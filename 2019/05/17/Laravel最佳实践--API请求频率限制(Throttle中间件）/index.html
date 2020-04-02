@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="PHP,Laravel,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Laravel最佳实践–API请求频率限制(Throttle中间件）在向公网提供API供外部访问数据时，为了避免被恶意攻击除了token认证最好还要给API加上请求频次限制，而在Laravel中从5.2开始框架自带的组件Throttle就支持访问频次限制了，并提供了一个Throttle中间件供我们使用，不过Throttle中间件在访问API频次达到限制后会返回一个HTML响应告诉你请求超频，在应用">
+<meta name="keywords" content="PHP,Laravel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Laravel最佳实践--API请求频率限制(Throttle中间件）">
+<meta property="og:url" content="http://blog.com/2019/05/17/Laravel最佳实践--API请求频率限制(Throttle中间件）/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Laravel最佳实践–API请求频率限制(Throttle中间件）在向公网提供API供外部访问数据时，为了避免被恶意攻击除了token认证最好还要给API加上请求频次限制，而在Laravel中从5.2开始框架自带的组件Throttle就支持访问频次限制了，并提供了一个Throttle中间件供我们使用，不过Throttle中间件在访问API频次达到限制后会返回一个HTML响应告诉你请求超频，在应用">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-17T15:56:03.851Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Laravel最佳实践--API请求频率限制(Throttle中间件）">
+<meta name="twitter:description" content="Laravel最佳实践–API请求频率限制(Throttle中间件）在向公网提供API供外部访问数据时，为了避免被恶意攻击除了token认证最好还要给API加上请求频次限制，而在Laravel中从5.2开始框架自带的组件Throttle就支持访问频次限制了，并提供了一个Throttle中间件供我们使用，不过Throttle中间件在访问API频次达到限制后会返回一个HTML响应告诉你请求超频，在应用">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/17/Laravel最佳实践--API请求频率限制(Throttle中间件）/">
+
+
+
+
+
+  <title>Laravel最佳实践--API请求频率限制(Throttle中间件） | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/17/Laravel最佳实践--API请求频率限制(Throttle中间件）/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Laravel最佳实践--API请求频率限制(Throttle中间件）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T12:12:57+08:00">
+                2019-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/" itemprop="url" rel="index">
+                    <span itemprop="name">PHP</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/Laravel/" itemprop="url" rel="index">
+                    <span itemprop="name">Laravel</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Laravel最佳实践–API请求频率限制-Throttle中间件）"><a href="#Laravel最佳实践–API请求频率限制-Throttle中间件）" class="headerlink" title="Laravel最佳实践–API请求频率限制(Throttle中间件）"></a>Laravel最佳实践–API请求频率限制(Throttle中间件）</h1><p>在向公网提供API供外部访问数据时，为了避免被恶意攻击除了token认证最好还要给API加上请求频次限制，而在Laravel中从5.2开始框架自带的组件Throttle就支持访问频次限制了，并提供了一个Throttle中间件供我们使用，不过Throttle中间件在访问API频次达到限制后会返回一个HTML响应告诉你请求超频，在应用中我们往往更希望返回一个API响应而不是一个HTML响应，所以在文章中会提供一个自定义的中间件替换默认的Throttle中间件来实现自定义响应内容。</p>
+<h3 id="访问频次限制概述"><a href="#访问频次限制概述" class="headerlink" title="访问频次限制概述"></a>访问频次限制概述</h3><p>频次限制经常用在API中，用于限制独立请求者对特定API的请求频率。例如，如果设置频次限制为每分钟1000次，如果一分钟内超过这个限制，那么服务器就会返回 <code>429: Too Many Attempts.</code>响应。</p>
+<p>通常，一个编码良好的、实现了频率限制的应用还会回传三个响应头: <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>和 <code>Retry-After</code>（<code>Retry-After</code>头只有在达到限制次数后才会返回）。 <code>X-RateLimit-Limit</code>告诉我们在指定时间内允许的最大请求次数， <code>X-RateLimit-Remaining</code>指的是在指定时间段内剩下的请求次数， <code>Retry-After</code>指的是距离下次重试请求需要等待的时间（s）</p>
+<blockquote>
+<p>注意：每个应用都会选择一个自己的频率限制时间跨度，Laravel应用访问频率限制的时间跨度是一分钟，所以频率限制限制的是一分钟内的访问次数。</p>
+</blockquote>
+<h3 id="使用Throttle中间件"><a href="#使用Throttle中间件" class="headerlink" title="使用Throttle中间件"></a>使用Throttle中间件</h3><p>让我们先来看看这个中间件的用法，首先我们定义一个路由，将中间件throttle添加到其中，throttle默认限制每分钟尝试60次，并且在一分钟内访问次数达到60次后禁止访问：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Route::group([<span class="string">'prefix'</span>=&gt;<span class="string">'api'</span>,<span class="string">'middleware'</span>=&gt;<span class="string">'throttle'</span>], <span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Route::get(<span class="string">'users'</span>, <span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> \App\User::all();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>访问路由/api/users时你会看见响应头里有如下的信息:</p>
+<blockquote>
+<p>X-RateLimit-Limit: 60<br>X-RateLimit-Remaining: 58</p>
+</blockquote>
+<p>如果请求超频，响应头里会返回<code>Retry-After</code>:</p>
+<blockquote>
+<p>Retry-After: 58<br>X-RateLimit-Limit: 60<br>X-RateLimit-Remaining: 0</p>
+</blockquote>
+<p>上面的信息表示58秒后页面或者API的访问才能恢复正常。</p>
+<h4 id="定义频率和重试等待时间"><a href="#定义频率和重试等待时间" class="headerlink" title="定义频率和重试等待时间"></a>定义频率和重试等待时间</h4><p>频率默认是60次可以通过throttle中间件的第一个参数来指定你想要的频率，重试等待时间默认是一分钟可以通过throttle中间件的第二个参数来指定你想要的分钟数。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Route::group([<span class="string">'prefix'</span>=&gt;<span class="string">'api'</span>,<span class="string">'middleware'</span>=&gt;<span class="string">'throttle:5'</span>],<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Route::get(<span class="string">'users'</span>,<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> \App\User::all();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);<span class="comment">//频次上限5</span></span><br><span class="line"></span><br><span class="line">Route::group([<span class="string">'prefix'</span>=&gt;<span class="string">'api'</span>,<span class="string">'middleware'</span>=&gt;<span class="string">'throttle:5,10'</span>],<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Route::get(<span class="string">'users'</span>,<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> \App\User::all();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);<span class="comment">//频次上限5，重试等待时间10分钟</span></span><br></pre></td></tr></table></figure>
+<h3 id="自定义Throttle中间件，返回API响应"><a href="#自定义Throttle中间件，返回API响应" class="headerlink" title="自定义Throttle中间件，返回API响应"></a>自定义Throttle中间件，返回API响应</h3><p>在请求频次达到上限后Throttle除了返回那些响应头，返回的响应内容是一个HTML页面，页面上告诉我们Too Many Attempts。在调用API的时候我们显然更希望得到一个json响应，下面提供一个自定义的中间件替代默认的Throttle中间件来自定义响应信息。</p>
+<p>首先创建一个ThrottleRequests中间件: <code>php artisan make:middleware ThrottleRequests</code>.</p>
+<p>将下面的代码拷贝到<code>app/Http/Middlewares/ThrottleReuqests</code>文件中:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Http</span>\<span class="title">Middleware</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Closure</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Cache</span>\<span class="title">RateLimiter</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Symfony</span>\<span class="title">Component</span>\<span class="title">HttpFoundation</span>\<span class="title">Response</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ThrottleRequests</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The rate limiter instance.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> \Illuminate\Cache\RateLimiter</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $limiter;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a new request throttler.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Cache\RateLimiter $limiter</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(RateLimiter $limiter)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;limiter = $limiter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Handle an incoming request.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Http\Request $request</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Closure $next</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $decayMinutes</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">handle</span><span class="params">($request, Closure $next, $maxAttempts = <span class="number">60</span>, $decayMinutes = <span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $key = <span class="keyword">$this</span>-&gt;resolveRequestSignature($request);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;limiter-&gt;tooManyAttempts($key, $maxAttempts, $decayMinutes)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;buildResponse($key, $maxAttempts);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">$this</span>-&gt;limiter-&gt;hit($key, $decayMinutes);</span><br><span class="line"></span><br><span class="line">        $response = $next($request);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;addHeaders(</span><br><span class="line">            $response, $maxAttempts,</span><br><span class="line">            <span class="keyword">$this</span>-&gt;calculateRemainingAttempts($key, $maxAttempts)</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Resolve request signature.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Http\Request $request</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">resolveRequestSignature</span><span class="params">($request)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> $request-&gt;fingerprint();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a 'too many attempts' response.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> \Illuminate\Http\Response</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">buildResponse</span><span class="params">($key, $maxAttempts)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $message = json_encode([</span><br><span class="line">            <span class="string">'error'</span> =&gt; [</span><br><span class="line">                <span class="string">'message'</span> =&gt; <span class="string">'Too many attempts, please slow down the request.'</span> <span class="comment">//may comes from lang file</span></span><br><span class="line">            ],</span><br><span class="line">            <span class="string">'status_code'</span> =&gt; <span class="number">4029</span> <span class="comment">//your custom code</span></span><br><span class="line">        ]);</span><br><span class="line"></span><br><span class="line">        $response = <span class="keyword">new</span> Response($message, <span class="number">429</span>);</span><br><span class="line"></span><br><span class="line">        $retryAfter = <span class="keyword">$this</span>-&gt;limiter-&gt;availableIn($key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;addHeaders(</span><br><span class="line">            $response, $maxAttempts,</span><br><span class="line">            <span class="keyword">$this</span>-&gt;calculateRemainingAttempts($key, $maxAttempts, $retryAfter),</span><br><span class="line">            $retryAfter</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add the limit header information to the given response.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Symfony\Component\HttpFoundation\Response $response</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $remainingAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int|null $retryAfter</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> \Illuminate\Http\Response</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">addHeaders</span><span class="params">(Response $response, $maxAttempts, $remainingAttempts, $retryAfter = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $headers = [</span><br><span class="line">            <span class="string">'X-RateLimit-Limit'</span> =&gt; $maxAttempts,</span><br><span class="line">            <span class="string">'X-RateLimit-Remaining'</span> =&gt; $remainingAttempts,</span><br><span class="line">        ];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!is_null($retryAfter)) &#123;</span><br><span class="line">            $headers[<span class="string">'Retry-After'</span>] = $retryAfter;</span><br><span class="line">            $headers[<span class="string">'Content-Type'</span>] = <span class="string">'application/json'</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $response-&gt;headers-&gt;add($headers);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $response;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Calculate the number of remaining attempts.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int|null $retryAfter</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">calculateRemainingAttempts</span><span class="params">($key, $maxAttempts, $retryAfter = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!is_null($retryAfter)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;limiter-&gt;retriesLeft($key, $maxAttempts);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后将<code>app/Http/Kernel.php</code>文件里的:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">'throttle'</span> =&gt; \Illuminate\Routing\Middleware\ThrottleRequests::class,</span><br></pre></td></tr></table></figure>
+<p>替换成:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">'throttle'</span> =&gt; \App\Http\Middleware\ThrottleRequests::class,</span><br></pre></td></tr></table></figure>
+<p>就大功告成了。</p>
+<h3 id="Throttle信息存储"><a href="#Throttle信息存储" class="headerlink" title="Throttle信息存储"></a>Throttle信息存储</h3><p>最后再来说下，<code>Throttle</code>这些频次数据都是存储在<code>cache</code>里的，<code>Laravel</code>默认的<code>cache driver</code>是<code>file</code>也就是<code>throttle</code>信息会默认存储在框架的<code>cache</code>文件里, 如果你的<code>cache driver</code>换成redis那么这些信息就会存储在redis里，记录的信息其实很简单，<code>Throttle</code>会将请求对象的signature（以HTTP请求方法、域名、URI和客户端IP做哈希）作为缓存key记录客户端的请求次数。</p>
+<h2 id="ThrottleRequests"><a href="#ThrottleRequests" class="headerlink" title="ThrottleRequests"></a>ThrottleRequests</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">Illuminate</span>\<span class="title">Routing</span>\<span class="title">Middleware</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Closure</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Carbon</span>\<span class="title">Carbon</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Cache</span>\<span class="title">RateLimiter</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Symfony</span>\<span class="title">Component</span>\<span class="title">HttpFoundation</span>\<span class="title">Response</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ThrottleRequests</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The rate limiter instance.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> \Illuminate\Cache\RateLimiter</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $limiter;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a new request throttler.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Cache\RateLimiter  $limiter</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(RateLimiter $limiter)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;limiter = $limiter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Handle an incoming request.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Http\Request  $request</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Closure  $next</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  float|int  $decayMinutes</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">handle</span><span class="params">($request, Closure $next, $maxAttempts = <span class="number">60</span>, $decayMinutes = <span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $key = <span class="keyword">$this</span>-&gt;resolveRequestSignature($request);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;limiter-&gt;tooManyAttempts($key, $maxAttempts, $decayMinutes)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;buildResponse($key, $maxAttempts);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">$this</span>-&gt;limiter-&gt;hit($key, $decayMinutes);</span><br><span class="line"></span><br><span class="line">        $response = $next($request);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;addHeaders(</span><br><span class="line">            $response, $maxAttempts,</span><br><span class="line">            <span class="keyword">$this</span>-&gt;calculateRemainingAttempts($key, $maxAttempts)</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Resolve request signature.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Http\Request  $request</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">resolveRequestSignature</span><span class="params">($request)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> $request-&gt;fingerprint();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a 'too many attempts' response.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> \Symfony\Component\HttpFoundation\Response</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">buildResponse</span><span class="params">($key, $maxAttempts)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $response = <span class="keyword">new</span> Response(<span class="string">'Too Many Attempts.'</span>, <span class="number">429</span>);</span><br><span class="line"></span><br><span class="line">        $retryAfter = <span class="keyword">$this</span>-&gt;limiter-&gt;availableIn($key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;addHeaders(</span><br><span class="line">            $response, $maxAttempts,</span><br><span class="line">            <span class="keyword">$this</span>-&gt;calculateRemainingAttempts($key, $maxAttempts, $retryAfter),</span><br><span class="line">            $retryAfter</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add the limit header information to the given response.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Symfony\Component\HttpFoundation\Response  $response</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $remainingAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int|null  $retryAfter</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> \Symfony\Component\HttpFoundation\Response</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">addHeaders</span><span class="params">(Response $response, $maxAttempts, $remainingAttempts, $retryAfter = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $headers = [</span><br><span class="line">            <span class="string">'X-RateLimit-Limit'</span> =&gt; $maxAttempts,</span><br><span class="line">            <span class="string">'X-RateLimit-Remaining'</span> =&gt; $remainingAttempts,</span><br><span class="line">        ];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (! is_null($retryAfter)) &#123;</span><br><span class="line">            $headers[<span class="string">'Retry-After'</span>] = $retryAfter;</span><br><span class="line">            $headers[<span class="string">'X-RateLimit-Reset'</span>] = Carbon::now()-&gt;getTimestamp() + $retryAfter;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $response-&gt;headers-&gt;add($headers);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $response;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Calculate the number of remaining attempts.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int|null  $retryAfter</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">calculateRemainingAttempts</span><span class="params">($key, $maxAttempts, $retryAfter = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_null($retryAfter)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;limiter-&gt;retriesLeft($key, $maxAttempts);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="RateLimiter"><a href="#RateLimiter" class="headerlink" title="RateLimiter"></a>RateLimiter</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">Illuminate</span>\<span class="title">Cache</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Carbon</span>\<span class="title">Carbon</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Cache</span>\<span class="title">Repository</span> <span class="title">as</span> <span class="title">Cache</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RateLimiter</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The cache store implementation.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> \Illuminate\Contracts\Cache\Repository</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $cache;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create a new rate limiter instance.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  \Illuminate\Contracts\Cache\Repository  $cache</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(Cache $cache)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;cache = $cache;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Determine if the given key has been "accessed" too many times.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  float|int  $decayMinutes</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> bool</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tooManyAttempts</span><span class="params">($key, $maxAttempts, $decayMinutes = <span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;cache-&gt;has($key.<span class="string">':lockout'</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;attempts($key) &gt;= $maxAttempts) &#123;</span><br><span class="line">            <span class="keyword">$this</span>-&gt;lockout($key, $decayMinutes);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">$this</span>-&gt;resetAttempts($key);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add the lockout key to the cache.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $decayMinutes</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">lockout</span><span class="params">($key, $decayMinutes)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;cache-&gt;add(</span><br><span class="line">            $key.<span class="string">':lockout'</span>, Carbon::now()-&gt;getTimestamp() + ($decayMinutes * <span class="number">60</span>), $decayMinutes</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Increment the counter for a given key for a given decay time.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  float|int  $decayMinutes</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">hit</span><span class="params">($key, $decayMinutes = <span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $added = <span class="keyword">$this</span>-&gt;cache-&gt;add($key, <span class="number">0</span>, $decayMinutes);</span><br><span class="line"></span><br><span class="line">        $hits = (int) <span class="keyword">$this</span>-&gt;cache-&gt;increment($key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (! $added &amp;&amp; $hits == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">$this</span>-&gt;cache-&gt;put($key, <span class="number">1</span>, $decayMinutes);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $hits;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get the number of attempts for the given key.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">attempts</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;cache-&gt;get($key, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Reset the number of attempts for the given key.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">resetAttempts</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;cache-&gt;forget($key);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get the number of retries left for the given key.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  int  $maxAttempts</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">retriesLeft</span><span class="params">($key, $maxAttempts)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $attempts = <span class="keyword">$this</span>-&gt;attempts($key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $maxAttempts - $attempts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Clear the hits and lockout for the given key.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">clear</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;resetAttempts($key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">$this</span>-&gt;cache-&gt;forget($key.<span class="string">':lockout'</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get the number of seconds until the "key" is accessible again.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">availableIn</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;cache-&gt;get($key.<span class="string">':lockout'</span>) - Carbon::now()-&gt;getTimestamp();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><code>RateLimiter</code>中的<code>hit</code>方法:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment">/**</span></span><br><span class="line"><span class="comment">&gt;      * Increment the counter for a given key for a given decay time.</span></span><br><span class="line"><span class="comment">&gt;   *</span></span><br><span class="line"><span class="comment">&gt;      * <span class="doctag">@param</span>  string  $key</span></span><br><span class="line"><span class="comment">&gt;      * <span class="doctag">@param</span>  float|int  $decayMinutes</span></span><br><span class="line"><span class="comment">&gt;      * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">&gt;   */</span></span><br><span class="line">&gt;  <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">hit</span><span class="params">($key, $decayMinutes = <span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">&gt;  </span>&#123;</span><br><span class="line">&gt;      $added = <span class="keyword">$this</span>-&gt;cache-&gt;add($key, <span class="number">0</span>, $decayMinutes);</span><br><span class="line">&gt; </span><br><span class="line">&gt;      $hits = (int) <span class="keyword">$this</span>-&gt;cache-&gt;increment($key);</span><br><span class="line">&gt; </span><br><span class="line">&gt;      <span class="keyword">if</span> (! $added &amp;&amp; $hits == <span class="number">1</span>) &#123;</span><br><span class="line">&gt;          <span class="keyword">$this</span>-&gt;cache-&gt;put($key, <span class="number">1</span>, $decayMinutes);</span><br><span class="line">&gt;      &#125;</span><br><span class="line">&gt; </span><br><span class="line">&gt;      <span class="keyword">return</span> $hits;</span><br><span class="line">&gt;  &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>先添加key 然后自增长数值记录访问次数.</p>
+<p>最后就是cache服务redis具体实现中的add方法到底做了什么:</p>
+<p>​    <strong>key不存在  新增  lua脚本，保证新增与设置有效期的原子性</strong></p>
+<p>在<code>RedisStore</code>中的add方法:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">add</span><span class="params">($key, $value, $minutes)</span></span></span><br><span class="line"><span class="function">&gt;  </span>&#123;</span><br><span class="line">&gt;      $lua = <span class="string">"return redis.call('exists',KEYS[1])&lt;1 and redis.call('setex',KEYS[1],ARGV[2],ARGV[1])"</span>;</span><br><span class="line">&gt; </span><br><span class="line">&gt;      <span class="keyword">return</span> (bool) <span class="keyword">$this</span>-&gt;connection()-&gt;eval(</span><br><span class="line">&gt;          $lua, <span class="number">1</span>, <span class="keyword">$this</span>-&gt;prefix.$key, <span class="keyword">$this</span>-&gt;serialize($value), (int) max(<span class="number">1</span>, $minutes * <span class="number">60</span>)</span><br><span class="line">&gt;      );</span><br><span class="line">&gt;  &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>可以看到是通过redis 脚本(<code>lua</code>实现) 先判断key是否存在,再执行了<code>setex</code>设置了过期时间.</p>
+</blockquote>
+<h2 id="请求唯一标识"><a href="#请求唯一标识" class="headerlink" title="请求唯一标识"></a>请求唯一标识</h2><blockquote>
+<p>\Illuminate\Http\Request</p>
+</blockquote>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Get a unique fingerprint for the request / route / IP address.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> \RuntimeException</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">fingerprint</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (! $route = <span class="keyword">$this</span>-&gt;route()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">'Unable to generate fingerprint. Route unavailable.'</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> sha1(implode(<span class="string">'|'</span>, array_merge(</span><br><span class="line">        $route-&gt;methods(), [$route-&gt;domain(), $route-&gt;uri(), <span class="keyword">$this</span>-&gt;ip()]</span><br><span class="line">    )));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.wangxuyin.cn/138.html" target="_blank" rel="noopener">Laravel 访问频率限制中间件throttle的使用</a></p>
+<p><a href="https://segmentfault.com/a/1190000013499082" target="_blank" rel="noopener">Laravel最佳实践–API请求频率限制(Throttle中间件)</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
+          
+            <a href="/tags/Laravel/" rel="tag"># Laravel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/PHP框架中间件实现/" rel="next" title="PHP框架中间件实现">
+                <i class="fa fa-chevron-left"></i> PHP框架中间件实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/Java 设计模式之组合模式及应用场景/" rel="prev" title="Java 设计模式之组合模式及应用场景">
+                Java 设计模式之组合模式及应用场景 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Laravel最佳实践–API请求频率限制-Throttle中间件）"><span class="nav-number">1.</span> <span class="nav-text">Laravel最佳实践–API请求频率限制(Throttle中间件）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#访问频次限制概述"><span class="nav-number">1.0.1.</span> <span class="nav-text">访问频次限制概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Throttle中间件"><span class="nav-number">1.0.2.</span> <span class="nav-text">使用Throttle中间件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#定义频率和重试等待时间"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">定义频率和重试等待时间</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义Throttle中间件，返回API响应"><span class="nav-number">1.0.3.</span> <span class="nav-text">自定义Throttle中间件，返回API响应</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Throttle信息存储"><span class="nav-number">1.0.4.</span> <span class="nav-text">Throttle信息存储</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThrottleRequests"><span class="nav-number">1.1.</span> <span class="nav-text">ThrottleRequests</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RateLimiter"><span class="nav-number">1.2.</span> <span class="nav-text">RateLimiter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求唯一标识"><span class="nav-number">1.3.</span> <span class="nav-text">请求唯一标识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">1.4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

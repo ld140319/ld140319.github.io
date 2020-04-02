@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,站内信,消息通知,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="网站消息通知设计  原文地址：https://juejin.im/post/5d02629c5188253d592e0631   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;通知系统是一个成熟的 web网站或者app 最基本的功能，比如微博、知乎、掘金等。当然今天本文要讨论的不是这种大网站、大流量的通知系统，而是一般用户量的网站或者应用。 通知系统的组成&amp;nbsp;&amp;n">
+<meta name="keywords" content="架构,站内信,消息通知">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网站消息通知设计">
+<meta property="og:url" content="http://blog.com/2019/06/17/网站消息通知设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="网站消息通知设计  原文地址：https://juejin.im/post/5d02629c5188253d592e0631   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;通知系统是一个成熟的 web网站或者app 最基本的功能，比如微博、知乎、掘金等。当然今天本文要讨论的不是这种大网站、大流量的通知系统，而是一般用户量的网站或者应用。 通知系统的组成&amp;nbsp;&amp;n">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/17/网站消息通知设计/16b515332dbf5854.png">
+<meta property="og:image" content="http://blog.com/2019/06/17/网站消息通知设计/16b515369c6fd79e.png">
+<meta property="og:updated_time" content="2019-06-18T15:13:16.303Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="网站消息通知设计">
+<meta name="twitter:description" content="网站消息通知设计  原文地址：https://juejin.im/post/5d02629c5188253d592e0631   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;通知系统是一个成熟的 web网站或者app 最基本的功能，比如微博、知乎、掘金等。当然今天本文要讨论的不是这种大网站、大流量的通知系统，而是一般用户量的网站或者应用。 通知系统的组成&amp;nbsp;&amp;n">
+<meta name="twitter:image" content="http://blog.com/2019/06/17/网站消息通知设计/16b515332dbf5854.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/17/网站消息通知设计/">
+
+
+
+
+
+  <title>网站消息通知设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/17/网站消息通知设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">网站消息通知设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-17T12:12:57+08:00">
+                2019-06-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/站内信/" itemprop="url" rel="index">
+                    <span itemprop="name">站内信</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/站内信/消息通知/" itemprop="url" rel="index">
+                    <span itemprop="name">消息通知</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="网站消息通知设计"><a href="#网站消息通知设计" class="headerlink" title="网站消息通知设计"></a>网站消息通知设计</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://juejin.im/post/5d02629c5188253d592e0631" target="_blank" rel="noopener">https://juejin.im/post/5d02629c5188253d592e0631</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知系统是一个成熟的 <code>web</code>网站或者<code>app</code> 最基本的功能，比如微博、知乎、掘金等。当然今天本文要讨论的不是这种大网站、大流量的通知系统，而是一般用户量的网站或者应用。</p>
+<h2 id="通知系统的组成"><a href="#通知系统的组成" class="headerlink" title="通知系统的组成"></a>通知系统的组成</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个通知系统主要由：<strong>通知来源、通知控制、通知方式、通知模板、通知目标</strong>五个部分组成。 后面详细介绍各个组成的作用。组成结构如下图所示：</p>
+<p><img src="//blog.com/2019/06/17/网站消息通知设计/16b515332dbf5854.png" alt="img"></p>
+<h3 id="通知来源"><a href="#通知来源" class="headerlink" title="通知来源"></a>通知来源</h3><p>通知来源是指触发本次通知事件的源头，一般包括以下三种情况：</p>
+<ol>
+<li><strong>用户事件触发</strong>：当其他用户对某个对象执行了评论、@、点赞、留言等动作，都需要对对象拥有者进行通知。这是最常见的需要通知的场景。</li>
+<li><strong>满足系统的规则后自动触发</strong>：比如被系统封号、等级提升、获得勋章时，理论上都应该对用户进行通知。</li>
+<li><strong>管理员触发</strong>：管理员主动向全网或者某个用户发送通知，比如发送公告等。</li>
+</ol>
+<h3 id="通知控制"><a href="#通知控制" class="headerlink" title="通知控制"></a>通知控制</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知控制用来进行<strong>权限控制、黑白名单过滤、用户接收消息频率控制、内容审查</strong>等。总之控制和过滤相关的都放在这里。</p>
+<h3 id="通知模板"><a href="#通知模板" class="headerlink" title="通知模板"></a>通知模板</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模板用来与数据模型结合并最终展示给用户，类似<code>MVC</code>模式中的<code>V</code>，可以是纯文本也可以是<code>Velocity</code>之类的模板。引入通知模板主要是为了满足以下三点：</p>
+<ol>
+<li><strong>不同通知方式通知的展示方式可以不同</strong>；</li>
+<li><strong>通知的展示与通知的模型数据分离</strong>；</li>
+<li><strong>通知模板可配</strong>；</li>
+</ol>
+<h3 id="通知方式"><a href="#通知方式" class="headerlink" title="通知方式"></a>通知方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;常见的有站内信、邮件、短信、工作通知(钉钉、企业微信)等。其中像邮件、短信和工作通知都是基于第三方应用的，用的时候顶多在他们提供的接口上做一层封装就可以了，所以没什么可以讲的。而站内信往往则需要网站或者应用自己设计和开发，所以很多网上介绍通知系统都只是介绍站内信的设计。</p>
+<h3 id="通知目标"><a href="#通知目标" class="headerlink" title="通知目标"></a>通知目标</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知目标即用户，可为<strong>单个用户或者满足某条件的全部用户</strong></p>
+<h2 id="通知系统的分层"><a href="#通知系统的分层" class="headerlink" title="通知系统的分层"></a>通知系统的分层</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文设计的通知系统流程图如下，主要分为<strong>业务层、数据模型层、控制层、分发层、视图层和发送层</strong>。分层可以降低各个模块之间的耦合，每一层只做自己该做的事。</p>
+<p><img src="//blog.com/2019/06/17/网站消息通知设计/16b515369c6fd79e.png" alt="img"></p>
+<h3 id="业务层"><a href="#业务层" class="headerlink" title="业务层"></a>业务层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该层与业务相关，属于通知系统中的通知来源部分。是<strong>调用通知系统服务的调用方</strong>，放在这里为了后面讲解业务与通知系统的解耦。</p>
+<blockquote>
+<p>将通知数据主体写入数据模型层</p>
+</blockquote>
+<h3 id="数据模型层"><a href="#数据模型层" class="headerlink" title="数据模型层"></a>数据模型层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相信很多写 <code>web</code> 后台的程序员对 <code>MVC</code>模式很熟悉，这一层相当于 <code>MVC</code> 模式中的 <code>M</code> 层，主要<strong>负责收集模型数据</strong>的。该层理论上划分为通知系统的通知来源。该层的数据模型与上层业务紧密关联，不同的业务场景需要不同的通知数据。</p>
+<blockquote>
+<p>存储通知数据主体数据，这里主要涉及到的是存储模型的可扩展性（业务区分、权限控制）</p>
+</blockquote>
+<h3 id="控制-过滤层"><a href="#控制-过滤层" class="headerlink" title="控制/过滤层"></a>控制/过滤层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即<strong>通知控制，用来进行权限控制、黑白名单过滤、用户接收消息频率控制、内容审查</strong>等。</p>
+<blockquote>
+<p>全局检查规则，与通知业务主体关联不大，但如果要做到<strong>用户对接收通知的控制</strong>这一层需要好好设计（如：仅仅接收某类通知、拒收某类通知）</p>
+</blockquote>
+<h3 id="分发层"><a href="#分发层" class="headerlink" title="分发层"></a>分发层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的业务往往需要不同的方式发送通知消息，比如事件通知要进行站内信通知、而被封号往往会选择邮件或者短信通知。<strong>消息到达分发层后，根据业务的不同选择不同的发送策略</strong>。如果需要将发送的<strong>消息记录进行存储</strong>也可以放在这层。</p>
+<blockquote>
+<p>根据通知类型做分发路由，最好做成可配置的；记录发送通知记录</p>
+</blockquote>
+<h3 id="视图层"><a href="#视图层" class="headerlink" title="视图层"></a>视图层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本层与数据模型层关系很大，数据到这一层后会<strong>与模板结合组成要发送的内容</strong>。</p>
+<blockquote>
+<p>通过通知模板、通知主体模型生成通知内容</p>
+</blockquote>
+<blockquote>
+<p><strong>模板管理可考虑做到这一层动态配置</strong></p>
+</blockquote>
+<h3 id="发送层"><a href="#发送层" class="headerlink" title="发送层"></a>发送层</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主要是调用短信、邮件、工作通知和站内信等接口将<strong>消息发送</strong>出去。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上分层建议采用框架的方式将所有流程编排好，每层都采用接口或者抽象类的方式调用。每层都有一些基类和固定接口，一旦有新的业务来只需要继承这些基类并实现相应接口就可以了。</p>
+<h2 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文通知系统设计就讲到这里，虽然简单但也是经验之谈吧。笔者在设计这块的时候也是慢慢演化过来的。一开始业务少、功能简单，直接将所有代码垒在一起。后期增加功能改动非常之大，几乎等于重构。采用这种设计后，如果需要新增业务，只需要新增一些类，流程就可以自动 <code>run</code> 起来。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/站内信/" rel="tag"># 站内信</a>
+          
+            <a href="/tags/消息通知/" rel="tag"># 消息通知</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/17/用策略模式消除代码中的if-else、switch-case/" rel="next" title="用策略模式消除代码中的if-else、switch-case">
+                <i class="fa fa-chevron-left"></i> 用策略模式消除代码中的if-else、switch-case
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/17/站内信设计总结/" rel="prev" title="站内信设计总结">
+                站内信设计总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#网站消息通知设计"><span class="nav-number">1.</span> <span class="nav-text">网站消息通知设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#通知系统的组成"><span class="nav-number">1.1.</span> <span class="nav-text">通知系统的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通知来源"><span class="nav-number">1.1.1.</span> <span class="nav-text">通知来源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通知控制"><span class="nav-number">1.1.2.</span> <span class="nav-text">通知控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通知模板"><span class="nav-number">1.1.3.</span> <span class="nav-text">通知模板</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通知方式"><span class="nav-number">1.1.4.</span> <span class="nav-text">通知方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通知目标"><span class="nav-number">1.1.5.</span> <span class="nav-text">通知目标</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通知系统的分层"><span class="nav-number">1.2.</span> <span class="nav-text">通知系统的分层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#业务层"><span class="nav-number">1.2.1.</span> <span class="nav-text">业务层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据模型层"><span class="nav-number">1.2.2.</span> <span class="nav-text">数据模型层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#控制-过滤层"><span class="nav-number">1.2.3.</span> <span class="nav-text">控制/过滤层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分发层"><span class="nav-number">1.2.4.</span> <span class="nav-text">分发层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#视图层"><span class="nav-number">1.2.5.</span> <span class="nav-text">视图层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#发送层"><span class="nav-number">1.2.6.</span> <span class="nav-text">发送层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结尾"><span class="nav-number">1.3.</span> <span class="nav-text">结尾</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

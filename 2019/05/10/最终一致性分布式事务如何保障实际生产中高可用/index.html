@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,消息队列,分布式事务,最终一致性,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="最终一致性分布式事务如何保障实际生产中高可用  原文地址：https://juejin.im/post/5bf2c6b6e51d456693549af4   产生背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在微服务盛行的背景下，服务间的调用是异步的，如支付成功后，通知更新订单状态   订单支付成功后，通知库存服务…… &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="keywords" content="架构,消息队列,分布式事务,最终一致性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="最终一致性分布式事务如何保障实际生产中高可用">
+<meta property="og:url" content="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="最终一致性分布式事务如何保障实际生产中高可用  原文地址：https://juejin.im/post/5bf2c6b6e51d456693549af4   产生背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在微服务盛行的背景下，服务间的调用是异步的，如支付成功后，通知更新订单状态   订单支付成功后，通知库存服务…… &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/1672c79c4bcd7dac.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/1672c7a396a84cda.png">
+<meta property="og:updated_time" content="2019-05-13T08:53:08.419Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="最终一致性分布式事务如何保障实际生产中高可用">
+<meta name="twitter:description" content="最终一致性分布式事务如何保障实际生产中高可用  原文地址：https://juejin.im/post/5bf2c6b6e51d456693549af4   产生背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在微服务盛行的背景下，服务间的调用是异步的，如支付成功后，通知更新订单状态   订单支付成功后，通知库存服务…… &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="twitter:image" content="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/1672c79c4bcd7dac.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/">
+
+
+
+
+
+  <title>最终一致性分布式事务如何保障实际生产中高可用 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">最终一致性分布式事务如何保障实际生产中高可用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-10T12:12:57+08:00">
+                2019-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/分布式事务/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式事务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/分布式事务/最终一致性/" itemprop="url" rel="index">
+                    <span itemprop="name">最终一致性</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="最终一致性分布式事务如何保障实际生产中高可用"><a href="#最终一致性分布式事务如何保障实际生产中高可用" class="headerlink" title="最终一致性分布式事务如何保障实际生产中高可用"></a>最终一致性分布式事务如何保障实际生产中高可用</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://juejin.im/post/5bf2c6b6e51d456693549af4" target="_blank" rel="noopener">https://juejin.im/post/5bf2c6b6e51d456693549af4</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="产生背景"><a href="#产生背景" class="headerlink" title="产生背景"></a>产生背景</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在微服务盛行的背景下，服务间的调用是异步的</strong>，如支付成功后，通知更新订单状态   订单支付成功后，通知库存服务……</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;也就是说，一个服务发送一个消息给MQ，即消息中间件，比如RocketMQ、RabbitMQ、Kafka、ActiveMQ等等。然后，另外一个服务从MQ消费到一条消息后进行处理。这就成了<strong>基于MQ的异步调用</strong>了。</p>
+<p>可能出现的问题：</p>
+<ol>
+<li>上游服务本地执行失败   消息发送给了下游服务   下游服务执行成功</li>
+<li>上游服务本地执行成功    消息发送给了下游服务   下游服务执行失败</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么针对这种基于MQ的异步调用，如何保证各个服务间的分布式事务呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;也就是说，我希望的是<strong>基于MQ实现异步调用的多个服务的业务逻辑，要么一起成功，要么一起失败</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个时候，就要用上<strong>可靠消息最终一致性方案</strong>，来实现分布式事务。</p>
+<p><img src="//blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/1672c79c4bcd7dac.png" alt="img"></p>
+<h2 id="概念解释"><a href="#概念解释" class="headerlink" title="概念解释"></a>概念解释</h2><h3 id="上游"><a href="#上游" class="headerlink" title="上游"></a>上游</h3><p>可以简单理解为<strong>消息生产者</strong></p>
+<h3 id="下游"><a href="#下游" class="headerlink" title="下游"></a>下游</h3><p>可以简单理解为消息<strong>消费者</strong></p>
+<h3 id="可靠消息服务"><a href="#可靠消息服务" class="headerlink" title="可靠消息服务"></a>可靠消息服务</h3><p><strong>存储一次调用消息的载体 + 消息投递服务 </strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以用一个<strong>任务表</strong>来存储调用消息（队列名称、业务关键信息 如订单ID……），然后用一个<strong>守护进程或者定时任务</strong>一直来扫描这个表的任务状态，根据任务状态来执行相应操作</p>
+<blockquote>
+<p>已删除 =》 不做任何处理</p>
+<p>下面的操作均<strong>需要一个的时间间隔，超过了正常的执行时间，根据业务情况而定</strong></p>
+<p><strong>时间间隔 = 当前时间 - 上次任务状态更新时间</strong></p>
+<p>​     待确认 =》 询问上游</p>
+<p>​    已发送 =》重新投递信息</p>
+</blockquote>
+<h2 id="可靠消息最终一致性方案的核心流程"><a href="#可靠消息最终一致性方案的核心流程" class="headerlink" title="可靠消息最终一致性方案的核心流程"></a>可靠消息最终一致性方案的核心流程</h2><h3 id="上游服务投递消息"><a href="#上游服务投递消息" class="headerlink" title="上游服务投递消息"></a>上游服务投递消息</h3><ol>
+<li>上游服务需要发送一条消息给可靠消息服务, 对下游服务一个接口的调用，里面包含了对应的一些请求参数</li>
+</ol>
+<blockquote>
+<p>可能包括：队列名称，业务关键信息（如：订单ID……）</p>
+<p>可以认为是对下游服务一个接口的调用</p>
+</blockquote>
+<ol start="2">
+<li><p>可靠消息服务就得把这条消息存储到自己的数据库里去，状态为“待确认”</p>
+</li>
+<li><p>上游服务就可以执行自己本地的数据库操作，根据自己的执行结果，再次调用可靠消息服务的接口</p>
+</li>
+</ol>
+<blockquote>
+<p>如果本地数据库操作执行成功了，那么就找可靠消息服务确认那条消息。此时如果是确认消息，那么可靠消息服务就把数据库里的消息状态更新为“已发送”，同时将消息发送给MQ。</p>
+</blockquote>
+<blockquote>
+<p>如果本地数据库操作失败了，那么就找可靠消息服务删除那条消息。如果上游服务是通知删除消息，那么可靠消息服务就得删除这条消息。</p>
+</blockquote>
+<p><strong>关键点:  保证更新数据库里的消息状态和投递消息到MQ同时成功或失败</strong></p>
+<p><strong>解决方案：两个操作放到一个事务</strong></p>
+<blockquote>
+<p>如果数据库里更新消息的状态失败了，那么就抛异常退出了，就别投递到MQ;</p>
+<p>如果投递MQ失败报错了，那么就要抛异常让本地数据库事务回滚;</p>
+<p>这俩操作必须得一起成功，或者一起失败。</p>
+</blockquote>
+<h3 id="下游服务接收消息"><a href="#下游服务接收消息" class="headerlink" title="下游服务接收消息"></a>下游服务接收消息</h3><ol>
+<li><p>下游服务就一直等着从MQ消费消息好了，如果消费到了消息，那么就操作自己本地数据库。</p>
+</li>
+<li><p>如果操作成功了，就反过来通知可靠消息服务，说自己处理成功了，然后可靠消息服务就会把消息的状态设置为“已完成”。</p>
+</li>
+</ol>
+<h3 id="投递消息的过程中各个环节出现了问题该怎么办？"><a href="#投递消息的过程中各个环节出现了问题该怎么办？" class="headerlink" title="投递消息的过程中各个环节出现了问题该怎么办？"></a>投递消息的过程中各个环节出现了问题该怎么办？</h3><h4 id="如何上游服务对消息的100-可靠投递？"><a href="#如何上游服务对消息的100-可靠投递？" class="headerlink" title="如何上游服务对消息的100%可靠投递？"></a>如何上游服务对消息的100%可靠投递？</h4><h5 id="上游服务给可靠消息服务发送确认消息的过程出错"><a href="#上游服务给可靠消息服务发送确认消息的过程出错" class="headerlink" title="上游服务给可靠消息服务发送确认消息的过程出错"></a>上游服务给可靠消息服务发送确认消息的过程出错</h5><p>错误结果：消息未投递，下游服务调用失败 ，<strong>业务不能接受</strong></p>
+<p>解决方案：上游服务可以感知到调用异常  可以<strong>尝试重试</strong>  如果重试n次后仍然失败，可以以邮件、短信等<strong>报警形      式通知负责人</strong></p>
+<h5 id="上游服务给可靠消息服务发送删除消息的过程出错"><a href="#上游服务给可靠消息服务发送删除消息的过程出错" class="headerlink" title="上游服务给可靠消息服务发送删除消息的过程出错"></a>上游服务给可靠消息服务发送删除消息的过程出错</h5><p>错误结果：消息一直卡住在“待确认”，<strong>业务没有影响</strong></p>
+<p>解决方案：上游服务可以感知到调用异常  可以<strong>尝试重试</strong>  【视情况而定：如果重试n次后仍然失败，可以以邮件、短信等<strong>报警形式通知负责人</strong>】</p>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>现象：<strong>消息在可靠消息服务的数据库里的状态会一直是“待确认”</strong></p>
+<p>可选的方案：</p>
+<ol>
+<li>在可靠消息服务里开发一个<strong>后台定时运行的线程</strong>，不停的检查各个消息的状态</li>
+</ol>
+<blockquote>
+<p>如果一直是“待确认”状态，就认为这个消息出了点什么问题。</p>
+<p>此时的话，就可以回调上游服务提供的一个接口，问问说，兄弟，这个消息对应的数据库操作，你执行成功了没啊？</p>
+<p>如果上游服务答复说，我执行成功了，那么可靠消息服务将消息状态修改为“已发送”，同时投递消息到MQ。</p>
+<p>如果上游服务答复说，没执行成功，那么可靠消息服务将数据库中的消息删除即可。</p>
+</blockquote>
+<p><strong>难点在于如何判断上游的处理结果？需要另外的存储载体</strong></p>
+<ol start="2">
+<li><strong>业务报警</strong></li>
+</ol>
+<h4 id="如何保证下游服务对消息的100-可靠接收？"><a href="#如何保证下游服务对消息的100-可靠接收？" class="headerlink" title="如何保证下游服务对消息的100%可靠接收？"></a>如何保证下游服务对消息的100%可靠接收？</h4><p><strong>如果下游服务消费消息出了问题，没消费到？或者是下游服务对消息的处理失败了，怎么办？</strong></p>
+<p>错误结果：消息未正确消费，下游服务调用失败 ，<strong>业务不能接受</strong></p>
+<p>解决方案：<strong>重新发送消息 + 幂等机制</strong></p>
+<blockquote>
+<p><strong>在可靠消息服务里开发一个后台线程，不断的检查消息状态。</strong></p>
+<p>如果消息状态一直是“已发送”，始终没有变成“已完成”，那么就说明下游服务始终没有处理成功。</p>
+<p>此时可靠消息服务就可以再次<strong>尝试重新投递消息到MQ</strong>，让下游服务来再次处理。</p>
+<p>只要下游服务的接口逻辑<strong>实现幂等性</strong>，保证多次处理一个消息，不会插入重复数据即可。</p>
+</blockquote>
+<h2 id="如何基于RocketMQ来实现可靠消息最终一致性方案？"><a href="#如何基于RocketMQ来实现可靠消息最终一致性方案？" class="headerlink" title="如何基于RocketMQ来实现可靠消息最终一致性方案？"></a>如何基于RocketMQ来实现可靠消息最终一致性方案？</h2><p>在上面的通用方案设计里，完全依赖可靠消息服务的各种自检机制来确保：</p>
+<ul>
+<li>如果上游服务的数据库操作没成功，下游服务是不会收到任何通知</li>
+<li>如果上游服务的数据库操作成功了，可靠消息服务死活都会确保将一个调用消息投递给下游服务，而且一定会确保下游服务务必成功处理这条消息。</li>
+</ul>
+<p>通过这套机制，保证了基于MQ的异步调用/通知的服务间的分布式事务保障。</p>
+<p>其实阿里开源的RocketMQ，就实现了可靠消息服务的所有功能，核心思想跟上面类似。</p>
+<p>只不过RocketMQ为了保证高并发、高可用、高性能，做了较为复杂的架构实现，非常的优秀。</p>
+<p>有兴趣的同学，自己可以去查阅RocketMQ对分布式事务的支持。</p>
+<h2 id="可靠消息最终一致性方案的高可用保障生产实践"><a href="#可靠消息最终一致性方案的高可用保障生产实践" class="headerlink" title="可靠消息最终一致性方案的高可用保障生产实践"></a>可靠消息最终一致性方案的高可用保障生产实践</h2><h3 id="背景引入"><a href="#背景引入" class="headerlink" title="背景引入"></a>背景引入</h3><p><strong>这套方案如何保证99.99%的高可用？</strong></p>
+<p><strong>MQ挂了怎么处理，MQ的高可用性？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实大家应该发现了这套方案里保障高可用性最大的一个依赖点，就是<strong>MQ的高可用性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任何一种MQ中间件都有一整套的高可用保障机制，无论是RabbitMQ、RocketMQ还是Kafka。<strong>通常对可用性的保障都是依赖于公司基础架构团队对MQ的高可用保障</strong>。MQ中间件在自己公司机器上部署的集群整体故障不可用，导致依赖MQ的分布式事务全部无法跑通，业务流程大量中断的情况。</p>
+<h3 id="基于KV存储的队列支持的高可用降级方案"><a href="#基于KV存储的队列支持的高可用降级方案" class="headerlink" title="基于KV存储的队列支持的高可用降级方案"></a>基于KV存储的队列支持的高可用降级方案</h3><p>一旦MQ中间件出现故障，立马<strong>自动降级</strong>为备用方案</p>
+<p><img src="//blog.com/2019/05/10/最终一致性分布式事务如何保障实际生产中高可用/1672c7a396a84cda.png" alt="img"></p>
+<p><strong>（1）自行封装MQ客户端组件与故障感知</strong></p>
+<p>首先第一点，你要做到自动感知MQ的故障接着自动完成降级，那么必须动手对MQ客户端进行封装，发布到公司Nexus私服上去。</p>
+<p>然后公司需要支持MQ降级的业务服务都使用这个自己封装的组件来发送消息到MQ，以及从MQ消费消息。</p>
+<p>在你自己封装的MQ客户端组件里，你可以根据写入MQ的情况来判断MQ是否故障。</p>
+<p>比如说，如果连续10次重试尝试投递消息到MQ都发现异常报错，网络无法联通等问题，说明MQ故障，此时就可以自动感知以及自动触发降级开关。</p>
+<p><strong>可以用redis做一个计数器，在单位时间内失败了多少次就触发降级</strong></p>
+<p><strong>（2）基于kv存储中队列的降级方案</strong></p>
+<p>如果MQ挂掉之后，要是希望继续投递消息，那么就必须得找一个MQ的替代品。</p>
+<p>使用<strong>redis的kv存储中的队列来进行替代–list</strong></p>
+<p>避坑指南：</p>
+<ol>
+<li>任何kv存储的集合类数据结构，建议<strong>不要往里面写入数据量过大，否则会导致大value的情况发生</strong>，引发严重的后果。可以<strong>只写入关键业务消息</strong>，如：订单id，需要订单详情时，调用一次接口进行查询</li>
+<li>绝不能在redis里搞一个key，就拼命往这个数据结构中一直写入消息，这是肯定不行的。<strong>不能够单个key,  根据业务需要拆分为多个key,跟队列名称一致</strong></li>
+<li>绝对不能往少数key对应的数据结构中持续写入数据，那样会导致热key的产生，也就是某几个key特别热</li>
+</ol>
+<p>​       一般kv集群，都是根据key来hash分配到各个机器上的，你要是老写少数几个key，会导致kv集群中的某台机器访问过高，负载过大。</p>
+<p><strong>（3）下游服务消费MQ的降级感知</strong></p>
+<p>下游服务消费MQ也是通过自行封装的组件来做的，此时那个组件如果从zk感知到降级开关打开了，首先会判断自己是否还能继续从MQ消费到数据？</p>
+<p>如果不能了，就开启多个线程，并发的从kv存储的各个预设好的上百个队列中不断的获取数据。</p>
+<p>每次获取到一条数据，就交给下游服务的业务逻辑来执行。</p>
+<p>通过这套机制，就实现了MQ故障时候的自动故障感知，以及自动降级。如果系统的负载和并发不是很高的话，用这套方案大致是没没问题的。</p>
+<p><strong>可以用redis做一个计数器，在单位时间内失败了多少次就触发降级</strong></p>
+<p><strong>（4）故障的自动恢复</strong></p>
+<p>如果降级开关打开之后，自行封装的组件需要开启一个线程，每隔一段时间尝试给MQ投递一个消息看看是否恢复了。</p>
+<p>如果MQ已经恢复可以正常投递消息了，此时就可以通过zk关闭降级开关，然后可靠消息服务继续投递消息到MQ，下游服务在确认kv存储的各个队列中已经没有数据之后，就可以重新切换为从MQ消费消息。</p>
+<h3 id="值得注意的点"><a href="#值得注意的点" class="headerlink" title="值得注意的点"></a>值得注意的点</h3><ol>
+<li>投递到消息队列和redis的<strong>内容要一致</strong>，保证逻辑可以封装复用 ，推荐<strong>使用json</strong></li>
+</ol>
+<h3 id="一个可行的设计"><a href="#一个可行的设计" class="headerlink" title="一个可行的设计"></a>一个可行的设计</h3><ul>
+<li>根据他们每天的消息量，在kv存储中固定划分上百个队列，有上百个key对应。</li>
+<li>这样保证每个key对应的数据结构中不会写入过多的消息，而且不会频繁的写少数几个key。</li>
+<li>一旦发生了MQ故障，可靠消息服务可以对每个消息通过hash算法，均匀的写入固定好的上百个key对应的kv存储的队列中。</li>
+</ul>
+<p>同时此时需要通过zk触发一个降级开关，整个系统在MQ这块的读和写全部立马降级。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+            <a href="/tags/分布式事务/" rel="tag"># 分布式事务</a>
+          
+            <a href="/tags/最终一致性/" rel="tag"># 最终一致性</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/10/如何保证消息被正确消费/" rel="next" title="如何保证消息被正确消费">
+                <i class="fa fa-chevron-left"></i> 如何保证消息被正确消费
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/10/消息队列的高可用性保障/" rel="prev" title="消息队列的高可用性保障">
+                消息队列的高可用性保障 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#最终一致性分布式事务如何保障实际生产中高可用"><span class="nav-number">1.</span> <span class="nav-text">最终一致性分布式事务如何保障实际生产中高可用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#产生背景"><span class="nav-number">1.1.</span> <span class="nav-text">产生背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#概念解释"><span class="nav-number">1.2.</span> <span class="nav-text">概念解释</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上游"><span class="nav-number">1.2.1.</span> <span class="nav-text">上游</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下游"><span class="nav-number">1.2.2.</span> <span class="nav-text">下游</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可靠消息服务"><span class="nav-number">1.2.3.</span> <span class="nav-text">可靠消息服务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可靠消息最终一致性方案的核心流程"><span class="nav-number">1.3.</span> <span class="nav-text">可靠消息最终一致性方案的核心流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上游服务投递消息"><span class="nav-number">1.3.1.</span> <span class="nav-text">上游服务投递消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下游服务接收消息"><span class="nav-number">1.3.2.</span> <span class="nav-text">下游服务接收消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#投递消息的过程中各个环节出现了问题该怎么办？"><span class="nav-number">1.3.3.</span> <span class="nav-text">投递消息的过程中各个环节出现了问题该怎么办？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何上游服务对消息的100-可靠投递？"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">如何上游服务对消息的100%可靠投递？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#上游服务给可靠消息服务发送确认消息的过程出错"><span class="nav-number">1.3.3.1.1.</span> <span class="nav-text">上游服务给可靠消息服务发送确认消息的过程出错</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#上游服务给可靠消息服务发送删除消息的过程出错"><span class="nav-number">1.3.3.1.2.</span> <span class="nav-text">上游服务给可靠消息服务发送删除消息的过程出错</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#总结"><span class="nav-number">1.3.3.1.3.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何保证下游服务对消息的100-可靠接收？"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">如何保证下游服务对消息的100%可靠接收？</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何基于RocketMQ来实现可靠消息最终一致性方案？"><span class="nav-number">1.4.</span> <span class="nav-text">如何基于RocketMQ来实现可靠消息最终一致性方案？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可靠消息最终一致性方案的高可用保障生产实践"><span class="nav-number">1.5.</span> <span class="nav-text">可靠消息最终一致性方案的高可用保障生产实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#背景引入"><span class="nav-number">1.5.1.</span> <span class="nav-text">背景引入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于KV存储的队列支持的高可用降级方案"><span class="nav-number">1.5.2.</span> <span class="nav-text">基于KV存储的队列支持的高可用降级方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#值得注意的点"><span class="nav-number">1.5.3.</span> <span class="nav-text">值得注意的点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个可行的设计"><span class="nav-number">1.5.4.</span> <span class="nav-text">一个可行的设计</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

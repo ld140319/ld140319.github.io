@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,分布式事务,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分布式事务解决方案与适用场景分析基于 XA 协议的应用场景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;XA协议在架构上与 TCC模型相比，最大的不同是XA 直接作用于资源层，而后者作用于服务层。  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;资源层更普适，并且对业务几乎没有侵入，但是为了适应各种业务场景使用，需要严格遵循事务ACID特性；服务">
+<meta name="keywords" content="架构,分布式事务">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务解决方案与适用场景分析">
+<meta property="og:url" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="分布式事务解决方案与适用场景分析基于 XA 协议的应用场景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;XA协议在架构上与 TCC模型相比，最大的不同是XA 直接作用于资源层，而后者作用于服务层。  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;资源层更普适，并且对业务几乎没有侵入，但是为了适应各种业务场景使用，需要严格遵循事务ACID特性；服务">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NwNwqVMDkvD2LJdehdFIvYx60qmdIH9uXFn9HSTC5KCEZnuwo0iaz0tA.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NEz5BvMwgtbib8RQFclFfmbKsbWWjZoaiaANuufmRf1B6FeVL9kHZKiauA.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NdqDia1ZSSJve3GoYq252DmCfB6KFnmY2sjpNiaa8PCXfEt252KHlK5Hg.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N4jcp3ibibYbION7iclIKhPicnoDjib55cCUZoia72z6k2HZlVP5cxgiaSibXvQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NQCjjyZPtoeDq2ia0bHsGCkq5y62TQiaW3pGuIDxMwdyedYA1PBjFHavQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nslwp0paqsg78DIx90iaSdujgDI9dxlG2TNZichmVWhdeGwjC5dGpIONw.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nv5CXjEh0hxhaib4QsLnn0yXktgjoOmTc9tkwpvTiaPiavzj7rN1iax31aw.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NHOXakGakfImRpggjBGbIa8F8sdGzqxyYEiaRLXuGySJoGqFXpXxKxZQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NuWvK79bUTagbPV9TCEKZx9wdHV3LhlUmtBBftKPDAdlUdOSDM8GgNA.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NPe5xicdLjdwettIPudZvQsQ4C5jeccG0TqYXjrz6f4UuzibwZeZA6Tvg.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NEasXhLVvmU8C0EzlAD9iblquCpSib14usG9vyCcd6VibX7TicYCK5eiazMw.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nbe9Lw0t7tL3ibYJmH6EWoAygCKlbqc8mKEHXu0EyEbuGicDuBJVMgmAw.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NOURfhGTQicVq8IjOJ5myiaUPNl01BjhdvCCls0fYWGnbm9KuNdXVNuuQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NCSmDP6UJKNt26DmA5sdkLLciaRnhJfepLEDfsklNF4R2ScFaCtL3zGg.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NU4UaibIxnqTLXkpGHTHA2sazrAZEekericgwn10qKxXwYvk17h0D7nrw.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N3VqJzbZyCwDZ1ib5pFvC69NasLV5CJanjUQqqT56dgrseEMDkRuJOibQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N1NpiaGAmTTWkLdmXwfPSIcJMNhdmI6icj5BfJcMxxdq6FibnvyUUyPFkA.png">
+<meta property="og:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NntcwQyt3wnlv2urCEtJIKyv1vKnPY9Fv3XHlMhaobuibodLq2IUmfgA.png">
+<meta property="og:updated_time" content="2019-06-18T16:46:13.942Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式事务解决方案与适用场景分析">
+<meta name="twitter:description" content="分布式事务解决方案与适用场景分析基于 XA 协议的应用场景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;XA协议在架构上与 TCC模型相比，最大的不同是XA 直接作用于资源层，而后者作用于服务层。  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;资源层更普适，并且对业务几乎没有侵入，但是为了适应各种业务场景使用，需要严格遵循事务ACID特性；服务">
+<meta name="twitter:image" content="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NwNwqVMDkvD2LJdehdFIvYx60qmdIH9uXFn9HSTC5KCEZnuwo0iaz0tA.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/">
+
+
+
+
+
+  <title>分布式事务解决方案与适用场景分析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/18/分布式事务解决方案与适用场景分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">分布式事务解决方案与适用场景分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-18T12:12:57+08:00">
+                2019-06-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式事务/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式事务</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="分布式事务解决方案与适用场景分析"><a href="#分布式事务解决方案与适用场景分析" class="headerlink" title="分布式事务解决方案与适用场景分析"></a>分布式事务解决方案与适用场景分析</h1><h2 id="基于-XA-协议的应用场景"><a href="#基于-XA-协议的应用场景" class="headerlink" title="基于 XA 协议的应用场景"></a>基于 XA 协议的应用场景</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>XA</code>协议在架构上与 <code>TCC</code>模型相比，最大的不同是<strong><code>XA</code> 直接作用于资源层，而后者作用于服务层</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NwNwqVMDkvD2LJdehdFIvYx60qmdIH9uXFn9HSTC5KCEZnuwo0iaz0tA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;资源层更普适，并且对业务几乎没有侵入，但是为了适应各种业务场景使用，需要严格遵循事务<code>ACID</code>特性；服务层更接近业务，可以针对不同业务做特定的优化处理，追求更高的极限性能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，并不是说 <code>XA</code> 协议只能作用于单个服务内部的多资源场景，跨服务的多资源场景也是可以的，只不过同样需要额外的事务传递机制。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NEz5BvMwgtbib8RQFclFfmbKsbWWjZoaiaANuufmRf1B6FeVL9kHZKiauA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在《分布式事务综述》一中介绍过，<code>XA</code> 协议通过每个 <code>RM</code>（<code>Resource Manager</code>，资源管理器）的<strong>本地事务隔离性来保证全局隔离，并且需要通过串行化隔离级别来保证分布式事务一致性</strong>。但是，串行化隔离级别存在一定的性能问题，如下所示： </p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NdqDia1ZSSJve3GoYq252DmCfB6KFnmY2sjpNiaa8PCXfEt252KHlK5Hg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在串行化隔离级别下，会为本来不加锁的 <code>Select</code>快照读操作都加上读锁，导致锁持有时间增加，并发性能进一步降低</strong>。当实现了无锁的全局一致性读取以后，比如分布式<code>MVCC</code>，可以大幅减少锁持有时间，并发性能会获得较大提升。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是不管怎么优化实现，分布式事务的热点数据并发性能最高就是趋近于单机本地事务。所以，无论是基于<code>XA</code> 协议实现的分布式事务，还是单机本地事务，都是存在<strong>热点数据并发性能极限</strong>的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么 <code>XA</code> 协议最大的作用是什么呢？其<strong>最大的作用在于数据库资源横向扩展时，能保证多资源访问的事务属性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当单台 <code>RM</code> 机器达到资源性能瓶颈，无法满足业务增长需求时，就需要横向扩展 <code>RM</code> 资源，形成 RM 集群</strong>。通过横向扩展资源，提升非热点数据的并发性能，这对于大体量的互联网产品来说，是至关重要的。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N4jcp3ibibYbION7iclIKhPicnoDjib55cCUZoia72z6k2HZlVP5cxgiaSibXvQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上图为例，假设单台 <code>RM</code> 的非热点数据并发性能为 <code>100 TPS</code>，那么 5台 RM 就是<code>500 TPS</code>，就算一个分布式事务平均涉及 2 台 <code>RM</code>，也有 <code>250 TPS</code>，提升了 2.5 倍的非热点并发能力。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;综上所述，基于 <code>XA</code>协议实现的分布式事务并不能提升热点并发性能，其意义<strong>在于横向扩展资源提升非热点数据并发性能时，能严格保证对多资源访问的事务<code>ACID</code>特性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;至于热点数据并发性能问题，对于一般的应用来说，经过 <code>SQL</code> 层面一定的性能优化之后，其并发性能基本就能够满足业务的需求。如果经过优化，达到性能极限之后，还不能满足，就需要上升到业务层面，根据业务特点，通过专门的业务逻辑或业务架构优化来实现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>直接在资源层实现分布式事务的另外一点好处是其普适性，可以对上层业务屏蔽底层实现细节</strong>。这一点在云服务时代特别有用，云服务面对的是大量的中小企业，甚至是个人开发者，业务诉求不尽相同，普适、标准的分布式事务产品是非常有必要的，可以让开发者从底层技术细节中脱离出来，更专注于业务逻辑的实现，从而获得更高效、快速的业务发展。</p>
+<h2 id="基于-TCC-模型的应用场景"><a href="#基于-TCC-模型的应用场景" class="headerlink" title="基于 TCC 模型的应用场景"></a>基于 TCC 模型的应用场景</h2><p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NQCjjyZPtoeDq2ia0bHsGCkq5y62TQiaW3pGuIDxMwdyedYA1PBjFHavQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>TCC</code>分布式事务模型直接作用于服务层</strong>。不与具体的服务框架耦合，与底层<code>RPC</code>协议无关，与底层存储介质无关，可以<strong>灵活选择业务资源的锁定粒度，减少资源锁持有时间，可扩展性好，可以说是为独立部署的 <code>SOA</code> 服务而设计的</strong>。</p>
+<h3 id="TCC-模型优势"><a href="#TCC-模型优势" class="headerlink" title="TCC 模型优势"></a>TCC 模型优势</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于<code>TCC</code> 分布式事务模型，笔者认为其在业务场景应用上，有两方面的意义。</p>
+<h4 id="跨服务的分布式事务"><a href="#跨服务的分布式事务" class="headerlink" title="跨服务的分布式事务"></a>跨服务的分布式事务</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这一部分的作用与 <code>XA</code>类似，服务的拆分，也可以认为是资源的横向扩展，只不过方向不同而已。</p>
+<p>横向扩展可能沿着两个方向发展：</p>
+<ol>
+<li><p><strong>功能扩展</strong>。根据功能对数据进行分组，并将不同的功能组分布在多个不同的数据库上，这实际上就是<code>SOA</code>架构下的服务化。</p>
+</li>
+<li><p><strong>数据分片</strong>，在功能组内部将数据拆分到多个数据库上，为横向扩展增加一个新的维度。</p>
+</li>
+</ol>
+<p>下图简要阐释了横向数据扩展策略：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nslwp0paqsg78DIx90iaSdujgDI9dxlG2TNZichmVWhdeGwjC5dGpIONw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;横向扩展的两种方法可以同时进行运用：用户信息（<code>Users</code>）、产品信息（<code>Products</code>）与交易信息（<code>Trans</code>）三个不同功能组可以存储在不同的数据库中。另外，每个功能组内根据其业务量可以再拆分到多个数据库中，各功能组可以相互独立地进行扩展。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此，<code>TCC</code>的其中一个作用就是<strong>在按照功能横向扩展资源时，保证多资源访问的事务属性</strong>。</p>
+<h3 id="两阶段拆分"><a href="#两阶段拆分" class="headerlink" title="两阶段拆分"></a>两阶段拆分</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TCC</code>另一个作用就是把两阶段拆分成了两个独立的阶段，通过<strong>资源业务锁定</strong>的方式进行关联。资源业务锁定方式的好处在于，既<strong>不会阻塞其他事务在第一阶段对于相同资源的继续使用，也不会影响本事务第二阶段的正确执行</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nv5CXjEh0hxhaib4QsLnn0yXktgjoOmTc9tkwpvTiaPiavzj7rN1iax31aw.png" alt="img"></p>
+<h2 id="XA模型的并发事务"><a href="#XA模型的并发事务" class="headerlink" title="XA模型的并发事务"></a>XA模型的并发事务</h2><p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NHOXakGakfImRpggjBGbIa8F8sdGzqxyYEiaRLXuGySJoGqFXpXxKxZQ.png" alt="img"></p>
+<h2 id="TCC-模型的并发事务"><a href="#TCC-模型的并发事务" class="headerlink" title="TCC 模型的并发事务"></a>TCC 模型的并发事务</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以发现<code>TCC</code> 模型进一步减少了资源锁的持有时间。同时，<strong>从理论上来说，只要业务允许，事务的第二阶段什么时候执行都可以，反正资源已经业务锁定，不会有其他事务动用该事务锁定的资源</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这对业务有什么好处呢？拿支付宝的担保交易场景来说，简化情况下，只需要涉及两个服务，交易服务和账务服务。交易作为主业务服务，账务作为从业务服务，提供<code>Try、Commit、Cancel</code>接口：</p>
+<ol>
+<li><p><code>Try</code> 接口扣除用户可用资金，转移到预冻结资金。预冻结资金就是业务锁定方案，每个事务第二阶段只能使用本事务的预冻结资金，<strong>在第一阶段执行结束后，其他并发事务也可以继续处理用户的可用资金</strong>。</p>
+</li>
+<li><p><code>Commit</code>接口扣除预冻结资金，增加中间账户可用资金（担保交易不能立即把钱打给商户，需要有一个中间账户来暂存）。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设只有一个中间账户的情况下，每次调用支付服务的 <code>Commit</code> 接口，都会锁定中间账户，中间账户存在<strong>热点性能问题</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是，在担保交易场景中，七天以后才需要将资金从中间账户划拨给商户，中间账户并不需要对外展示。因此，在执行完支付服务的第一阶段后，就可以认为本次交易的支付环节已经完成，并向用户和商户返回支付成功的结果，并不需要马上执行支付服务二阶段的 <code>Commit</code> 接口，等到低锋期时，再<strong>慢慢消化，异步地执行</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NuWvK79bUTagbPV9TCEKZx9wdHV3LhlUmtBBftKPDAdlUdOSDM8GgNA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能部分读者认为担保交易比较特殊，其实直付交易（直接把钱打到商户账户的交易模式，<code>Commit</code> 接口扣除预冻结资金以后，不是转移到中间账务，而是直接转移到商户账户）也可以这样使用，只要提前告知商户，高峰期交易资金不是实时到账，但保证在一定时间之内结算完成，商户应该也是可以理解的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这就是 <strong><code>TCC</code>分布式事务模型的二阶段异步化功能，从业务服务的第一阶段执行成功，主业务服务就可以提交完成，然后再由框架异步的执行各从业务服务的第二阶段</strong>。</p>
+<h2 id="通用型-TCC-解决方案"><a href="#通用型-TCC-解决方案" class="headerlink" title="通用型 TCC 解决方案"></a>通用型 TCC 解决方案</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通用型 <code>TCC</code>解决方案就是最典型的 <code>TCC</code> 分布式事务模型实现，<strong>所有从业务服务都需要参与到主业务服务的决策当中</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NPe5xicdLjdwettIPudZvQsQ4C5jeccG0TqYXjrz6f4UuzibwZeZA6Tvg.png" alt="img"></p>
+<p><strong>适用场景</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于从业务服务是<strong>同步调用</strong>，其结果会影响到主业务服务的决策，因此通用型 <code>TCC</code> 分布式事务解决方案<strong>适用于执行时间确定且较短的业务</strong>，比如互联网金融企业最核心的三个服务：交易、支付、账务：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NEasXhLVvmU8C0EzlAD9iblquCpSib14usG9vyCcd6VibX7TicYCK5eiazMw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当用户发起一笔交易时，首先访问交易服务，创建交易订单；然后交易服务调用支付服务为该交易创建支付订单，执行收款动作，最后支付服务调用账务服务记录账户流水和记账。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了保证三个服务一起完成一笔交易，要么同时成功，要么同时失败，可以使用通用型<code>TCC</code>解决方案，将<strong>这三个服务放在一个分布式事务中，交易作为主业务服务，支付作为从业务服务，账务作为支付服务的嵌套从业务服务，由 <code>TCC</code>模型保证事务的原子性</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0Nbe9Lw0t7tL3ibYJmH6EWoAygCKlbqc8mKEHXu0EyEbuGicDuBJVMgmAw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>支付服务的 <code>Try</code> 接口创建支付订单，开启嵌套分布式事务，并调用账务服务的<code>Try</code> 接口；账务服务在<code>Try</code> 接口中冻结买家资金</strong>。一阶段调用完成后，交易完成，提交本地事务，<strong>由 <code>TCC</code>框架完成分布式事务各从业务服务二阶段的调用</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;支付服务二阶段先调用账务服务的 <code>Confirm</code>接口，解冻买家资金；增加卖家可用资金。调用成功后，支付服务修改支付订单为完成状态，完成支付。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当支付和账务服务二阶段都调用完成后，整个分布式事务结束。</p>
+<h2 id="异步确保型-TCC-解决方案"><a href="#异步确保型-TCC-解决方案" class="headerlink" title="异步确保型 TCC 解决方案"></a>异步确保型 TCC 解决方案</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>异步确保型 <code>TCC</code> 解决方案的直接从业务服务是可靠消息服务，而真正的从业务服务则通过消息服务解耦，作为消息服务的消费端，异步地执行</strong>。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NOURfhGTQicVq8IjOJ5myiaUPNl01BjhdvCCls0fYWGnbm9KuNdXVNuuQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>可靠消息服务需要提供<code>Try，Confirm，Cancel</code> 三个接口。<code>Try</code>接口预发送，只负责持久化存储消息数据；<code>Confirm</code> 接口确认发送，这时才开始真正的投递消息；<code>Cancel</code> 接口取消发送，删除消息数据</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息服务的消息数据独立存储，独立伸缩，降低从业务服务与消息系统间的耦合，<strong>在消息服务可靠的前提下，实现分布式事务的最终一致性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此解决方案虽然增加了消息服务的维护成本，但<strong>由于消息服务代替从业务服务实现了 <code>TCC</code>接口，从业务服务不需要任何改造，接入成本非常低</strong>。</p>
+<p><strong>适用场景</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于从业务服务消费消息是一个异步的过程，执行时间不确定，可能会导致<strong>不一致时间窗口增加</strong>。因此，异步确保性<code>TCC</code> 分布式事务解决方案<strong>只适用于对最终一致性时间敏感度较低的一些被动型业务（从业务服务的处理结果不影响主业务服务的决策，只被动的接收主业务服务的决策结果）</strong>。比如会员注册服务和邮件发送服务：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NCSmDP6UJKNt26DmA5sdkLLciaRnhJfepLEDfsklNF4R2ScFaCtL3zGg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当用户注册会员成功，需要给用户发送一封邮件，告诉用户注册成功，并提示用户激活该会员。但要注意两点：</p>
+<ol>
+<li><p>如果用户注册成功，一定要给用户发送一封邮件；</p>
+</li>
+<li><p>如果用户注册失败，一定不能给用户发送邮件。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此，这同样需要会员服务和邮件服务保证原子性，要么都执行，要么都不执行。不一样的是，邮件服务只是一种被动型的业务，并不影响用户是否能够注册成功，它只需要在用户注册成功以后发送邮件给用户即可，<strong>邮件服务不需要参与到会员服务的活动决策中</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于此种业务场景，可以使用异步确保型<code>TCC</code>分布式事务解决方案，如下：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NU4UaibIxnqTLXkpGHTHA2sazrAZEekericgwn10qKxXwYvk17h0D7nrw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由可靠消息服务来解耦会员和邮件服务，会员服务与消息服务组成 <code>TCC</code>事务模型，保证事务原子性。然后通过消息服务的可靠特性，确保消息一定能够被邮件服务消费，从而使得会员与邮件服务在同一个分布式事务中。同时，邮件服务也不会影响会员服务的执行过程，只在会员服务执行成功后被动接收发送邮件的请求。</p>
+<h2 id="补偿型-TCC-解决方案"><a href="#补偿型-TCC-解决方案" class="headerlink" title="补偿型 TCC 解决方案"></a>补偿型 TCC 解决方案</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;补偿型<code>TCC</code> 解决方案与通用型 <code>TCC</code> 解决方案的结构相似，其从业务服务也需要参与到主业务服务的活动决策当中。但不一样的是，前者的从业务服务只需要提供 <code>Do</code>和 <code>Compensate</code> 两个接口，而后者需要提供三个接口。</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N3VqJzbZyCwDZ1ib5pFvC69NasLV5CJanjUQqqT56dgrseEMDkRuJOibQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Do</code>接口直接执行真正的完整业务逻辑，完成业务处理，业务执行结果外部可见；<code>Compensate</code> 操作用于业务补偿，抵消或部分抵消正向业务操作的业务结果，<code>Compensate</code>操作需满足幂等性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与通用型解决方案相比，<strong>补偿型解决方案的从业务服务不需要改造原有业务逻辑，只需要额外增加一个补偿回滚逻辑即可，业务改造量较小</strong>。但要注意的是，<strong>业务在一阶段就执行完整个业务逻辑，无法做到有效的事务隔离，当需要回滚时，可能存在补偿失败的情况，还需要额外的异常处理机制，比如人工介入</strong>。</p>
+<p><strong>适用场景</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于存在回滚补偿失败的情况，补偿型 <code>TCC</code>分布式事务解决方案<strong>只适用于一些并发冲突较少或者需要与外部交互的业务</strong>，这些外部业务不属于被动型业务，其执行结果会影响主业务服务的决策，比如机票代理商的机票预订服务：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0N1NpiaGAmTTWkLdmXwfPSIcJMNhdmI6icj5BfJcMxxdq6FibnvyUUyPFkA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该机票服务提供多程机票预订服务，可以同时预订多趟行程航班机票，比如从北京到圣彼得堡，需要第一程从北京到莫斯科，以及第二程从莫斯科到圣彼得堡。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当用户预订机票时，肯定希望能<strong>同时预订</strong>这两趟航班的机票，只预订一趟航班对用户来说没有意义。因此，对于这样的业务服务同样提出了原子性要求，如果其中一趟航班的机票预订失败，另外一趟需要能够取消预订。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是，<strong>由于航空公司相对于机票代理商来说属于外部业务，只提供订票接口和取消预订接口，想要推动航空公司改造是极其困难的。因此，对于此类业务服务，可以使用补偿型 <code>TCC</code> 分布式事务解决方案</strong>，如下：</p>
+<p><img src="//blog.com/2019/06/18/分布式事务解决方案与适用场景分析/nibOZpaQKw080RxcCq2iaV6zia55TdALJ0NntcwQyt3wnlv2urCEtJIKyv1vKnPY9Fv3XHlMhaobuibodLq2IUmfgA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;网关服务在原有逻辑基础上增加 <code>Compensate</code>接口，负责调用对应航空公司的取消预订接口。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在用户发起机票预订请求时，机票服务先通过网关 <code>Do</code>接口，调用各航空公司的预订接口，如果所有航班都预订成功，则整个分布式事务直接执行成功；<strong>一旦某趟航班机票预订失败，则分布式事务回滚，由<code>TCC</code> 事务框架调用各网关的 <code>Compensate</code> 补偿接口，其再调用对应航空公司的取消预订接口。通过这种方式，也可以保证多程机票预订服务的原子性</strong>。</p>
+<h2 id="总-结"><a href="#总-结" class="headerlink" title="总 结"></a>总 结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于现在的互联网应用来说，资源横向扩展提供了更多的灵活性，是一种比较容易实现的向外扩展方案，但是同时也明显增加了复杂度，引入一些新的挑战，比如资源之间的数据一致性问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;横向数据扩展既可以按数据分片扩展，也可以按功能扩展。<code>XA</code> 与<code>TCC</code> 模型在这一点上的作用类似，都能在横向扩展资源的同时，保证多资源访问的事务属性，只不过前者作用于数据分片时，后者作用于功能扩展时。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>XA</code> 模型另外一个意义在于其普适性，抛开性能问题的情况下，几乎可以适用于所有业务模式，这对于一些基础性的技术产品来说是非常有用的，比如分布式数据库、云服务的分布式事务框架等</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>TCC</code>模型除了跨服务的分布式事务这一层作用之外，还具有两阶段划分的功能，通过业务资源锁定，允许第二阶段的异步执行，而异步化思想正是解决热点数据并发性能问题的利器之一</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文结合具体的业务场景和例子，对比分析了各分布式事务解决方案在性能、热点冲突、接入复杂度和适用场景等方面的能力，希望能帮助各位读者对分布式事务有更深一层的理解。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务各有各的不同，有些业务能容忍短期不一致，有些业务的操作可以幂等，无论什么样的分布式事务解决方案都有其优缺点，没有一个银弹能够适配所有。因此，业务需要什么样的解决方案，还需要结合自身的业务需求、业务特点、技术架构以及各解决方案的特性，综合分析，才能找到最适合的方案。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/分布式事务/" rel="tag"># 分布式事务</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/17/算法之美-栈和队列/" rel="next" title="算法之美-栈和队列">
+                <i class="fa fa-chevron-left"></i> 算法之美-栈和队列
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/18/seq命令的使用/" rel="prev" title="seq命令的使用">
+                seq命令的使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#分布式事务解决方案与适用场景分析"><span class="nav-number">1.</span> <span class="nav-text">分布式事务解决方案与适用场景分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基于-XA-协议的应用场景"><span class="nav-number">1.1.</span> <span class="nav-text">基于 XA 协议的应用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于-TCC-模型的应用场景"><span class="nav-number">1.2.</span> <span class="nav-text">基于 TCC 模型的应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCC-模型优势"><span class="nav-number">1.2.1.</span> <span class="nav-text">TCC 模型优势</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#跨服务的分布式事务"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">跨服务的分布式事务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#两阶段拆分"><span class="nav-number">1.2.2.</span> <span class="nav-text">两阶段拆分</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#XA模型的并发事务"><span class="nav-number">1.3.</span> <span class="nav-text">XA模型的并发事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC-模型的并发事务"><span class="nav-number">1.4.</span> <span class="nav-text">TCC 模型的并发事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通用型-TCC-解决方案"><span class="nav-number">1.5.</span> <span class="nav-text">通用型 TCC 解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步确保型-TCC-解决方案"><span class="nav-number">1.6.</span> <span class="nav-text">异步确保型 TCC 解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#补偿型-TCC-解决方案"><span class="nav-number">1.7.</span> <span class="nav-text">补偿型 TCC 解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总-结"><span class="nav-number">1.8.</span> <span class="nav-text">总 结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

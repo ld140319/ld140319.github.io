@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Redis,缓存,Redis最佳实践,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Redis 读写分离技术解析  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/Redis 读写分离技术解析.md   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;云数据库 Redis 版不管主从版还是集群规格，slave 作为备库不对外提供服务，只有在发生 HA 的时">
+<meta name="keywords" content="架构,Redis,缓存,Redis最佳实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 读写分离技术解析">
+<meta property="og:url" content="http://blog.com/2019/06/02/Redis 读写分离技术解析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Redis 读写分离技术解析  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/Redis 读写分离技术解析.md   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;云数据库 Redis 版不管主从版还是集群规格，slave 作为备库不对外提供服务，只有在发生 HA 的时">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/读写分离解决的问题.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/4.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/1.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136392f333138395f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/2.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136392f333139315f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/3.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/5.png">
+<meta property="og:updated_time" content="2019-06-02T14:46:06.378Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis 读写分离技术解析">
+<meta name="twitter:description" content="Redis 读写分离技术解析  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/Redis 读写分离技术解析.md   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;云数据库 Redis 版不管主从版还是集群规格，slave 作为备库不对外提供服务，只有在发生 HA 的时">
+<meta name="twitter:image" content="http://blog.com/2019/06/02/Redis%20读写分离技术解析/读写分离解决的问题.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/02/Redis 读写分离技术解析/">
+
+
+
+
+
+  <title>Redis 读写分离技术解析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/02/Redis 读写分离技术解析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis 读写分离技术解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-02T12:12:57+08:00">
+                2019-06-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/缓存/Redis最佳实践/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis最佳实践</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Redis-读写分离技术解析"><a href="#Redis-读写分离技术解析" class="headerlink" title="Redis 读写分离技术解析"></a>Redis 读写分离技术解析</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/Redis" target="_blank" rel="noopener">https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/Redis</a> 读写分离技术解析.md</p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;云数据库 <code>Redis</code> 版不管主从版还是集群规格，<code>slave</code> 作为备库不对外提供服务，只有在发生 <code>HA</code> 的时候，<code>slave</code> 提升为 <code>master</code>后才承担读写流量。这种架构<strong>读写请求都在 <code>master</code>上完成，一致性较高，但性能受到 <code>master</code>数量的限制</strong>。经常有用户数据较少，但因为流量或者并发太高而不得不升级到更大的集群规格。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为满足读多写少的业务场景，最大化节约用户成本，云数据库 <code>Redis</code>版推出了读写分离规格，为用户提供透明、高可用、高性能、高灵活的读写分离服务。</p>
+<h2 id="解决了什么问题"><a href="#解决了什么问题" class="headerlink" title="解决了什么问题"></a>解决了什么问题</h2><p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/读写分离解决的问题.png" alt=""></p>
+<p>集群分片仍然某个节点会有负载问题，比如一些命令导致的慢查询   大<code>key</code>因为分片是由<code>key</code>来决定的</p>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code> 集群模式有 <code>redis-proxy、master、slave、HA</code>等几个角色。在读写分离实例中，新增<code>readonly slave</code>角色来承担读流量，<code>slave</code> 作为热备不提供服务，架构上保持对现有集群规格的兼容性。<code>redis-proxy</code>按权重将读写请求转发到<code>master</code>或者某个 <code>readonly slave</code>上；<code>HA</code>负责监控 <code>Redis</code>节点的健康状态，异常时发起主从切换或重搭<code>readonly slave</code>，并更新路由。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般来说，根据<code>master</code> 和 <code>readonly slave</code> 的数据同步方式，可以分为两种架构：星型复制和链式复制。</p>
+<p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/4.png" alt=""></p>
+<h3 id="星型复制"><a href="#星型复制" class="headerlink" title="星型复制"></a>星型复制</h3><p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/1.png" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>星型复制就是将所有的 <code>readonly slave</code>直接和<code>master</code>保持同步，每个 <code>readonly slave</code>之间相互独立，任何一个节点异常不影响到其他节点，同时因为复制链比较短，<code>readonly slave</code>上的复制延迟比较小</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code>是单进程单线程模型，主从之间的数据复制也在主线程中处理，<code>readonly slave</code> 数量越多，数据同步对 <code>master</code> 的<code>CPU</code> 消耗就越严重，集群的<strong>写入性能</strong>会随着 <code>readonly slave</code> 的增加而降低。此外，星型架构会让 <code>master</code> 的<strong>出口带宽</strong>随着<code>readonly slave</code>的增加而成倍增长。<code>master</code>上较高的 <code>CPU</code>和网络负载会抵消掉星型复制延迟较低的优势，因此，<strong>星型复制架构会带来比较严重的扩展问题，整个集群的性能会受限于 <code>master</code></strong>。</p>
+<p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136392f333138395f7a682d434e2e706e67.png" alt="img"></p>
+<h3 id="链式复制"><a href="#链式复制" class="headerlink" title="链式复制"></a>链式复制</h3><p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/2.png" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>链式复制将所有的 <code>readonly slave</code> 组织成一个复制链，如下图所示，<code>master</code>只需要将数据同步给<code>slave</code> 和复制链上的第一个<code>readonly slave</code></strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;链式复制解决了星型复制的扩展问题，理论上可以无限增加<code>readonly slave</code> 的数量，随着节点的增加整个集群的性能也可以基本上呈线性增长。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;链式复制的架构下，<strong>复制链越长，复制链末端的<code>readonly slave</code>和<code>master</code>之间的同步延迟就越大</strong>，考虑到读写分离主要使用在对一致性要求不高的场景下，这个缺点一般可以接受。但是<strong>如果复制链中的某个节点异常，会导致下游的所有节点数据都会大幅滞后</strong>。更加严重的是这可能带来全量同步，并且全量同步将一直传递到复制链的末端，这会对服务带来一定的影响。为了解决这个问题，读写分离的 <code>redis</code>都使用阿里云优化后的 <code>binlog</code>复制版本，最大程度的降低全量同步的概率。</p>
+<p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136392f333139315f7a682d434e2e706e67.png" alt="img"></p>
+<h2 id="Redis-读写分离优势"><a href="#Redis-读写分离优势" class="headerlink" title="Redis 读写分离优势"></a>Redis 读写分离优势</h2><h3 id="透明兼容"><a href="#透明兼容" class="headerlink" title="透明兼容"></a>透明兼容</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;读写分离和普通集群规格一样，都使用了 <code>redis-proxy</code>做请求转发，多 <code>shard</code> 时部分命令使用存在一定的限制，但从主从升级单分片读写分离，或者从集群升级到多分片的读写分离集群可以做到完全兼容。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>用户和 <code>redis-proxy</code>建立连接，<code>redis-proxy</code>会识别出客户端连接发送过来的请求是读还是写，然后按照权重作负载均衡，将请求转发到后端不同的 <code>Redis</code>节点中，写请求转发给<code>master</code>，读操作转发给 <code>readonly slave</code>（<code>master</code> 默认也提供读，可以通过权重控制）</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户只需要购买读写分离规格的实例，直接使用任何客户端即可直接使用，业务不用做任何修改就可以开始享受读写分离服务带来的巨大性能提升，接入成本几乎为0。</p>
+<h3 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h3><p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/3.png" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;高可用模块（<code>HA</code>）监控所有 <code>Redis</code> 节点的健康状态，为整个实例的可用性保驾护航。<code>master</code> 宕机时自动切换到新主。如果某个<code>readonly slave</code> 宕机，<code>HA</code>也能及时感知，然后重搭一个新的 <code>readonly slave</code>，下线宕机节点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除<code>HA</code>之外，<code>redis-proxy</code>也能实时感知每个<code>readonly slave</code>的状态。在某个<code>readonly slave</code>异常期间，<code>redis-proxy</code>会自动降低这个节点的权重，如果发现某个 <code>readonly slave</code>连续失败超过一定次数以后，会暂时屏蔽异常节点，直到异常消失以后才会恢复其正常权重。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>redis-proxy</code>和 <code>HA</code> 一起做到尽量减少业务对后端异常的感知，提高服务可用性。</p>
+<h3 id="高性能"><a href="#高性能" class="headerlink" title="高性能"></a>高性能</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于读多写少的业务场景，直接使用集群版本往往不是最合适的方案，现在读写分离提供了更多的选择，业务可以根据场景选择最适合的规格，充分利用每一个<code>readonly slave</code> 的资源。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前单<code>shard</code> 对外售卖<code>1 master + 1/3/5 readonly slave</code>多种规格（如果有更大的需求可以提工单反馈），提供<code>60万 QPS</code>和 <code>192 MByte/s</code>的服务能力，在完全兼容所有命令的情况下突破单机的资源限制。后续将去掉规格限制，让用户根据业务流量随时自由的增加或减少<code>readonly slave</code>数量。</p>
+<table>
+<thead>
+<tr>
+<th>规格</th>
+<th>QPS</th>
+<th>带宽</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 master</td>
+<td>8-10万读写</td>
+<td>10-48 MB</td>
+</tr>
+<tr>
+<td>1 master + 1 readonly_slave</td>
+<td>10万写 + 10万读</td>
+<td>20-64 MB</td>
+</tr>
+<tr>
+<td>1 master + 3 readonly_slave</td>
+<td>10万写 + 30万读</td>
+<td>40-128 MB</td>
+</tr>
+<tr>
+<td>1 master + 5 readonly_slave</td>
+<td>10万写 + 50万读</td>
+<td>60-192 MB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p><img src="//blog.com/2019/06/02/Redis 读写分离技术解析/5.png" alt=""></p>
+<h2 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>redis</code> 主从异步复制，从 <code>readonly slave</code> 中可能读到旧的数据，<strong>使用读写分离需要业务可以容忍一定程度的数据不一致</strong>，后续将会给客户更灵活的配置和更大的自由，比如配置可以容忍的最大延迟时间。</p>
+<h2 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里的<code>proxy</code>可以是一个<code>http</code>服务，所有的缓存操作都通过这个服务进行。服务可以通过<code>http method</code>方式来判断是写还是读，然后连接不同的<code>redis</code>节点进行操作。可以<strong>将要调用的<code>redis function以及function参数</code>都作为<code>http</code>请求参数传递到统一的<code>http</code>服务，然后这个服务再去调用相关方法</strong>，只是最简单的实现。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+            <a href="/tags/Redis最佳实践/" rel="tag"># Redis最佳实践</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/02/解密 Redis 助力双十一背后的技术/" rel="next" title="解密 Redis 助力双十一背后的技术">
+                <i class="fa fa-chevron-left"></i> 解密 Redis 助力双十一背后的技术
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/04/PHP定时脚本的那些事/" rel="prev" title="PHP定时脚本的那些事">
+                PHP定时脚本的那些事 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis-读写分离技术解析"><span class="nav-number">1.</span> <span class="nav-text">Redis 读写分离技术解析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解决了什么问题"><span class="nav-number">1.1.</span> <span class="nav-text">解决了什么问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构"><span class="nav-number">1.2.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#星型复制"><span class="nav-number">1.2.1.</span> <span class="nav-text">星型复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#链式复制"><span class="nav-number">1.2.2.</span> <span class="nav-text">链式复制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis-读写分离优势"><span class="nav-number">1.3.</span> <span class="nav-text">Redis 读写分离优势</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#透明兼容"><span class="nav-number">1.3.1.</span> <span class="nav-text">透明兼容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高可用"><span class="nav-number">1.3.2.</span> <span class="nav-text">高可用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高性能"><span class="nav-number">1.3.3.</span> <span class="nav-text">高性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一致性"><span class="nav-number">1.3.4.</span> <span class="nav-text">一致性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后续"><span class="nav-number">1.4.</span> <span class="nav-text">后续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#个人理解"><span class="nav-number">1.5.</span> <span class="nav-text">个人理解</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

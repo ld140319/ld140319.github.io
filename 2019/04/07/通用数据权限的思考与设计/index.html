@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,权限设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="通用数据权限的思考与设计 原文地址：https://www.cnblogs.com/liuyh/p/9774998.html  1、数据权限概述1.1 什么是数据权限？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;数据权限是指对系统用户进行数据资源可见性的控制，通俗的解释就是：符合某条件的用户只能看到该条件下对应的数据资源。那么最简单的数据权限大概就是：用户只能看到自己的数据。而在正式的系统环境">
+<meta name="keywords" content="架构,权限设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通用数据权限的思考与设计">
+<meta property="og:url" content="http://blog.com/2019/04/07/通用数据权限的思考与设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="通用数据权限的思考与设计 原文地址：https://www.cnblogs.com/liuyh/p/9774998.html  1、数据权限概述1.1 什么是数据权限？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;数据权限是指对系统用户进行数据资源可见性的控制，通俗的解释就是：符合某条件的用户只能看到该条件下对应的数据资源。那么最简单的数据权限大概就是：用户只能看到自己的数据。而在正式的系统环境">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/07/通用数据权限的思考与设计/1.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/通用数据权限的思考与设计/2.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/通用数据权限的思考与设计/3.png">
+<meta property="og:updated_time" content="2019-04-07T14:16:25.793Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通用数据权限的思考与设计">
+<meta name="twitter:description" content="通用数据权限的思考与设计 原文地址：https://www.cnblogs.com/liuyh/p/9774998.html  1、数据权限概述1.1 什么是数据权限？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;数据权限是指对系统用户进行数据资源可见性的控制，通俗的解释就是：符合某条件的用户只能看到该条件下对应的数据资源。那么最简单的数据权限大概就是：用户只能看到自己的数据。而在正式的系统环境">
+<meta name="twitter:image" content="http://blog.com/2019/04/07/通用数据权限的思考与设计/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/07/通用数据权限的思考与设计/">
+
+
+
+
+
+  <title>通用数据权限的思考与设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/07/通用数据权限的思考与设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">通用数据权限的思考与设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-07T12:12:57+08:00">
+                2019-04-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/权限设计/" itemprop="url" rel="index">
+                    <span itemprop="name">权限设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="通用数据权限的思考与设计"><a href="#通用数据权限的思考与设计" class="headerlink" title="通用数据权限的思考与设计"></a>通用数据权限的思考与设计</h1><blockquote>
+<p>原文地址：<a href="https://www.cnblogs.com/liuyh/p/9774998.html" target="_blank" rel="noopener">https://www.cnblogs.com/liuyh/p/9774998.html</a></p>
+</blockquote>
+<h2 id="1、数据权限概述"><a href="#1、数据权限概述" class="headerlink" title="1、数据权限概述"></a>1、数据权限概述</h2><h3 id="1-1-什么是数据权限？"><a href="#1-1-什么是数据权限？" class="headerlink" title="1.1 什么是数据权限？"></a>1.1 什么是数据权限？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;数据权限是指对系统用户进行数据资源可见性的控制，通俗的解释就是：<strong><code>符合某条件的用户只能看到该条件下对应的数据资源</code></strong>。那么最简单的数据权限大概就是：用户只能看到自己的数据。而在正式的系统环境中，会有很多更为复杂的数据权限需求场景，如：</p>
+<ul>
+<li>领导需要看到所有下属员工的客户数据，员工只能看自己的客户数据；</li>
+<li>经理A能看到所有企业客户，经理B只能看到年销售额小于1000万的企业客户；</li>
+<li>角色A能看到全国的产品数据，角色B只能看到上海的产品数据；</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上述这些需求，使用硬编码也是可以实现的，但是在业务快速发展的过程中，类似这种数据权限需求会越来越多，如果全部采用硬编码的方式，无疑会给我们带来巨大的开发和维护压力。</p>
+<h3 id="1-2-要素分析"><a href="#1-2-要素分析" class="headerlink" title="1.2 要素分析"></a>1.2 要素分析</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;从当前登录用户的角度来说，数据权限的定义可以解释为：<strong><code>当前登录的用户只能看到该用户权限范围内的数据资源</code></strong>。由此可以分析出数据权限控制中几个关键要素：</p>
+<ol>
+<li><p><strong>主体，即当前登录用户</strong>。领导、角色等概念可翻译为当前登录用户是否是领导，是否拥有某角色。</p>
+</li>
+<li><p><strong>数据资源</strong>。即受管控系统数据。</p>
+</li>
+<li><p><strong>条件规则</strong>。即当前登录用户对于某特定的数据资源适用的条件。</p>
+</li>
+</ol>
+<h2 id="2、-数据权限设计"><a href="#2、-数据权限设计" class="headerlink" title="2、 数据权限设计"></a>2、 数据权限设计</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;理论上来说，用户在访问受控的系统数据时，获取用户对该数据资源适用的条件规则，并将该条件规则解析为SQL查询语句即可实现对数据的权限控制。但是在实现过程中，还是会有很多难点，譬如当前登录用户适用下列规则：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">客户数据：[客户经理] [包含于] [下属人员]</span><br><span class="line">产品数据：[销售地区] [等于] [上海]</span><br><span class="line">订单数据：（[产品销售地区] [等于] [上海]）[并且] （[客户市场经理] [包含于] [下属人员]）</span><br></pre></td></tr></table></figure>
+<p>思考如下问题：</p>
+<ol>
+<li><p><code>[客户经理] [包含于] [下属人员]</code>如何解析为SQL语句？多表联合查询时又该如何处理？</p>
+</li>
+<li><p><code>[下属人员]</code>由系统根据当前登录用户计算而来，<code>上海</code>由管理员后台选择。两种方式如何兼容？</p>
+</li>
+<li><p>对于复杂多变的组合条件，应该如何设计？</p>
+</li>
+<li><p>如何确定当前查询应该应用哪些条件规则？</p>
+</li>
+<li><p>一个用户拥有多个角色，不同角色对于同一个规则设置不同的值应该如何处理？</p>
+</li>
+</ol>
+<h3 id="2-1-规则元"><a href="#2-1-规则元" class="headerlink" title="2.1 规则元"></a>2.1 规则元</h3><blockquote>
+<p>名词定义：规则元。在本文是指单个独立的数据规则定义，不同用户对规则元可设置具体的规则过滤值，该值用作数据查询时的筛选条件。上述规则中<code>[客户经理]</code>，<code>[销售地区]</code>都属于规则元。</p>
+</blockquote>
+<h3 id="2-2-规则元配置"><a href="#2-2-规则元配置" class="headerlink" title="2.2 规则元配置"></a>2.2 规则元配置</h3><ol>
+<li><strong>规则元名称的配置</strong>。一个表中哪些字段可以进行规则设置，以及规则元名称如何与表字段关联。（如上述规则中<code>[客户经理]</code>，<code>[销售地区]</code>），比较容易想到的方法是通过配置文件维护规则名称与数据库字段之间的关系。</li>
+<li><strong>规则元Value数据源的配置</strong>。如上述规则中的<code>[下属人员]</code>，<code>[上海]</code>，不难发现规则元Value来源有三种情况：<br>　　① <strong>后台管理人员输入</strong>。<br>　　② <strong>系统提供数据源，后台管理人员选择</strong>。如：所在地区<code>[上海]</code><br>　　③ <strong>系统提供数据</strong>。如：<code>[下属人员]</code></li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;配置文件可以实现数据规则的配置需求，但是当规则元越来越多时，维护配置文件就会变得麻烦起来，我们是否可以效仿spring-boot取代spring-mvc的做法，使用注解来代替配置呢？每一条数据规则最终都会落到对数据库字段的控制，而现在绝大部分系统都会有一个Model层对应到数据库中的表，于是脑补出一个绝佳的规则元配置方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@TableName(&quot;test&quot;)</span><br><span class="line">public class TestModal extends AbstractModel &#123;</span><br><span class="line">    @DataRule(name = &quot;规则元名称&quot;)</span><br><span class="line">    private String name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>@DataRule</code>注解源码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">@Target(&#123;ElementType.FIELD&#125;)</span><br><span class="line">@Retention(RetentionPolicy.RUNTIME)</span><br><span class="line">public @interface DataRule &#123;</span><br><span class="line">　　/**</span><br><span class="line">　　* 规则元名称</span><br><span class="line">　　*/</span><br><span class="line">　　String name() default &quot;&quot;;</span><br><span class="line"></span><br><span class="line">　　/**</span><br><span class="line">　　* 规则元值来源类型</span><br><span class="line">　　*/</span><br><span class="line">　　RuleSourceStrategy strategy() default RuleSourceStrategy.TEXT;</span><br><span class="line"></span><br><span class="line">　　/**</span><br><span class="line">　　* 当数据来源是用户选择时&#123;@code RuleSourceStrategy.CHOICE&#125;数据地址</span><br><span class="line">　　*/</span><br><span class="line">　　String url() default &quot;&quot;;</span><br><span class="line"></span><br><span class="line">　　/**</span><br><span class="line">　　* 当数据来源是系统提供时&#123;@code RuleSourceStrategy.SYSTEM&#125;提供器类名</span><br><span class="line">　　*/</span><br><span class="line">　　Class&lt;? extends IDataRuleProvider&gt; provider() default NullDataRuleProvider.class;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;系统启动时，将<strong>规则元配置信息（名称、对应数据表、对应字段、值来源类型，值来源url，值来源提供者类名等）</strong>同步至数据库。数据表简单设计如下图：<br><img src="//blog.com/2019/04/07/通用数据权限的思考与设计/1.png" alt="img"></p>
+<h3 id="2-3-数据规则的配置"><a href="#2-3-数据规则的配置" class="headerlink" title="2.3 数据规则的配置"></a>2.3 数据规则的配置</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;有了规则元信息，管理人员即可在系统中针对不同用户（角色）设置规则元Value，该值作为数据查询时的筛选条件。规则元Value数据源包含三种情况，其中第①、②种情况下，需要管理员填写或选择该规则的值，存储于数据库；第③种情况下，Value值根据当前登录用户计算得出，也即是<code>@DataRule</code>注解中<code>provider</code>计算得来的值。<strong>由数据库存储的规则与系统计算得到的规则合并后即是登录用户的所有数据规则</strong>。一个简单的配置界面如下：<br><img src="//blog.com/2019/04/07/通用数据权限的思考与设计/2.png" alt="img"></p>
+<h3 id="2-4-数据规则的解析"><a href="#2-4-数据规则的解析" class="headerlink" title="2.4 数据规则的解析"></a>2.4 数据规则的解析</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;由上文可知，适用于当前登录用户的数据规则主要来源有两种：</p>
+<ol>
+<li><strong>存储在数据库中的规则配置</strong>；如：所在地区<code>[上海]</code></li>
+<li><strong>需要系统计算的规则配置</strong>；如：<code>[下属人员]</code></li>
+</ol>
+<p>两种情况下获取的数据规则合并之后即可获取适用于当前登录用户的数据规则集合，流程图如下：<br><img src="//blog.com/2019/04/07/通用数据权限的思考与设计/3.png" alt="img"></p>
+<blockquote>
+<p>> <strong>两种情况下获取的数据规则如何兼容？规则合并后成为一个复杂的查询条件应该如何设计？</strong></p>
+</blockquote>
+<p>定义通用的规则结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    rule:[&#123;</span><br><span class="line">        field: &quot;name&quot;,</span><br><span class="line">        operate: &quot;equal&quot;,</span><br><span class="line">        value: &quot;xxx&quot;</span><br><span class="line">    &#125;],</span><br><span class="line">    operate:&quot;and&quot;,</span><br><span class="line">    group:[&#123;</span><br><span class="line">        rule:[],</span><br><span class="line">        operate:&quot;greater&quot;,</span><br><span class="line">        group:[]</span><br><span class="line">    &#125;]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;数据库存储规则结构的JSON串，合并时将JSON串反序列化之后使用<code>and</code>与系统计算得出规则对象连接即可，合并后的规则结构解析成简单SQL语句已经不是很难了。</p>
+<blockquote>
+<p><strong>&gt; 但是对于多表联合查询时应该如何处理呢？</strong></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;解析成SQL语句时可以使用<code>表名+字段名</code>的方式，可是遇到查询中使用别名的时候，这种方式也不能正常工作，这里暂时的处理方式是支持解析时传递别名。</p>
+<blockquote>
+<p><strong>&gt; 一个用户拥有多个角色，不同角色对于同一个规则设置不同的值应该如何处理？</strong></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;譬如，用户A拥有角色<code>role1</code>、<code>role2</code>，其中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">role1适用规则：[销售地区] [等于] [上海]</span><br><span class="line">role2适用规则：[销售地区] [等于] [北京]</span><br></pre></td></tr></table></figure>
+<p>那么用户A合并后的数据规则应该是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户A适用规则：([销售地区] [等于] [上海]) or ([销售地区] [等于] [北京])</span><br></pre></td></tr></table></figure>
+<p>即：<strong>一个用户对于同一个规则元的多个规则设置，应使用<code>or</code>连接后再与其他规则元进行<code>and</code>连接</strong>。</p>
+<h3 id="2-5-确定当前查询适用的数据规则"><a href="#2-5-确定当前查询适用的数据规则" class="headerlink" title="2.5 确定当前查询适用的数据规则"></a>2.5 确定当前查询适用的数据规则</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;经过上述的规则配置与解析之后，我们很容易拿到当前用户适用的数据规则集合。但是在一次查询时我们应该使用集合中哪些规则进行过滤呢？<strong>一次查询是否开启数据规则过滤，使用哪些表的规则过滤应该是开发者来决定</strong>，类似：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xxxQuery(...).withDataRule(&quot;`table1`,`table2`&quot;);</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;即表示当前用户本次查询使用<code>table1</code>、<code>table2</code>中配置的数据规则。数据表中的每条规则应该支持在管理后台设置是否启用，这样理论上可实现每个用户对每一条数据规则的配置。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/权限设计/" rel="tag"># 权限设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/07/GitHub第三方登录示例教程/" rel="next" title="GitHub第三方登录示例教程">
+                <i class="fa fa-chevron-left"></i> GitHub第三方登录示例教程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/07/二进制与权限控制/" rel="prev" title="二进制与权限控制">
+                二进制与权限控制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#通用数据权限的思考与设计"><span class="nav-number">1.</span> <span class="nav-text">通用数据权限的思考与设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、数据权限概述"><span class="nav-number">1.1.</span> <span class="nav-text">1、数据权限概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-什么是数据权限？"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 什么是数据权限？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-要素分析"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 要素分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、-数据权限设计"><span class="nav-number">1.2.</span> <span class="nav-text">2、 数据权限设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-规则元"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 规则元</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-规则元配置"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 规则元配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-数据规则的配置"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 数据规则的配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-数据规则的解析"><span class="nav-number">1.2.4.</span> <span class="nav-text">2.4 数据规则的解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-确定当前查询适用的数据规则"><span class="nav-number">1.2.5.</span> <span class="nav-text">2.5 确定当前查询适用的数据规则</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

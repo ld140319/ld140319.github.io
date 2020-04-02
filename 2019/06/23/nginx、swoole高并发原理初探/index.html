@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="nginx、swoole高并发原理初探  原文地址：https://segmentfault.com/a/1190000007614502   一、阅前热身为了更加形象的说明同步异步、阻塞非阻塞，我们以小明去买奶茶为例。 1、同步与异步①同步与异步的理解 同步与异步的重点在消息通知的方式上，也就是调用结果通知的方式。   同步 当一个同步调用发出去后，调用者要一直等待调用结果的通知后，才能进行后续">
+<meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx、swoole高并发原理初探">
+<meta property="og:url" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="nginx、swoole高并发原理初探  原文地址：https://segmentfault.com/a/1190000007614502   一、阅前热身为了更加形象的说明同步异步、阻塞非阻塞，我们以小明去买奶茶为例。 1、同步与异步①同步与异步的理解 同步与异步的重点在消息通知的方式上，也就是调用结果通知的方式。   同步 当一个同步调用发出去后，调用者要一直等待调用结果的通知后，才能进行后续">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2ianfo42ag28ghrgl4u18sa13.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2iad9fimm51tc5f4c13tj2009.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2iakmlo6gtba5m6ktfp9esm.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2ib3qhpkbajn4l2u2go1vc51g.png">
+<meta property="og:updated_time" content="2019-06-23T12:55:02.705Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="nginx、swoole高并发原理初探">
+<meta name="twitter:description" content="nginx、swoole高并发原理初探  原文地址：https://segmentfault.com/a/1190000007614502   一、阅前热身为了更加形象的说明同步异步、阻塞非阻塞，我们以小明去买奶茶为例。 1、同步与异步①同步与异步的理解 同步与异步的重点在消息通知的方式上，也就是调用结果通知的方式。   同步 当一个同步调用发出去后，调用者要一直等待调用结果的通知后，才能进行后续">
+<meta name="twitter:image" content="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2ianfo42ag28ghrgl4u18sa13.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/">
+
+
+
+
+
+  <title>nginx、swoole高并发原理初探 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/23/nginx、swoole高并发原理初探/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">nginx、swoole高并发原理初探</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-23T12:12:57+08:00">
+                2019-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/" itemprop="url" rel="index">
+                    <span itemprop="name">异步与同步</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/" itemprop="url" rel="index">
+                    <span itemprop="name">IO</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/" itemprop="url" rel="index">
+                    <span itemprop="name">Reactor</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/" itemprop="url" rel="index">
+                    <span itemprop="name">事件模型</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/网络编程/" itemprop="url" rel="index">
+                    <span itemprop="name">网络编程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="nginx、swoole高并发原理初探"><a href="#nginx、swoole高并发原理初探" class="headerlink" title="nginx、swoole高并发原理初探"></a>nginx、swoole高并发原理初探</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://segmentfault.com/a/1190000007614502" target="_blank" rel="noopener">https://segmentfault.com/a/1190000007614502</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="一、阅前热身"><a href="#一、阅前热身" class="headerlink" title="一、阅前热身"></a>一、阅前热身</h2><p>为了更加形象的说明同步异步、阻塞非阻塞，我们以小明去买奶茶为例。</p>
+<h3 id="1、同步与异步"><a href="#1、同步与异步" class="headerlink" title="1、同步与异步"></a>1、同步与异步</h3><h4 id="①同步与异步的理解"><a href="#①同步与异步的理解" class="headerlink" title="①同步与异步的理解"></a>①同步与异步的理解</h4><blockquote>
+<p>同步与异步的重点在消息通知的方式上，也就是<strong>调用结果通知</strong>的方式。</p>
+</blockquote>
+<ul>
+<li><p>同步</p>
+<p>当一个同步调用发出去后，调用者要一直等待调用结果的通知后，才能进行后续的执行</p>
+</li>
+<li><p>异步：</p>
+<p>当一个异步调用发出去后，调用者不能立即得到调用结果的返回。</p>
+</li>
+</ul>
+<p>异步调用，要想获得结果，一般有两种方式：</p>
+<p>1、<strong>主动轮询</strong>异步调用的结果;</p>
+<p>2、被调用方通过<strong><code>callback</code></strong>来通知调用方调用结果。</p>
+<h4 id="②生活实例"><a href="#②生活实例" class="headerlink" title="②生活实例"></a>②生活实例</h4><p>同步买奶茶：小明点单交钱，然后等着拿奶茶；</p>
+<p>异步买奶茶：小明点单交钱，店员给小明一个小票，等小明奶茶做好了，再来取。</p>
+<p>异步买奶茶，小明要想知道奶茶是否做好了，有两种方式：</p>
+<p>1、小明主动去问店员，一会就去问一下：“奶茶做好了吗？”…直到奶茶做好。</p>
+<p>2、等奶茶做好了，店员喊一声：“小明，奶茶好了！”，然后小明去取奶茶。</p>
+<hr>
+<h3 id="2、阻塞与非阻塞"><a href="#2、阻塞与非阻塞" class="headerlink" title="2、阻塞与非阻塞"></a>2、阻塞与非阻塞</h3><h4 id="①阻塞与非阻塞的理解"><a href="#①阻塞与非阻塞的理解" class="headerlink" title="①阻塞与非阻塞的理解"></a>①阻塞与非阻塞的理解</h4><blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;阻塞与非阻塞的重点在于进/线程等待消息时候的行为，也就是在<strong>等待消息的时候，当前进/线程是挂起状态，还是非挂起状态</strong>。</p>
+</blockquote>
+<ul>
+<li><p>阻塞</p>
+<p>阻塞调用在发出去后，在消息返回之前，当前进/线程会被挂起，直到有消息返回，当前进/线程才会被激活.</p>
+</li>
+<li><p>非阻塞</p>
+<p>非阻塞调用在发出去后，不会阻塞当前进/线程，而会立即返回。</p>
+</li>
+</ul>
+<h4 id="②生活实例-1"><a href="#②生活实例-1" class="headerlink" title="②生活实例"></a>②生活实例</h4><p>阻塞买奶茶：小明点单交钱，干等着拿奶茶，什么事都不做；</p>
+<p>非阻塞买奶茶：小明点单交钱，等着拿奶茶，等的过程中，时不时刷刷微博、朋友圈…</p>
+<hr>
+<h3 id="3、总结"><a href="#3、总结" class="headerlink" title="3、总结"></a>3、总结</h3><p>通过上面的分析，我们可以得知：</p>
+<blockquote>
+<p>同步与异步，重点在于消息通知的方式;阻塞与非阻塞，重点在于等消息时候的行为。</p>
+</blockquote>
+<p>所以，就有了下面4种组合方式</p>
+<ul>
+<li>同步阻塞：小明在柜台干等着拿奶茶；</li>
+<li>同步非阻塞：小明在柜台边刷微博边等着拿奶茶；</li>
+<li>异步阻塞：小明拿着小票啥都不干，一直等着店员通知他拿奶茶；</li>
+<li>异步非阻塞：小明拿着小票，刷着微博，等着店员通知他拿奶茶。</li>
+</ul>
+<hr>
+<h2 id="二、Nginx如何处理高并发"><a href="#二、Nginx如何处理高并发" class="headerlink" title="二、Nginx如何处理高并发"></a>二、Nginx如何处理高并发</h2><h3 id="1、Apache面对高并发，为什么很无力？"><a href="#1、Apache面对高并发，为什么很无力？" class="headerlink" title="1、Apache面对高并发，为什么很无力？"></a>1、Apache面对高并发，为什么很无力？</h3><p><code>Apache</code>处理一个请求是<strong>同步阻塞</strong>的模式。</p>
+<p><img src="//blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2ianfo42ag28ghrgl4u18sa13.png" alt="image_1b2ianfo42ag28ghrgl4u18sa13.png-93.4kB"></p>
+<p>每到达一个请求，<code>Apache</code>都会去<code>fork</code>一个子进程去处理这个请求，直到这个请求处理完毕。</p>
+<p>面对低并发，这种模式没什么缺点，但是，面对高并发，就是这种模式的软肋了。</p>
+<ul>
+<li><strong>进程数量决定了并发能力</strong>。1个客户端占用1个进程，那么，进程数量有多少，并发处理能力就有多少，但操作系统可以创建的进程数量是有限的。</li>
+<li><strong>多进程就会有进程间的切换问题，而进程间的切换调度势必会造成<code>CPU</code>的额外消耗</strong>。当进程数量达到成千上万的时候，进程间的切换就占了<code>CPU</code>大部分的时间片，而真正进程的执行反而占了`CPU的一小部分，这就得不偿失了。</li>
+</ul>
+<p>下面，举例说明这2种场景是多进程模式的软肋：</p>
+<ul>
+<li><strong>及时消息通知程序</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如及时聊天程序，一台服务器可能要维持数十万的连接(典型的<code>C10K</code>问题)，那么就要启动数十万的进程来维持。这显然不可能。</li>
+<li><strong>调用外部<code>Http</code>接口时</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设<code>Apache</code>启动100个进程来处理请求，每个请求消耗100ms，那么这100个进程能提供1000qps。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是，在我们调用外部<code>Http</code>接口时，比如QQ登录、微博登录，耗时较长，假设一个请求消耗10s，也就是1个进程1s处理0.1个请求，那么100个进程只能达到10qps，这样的处理能力就未免太差了。</p>
+<blockquote>
+<p>注：什么是C10K问题？<br>网络服务在处理数以万计的客户端连接时，往往出现效率低下甚至完全瘫痪，这被称为C10K问题。（concurrent 10000 connection）</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;综上，我们可以看出，<strong><code>Apache</code>是同步阻塞的多进程模式，面对高并发等一些场景，是很苍白的</strong>。</p>
+<hr>
+<h3 id="2、Nginx何以问鼎高并发？"><a href="#2、Nginx何以问鼎高并发？" class="headerlink" title="2、Nginx何以问鼎高并发？"></a>2、Nginx何以问鼎高并发？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传统的服务器模型就是这样，因为其同步阻塞的多进程模型，无法面对高并发。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，有没有一种方式，可以让我们在一个进程处理所有的并发I/O呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;答案是有的，这就是<strong>I/O复用技术</strong>。</p>
+<h3 id="①I-O复用是神马？"><a href="#①I-O复用是神马？" class="headerlink" title="①I/O复用是神马？"></a>①I/O复用是神马？</h3><h4 id="最初级的I-O复用"><a href="#最初级的I-O复用" class="headerlink" title="最初级的I/O复用"></a>最初级的I/O复用</h4><p><strong>所谓的<code>I/O</code>复用，就是多个<code>I/O</code>可以复用一个进程</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面说的同步阻塞的多进程模型不适合处理高并发，那么，我们再来考虑非阻塞的方式。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;采用非阻塞的模式，当一个连接过来时，我们不阻塞住，这样一个进程可以同时处理多个连接了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如一个进程接受了10000个连接，这个进程每次从头到尾的问一遍这10000个连接：“<strong>有I/O事件没？有的话就交给我处理，没有的话我一会再来问一遍”。</strong>然后进程就一直从头到尾问这10000个连接，如果这1000个连接都没有<code>I/O</code>事件，就会造成<strong>CPU的空转，并且效率也很低</strong>，不好不好。</p>
+<h4 id="升级版的I-O复用"><a href="#升级版的I-O复用" class="headerlink" title="升级版的I/O复用"></a>升级版的I/O复用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面虽然实现了基础版的<code>I/O</code>复用，但是效率太低了。于是伟大的程序猿们日思夜想的去解决这个问题…终于！</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们能不能<strong>引入一个代理，这个代理可以同时观察许多<code>I/O</code>流事件</strong>呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当没有<code>I/O</code>事件的时候，这个进程处于阻塞状态；当有<code>I/O</code>事件的时候，这个代理就去通知进程醒来？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;于是，早期的程序猿们发明了两个代理—<code>select、poll</code>。</p>
+<p><code>select、poll</code>代理的原理是这样的：</p>
+<blockquote>
+<p>当连接有I/O流事件产生的时候，就会去唤醒进程去处理。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是<strong>进程并不知道是哪个连接产生的I/O流事件</strong>，于是进程就挨个去问：“请问是你有事要处理吗？”……问了99999遍，哦，原来是第100000个进程有事要处理。那么，前面这99999次就白问了，白白<strong>浪费宝贵的CPU时间片了</strong>！痛哉，惜哉…</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注:<code>select</code>与<code>poll</code>原理是一样的，只不过<code>select</code>只能观察1024个连接，<code>poll</code>可以观察无限个连接。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面看了，<code>select</code>、<code>poll</code>因为不知道哪个连接有<code>I/O</code>流事件要处理，性能也挺不好的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，如果发明一个<strong>代理，每次能够知道哪个连接有了<code>I/O</code>流事件</strong>，不就可以避免无意义的空转了吗？</p>
+<p>于是，超级无敌、闪闪发光的<code>epoll</code>被伟大的程序员发明出来了。</p>
+<p><code>epoll</code>代理的原理是这样的：</p>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当连接有I/O流事件产生的时候，epoll就会去告诉进程哪个连接有I/O流事件产生，然后进程就去处理这个进程</strong>。</p>
+</blockquote>
+<p>如此，多高效！</p>
+<h3 id="②基于epoll的Nginx"><a href="#②基于epoll的Nginx" class="headerlink" title="②基于epoll的Nginx"></a>②基于epoll的Nginx</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>有了<code>epoll</code>，理论上1个进程就可以无限数量的连接，而且无需轮询，真正解决了<code>c10k</code>的问题</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code>是基于<code>epoll</code>的，<strong>异步非阻塞</strong>的服务器程序。自然，<code>Nginx</code>能够轻松处理百万级的并发连接，也就无可厚非了。</p>
+<h2 id="三、swoole如何处理高并发以及异步I-O的实现"><a href="#三、swoole如何处理高并发以及异步I-O的实现" class="headerlink" title="三、swoole如何处理高并发以及异步I/O的实现"></a>三、swoole如何处理高并发以及异步I/O的实现</h2><h3 id="1、swoole介绍"><a href="#1、swoole介绍" class="headerlink" title="1、swoole介绍"></a>1、swoole介绍</h3><p><code>swoole</code>是<code>PHP</code>的一个扩展。<br>简单理解：<code>swoole</code> =  异步<code>I/O</code>+网络通信<br><code>PHPer</code>可以基于<code>swoole</code>去实现过去<code>PHP</code>无法实现的功能。<br>具体请参考<code>swoole</code>官网：<a href="http://www.swoole.com/" target="_blank" rel="noopener">swoole官网</a></p>
+<hr>
+<h3 id="2、swoole如何处理高并发"><a href="#2、swoole如何处理高并发" class="headerlink" title="2、swoole如何处理高并发"></a>2、swoole如何处理高并发</h3><h3 id="①Reactor模型介绍"><a href="#①Reactor模型介绍" class="headerlink" title="①Reactor模型介绍"></a>①Reactor模型介绍</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IO复用异步非阻塞程序使用经典的<code>Reactor</code>模型，<code>Reactor</code>顾名思义就是反应堆的意思，它<strong>本身不处理任何数据收发</strong>。<strong>只是可以监视一个socket(也可以是管道、eventfd、信号)句柄的事件变化</strong>。</p>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注:什么是句柄？句柄英文为handler，可以形象的比喻为锅柄、勺柄。也就是资源的唯一标识符、资源的ID。通过这个ID可以操作资源。</p>
+</blockquote>
+<p><img src="//blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2iad9fimm51tc5f4c13tj2009.png" alt="image_1b2iad9fimm51tc5f4c13tj2009.png-63.3kB"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Reactor只是一个事件发生器，实际对socket句柄的操作，如connect/accept、send/recv、close是在callback中完成的。</strong></p>
+<h3 id="②swoole的架构"><a href="#②swoole的架构" class="headerlink" title="②swoole的架构"></a>②swoole的架构</h3><p><code>swoole</code>采用 <strong>多线程Reactor+多进程Worker</strong></p>
+<p>swoole的架构图如下：</p>
+<p><img src="//blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2iakmlo6gtba5m6ktfp9esm.png" alt="image_1b2iakmlo6gtba5m6ktfp9esm.png-125.1kB"></p>
+<p><strong>swoole的处理连接流程图如下：</strong></p>
+<p><img src="//blog.com/2019/06/23/nginx、swoole高并发原理初探/image_1b2ib3qhpkbajn4l2u2go1vc51g.png" alt="image_1b2ib3qhpkbajn4l2u2go1vc51g.png-62.5kB"></p>
+<p>当请求到达时,<code>swoole</code>是这样处理的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">请求到达 Main Reactor</span><br><span class="line">        |</span><br><span class="line">        |</span><br><span class="line">Main Reactor根据Reactor的情况，将请求注册给对应的Reactor</span><br><span class="line">(每个Reactor都有epoll。用来监听客户端的变化)</span><br><span class="line">        |</span><br><span class="line">        |</span><br><span class="line">客户端有变化时，交给worker来处理</span><br><span class="line">        |</span><br><span class="line">        |</span><br><span class="line">worker处理完毕，通过进程间通信(比如管道、共享内存、消息队列)发给对应的reactor。</span><br><span class="line">        |</span><br><span class="line">        |</span><br><span class="line">reactor将响应结果发给相应的连接</span><br><span class="line">        |</span><br><span class="line">        |</span><br><span class="line">    请求处理完成</span><br></pre></td></tr></table></figure>
+<p>因为<code>reactor</code>基于<code>epoll</code>，所以每个<code>reactor</code>可以处理无数个连接请求。</p>
+<p>如此，<code>swoole</code>就轻松的处理了高并发。</p>
+<h3 id="3、swoole如何实现异步I-O"><a href="#3、swoole如何实现异步I-O" class="headerlink" title="3、swoole如何实现异步I/O"></a>3、swoole如何实现异步I/O</h3><p>基于上面的<code>Swoole</code>结构图，我们看到<code>swoole</code>的<code>worker</code>进程有2种类型：</p>
+<p><strong>一种是 普通的worker进程，一种是 task worker进程。</strong></p>
+<p><code>worker</code>进程是用来处理普通的耗时不是太长的请求；</p>
+<p><code>task worker</code>进程用来处理耗时较长的请求，比如数据库的<code>I/O</code>操作。</p>
+<p>我们以异步<code>Mysql</code>举例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">耗时较长的Mysql查询进入worker</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">worker通过管道将这个请求交给taskworker来处理</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">worker再去处理其他请求</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">task worker处理完毕后，处理结果通过管道返回给worker</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">worker 将结果返回给reactor</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">reactor将结果返回给请求方</span><br></pre></td></tr></table></figure>
+<p>如此，通过<code>worker</code>、<code>task worker</code>结合的方式，我们就实现了异步<code>I/O</code>。</p>
+<h2 id="四、参考文章"><a href="#四、参考文章" class="headerlink" title="四、参考文章"></a>四、参考文章</h2><p><a href="https://www.zhihu.com/question/22062795" target="_blank" rel="noopener">Nginx 多进程模型是如何实现高并发的？</a><br><a href="http://rango.swoole.com/archives/508" target="_blank" rel="noopener">PHP并发IO编程之路</a><br><a href="https://www.zhihu.com/question/20122137" target="_blank" rel="noopener">epoll 或者 kqueue 的原理是什么？</a><br><a href="https://www.zhihu.com/question/32163005" target="_blank" rel="noopener">IO 多路复用是什么意思？</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/异步与同步/" rel="tag"># 异步与同步</a>
+          
+            <a href="/tags/IO/" rel="tag"># IO</a>
+          
+            <a href="/tags/Reactor/" rel="tag"># Reactor</a>
+          
+            <a href="/tags/事件模型/" rel="tag"># 事件模型</a>
+          
+            <a href="/tags/网络编程/" rel="tag"># 网络编程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/23/MySQL InnoDB 中的 redo undo log/" rel="next" title="MySQL InnoDB 中的 redo undo log">
+                <i class="fa fa-chevron-left"></i> MySQL InnoDB 中的 redo undo log
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/23/epoll的原理是什么/" rel="prev" title="epoll的原理是什么">
+                epoll的原理是什么 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#nginx、swoole高并发原理初探"><span class="nav-number">1.</span> <span class="nav-text">nginx、swoole高并发原理初探</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、阅前热身"><span class="nav-number">1.1.</span> <span class="nav-text">一、阅前热身</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、同步与异步"><span class="nav-number">1.1.1.</span> <span class="nav-text">1、同步与异步</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#①同步与异步的理解"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">①同步与异步的理解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#②生活实例"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">②生活实例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、阻塞与非阻塞"><span class="nav-number">1.1.2.</span> <span class="nav-text">2、阻塞与非阻塞</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#①阻塞与非阻塞的理解"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">①阻塞与非阻塞的理解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#②生活实例-1"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">②生活实例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、总结"><span class="nav-number">1.1.3.</span> <span class="nav-text">3、总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Nginx如何处理高并发"><span class="nav-number">1.2.</span> <span class="nav-text">二、Nginx如何处理高并发</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、Apache面对高并发，为什么很无力？"><span class="nav-number">1.2.1.</span> <span class="nav-text">1、Apache面对高并发，为什么很无力？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、Nginx何以问鼎高并发？"><span class="nav-number">1.2.2.</span> <span class="nav-text">2、Nginx何以问鼎高并发？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#①I-O复用是神马？"><span class="nav-number">1.2.3.</span> <span class="nav-text">①I/O复用是神马？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#最初级的I-O复用"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">最初级的I/O复用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#升级版的I-O复用"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">升级版的I/O复用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#②基于epoll的Nginx"><span class="nav-number">1.2.4.</span> <span class="nav-text">②基于epoll的Nginx</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、swoole如何处理高并发以及异步I-O的实现"><span class="nav-number">1.3.</span> <span class="nav-text">三、swoole如何处理高并发以及异步I/O的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、swoole介绍"><span class="nav-number">1.3.1.</span> <span class="nav-text">1、swoole介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、swoole如何处理高并发"><span class="nav-number">1.3.2.</span> <span class="nav-text">2、swoole如何处理高并发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#①Reactor模型介绍"><span class="nav-number">1.3.3.</span> <span class="nav-text">①Reactor模型介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#②swoole的架构"><span class="nav-number">1.3.4.</span> <span class="nav-text">②swoole的架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、swoole如何实现异步I-O"><span class="nav-number">1.3.5.</span> <span class="nav-text">3、swoole如何实现异步I/O</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、参考文章"><span class="nav-number">1.4.</span> <span class="nav-text">四、参考文章</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

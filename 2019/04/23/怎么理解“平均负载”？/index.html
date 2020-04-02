@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,bash,Linux问题排查,Linux性能优化,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="怎么理解“平均负载”？平均负载的概念&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;平均负载是指单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数，它和 CPU 使用率并没有直接关系。  可运行状态的进程，是指正在使用 CPU 或者正在等待 CPU 的进程，也就是我们常用ps 命令看到的，处于 R 状态（Running 或 Runnable）的进">
+<meta name="keywords" content="Linux,bash,Linux问题排查,Linux性能优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="怎么理解“平均负载”？">
+<meta property="og:url" content="http://blog.com/2019/04/23/怎么理解“平均负载”？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="怎么理解“平均负载”？平均负载的概念&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;平均负载是指单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数，它和 CPU 使用率并没有直接关系。  可运行状态的进程，是指正在使用 CPU 或者正在等待 CPU 的进程，也就是我们常用ps 命令看到的，处于 R 状态（Running 或 Runnable）的进">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-04-24T15:59:24.319Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="怎么理解“平均负载”？">
+<meta name="twitter:description" content="怎么理解“平均负载”？平均负载的概念&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;平均负载是指单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数，它和 CPU 使用率并没有直接关系。  可运行状态的进程，是指正在使用 CPU 或者正在等待 CPU 的进程，也就是我们常用ps 命令看到的，处于 R 状态（Running 或 Runnable）的进">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/23/怎么理解“平均负载”？/">
+
+
+
+
+
+  <title>怎么理解“平均负载”？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/23/怎么理解“平均负载”？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">怎么理解“平均负载”？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-23T12:12:57+08:00">
+                2019-04-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/bash/" itemprop="url" rel="index">
+                    <span itemprop="name">bash</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/bash/Linux问题排查/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux问题排查</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/bash/Linux问题排查/Linux性能优化/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux性能优化</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="怎么理解“平均负载”？"><a href="#怎么理解“平均负载”？" class="headerlink" title="怎么理解“平均负载”？"></a>怎么理解“平均负载”？</h1><h2 id="平均负载的概念"><a href="#平均负载的概念" class="headerlink" title="平均负载的概念"></a>平均负载的概念</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>平均负载是指单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数，它和 CPU 使用率并没有直接关系</strong>。</p>
+<blockquote>
+<p><strong>可运行状态的进程，是指正在使用 CPU 或者正在等待 CPU 的进程</strong>，也就是我们常用<br>ps 命令看到的，处于 R 状态（Running 或 Runnable）的进程。</p>
+</blockquote>
+<blockquote>
+<p><strong>不可中断状态的进程则是正处于内核态关键流程中的进程，并且这些流程是不可打断的</strong>，<br>比如最常见的是等待硬件设备的 I/O 响应，也就是我们在 ps 命令中看到的 D 状态<br>（Uninterruptible Sleep，也称为 Disk Sleep）的进程。<br>比如，当一个进程向磁盘读写数据时，为了保证数据的一致性，在得到磁盘回复前，它是<br>不能被其他进程或者中断打断的，这个时候的进程就处于不可中断状态。如果此时的进程<br>被打断了，就容易出现磁盘数据与进程数据不一致的问题。<br>所以，<strong>不可中断状态实际上是系统对进程和硬件设备的一种保护机制</strong>。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以简单理解为，平均负载其实就是平均活跃进程数。平均活跃进程数，直观上的理解就是单位时间内的活跃进程数，但它实际上是活跃进程数的指数衰减平均值。这个“指数衰减平均”的详细含义你不用计较，这只是系统的一种更快速的计算方式，你把它直接当成活跃进程数的平均值也没问题。既然平均的是活跃进程数，那么最理想的，就是<strong>每个 CPU 上都刚好运行着一个进程，这样每个 CPU 都得到了充分利用</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;既然平均的是活跃进程数，那么最理想的，就是每个 CPU 上都刚好运行着一个进程，这样每个 CPU 都得到了充分利用。比如当平均负载为 2 时，意味着什么呢？</p>
+<blockquote>
+<p>在只有 2 个 CPU 的系统上，意味着所有的 CPU 都刚好被完全占用。<br>在 4 个 CPU 的系统上，意味着 CPU 有 50% 的空闲。<br>而在只有 1 个 CPU 的系统中，则意味着有一半的进程竞争不到 CPU。</p>
+</blockquote>
+<blockquote>
+<p> CPU比喻成一辆地铁</p>
+<p>地铁的乘客容量就是CPU个数</p>
+<p>正在使用CPU的进程就是在地铁上的人；</p>
+<p>等待CPU的进程就是在下一站等地铁来的人；</p>
+<p>等待I/O的进程就是在下一站要上车和下车的人，虽然现在对CPU没影响，可未来会影响，所以也要考虑到平均负载上。</p>
+</blockquote>
+<h2 id="平均负载为多少时合理"><a href="#平均负载为多少时合理" class="headerlink" title="平均负载为多少时合理"></a>平均负载为多少时合理</h2><h3 id="cpu个数查看"><a href="#cpu个数查看" class="headerlink" title="cpu个数查看"></a>cpu个数查看</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在uptime 命令的结果里，那三个时间段的平均负载数，多大的时候能说明系统负载高？或是多小的时候就能说明系统负载很低呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们知道，<strong>平均负载最理想的情况是等于 CPU 个数</strong>。所以在评判平均负载时，首先你要知道系统有几个 CPU，这可以通过 top 命令或者从文件 /proc/cpuinfo 中读取，比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep <span class="string">'model name'</span> /proc/cpuinfo | wc -l   <span class="comment"># 4</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有了 CPU 个数，我们就可以判断出，<strong>当平均负载比 CPU 个数还大的时候，系统已经出现了过载</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在大多数CPU有超线程能力，在计算和评估平均负载的时候，CPU的核数是指物理核数，还是超线程功能的逻辑核数？</p>
+<p><strong>逻辑核数</strong></p>
+<h3 id="平均负载有三个数值，到底该参考哪一个呢？"><a href="#平均负载有三个数值，到底该参考哪一个呢？" class="headerlink" title="平均负载有三个数值，到底该参考哪一个呢？"></a>平均负载有三个数值，到底该参考哪一个呢？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实际上，都要看。三个不同时间间隔的平均值，其实给我们提供了<strong>分析系统负载趋势</strong>的数据来源，让我们能更全面、更立体地理解目前的负载状况。</p>
+<blockquote>
+<p>打个比方，就像初秋时北京的天气，如果只看中午的温度，你可能以为还在 7 月份的大夏天呢。但如果你结合了早上、中午、晚上三个时间点的温度来看，基本就可以全方位了解这一天的天气情况了。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果 1 分钟、5 分钟、15 分钟的三个值基本相同，或者相差不大，那就说明系统负载很平稳</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果 1 分钟的值远小于 15 分钟的值，就说明系统最近 1 分钟的负载在减少，而过去15 分钟内却有很大的负载</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果 1 分钟的值远大于 15 分钟的值，就说明最近 1 分钟的负载在增加，这种增加有可能只是临时性的，也有可能还会持续增加下去，所以就需要持续观察</strong>。一旦 1分钟的平均负载接近或超过了 CPU 的个数，就意味着系统正在发生过载的问题，这时就得分析调查是哪里导致的问题，并要想办法优化了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设我们<code>在一个单 CPU 系统上看到平均负载为 1.73，0.60，7.98，那么说明在过去 1 分钟内，系统有 73% 的超载，而在 15 分钟内，有 698% 的超载，从整体趋势来看，系统的负载在降低</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当平均负载高于 CPU 数量 70% 的时候</strong>，你就应该分析排查负载高的问题了。一旦负载过高，就可能导致进程响应变慢，进而影响服务的正常功能。但 70% 这个数字并不是绝对的，最推荐的方法，还是把系统的平均负载监控起来，然后根据更多的历史数据，判断负载的变化趋势。当发现负载<strong>有明显升高趋势时</strong>，比如说负载翻倍了，你再去做分析和调查。</p>
+<h2 id="平均负载与-CPU-使用率"><a href="#平均负载与-CPU-使用率" class="headerlink" title="平均负载与 CPU 使用率"></a>平均负载与 CPU 使用率</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现实工作中，我们经常容易把平均负载和 CPU 使用率混淆，所以在这里，我也做一个区分。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能你会疑惑，既然平均负载代表的是活跃进程数，那平均负载高了，不就意味着 CPU 使用率高吗？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们还是要回到平均负载的含义上来，<strong>平均负载是指单位时间内，处于可运行状态和不可中断状态的进程数</strong>。所以，它<strong>不仅包括了正在使用 CPU 的进程，还包括等待 CPU 和等待I/O 的进程</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>而 CPU 使用率，是单位时间内 CPU 繁忙情况的统计，跟平均负载并不一定完全对应</strong>。</p>
+<ol>
+<li><strong>CPU 密集型进程，使用大量 CPU 会导致平均负载升高，此时这两者是一致的</strong>；</li>
+<li><strong>I/O 密集型进程，等待 I/O 也会导致平均负载升高，但 CPU 使用率不一定很高</strong>；</li>
+<li><strong>大量等待 CPU 的进程调度也会导致平均负载升高，此时的 CPU 使用率也会比较高</strong>；</li>
+</ol>
+<h2 id="平均负载案例分析"><a href="#平均负载案例分析" class="headerlink" title="平均负载案例分析"></a>平均负载案例分析</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>stress</code> 是一个<code>Linux</code>系统<strong>压力测试工具</strong>，这里我们用作异常进程模拟平均负载升高的场景。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"># stress</span><br><span class="line">`stress&apos; imposes certain types of compute stress on your system</span><br><span class="line"></span><br><span class="line">Usage: stress [OPTION [ARG]] ...</span><br><span class="line"> -?, --help         show this help statement</span><br><span class="line">     --version      show version statement</span><br><span class="line"> -v, --verbose      be verbose</span><br><span class="line"> -q, --quiet        be quiet</span><br><span class="line"> -n, --dry-run      show what would have been done</span><br><span class="line"> -t, --timeout N    timeout after N seconds</span><br><span class="line">     --backoff N    wait factor of N microseconds before work starts</span><br><span class="line"> -c, --cpu N        spawn N workers spinning on sqrt()</span><br><span class="line"> -i, --io N         spawn N workers spinning on sync()</span><br><span class="line"> -m, --vm N         spawn N workers spinning on malloc()/free()</span><br><span class="line">     --vm-bytes B   malloc B bytes per vm worker (default is 256MB)</span><br><span class="line">     --vm-stride B  touch a byte every B bytes (default is 4096)</span><br><span class="line">     --vm-hang N    sleep N secs before free (default none, 0 is inf)</span><br><span class="line">     --vm-keep      redirty memory instead of freeing and reallocating</span><br><span class="line"> -d, --hdd N        spawn N workers spinning on write()/unlink()</span><br><span class="line">     --hdd-bytes B  write B bytes per hdd worker (default is 1GB)</span><br><span class="line"></span><br><span class="line">Example: stress --cpu 8 --io 4 --vm 2 --vm-bytes 128M --timeout 10s</span><br><span class="line"></span><br><span class="line">Note: Numbers may be suffixed with s,m,h,d,y (time) or B,K,M,G (size).</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">-? 显示帮助信息</span><br><span class="line"></span><br><span class="line">-v 显示版本号</span><br><span class="line"></span><br><span class="line">-q 不显示运行信息</span><br><span class="line"></span><br><span class="line">-n 显示已完成的指令情况</span><br><span class="line"></span><br><span class="line">-t --timeout N 指定运行N秒后停止</span><br><span class="line"></span><br><span class="line">--backoff N 等待N微妙后开始运行</span><br><span class="line"></span><br><span class="line">-c 产生n个进程 每个进程都反复不停的计算随机数的平方根</span><br><span class="line"></span><br><span class="line">-i 产生n个进程 每个进程反复调用sync()，sync()用于将内存上的内容写到硬盘上</span><br><span class="line"></span><br><span class="line">-m --vm n 产生n个进程,每个进程不断调用内存分配malloc和内存释放free函数</span><br><span class="line"></span><br><span class="line">--vm-bytes B 指定malloc时内存的字节数 （默认256MB）</span><br><span class="line"></span><br><span class="line">--vm-hang N 指定在free钱的秒数</span><br><span class="line"></span><br><span class="line">-d --hadd n 产生n个执行write和unlink函数的进程</span><br><span class="line"></span><br><span class="line">-hadd-bytes B 指定写的字节数</span><br><span class="line"></span><br><span class="line">--hadd-noclean 不unlink</span><br><span class="line"></span><br><span class="line">时间单位可以为秒s，分m，小时h，天d，年y，文件大小单位可以为K，M，G</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而<code>sysstat</code> 包含了常用的 <code>Linux</code> 性能工具，用来监控和分析系统的性能。我们的案例会用到这个包的两个命令 <code>mpstat</code>和 <code>pidstat</code>。</p>
+<p>​            （1） <code>mpstat</code> 是一个常用的<strong>多核 CPU 性能分析工具</strong>，用来实时查看每个 CPU 的性能指标，以及所有 CPU 的平均指标。<br>​            （2） <code>pidstat</code> 是一个常用的<strong>进程性能分析工具</strong>，用来实时查看进程的 CPU、内存、I/O 以及上下文切换等性能指标。</p>
+<h3 id="安装或更新stress"><a href="#安装或更新stress" class="headerlink" title="安装或更新stress"></a>安装或更新stress</h3><ol>
+<li>移除系统自带的旧版本</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">centos:  yum remove stress</span><br><span class="line">Ubuntu:  apt-get remove stress</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>下载源码包</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">wget http://people.seas.harvard.edu/~apw/stress/stress-1.0.4.tar.gz</span><br><span class="line"></span><br><span class="line">tar -zvxf stress-1.0.4.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> stress-1.0.4</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>编译安装</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /usr/<span class="built_in">local</span>/tool/stress</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./configure ./configure --prefix=/usr/<span class="built_in">local</span>/tool/stress</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>将可执行文件添加到PATH中</li>
+</ol>
+<p><code>vim /etc/profile</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#stress</span><br><span class="line"></span><br><span class="line">STRESS_BIN=/usr/local/tool/stress/bin</span><br><span class="line">PATH=$PATH:$STRESS_BIN</span><br></pre></td></tr></table></figure>
+<h3 id="安装或更新sysstat"><a href="#安装或更新sysstat" class="headerlink" title="安装或更新sysstat"></a>安装或更新sysstat</h3><ol>
+<li>移除系统自带的旧版本</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">centos:  yum remove sysstat</span><br><span class="line">Ubuntu:  apt-get remove sysstat</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>下载源码包</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">wget http://pagesperso-orange.fr/sebastien.godard/sysstat-12.1.4.tar.gz</span><br><span class="line"></span><br><span class="line">tar -zvxf sysstat-12.1.4.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> sysstat-12.1.4</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>编译安装</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /usr/<span class="built_in">local</span>/tool/sysstat</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./configure ./configure --prefix=/usr/<span class="built_in">local</span>/tool/sysstat</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>将可执行文件添加到PATH中</li>
+</ol>
+<p><code>vim /etc/profile</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#sysstat</span><br><span class="line"></span><br><span class="line">SYSSTAT_BIN=/usr/local/tool/sysstat/bin</span><br><span class="line">PATH=$PATH:$SYSSTAT_BIN</span><br></pre></td></tr></table></figure>
+<h3 id="CPU-密集型进程"><a href="#CPU-密集型进程" class="headerlink" title="CPU 密集型进程"></a>CPU 密集型进程</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;初始状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">uptime</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># uptime</span></span><br><span class="line">23:01:14 up 12:50,  3 users,  load average: 0.00, 0.00, 0.00</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先，我们在第一个终端运行 stress 命令，<strong>模拟一个 CPU 使用率 100% 的场景</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stress --cpu 1 --timeout 600</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># stress --cpu 1 --timeout 600</span></span><br><span class="line">stress: info: [34546] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，在第二个终端运行 uptime <strong>查看平均负载的变化情况</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch -d uptime  <span class="comment"># -d 参数表示高亮显示变化的区域</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>从终端二中可以看到，<strong>1 分钟的平均负载会慢慢增加到 1.00</strong></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，在第三个终端运行 <code>mpstat</code> <strong>查看 CPU 使用率的变化情况</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mpstat -P ALL 5  # -P ALL 表示监控所有 CPU，后面数字 5 表示间隔 5 秒后输出一组数据</span><br><span class="line"></span><br><span class="line">root@php5# mpstat -P ALL 5</span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:04:59 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">11:05:04 PM  all   28.04    0.00    0.43    0.00    0.00    0.00    0.00    0.00    0.00   71.53</span><br><span class="line">11:05:04 PM    0    1.30    0.00    0.65    0.00    0.00    0.00    0.00    0.00    0.00   98.06</span><br><span class="line">11:05:04 PM    1    3.11    0.00    0.72    0.00    0.00    0.00    0.00    0.00    0.00   96.17</span><br><span class="line">11:05:04 PM    2    0.83    0.00    0.41    0.00    0.00    0.00    0.00    0.00    0.00   98.76</span><br><span class="line">11:05:04 PM    3  100.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从终端三中还可以看到，<strong>正好有一个 CPU 的使用率为 100%，但它的 iowait 只有 0</strong>。<strong>这说明，平均负载的升高正是由于 CPU 使用率为 100%</strong> 。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，到底是<strong>哪个进程导致了 CPU 使用率为 100%</strong> 呢？你可以使用 <code>pidstat</code> 来查询：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">pidstat -u 5 1  <span class="comment"># 间隔 5 秒后输出一组数据</span></span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># pidstat -u 5 1</span></span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:09:58 PM   UID       PID    %usr %system  %guest   %<span class="built_in">wait</span>    %CPU   CPU  Command</span><br><span class="line">11:10:03 PM     0        22    0.00    0.97    0.00    0.97    0.97     3  events/3</span><br><span class="line">11:10:03 PM     0       526    0.00    1.36    0.00    0.00    1.36     1  jbd2/dm-0-8</span><br><span class="line">11:10:03 PM     0       821    0.00    1.55    0.00    0.00    1.55     2  vmmemctl</span><br><span class="line">11:10:03 PM     0      1382    0.00    0.19    0.00    0.00    0.19     1  kauditd</span><br><span class="line">11:10:03 PM     0      1790    0.00    0.39    0.00    0.00    0.39     1  vmtoolsd</span><br><span class="line">11:10:03 PM     0      2012   14.37    2.14    0.00    4.85   16.50     3  php</span><br><span class="line">11:10:03 PM     0      2363    6.99    1.17    0.00    1.17    8.16     2  php</span><br><span class="line">11:10:03 PM     0      2846    0.00    0.19    0.00    0.19    0.19     2  redis-server</span><br><span class="line">11:10:03 PM     0      4859    0.00    0.19    0.00    0.00    0.19     1  crond</span><br><span class="line">11:10:03 PM     0      4970    0.00    0.78    0.00    0.00    0.78     1  Xorg</span><br><span class="line">11:10:03 PM     0      5510    0.00    0.19    0.00    0.00    0.19     2  gnome-panel</span><br><span class="line">11:10:03 PM     0     34547   96.12    0.00    0.00    1.36   96.12     0  stress</span><br><span class="line">11:10:03 PM     0     34573    0.00    0.19    0.00    0.00    0.19     3  watch</span><br><span class="line">11:10:03 PM     0     34997    0.19    3.50    0.00    0.00    3.69     1  pidstat</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从这里可以明显看到，stress 进程的 CPU 使用率为 100%。</p>
+<h3 id="I-O-密集型进程"><a href="#I-O-密集型进程" class="headerlink" title="I/O 密集型进程"></a>I/O 密集型进程</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先还是运行 stress 命令，但这次<strong>模拟 I/O 压力，即不停地执行 sync</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stress -i 1 --timeout 600</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># stress -i 1 --timeout 600</span></span><br><span class="line">stress: info: [35645] dispatching hogs: 0 cpu, 1 io, 0 vm, 0 hdd</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，在第二个终端运行 uptime <strong>查看平均负载的变化情况</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch -d uptime  # -d 参数表示高亮显示变化的区域</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>从终端二中可以看到，<strong>1 分钟的平均负载会慢慢增加到 1.00</strong></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，在第三个终端运行 <code>mpstat</code> <strong>查看 CPU 使用率的变化情况</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mpstat -P ALL 5  <span class="comment"># -P ALL 表示监控所有 CPU，后面数字 5 表示间隔 5 秒后输出一组数据</span></span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># mpstat -P ALL 5</span></span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:27:08 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">11:27:13 PM  all    1.17    0.00   26.94    0.00    0.00    0.00    0.00    0.00    0.00   71.88</span><br><span class="line">11:27:13 PM    0    1.31    0.00    0.66    0.00    0.00    0.00    0.00    0.00    0.00   98.03</span><br><span class="line">11:27:13 PM    1    2.76    0.00    0.46    0.00    0.00    0.00    0.00    0.00    0.00   96.77</span><br><span class="line">11:27:13 PM    2    0.62    0.00    0.21    0.00    0.00    0.00    0.00    0.00    0.00   99.18</span><br><span class="line">11:27:13 PM    3    0.20    0.00   99.80    0.00    0.00    0.00    0.00    0.00    0.00    0.00</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么<strong>到底是哪个进程，导致 iowait 这么高呢</strong>？我们还是用 <code>pidstat</code> 来查询：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">pidstat -u 5 1  <span class="comment"># 间隔 5 秒后输出一组数据，-u 表示 CPU 指标</span></span><br><span class="line"></span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:27:13 PM   UID       PID    %usr %system  %guest   %<span class="built_in">wait</span>    %CPU   CPU  Command</span><br><span class="line">11:27:18 PM     0      2012   16.24    2.35    0.00    0.39   18.59     0  php</span><br><span class="line">11:27:18 PM     0      2363    7.05    2.35    0.00    0.20    9.39     1  php</span><br><span class="line">11:27:18 PM     0      4749    0.00    0.20    0.00    0.00    0.20     0  php</span><br><span class="line">11:27:18 PM     0     35646    0.00   97.46    0.00    0.59   97.46     3  stress</span><br><span class="line">11:27:18 PM     0     35650    0.00    0.20    0.00    0.00    0.20     3  flush-0:23</span><br><span class="line">11:27:18 PM     0     35651    0.00    0.20    0.00    0.00    0.20     1  watch</span><br><span class="line">11:27:18 PM     0     35660    0.00    0.59    0.00    0.00    0.59     2  pidstat</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以发现，还是 stress 进程导致的。</p>
+<p><strong>另外一种测试方式</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">终端1：  stress -d 1 --timeout 600</span><br><span class="line"></span><br><span class="line">终端2：  watch -d uptime</span><br><span class="line"></span><br><span class="line">终端3： mpstat -P ALL 5</span><br><span class="line"></span><br><span class="line">终端4： pidstat -d 5  <span class="comment"># 观察kB_wr/s  stress非常高</span></span><br></pre></td></tr></table></figure>
+<h3 id="大量进程的场景"><a href="#大量进程的场景" class="headerlink" title="大量进程的场景"></a>大量进程的场景</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当系统中运行进程超出 CPU 运行能力时，就会出现等待 CPU 的进程</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如，我们还是使用 stress，但这次模拟的是 8 个进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stress -c 8 --timeout 600</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># stress -c 8 --timeout 600</span></span><br><span class="line">stress: info: [36462] dispatching hogs: 8 cpu, 0 io, 0 vm, 0 hdd</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于系统只有4 个 CPU，明显比 8 个进程要少得多，因而，<strong>系统的 CPU 处于严重过载状态，平均负载高达8，并持续增长</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># uptime</span></span><br><span class="line"> 23:47:45 up 13:37,  7 users,  load average: 8.41, 3.94, 1.89</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;运行 <code>mpstat</code> <strong>查看 CPU 使用率的变化情况</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mpstat -P ALL 5</span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:45:58 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">11:46:03 PM  all   98.93    0.00    1.02    0.00    0.00    0.05    0.00    0.00    0.00    0.00</span><br><span class="line">11:46:03 PM    0   99.59    0.00    0.41    0.00    0.00    0.00    0.00    0.00    0.00    0.00</span><br><span class="line">11:46:03 PM    1   98.37    0.00    1.63    0.00    0.00    0.00    0.00    0.00    0.00    0.00</span><br><span class="line">11:46:03 PM    2   99.39    0.00    0.61    0.00    0.00    0.00    0.00    0.00    0.00    0.00</span><br><span class="line">11:46:03 PM    3   98.38    0.00    1.41    0.00    0.00    0.20    0.00    0.00    0.00    0.00</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着再运行 <code>pidstat</code>来看一下进程的情况：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">root@php5# pidstat -u 5 1</span><br><span class="line">Linux 2.6.32-754.3.5.el6.x86_64 (php5.6) 	04/24/2019 	_x86_64_	(4 CPU)</span><br><span class="line"></span><br><span class="line">11:49:02 PM   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command</span><br><span class="line">11:49:07 PM     0      2012   23.97    0.98    0.00    3.34   24.95     3  php</span><br><span class="line">11:49:07 PM     0      2363   11.59    1.77    0.00    0.59   13.36     1  php</span><br><span class="line">11:49:07 PM     0      2846    0.00    0.20    0.00    0.00    0.20     0  redis-server</span><br><span class="line">11:49:07 PM   500      3879    0.20    0.00    0.00    0.00    0.20     1  mysqld</span><br><span class="line">11:49:07 PM     0      5556    0.00    0.20    0.00    0.00    0.20     0  vmtoolsd</span><br><span class="line">11:49:07 PM     0     36463   37.13    0.00    0.00   62.87   37.13     3  stress</span><br><span class="line">11:49:07 PM     0     36464   43.03    0.20    0.00   56.78   43.22     1  stress</span><br><span class="line">11:49:07 PM     0     36465   49.31    0.00    0.00   50.49   49.31     0  stress</span><br><span class="line">11:49:07 PM     0     36466   50.10    0.00    0.00   50.29   50.10     2  stress</span><br><span class="line">11:49:07 PM     0     36467   49.51    0.00    0.00   50.49   49.51     0  stress</span><br><span class="line">11:49:07 PM     0     36468   37.13    0.20    0.00   62.87   37.33     3  stress</span><br><span class="line">11:49:07 PM     0     36469   49.90    0.20    0.00   49.90   50.10     2  stress</span><br><span class="line">11:49:07 PM     0     36470   43.03    0.39    0.00   56.78   43.42     1  stress</span><br><span class="line">11:49:07 PM     0     36471    0.20    0.20    0.00    0.00    0.39     0  watch</span><br><span class="line">11:49:07 PM     0     36695    0.20    0.39    0.00    1.57    0.59     3  pidstat</span><br><span class="line"></span><br><span class="line">Average:      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command</span><br><span class="line">Average:        0      2012   23.97    0.98    0.00    3.34   24.95     -  php</span><br><span class="line">Average:        0      2363   11.59    1.77    0.00    0.59   13.36     -  php</span><br><span class="line">Average:        0      2846    0.00    0.20    0.00    0.00    0.20     -  redis-server</span><br><span class="line">Average:      500      3879    0.20    0.00    0.00    0.00    0.20     -  mysqld</span><br><span class="line">Average:        0      5556    0.00    0.20    0.00    0.00    0.20     -  vmtoolsd</span><br><span class="line">Average:        0     36463   37.13    0.00    0.00   62.87   37.13     -  stress</span><br><span class="line">Average:        0     36464   43.03    0.20    0.00   56.78   43.22     -  stress</span><br><span class="line">Average:        0     36465   49.31    0.00    0.00   50.49   49.31     -  stress</span><br><span class="line">Average:        0     36466   50.10    0.00    0.00   50.29   50.10     -  stress</span><br><span class="line">Average:        0     36467   49.51    0.00    0.00   50.49   49.51     -  stress</span><br><span class="line">Average:        0     36468   37.13    0.20    0.00   62.87   37.33     -  stress</span><br><span class="line">Average:        0     36469   49.90    0.20    0.00   49.90   50.10     -  stress</span><br><span class="line">Average:        0     36470   43.03    0.39    0.00   56.78   43.42     -  stress</span><br><span class="line">Average:        0     36471    0.20    0.20    0.00    0.00    0.39     -  watch</span><br><span class="line">Average:        0     36695    0.20    0.39    0.00    1.57    0.59     -  pidstat</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以看出，8 个进程在争抢 4 个 CPU，<strong>每个进程等待 CPU 的时间（也就是代码块中的%wait 列）高达50%。这些超出 CPU 计算能力的进程，最终导致 CPU 过载</strong>。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>平均负载提供了一个快速查看系统整体性能的手段，反映了整体的负载情况</strong>。但只看平均负载本身，我们并不能直接发现，到底是哪里出现了瓶颈。所以，在理解平均负载时，也要注意：</p>
+<ol>
+<li><strong>平均负载高有可能是 CPU 密集型进程导致的</strong>；</li>
+<li><strong>平均负载高并不一定代表 CPU 使用率高，还有可能是 I/O 更繁忙了</strong>；</li>
+<li>当发现负载高的时候，你可以使用 <code>mpstat</code>、<code>pidstat</code>等工具，辅助分析负载的来源。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/bash/" rel="tag"># bash</a>
+          
+            <a href="/tags/Linux问题排查/" rel="tag"># Linux问题排查</a>
+          
+            <a href="/tags/Linux性能优化/" rel="tag"># Linux性能优化</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/21/聊聊 5.7 error log 那些事儿/" rel="next" title="聊聊 5.7 error log 那些事儿">
+                <i class="fa fa-chevron-left"></i> 聊聊 5.7 error log 那些事儿
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/23/安装sysbench/" rel="prev" title="安装sysbench">
+                安装sysbench <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#怎么理解“平均负载”？"><span class="nav-number">1.</span> <span class="nav-text">怎么理解“平均负载”？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#平均负载的概念"><span class="nav-number">1.1.</span> <span class="nav-text">平均负载的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#平均负载为多少时合理"><span class="nav-number">1.2.</span> <span class="nav-text">平均负载为多少时合理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cpu个数查看"><span class="nav-number">1.2.1.</span> <span class="nav-text">cpu个数查看</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#平均负载有三个数值，到底该参考哪一个呢？"><span class="nav-number">1.2.2.</span> <span class="nav-text">平均负载有三个数值，到底该参考哪一个呢？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#平均负载与-CPU-使用率"><span class="nav-number">1.3.</span> <span class="nav-text">平均负载与 CPU 使用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#平均负载案例分析"><span class="nav-number">1.4.</span> <span class="nav-text">平均负载案例分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装或更新stress"><span class="nav-number">1.4.1.</span> <span class="nav-text">安装或更新stress</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装或更新sysstat"><span class="nav-number">1.4.2.</span> <span class="nav-text">安装或更新sysstat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU-密集型进程"><span class="nav-number">1.4.3.</span> <span class="nav-text">CPU 密集型进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O-密集型进程"><span class="nav-number">1.4.4.</span> <span class="nav-text">I/O 密集型进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大量进程的场景"><span class="nav-number">1.4.5.</span> <span class="nav-text">大量进程的场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

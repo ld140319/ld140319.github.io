@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,用户身份验证,token认证,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="基于token的多平台身份认证架构设计1   概述在存在账号体系的信息系统中，对身份的鉴定是非常重要的事情。 随着移动互联网时代到来，客户端的类型越来越多， 逐渐出现了 一个服务器，N个客户端的格局 。  不同的客户端产生了不同的用户使用场景，这些场景：  有不同的环境安全威胁 不同的会话生存周期 不同的用户权限控制体系 不同级别的接口调用方式  综上所述，它们的身份认证方式也存在一定的区别。 本">
+<meta name="keywords" content="架构,用户身份验证,token认证">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于token的多平台身份认证架构设计">
+<meta property="og:url" content="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="基于token的多平台身份认证架构设计1   概述在存在账号体系的信息系统中，对身份的鉴定是非常重要的事情。 随着移动互联网时代到来，客户端的类型越来越多， 逐渐出现了 一个服务器，N个客户端的格局 。  不同的客户端产生了不同的用户使用场景，这些场景：  有不同的环境安全威胁 不同的会话生存周期 不同的用户权限控制体系 不同级别的接口调用方式  综上所述，它们的身份认证方式也存在一定的区别。 本">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121327752-2038968196.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121406236-997134623.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121417283-63272219.png">
+<meta property="og:updated_time" content="2019-04-27T08:55:13.185Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于token的多平台身份认证架构设计">
+<meta name="twitter:description" content="基于token的多平台身份认证架构设计1   概述在存在账号体系的信息系统中，对身份的鉴定是非常重要的事情。 随着移动互联网时代到来，客户端的类型越来越多， 逐渐出现了 一个服务器，N个客户端的格局 。  不同的客户端产生了不同的用户使用场景，这些场景：  有不同的环境安全威胁 不同的会话生存周期 不同的用户权限控制体系 不同级别的接口调用方式  综上所述，它们的身份认证方式也存在一定的区别。 本">
+<meta name="twitter:image" content="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121327752-2038968196.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/">
+
+
+
+
+
+  <title>基于token的多平台身份认证架构设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/07/基于token的多平台身份认证架构设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">基于token的多平台身份认证架构设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-07T12:12:57+08:00">
+                2019-04-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/用户身份验证/" itemprop="url" rel="index">
+                    <span itemprop="name">用户身份验证</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/用户身份验证/token认证/" itemprop="url" rel="index">
+                    <span itemprop="name">token认证</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="基于token的多平台身份认证架构设计"><a href="#基于token的多平台身份认证架构设计" class="headerlink" title="基于token的多平台身份认证架构设计"></a>基于token的多平台身份认证架构设计</h1><h1 id="1-概述"><a href="#1-概述" class="headerlink" title="1   概述"></a>1   概述</h1><p>在存在账号体系的信息系统中，对身份的鉴定是非常重要的事情。</p>
+<p>随着移动互联网时代到来，客户端的类型越来越多， 逐渐出现了 <strong>一个服务器，N个客户端的格局</strong> 。</p>
+<p><img src="//blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121327752-2038968196.png" alt="img"></p>
+<p>不同的客户端产生了不同的用户使用场景，这些场景：</p>
+<ol>
+<li>有不同的环境安全威胁</li>
+<li>不同的会话生存周期</li>
+<li>不同的用户权限控制体系</li>
+<li>不同级别的接口调用方式</li>
+</ol>
+<p>综上所述，它们的身份认证方式也存在一定的区别。</p>
+<p>本文将使用一定的篇幅对这些场景进行一些分析和梳理工作。</p>
+<h1 id="2-使用场景"><a href="#2-使用场景" class="headerlink" title="2   使用场景"></a>2   使用场景</h1><p>下面是一些在IT服务常见的一些使用场景:</p>
+<ol>
+<li>用户在web浏览器端登录系统,使用系统服务</li>
+<li>用户在手机端（Android/iOS）登录系统,使用系统服务</li>
+<li>用户使用开放接口登录系统,调用系统服务</li>
+<li>用户在PC处理登录状态时通过手机扫码授权手机登录（使用得比较少）</li>
+<li>用户在手机处理登录状态进通过手机扫码授权PC进行登录（比较常见）</li>
+</ol>
+<p>通过对场景的细分,得到如下不同的认证token类别:</p>
+<ol>
+<li><p>原始账号密码类别</p>
+<p>用户名和密码API应用ID/KEY</p>
+</li>
+<li><p>会话ID类别</p>
+<p>浏览器端token移动端tokenAPI应用token</p>
+</li>
+<li><p>接口调用类别</p>
+<p>接口访问token</p>
+</li>
+<li><p>身份授权类别</p>
+<p>PC和移动端相互授权的token</p>
+</li>
+</ol>
+<h1 id="3-token的类别"><a href="#3-token的类别" class="headerlink" title="3   token的类别"></a>3   token的类别</h1><p>不同场景的token进行如下几个维度的对比:</p>
+<p><strong>天然属性</strong> 对比:</p>
+<ol>
+<li><p>使用成本</p>
+<p>本认证方式在使用的时候,造成的不便性。比如:账号密码需要用户打开页面然后逐个键入二维码需要用户掏出手机进行扫码操作</p>
+</li>
+<li><p>变化成本</p>
+<p>本认证方式,token发生变化时,用户需要做出的相应更改的成本:用户名和密码发生变化时,用户需要额外记忆和重新键入新密码API应用ID/KEY发生变化时,第三方应用需要重新在代码中修改并部署授权二维码发生变化时,需要用户重新打开手机应用进行扫码</p>
+</li>
+<li><p>环境风险</p>
+<blockquote>
+<ul>
+<li>被偷窥的风险</li>
+<li>被抓包的风险</li>
+<li>被伪造的风险</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+<p><strong>可调控属性</strong> 对比:</p>
+<ol>
+<li><p>使用频率</p>
+<p>在网路中传送的频率</p>
+</li>
+<li><p>有效时间</p>
+<p>此token从创建到终结的生存时间</p>
+</li>
+</ol>
+<p>最终的目标:安全和影响。</p>
+<p>安全和隐私性主要体现在:</p>
+<ul>
+<li>token 不容易被窃取和盗用（通过对传送频率控制）</li>
+<li>token 即使被窃取,产生的影响也是可控的（通过对有效时间控制）</li>
+</ul>
+<p>关于隐私及隐私破坏后的后果,有如下的基本结论:</p>
+<ol>
+<li>曝光频率高的容易被截获</li>
+<li>生存周期长的在被截获后产生的影响更严重和深远</li>
+</ol>
+<p>遵守如下原则:</p>
+<ol>
+<li>变化成本高的token不要轻易变化</li>
+<li>不轻易变化的token要减少曝光频率（网络传输次数）</li>
+<li>曝光频率高的token的生存周期要尽量短</li>
+</ol>
+<p>将各类token的固有特点及可控属性进行调控后, 对每个指标进行量化评分（1~5分），我们可以得到如下的对比表：</p>
+<p><img src="//blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121406236-997134623.png" alt=""></p>
+<p>备注:</p>
+<ul>
+<li><strong>user_name/passwd</strong> 和 <strong>app_id/app_key</strong> 是等价的效果</li>
+</ul>
+<h1 id="4-token的层级关系"><a href="#4-token的层级关系" class="headerlink" title="4   token的层级关系"></a>4   token的层级关系</h1><p>参考上一节的对比表，可以很容易对这些不同用途的token进行分层，主要可以分为4层：</p>
+<ol>
+<li><p>密码层</p>
+<p>最传统的用户和系统之间约定的数字身份认证方式</p>
+</li>
+<li><p>会话层</p>
+<p>用户登录后的会话生命周期的会话认证</p>
+</li>
+<li><p>调用层</p>
+<p>用户在会话期间对应用程序接口的调用认证</p>
+</li>
+<li><p>应用层</p>
+<p>用户获取了接口访问调用权限后的一些场景或者身份认证应用</p>
+</li>
+</ol>
+<p>token的分层图如下：</p>
+<p><img src="//blog.com/2019/04/07/基于token的多平台身份认证架构设计/111649-20161104121417283-63272219.png" alt=""></p>
+<p>在一个多客户端的信息系统里面,这些token的产生及应用的内在联系如下:</p>
+<ol>
+<li>用户输入用户名和用户口令进行一次性认证</li>
+<li>在 <strong>不同</strong> 的终端里面生成拥有 <strong>不同</strong> 生命周期的会话token</li>
+<li>客户端会话token从服务端交换生命周期短但曝光 <strong>频繁</strong> 的接口访问token</li>
+<li>会话token可以生成和刷新延长 <strong>access_token</strong> 的生存时间</li>
+<li>access_token可以生成生存周期最短的用于授权的二维码的token</li>
+</ol>
+<p>使用如上的架构有如下的好处：</p>
+<ol>
+<li>良好的统一性。可以解决不同平台上认证token的生存周期的 <strong>归一化</strong> 问题</li>
+<li>良好的解耦性。核心接口调用服务器的认证 access_token 可以完成独立的实现和部署</li>
+<li>良好的层次性。不同平台的可以有完全不同的用户权限控制系统，这个控制可以在 <strong>会话层</strong> 中各平台解决掉</li>
+</ol>
+<h2 id="4-1-账号密码"><a href="#4-1-账号密码" class="headerlink" title="4.1   账号密码"></a>4.1   账号密码</h2><p>广义的 <strong>账号/密码</strong> 有如下的呈现方式:</p>
+<ol>
+<li>传统的注册用户名和密码</li>
+<li>应用程序的app_id/app_key</li>
+</ol>
+<p>它们的特点如下：</p>
+<ol>
+<li><p>会有特别的意义</p>
+<p>比如：用户自己为了方便记忆，会设置有一定含义的账号和密码。</p>
+</li>
+<li><p>不常修改</p>
+<p>账号密码对用户有特别含义，一般没有特殊情况不会愿意修改。 而app_id/app_key则会写在应用程序中，修改会意味着重新发布上线的成本</p>
+</li>
+<li><p>一旦泄露影响深远</p>
+<p>正因为不常修改，只要泄露了基本相当于用户的网络身份被泄露，而且只要没被察觉这种身份盗用就会一直存在</p>
+</li>
+</ol>
+<p>所以在认证系统中应该尽量减少传输的机会，避免泄露。</p>
+<h2 id="4-2-客户端会话token"><a href="#4-2-客户端会话token" class="headerlink" title="4.2   客户端会话token"></a>4.2   客户端会话token</h2><p>功能：充当着session的角色，不同的客户端有不同的生命周期。</p>
+<p>使用步骤：</p>
+<ol>
+<li>用户使用账号密码，换取会话token</li>
+</ol>
+<p>不同的平台的token有不同的特点。</p>
+<p><strong>Web平台生存周期短</strong></p>
+<p>主要原因：</p>
+<ol>
+<li><p>环境安全性</p>
+<p>由于web登录环境一般很可能是公共环境，被他人盗取的风险值较大</p>
+</li>
+<li><p>输入便捷性</p>
+<p>在PC上使用键盘输入会比较便捷</p>
+</li>
+</ol>
+<p><strong>移动端生存周期长</strong></p>
+<p>主要原因：</p>
+<ol>
+<li><p>环境安全性</p>
+<p>移动端平台是个人用户极其私密的平台，它人接触的机会不大</p>
+</li>
+<li><p>输入便捷性</p>
+<p>在移动端上使用手指在小屏幕上触摸输入体验差，输入成本高</p>
+</li>
+</ol>
+<h2 id="4-3-access-token"><a href="#4-3-access-token" class="headerlink" title="4.3   access_token"></a>4.3   access_token</h2><p>功能：服务端应用程序api接口访问和调用的凭证。</p>
+<p>使用步骤：</p>
+<ol>
+<li>使用具有较长生命周期的会话token来换取此接口访问token。</li>
+</ol>
+<p>其曝光频率直接和接口调用频率有关，属于高频使用的凭证。 为了照顾到隐私性，尽量减少其生命周期，即使被截取了，也不至于产生严重的后果。</p>
+<p>注意：在客户端token之下还加上一个access_token， 主要是为了让具有不同生命周期的客户端token最后在调用api的时候， 能够具有统一的认证方式。</p>
+<h2 id="4-4-pam-token"><a href="#4-4-pam-token" class="headerlink" title="4.4   pam_token"></a>4.4   pam_token</h2><p>功能：由已经登录和认证的PC端生成的二维码的原始串号（Pc Auth Mobile）。</p>
+<p>主要步骤如下：</p>
+<ol>
+<li>PC上用户已经完成认证，登录了系统</li>
+<li>PC端生成一组和此用户相关联的pam_token</li>
+<li>PC端将此pam_token的使用链接生成二维码</li>
+<li>移动端扫码后，请求服务器，并和用户信息关联</li>
+<li>移动端获取refresh_token(长时效的会话)</li>
+<li>根据 refresh_token 获取 access_token</li>
+<li>完成正常的接口调用工作</li>
+</ol>
+<p>备注:</p>
+<ul>
+<li>生存周期为2分钟,2分钟后过期删除</li>
+<li>没有被使用时,每1分钟变一次</li>
+<li>被使用后,立刻删除掉</li>
+<li>此种认证模式一般不会被使用到</li>
+</ul>
+<h2 id="4-5-map-token"><a href="#4-5-map-token" class="headerlink" title="4.5   map_token"></a>4.5   map_token</h2><p>功能：由已经登录的移动app来扫码认证PC端系统，并完成PC端系统的登录（Mobile Auth Pc）。</p>
+<p>主要步骤：</p>
+<ol>
+<li>移动端完成用户身份的认证登录app</li>
+<li>未登录的PC生成匿名的 <strong>map_token</strong></li>
+<li>移动端扫码后在db中生成 <strong>map_token</strong> 和用户关联（完成签名）</li>
+<li>db同时针对此用户生成 <strong>web_token</strong></li>
+<li>PC端一直以 <strong>map_token</strong> 为参数查找此命名用户的 <strong>web_token</strong></li>
+<li>PC端根据 <strong>web_token</strong> 去获取 <strong>access_token</strong></li>
+<li>后续正常的调用接口调用工作</li>
+</ol>
+<p>备注:</p>
+<ul>
+<li>生存周期为2分钟,2分钟后过期删除</li>
+<li>没有被使用时,每1分钟变一次</li>
+<li>被使用后,立刻删除掉</li>
+</ul>
+<h1 id="5-小结与展望"><a href="#5-小结与展望" class="headerlink" title="5   小结与展望"></a>5   小结与展望</h1><p>本文所设计的基于token的身份认证系统，主要解决了如下的问题：</p>
+<ol>
+<li>token的分类问题</li>
+<li>token的隐私性参数设置问题</li>
+<li>token的使用场景问题</li>
+<li>不同生命周期的token分层转化关系</li>
+</ol>
+<p>本文中提到的设计方法，在 <strong>应用层</strong> 中可以适用于且不限于如下场景中：</p>
+<ol>
+<li>用户登录</li>
+<li>有时效的优惠券发放</li>
+<li>有时效的邀请码发放</li>
+<li>有时效的二维码授权</li>
+<li>具有时效 <strong>手机/邮件</strong> 验证码</li>
+<li>多个不同平台调用同一套API接口</li>
+<li>多个平台使用同一个身份认证中心</li>
+</ol>
+<p>至于更多的使用场景，就需要大家去发掘了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/用户身份验证/" rel="tag"># 用户身份验证</a>
+          
+            <a href="/tags/token认证/" rel="tag"># token认证</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/07/OAuth 2.0 的一个简单解释/" rel="next" title="OAuth 2.0 的一个简单解释">
+                <i class="fa fa-chevron-left"></i> OAuth 2.0 的一个简单解释
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/07/OAuth 2.0 的四种方式/" rel="prev" title="OAuth 2.0 的四种方式">
+                OAuth 2.0 的四种方式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#基于token的多平台身份认证架构设计"><span class="nav-number">1.</span> <span class="nav-text">基于token的多平台身份认证架构设计</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-概述"><span class="nav-number">2.</span> <span class="nav-text">1   概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-使用场景"><span class="nav-number">3.</span> <span class="nav-text">2   使用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-token的类别"><span class="nav-number">4.</span> <span class="nav-text">3   token的类别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-token的层级关系"><span class="nav-number">5.</span> <span class="nav-text">4   token的层级关系</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-账号密码"><span class="nav-number">5.1.</span> <span class="nav-text">4.1   账号密码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-客户端会话token"><span class="nav-number">5.2.</span> <span class="nav-text">4.2   客户端会话token</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-access-token"><span class="nav-number">5.3.</span> <span class="nav-text">4.3   access_token</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-pam-token"><span class="nav-number">5.4.</span> <span class="nav-text">4.4   pam_token</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-map-token"><span class="nav-number">5.5.</span> <span class="nav-text">4.5   map_token</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-小结与展望"><span class="nav-number">6.</span> <span class="nav-text">5   小结与展望</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

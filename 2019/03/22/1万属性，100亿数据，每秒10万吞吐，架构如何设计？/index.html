@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,58架构分享,类SKU问题处理,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="1万属性，100亿数据，每秒10万吞吐，架构如何设计？ 原文地址：https://mp.weixin.qq.com/s/msinJA9T3TR1uWrYx6M1iQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;有一类业务场景，没有固定的schema存储，却有着海量的数据行数，架构上如何来实现这类业务的存储与检索呢？58最核心的数据“帖子”的架构实现技术细节，今天和大家">
+<meta name="keywords" content="架构,58架构分享,类SKU问题处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="1万属性，100亿数据，每秒10万吞吐，架构如何设计？">
+<meta property="og:url" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="1万属性，100亿数据，每秒10万吞吐，架构如何设计？ 原文地址：https://mp.weixin.qq.com/s/msinJA9T3TR1uWrYx6M1iQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;有一类业务场景，没有固定的schema存储，却有着海量的数据行数，架构上如何来实现这类业务的存储与检索呢？58最核心的数据“帖子”的架构实现技术细节，今天和大家">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/1.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/2.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/3.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/4.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/5.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/7.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/8.webp">
+<meta property="og:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/9.webp">
+<meta property="og:updated_time" content="2019-05-02T01:29:27.369Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="1万属性，100亿数据，每秒10万吞吐，架构如何设计？">
+<meta name="twitter:description" content="1万属性，100亿数据，每秒10万吞吐，架构如何设计？ 原文地址：https://mp.weixin.qq.com/s/msinJA9T3TR1uWrYx6M1iQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;有一类业务场景，没有固定的schema存储，却有着海量的数据行数，架构上如何来实现这类业务的存储与检索呢？58最核心的数据“帖子”的架构实现技术细节，今天和大家">
+<meta name="twitter:image" content="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/">
+
+
+
+
+
+  <title>1万属性，100亿数据，每秒10万吞吐，架构如何设计？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">1万属性，100亿数据，每秒10万吞吐，架构如何设计？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-22T12:12:57+08:00">
+                2019-03-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/58架构分享/" itemprop="url" rel="index">
+                    <span itemprop="name">58架构分享</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/58架构分享/类SKU问题处理/" itemprop="url" rel="index">
+                    <span itemprop="name">类SKU问题处理</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1万属性，100亿数据，每秒10万吞吐，架构如何设计？"><a href="#1万属性，100亿数据，每秒10万吞吐，架构如何设计？" class="headerlink" title="1万属性，100亿数据，每秒10万吞吐，架构如何设计？"></a>1万属性，100亿数据，每秒10万吞吐，架构如何设计？</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/msinJA9T3TR1uWrYx6M1iQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/msinJA9T3TR1uWrYx6M1iQ</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有一类业务场景，没有固定的<code>schema</code>存储，却有着海量的数据行数，架构上如何来实现这类业务的存储与检索呢？58最核心的数据“帖子”的架构实现技术细节，今天和大家聊一聊。</p>
+<h2 id="一、背景描述及业务介绍"><a href="#一、背景描述及业务介绍" class="headerlink" title="一、背景描述及业务介绍"></a>一、背景描述及业务介绍</h2><p><strong>什么是58最核心的数据？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;58是一个信息平台，有很多垂直品类：招聘、房产、二手物品、二手车、黄页等等，每个品类又有很多子品类，不管哪个品类，最核心的数据都是“帖子信息”。</p>
+<p><code>画外音：像不像一个大论坛？</code></p>
+<p><strong>各分类帖子的信息有什么特点？</strong></p>
+<p>逛过58的朋友很容易了解到，这里的帖子信息：</p>
+<p>（1）<strong>各品类的属性千差万别</strong>，招聘帖子和二手帖子属性完全不同，二手手机和二手家电的属性又完全不同，目前恐怕有近万个属性；</p>
+<p>（2）<strong>数据量巨大</strong>，100亿级别；</p>
+<p>（3）<strong>每个属性上都有查询需求</strong>，各组合属性上都可能有组合查询需求，招聘要查职位/经验/薪酬范围，二手手机要查颜色/价格/型号，二手要查冰箱/洗衣机/空调；</p>
+<p>（4）<strong>吞吐量很大</strong>，每秒几10万吞吐；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如何解决100亿数据量，1万属性，多属性组合查询，10万并发查询的技术难题呢？一步步来。</p>
+<h2 id="二、最容易想到的方案"><a href="#二、最容易想到的方案" class="headerlink" title="二、最容易想到的方案"></a>二、最容易想到的方案</h2><p>每个公司的发展都是一个从小到大的过程，撇开并发量和数据量不谈，先看看</p>
+<p>（1）<strong>如何实现属性扩展性需求</strong>；</p>
+<p>（2）<strong>多属性组合查询需求</strong>；</p>
+<p><code>画外音：公司初期并发量和数据量都不大，必须先解决业务问题。</code></p>
+<p><strong>如何满足业务的存储需求呢？</strong></p>
+<p>最开始，业务只有一个招聘品类，那帖子表可能是这么设计的：</p>
+<p><code>tiezi(tid, uid, c1, c2, c3)</code>;</p>
+<p><strong>那如何满足各属性之间的组合查询需求呢？</strong></p>
+<p>最容易想到的是通过组合索引满足查询需求：</p>
+<p><code>index_1(c1, c2)</code></p>
+<p><code>index_2(c2, c3)</code></p>
+<p><code>index_3(c1, c3)</code></p>
+<p><strong>随着业务的发展，又新增了一个房产类别，存储问题又该如何解决呢？</strong></p>
+<p>可以新增若干属性满足存储需求，于是帖子表变成了：</p>
+<p><code>tiezi(tid, uid, c1, c2, c3, c10, c11, c12, c13)</code>; </p>
+<p>其中：</p>
+<ul>
+<li><code>c1,c2,c3</code>是招聘类别属性</li>
+<li><code>c10,c11,c12,c13</code>是房产类别属性</li>
+</ul>
+<p>通过扩展属性，可以解决存储的问题。</p>
+<p><strong>查询需求，又该如何满足呢？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先，<strong>跨业务属性一般没有组合查询需求</strong>。只能建立了若干组合索引，满足房产类别的查询需求。</p>
+<p><code>画外音：不敢想有多少个索引能覆盖所有两属性查询，三属性查询。</code></p>
+<p><strong>当业务越来越多时，是不是发现玩不下去了？</strong></p>
+<h2 id="三、垂直拆分是一个思路"><a href="#三、垂直拆分是一个思路" class="headerlink" title="三、垂直拆分是一个思路"></a>三、垂直拆分是一个思路</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;新增属性是一种扩展方式，新增表也是一种方式，垂直拆分也是常见的存储扩展方案。</p>
+<p><strong>如何按照业务进行垂直拆分？</strong></p>
+<p>可以这么玩：</p>
+<p><code>tiezi_zhaopin(tid, uid, c1, c2, c3)</code>;</p>
+<p><code>tiezi_fangchan(tid, uid, c10, c11, c12, c13)</code>;</p>
+<p><strong>在业务各异，数据量和吞吐量都巨大的情况下，垂直拆分会遇到什么问题呢？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这些表，以及对应的服务维护在不同的部门，看上去各业务灵活性强，研发闭环，这恰恰是悲剧的开始：</p>
+<p>（1）<strong>tid如何规范</strong>？</p>
+<p>（2）<strong>属性如何规范</strong>？</p>
+<p>（3）<strong>按照uid来查询怎么办</strong>（查询自己发布的所有帖子）？</p>
+<p>（4）<strong>按照时间来查询怎么办</strong>（最新发布的帖子）？</p>
+<p>（5）<strong>跨品类查询怎么办</strong>（例如首页搜索框）？</p>
+<p>（6）<strong>技术范围的扩散</strong>，有的用<code>mongo</code>存储，有的用<code>mysql</code>存储，有的自研存储；</p>
+<p>（7）<strong>重复开发了不少组件</strong>；</p>
+<p>（8）<strong>维护成本过高</strong>；</p>
+<p>（9）…</p>
+<p><code>画外音：想想看，电商的商品表，不可能一个类目一个表的。</code></p>
+<h2 id="四、58的玩法：三大中心服务"><a href="#四、58的玩法：三大中心服务" class="headerlink" title="四、58的玩法：三大中心服务"></a>四、58的玩法：三大中心服务</h2><h3 id="第一：统一帖子中心服务"><a href="#第一：统一帖子中心服务" class="headerlink" title="第一：统一帖子中心服务"></a>第一：统一帖子中心服务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;平台型创业型公司，可能有多个品类，各品类有很多异构数据的存储需求，到底是分还是合，无需纠结：<strong>基础数据基础服务的统一</strong>，是一个很好的实践。</p>
+<p><code>画外音：这里说的是平台型业务。</code></p>
+<p><strong>如何将不同品类，异构的数据统一存储起来呢？</strong></p>
+<p>（1）<strong>全品类通用属性统一存储</strong>；</p>
+<p>（2）<strong>单品类特有属性，品类类型与通用属性json来进行存储</strong>；</p>
+<p>更具体的：</p>
+<p><code>tiezi(tid, uid, time, title, cate, subcate, xxid, ext)</code>;</p>
+<p>（1）一些通用的字段抽取出来单独存储；</p>
+<p>（2）通过<code>cate, subcate, xxid</code>等来定义<code>ext</code>是何种含义；</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/1.webp" alt="img"></p>
+<p>（3）通过<code>ext</code>来存储不同业务线的个性化需求</p>
+<p>例如：</p>
+<p>招聘的帖子，<code>ext</code>为：</p>
+<p><code>{“job”:”driver”,”salary”:8000,”location”:”bj”}</code></p>
+<p>而二手的帖子，<code>ext</code>为：</p>
+<p><code>{”type”:”iphone”,”money”:3500}</code></p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/2.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子数据，100亿的数据量，分256库，通过<code>ext</code>存储异构业务数据，使用<code>mysql</code>存储，上层架了一个帖子中心服务，使用<code>memcache</code>做缓存，就是这样一个并不复杂的架构，解决了业务的大问题。这是58最核心的帖子中心服务<code>IMC（Info Management Center）</code>。</p>
+<p><code>画外音：该服务的底层存储在16年全面切换为了自研存储引擎，替换了mysql，但架构理念仍未变</code>。</p>
+<p>解决了海量异构数据的存储问题，遇到的<strong>新问题</strong>是：</p>
+<p>（1）<strong>每条记录ext内key都需要重复存储，占据了大量的空间，能否压缩存储</strong>；</p>
+<p>（2）<strong>cateid已经不足以描述ext内的内容，品类有层级，深度不确定，ext能否具备自描述性</strong>；</p>
+<p>（3）<strong>随时可以增加属性，保证扩展性</strong>；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;解决完海量异构数据的存储问题，接下来，要解决的是<strong>类目的扩展性问题</strong>。</p>
+<h3 id="第二：统一类目属性服务"><a href="#第二：统一类目属性服务" class="headerlink" title="第二：统一类目属性服务"></a>第二：统一类目属性服务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>每个业务有多少属性，这些属性是什么含义，值的约束等，耦合到帖子服务里</strong>显然是不合理的，那怎么办呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>抽象出一个统一的类目、属性服务，单独来管理这些信息，而帖子库ext字段里json的key，统一由数字来表示，减少存储空间</strong>。</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/3.webp" alt=""></p>
+<p>画外音：<strong>帖子表只存元信息，不管业务含义</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图所示，json里的key不再是”salary” ”location” ”money” 这样的长字符串了，取而代之的是数字1,2,3,4，这些<strong>数字是什么含义，属于哪个子分类，值的校验约束，统一都存储在类目、属性服务里</strong>。</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/4.webp" alt="img"></p>
+<p>画外音：<strong>类目表存业务信息，以及约束信息，与帖子表解耦</strong>。</p>
+<p>这个表里对帖子中心服务里<code>ext</code>字段里的数字<code>key</code>进行了解释：</p>
+<p>（1）1代表<code>job</code>，属于招聘品类下100子品类，其<code>value</code>必须是一个小于32的<code>[a-z]</code>字符；</p>
+<p>（2）4代表<code>type</code>，属于二手品类下200子品类，其<code>value</code>必须是一个<code>short</code>；</p>
+<p>这样就对原来帖子表<code>ext</code>扩展属性：</p>
+<p><code>{“1”:”driver”,”2”:8000,”3”:”bj”}</code></p>
+<p><code>{”4”:”iphone”,”5”:3500}</code></p>
+<p>key和value都做了统一约束。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除此之外，如果<code>ext</code>里某个<code>key</code>的<code>value</code>不是正则校验的值，而是枚举值时，需要<strong>有一个对值进行限定的枚举表来进行校验</strong>：</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/5.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个枚举校验，说明<code>key=4</code>的属性（对应属性表里二手，手机类型字段），其值不只是要进行“<code>short类型</code>”校验，而是<code>value</code>必须是固定的枚举值。</p>
+<p><code>{”4”:”iphone”,”5”:3500}</code></p>
+<p>这个<code>ext</code>就是不合法的，<code>key=4</code>的v<code>alue=iphone</code>不合法，而应该是枚举属性，合法的应该为：</p>
+<p><code>{”4”:”5”,”5”:3500}</code></p>
+<p>此外，类目属性服务还能记录类目之间的层级关系：</p>
+<p>（1）一级类目是招聘、房产、二手…</p>
+<p>（2）二手下有二级类目二手家具、二手手机…</p>
+<p>（3）二手手机下有三级类目二手iphone，二手小米，二手三星…</p>
+<p>（4）…</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>类目服务解释了帖子数据，描述品类层级关系，保证各类目属性扩展性，保证各属性值合理性校验，就是58另一个统一的核心服务<code>CMC（Category Management Center）</code></strong>。</p>
+<p>画外音：<strong>类目、属性服务像不像电商系统里的SKU扩展服务</strong>？</p>
+<p><strong>（1）品类层级关系，对应电商里的类别层级体系；</strong></p>
+<p><strong>（2）属性扩展，对应电商里各类别商品SKU的属性；</strong></p>
+<p><strong>（3）枚举值校验，对应属性的枚举值</strong>，例如颜色：红，黄，蓝；*</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过品类服务，解决了<code>key压缩</code>，<code>key描述</code>，<code>key扩展</code>，<code>value校验</code>，<code>品类层级</code>的问题，还有这样的一个问题没有解决：每个品类下帖子的属性各不相同，查询需求各不相同，<strong>如何解决100亿数据量，1万属性的检索与联合检索需求呢？</strong></p>
+<h3 id="第三：统一检索服务"><a href="#第三：统一检索服务" class="headerlink" title="第三：统一检索服务"></a>第三：统一检索服务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据量很大的时候，不同属性上的查询需求，不可能通过组合索引来满足所有查询需求，“外置索引，统一检索服务”是一个很常用的实践：</p>
+<p>（1）数据库提供“帖子id”的正排查询需求；</p>
+<p>（2）<strong>所有非“帖子id”的个性化检索需求，统一走外置索引</strong>；</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/7.webp" alt="img"></p>
+<p>元数据与索引数据的操作遵循：</p>
+<p>（1）对帖子进行tid正排查询，直接访问帖子服务；</p>
+<p>（2）<strong>对帖子进行修改，帖子服务通知检索服务，同时对索引进行修改</strong>；</p>
+<p>（3）对帖子进行复杂查询，通过检索服务满足需求；</p>
+<p><code>画外音：这个检索服务，扛起了58同城80%的请求（不管来自PC还是APP，不管是主页、城市页、分类页、列表页、详情页，最终都会转化为一个检索请求），它就是58另一个统一的核心服务E-search，这个搜索引擎，是完全自研的</code>。</p>
+<p>对于这个内核自研服务的搜索引擎架构，简单说明一下：</p>
+<p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/8.webp" alt="img"></p>
+<p>为应对100亿级别数据量、几十万级别的吞吐量，业务线各种复杂的复杂检索查询，扩展性是设计重点：</p>
+<p>（1）统一的<strong>代理层</strong>，作为入口，其无状态性能够保证增加机器就能扩充系统性能；</p>
+<p>（2）统一的<strong>结果聚合层</strong>，其无状态性也能够保证增加机器就能扩充系统性能；</p>
+<p>（3）搜索内核<strong>检索层</strong>，服务和索引数据部署在同一台机器上，服务启动时可以加载索引数据到内存，请求访问时从内存中load数据，访问速度很快：</p>
+<ul>
+<li>为了满足数据容量的扩展性，索引数据进行了水平切分，增加切分份数，就能够无限扩展性能</li>
+<li>为了满足一份数据的性能扩展性，同一份数据进行了冗余，理论上做到增加机器就无限扩展性能</li>
+</ul>
+<p>系统时延，100亿级别帖子检索，包含请求分合，拉链求交集，从聚合层均可以做到10ms返回。</p>
+<p><code>画外音：入口层是Java研发的，聚合层与检索层都是C语言研发的</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>帖子业务，一致性不是主要矛盾，E-search会定期全量重建索引，以保证即使数据不一致，也不会持续很长的时间</strong>。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p><img src="//blog.com/2019/03/22/1万属性，100亿数据，每秒10万吞吐，架构如何设计？/9.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;面对100亿数据量，1万列属性，10万吞吐量的业务需求，可以采用了<strong>元数据服务、属性服务、搜索服务来</strong>解决：</p>
+<ul>
+<li>一个解决存储问题</li>
+<li>一个解决品类解耦问题</li>
+<li>一个解决检索问题</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/58架构分享/" rel="tag"># 58架构分享</a>
+          
+            <a href="/tags/类SKU问题处理/" rel="tag"># 类SKU问题处理</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/22/分库分表后如何部署上线/" rel="next" title="分库分表后如何部署上线">
+                <i class="fa fa-chevron-left"></i> 分库分表后如何部署上线
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/22/“搜索”的原理，架构，实现，实践/" rel="prev" title="“搜索”的原理，架构，实现，实践">
+                “搜索”的原理，架构，实现，实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1万属性，100亿数据，每秒10万吞吐，架构如何设计？"><span class="nav-number">1.</span> <span class="nav-text">1万属性，100亿数据，每秒10万吞吐，架构如何设计？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、背景描述及业务介绍"><span class="nav-number">1.1.</span> <span class="nav-text">一、背景描述及业务介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、最容易想到的方案"><span class="nav-number">1.2.</span> <span class="nav-text">二、最容易想到的方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、垂直拆分是一个思路"><span class="nav-number">1.3.</span> <span class="nav-text">三、垂直拆分是一个思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、58的玩法：三大中心服务"><span class="nav-number">1.4.</span> <span class="nav-text">四、58的玩法：三大中心服务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一：统一帖子中心服务"><span class="nav-number">1.4.1.</span> <span class="nav-text">第一：统一帖子中心服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二：统一类目属性服务"><span class="nav-number">1.4.2.</span> <span class="nav-text">第二：统一类目属性服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三：统一检索服务"><span class="nav-number">1.4.3.</span> <span class="nav-text">第三：统一检索服务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、总结"><span class="nav-number">1.5.</span> <span class="nav-text">五、总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

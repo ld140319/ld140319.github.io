@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,服务注册与发现,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="深入理解RPC之服务注册与发现篇 原文地址：https://www.cnkirito.moe/rpc-registry/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 在我们之前 RPC 原理的分析中，主要将笔墨集中在 Client 和 Server 端。而成熟的服务治理框架中不止存在这两个角色，一般还会有一个 Registry（注册中心）的角色。一张图就可以解释注册中心的主要职责。   注">
+<meta name="keywords" content="架构,服务注册与发现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解RPC之服务注册与发现篇">
+<meta property="og:url" content="http://blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="深入理解RPC之服务注册与发现篇 原文地址：https://www.cnkirito.moe/rpc-registry/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 在我们之前 RPC 原理的分析中，主要将笔墨集中在 Client 和 Server 端。而成熟的服务治理框架中不止存在这两个角色，一般还会有一个 Registry（注册中心）的角色。一张图就可以解释注册中心的主要职责。   注">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/17071-20170522235215679-280378465.png">
+<meta property="og:updated_time" content="2019-03-30T08:09:53.311Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解RPC之服务注册与发现篇">
+<meta name="twitter:description" content="深入理解RPC之服务注册与发现篇 原文地址：https://www.cnkirito.moe/rpc-registry/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 在我们之前 RPC 原理的分析中，主要将笔墨集中在 Client 和 Server 端。而成熟的服务治理框架中不止存在这两个角色，一般还会有一个 Registry（注册中心）的角色。一张图就可以解释注册中心的主要职责。   注">
+<meta name="twitter:image" content="http://blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/17071-20170522235215679-280378465.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/">
+
+
+
+
+
+  <title>深入理解RPC之服务注册与发现篇 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入理解RPC之服务注册与发现篇</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-30T12:12:57+08:00">
+                2019-03-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/服务注册与发现/" itemprop="url" rel="index">
+                    <span itemprop="name">服务注册与发现</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="深入理解RPC之服务注册与发现篇"><a href="#深入理解RPC之服务注册与发现篇" class="headerlink" title="深入理解RPC之服务注册与发现篇"></a>深入理解RPC之服务注册与发现篇</h1><blockquote>
+<p>原文地址：<a href="https://www.cnkirito.moe/rpc-registry/" target="_blank" rel="noopener">https://www.cnkirito.moe/rpc-registry/</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p>在我们之前 RPC 原理的分析中，主要将笔墨集中在 Client 和 Server 端。而成熟的服务治理框架中不止存在这两个角色，一般还会有一个 Registry（注册中心）的角色。一张图就可以解释注册中心的主要职责。</p>
+<p><img src="//blog.com/2019/03/30/深入理解RPC之服务注册与发现篇/17071-20170522235215679-280378465.png" alt="注册中心的地位"></p>
+<ul>
+<li><p>注册中心，用于服务端注册远程服务以及客户端发现服务</p>
+</li>
+<li><p>服务端，对外提供后台服务，将自己的服务信息注册到注册中心</p>
+</li>
+<li><p>客户端，从注册中心获取远程服务的注册信息，然后进行远程过程调用</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;目前主要的注册中心可以借由 zookeeper，eureka，consul，etcd 等开源框架实现。互联网公司也会因为自身业务的特性自研，如美团点评自研的 MNS，新浪微博自研的 vintage。</p>
+<h2 id="注册中心的抽象"><a href="#注册中心的抽象" class="headerlink" title="注册中心的抽象"></a>注册中心的抽象</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;借用开源框架中的核心接口，可以帮助我们从一个较为抽象的高度去理解注册中心。例如 motan 中的相关接口：</p>
+<p>服务注册接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">RegistryService</span> </span>&#123;</span><br><span class="line">	<span class="comment">//1. 向注册中心注册服务</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">register</span><span class="params">(URL url)</span></span>;</span><br><span class="line">    <span class="comment">//2. 从注册中心摘除服务</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">unregister</span><span class="params">(URL url)</span></span>;</span><br><span class="line">    <span class="comment">//3. 将服务设置为可用，供客户端调用</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">available</span><span class="params">(URL url)</span></span>;</span><br><span class="line">    <span class="comment">//4. 禁用服务，客户端无法发现该服务</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">unavailable</span><span class="params">(URL url)</span></span>;</span><br><span class="line">  	<span class="comment">//5. 获取已注册服务的集合</span></span><br><span class="line">    <span class="function">Collection&lt;URL&gt; <span class="title">getRegisteredServiceUrls</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>服务发现接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DiscoveryService</span> </span>&#123;</span><br><span class="line">    <span class="comment">//1. 订阅服务</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(URL url, NotifyListener listener)</span></span>;</span><br><span class="line">    <span class="comment">//2. 取消订阅</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">unsubscribe</span><span class="params">(URL url, NotifyListener listener)</span></span>;</span><br><span class="line">    <span class="comment">//3. 发现服务列表</span></span><br><span class="line">    <span class="function">List&lt;URL&gt; <span class="title">discover</span><span class="params">(URL url)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;主要使用的方法是 RegistryService#register(URL) 和 DiscoveryService#discover(URL)。其中这个 URL 参数被传递，显然也是很重要的一个类。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class URL &#123;</span><br><span class="line">    private String protocol;//协议名称</span><br><span class="line">    private String host;</span><br><span class="line">    private int port;</span><br><span class="line">    // interfaceName,也代表着路径</span><br><span class="line">    private String path;</span><br><span class="line">    private Map&lt;String, String&gt; parameters;</span><br><span class="line">    private volatile transient Map&lt;String, Number&gt; numbers;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;注册中心也没那么玄乎，其实可以简单理解为：提供一个<strong>存储介质</strong>，供服务提供者和服务消费者共同连接，而存储的主要信息就是这里的 URL。但是具体 URL 都包含了什么实际信息，我们还没有一个直观的感受。</p>
+<h2 id="注册信息概览"><a href="#注册信息概览" class="headerlink" title="注册信息概览"></a>注册信息概览</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;以元老级别的注册中心 zookeeper 为例，看看它实际都存储了什么信息以及它是如何持久化上一节的 URL。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了测试，我创建了一个 RPC 服务接口 <code>com.sinosoft.student.api.DemoApi</code> ,并且在 6666 端口暴露了这个服务的实现类，将其作为服务提供者。在 6667 端口远程调用这个服务，作为服务消费者。两者都连接本地的 zookeeper，本机 ip 为 192.168.150.1。</p>
+<p>使用 zkClient.bash 或者 zkClient.sh 作为客户端连接到本地的 zookeeper，执行如下的命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[zk: localhost:2181(CONNECTED) 1] ls /motan/demo_group/com.sinosoft.student.api.DemoApi</span><br><span class="line">&gt; [client, server, unavailableServer]</span><br></pre></td></tr></table></figure>
+<p>zookeeper 有着和 linux 类似的命令和结构，其中 motan，demo_group，com.sinosoft.student.api.DemoApi，client, server, unavailableServer 都是一个个节点。可以从上述命令看出他们的父子关系。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/motan/demo_group/com.sinosoft.student.api.DemoApi` 的结构为 /框架标识/分组名/接口名</span><br><span class="line">其中的分组是 motan 为了隔离不同组的服务而设置的。这样，接口名称相同，分组不同的服务无法互相发现。</span><br><span class="line"></span><br><span class="line">如果此时有一个分组名为 demo_group2 的服务，接口名称为 DemoApi2，则 motan 会为其创建一个新的节点 /motan/demo_group2/com.sinosoft.student.api.DemoApi2</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;而 client，server，unavailableServer 则就是服务注册与发现的核心节点了。我们先看看这些节点都存储了什么信息。</p>
+<p>server 节点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[zk: localhost:2181(CONNECTED) 2] ls /motan/demo_group/com.sinosoft.student.api.DemoApi/server</span><br><span class="line">&gt; [192.168.150.1:6666]</span><br><span class="line"></span><br><span class="line">[zk: localhost:2181(CONNECTED) 3] get /motan/demo_group/com.sinosoft.student.api.DemoApi/server/192.168.150.1:6666</span><br><span class="line">&gt; motan://192.168.150.1:6666/com.sinosoft.student.api.DemoApi?serialization=hessian2&amp;protocol=motan&amp;isDefault=true&amp;maxContentLength=1548576&amp;shareChannel=true&amp;refreshTimestamp=1515122649835&amp;id=motanServerBasicConfig&amp;nodeType=service&amp;export=motan:6666&amp;requestTimeout=9000000&amp;accessLog=false&amp;group=demo_group&amp;</span><br></pre></td></tr></table></figure>
+<p>client 节点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[zk: localhost:2181(CONNECTED) 4] ls /motan/demo_group/com.sinosoft.student.api.DemoApi/client</span><br><span class="line">&gt; [192.168.150.1]</span><br><span class="line">[zk: localhost:2181(CONNECTED) 5] get /motan/demo_group/com.sinosoft.student.api.DemoApi/client/192.168.150.1</span><br><span class="line">&gt; motan://192.168.150.1:0/com.sinosoft.student.api.DemoApi?singleton=true&amp;maxContentLength=1548576&amp;check=false&amp;nodeType=service&amp;version=1.0&amp;throwException=true&amp;accessLog=false&amp;serialization=hessian2&amp;retries=0&amp;protocol=motan&amp;isDefault=true&amp;refreshTimestamp=1515122631758&amp;id=motanClientBasicConfig&amp;requestTimeout=9000&amp;group=demo_group&amp;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;unavailableServer 节点是一个过渡节点，所以在一切正常的情况下不会存在信息，它的具体作用在下面会介绍。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从这些输出数据可以发现，注册中心承担的一个职责就是存储服务调用中相关的信息，server 向 zookeeper 注册信息，保存在 server 节点，而 client 实际和 server 共享同一个接口，接口名称就是路径名，所以也到达了同样的 server 节点去获取信息。并且同时注册到了 client 节点下。</p>
+<h2 id="注册信息详解"><a href="#注册信息详解" class="headerlink" title="注册信息详解"></a>注册信息详解</h2><h3 id="Server-节点"><a href="#Server-节点" class="headerlink" title="Server 节点"></a>Server 节点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>server 节点承担着最重要的职责，它由服务提供者创建，以供服务消费者获取节点中的信息，从而定位到服务提供者真正网络拓扑位置以及得知如何调用</strong>。demo 中我只在本机 [192.168.150.1:6666] 启动了一个实例，所以在server 节点之下，只存在这么一个节点，继续 get 这个节点，可以获取更详细的信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">motan://192.168.150.1:6666/com.sinosoft.student.api.DemoApi?serialization=hessian2&amp;protocol=motan&amp;isDefault=true&amp;maxContentLength=1548576&amp;shareChannel=true&amp;refreshTimestamp=1515122649835&amp;id=motanServerBasicConfig&amp;nodeType=service&amp;export=motan:6666&amp;requestTimeout=9000000&amp;accessLog=false&amp;group=demo_group&amp;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;作为一个 value 值，它和 http 协议的请求十分相似，不过是以 motan:// 开头，表达的意图也很明确，这是 motan 协议和相关的路径及参数，关于 RPC 中的协议，可以翻看我的上一篇文章《深入理解RPC之协议篇》。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;serialization 对应序列化方式，protocol 对应协议名称，maxContentLength 对应 RPC 传输中数据报文的最大长度，shareChannel 是传输层用到的参数，netty channel 中的一个属性，group 对应分组名称。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上述的 value 包含了 RPC 调用中所需要的全部信息。</p>
+<h3 id="Client-节点"><a href="#Client-节点" class="headerlink" title="Client 节点"></a>Client 节点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在 motan 中使用 zookeeper 作为注册中心时，客户端订阅服务时会向 zookeeper 注册自身，主要是方便对调用方进行统计、管理。<strong>但订阅时是否注册 client 不是必要行为，和不同的注册中心实现有关</strong>，例如使用 consul 时便没有注册。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于我们使用 zookeeper，也可以分析下 zookeeper 中都注册了什么信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">motan://192.168.150.1:0/com.sinosoft.student.api.DemoApi?singleton=true&amp;maxContentLength=1548576&amp;check=false&amp;nodeType=service&amp;version=1.0&amp;throwException=true&amp;accessLog=false&amp;serialization=hessian2&amp;retries=0&amp;protocol=motan&amp;isDefault=true&amp;refreshTimestamp=1515122631758&amp;id=motanClientBasicConfig&amp;requestTimeout=9000&amp;group=demo_group</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;和 Server 节点的值类似，但也有客户独有的一些属性，如 singleton 代表服务是否单例，check 检查服务提供者是否存在，retries 代表重试次数，这也是 RPC 中特别需要注意的一点。</p>
+<h3 id="UnavailableServer-节点"><a href="#UnavailableServer-节点" class="headerlink" title="UnavailableServer 节点"></a>UnavailableServer 节点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;unavailableServer 节点也不是必须存在的一个节点，它主要用来做 server 端的延迟上线，优雅关机。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>延迟上线</strong>：一般推荐的服务端启动流程为：server 向注册中心的 unavailableServer 注册，状态为 unavailable，此时整个服务处于启动状态，但不对外提供服务，在服务验证通过，预热完毕，此时打开心跳开关，此时正式提供服务。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>优雅关机</strong>：当需要对 server 方进行维护升级时，如果直接关闭，则会影响到客户端的请求。所以理想的情况应当是首先切断流量，再进行 server 的下线。具体的做法便是：先关闭心跳开关，客户端感知停止调用后，再关闭服务进程。</p>
+<h2 id="感知服务的下线"><a href="#感知服务的下线" class="headerlink" title="感知服务的下线"></a>感知服务的下线</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;服务上线时自然要注册到注册中心，但下线时也得从注册中心中摘除。注册是一个主动的行为，这没有特别要注意的地方，但服务下线却是一个值得思考的问题。服务下线包含了主动下线和系统宕机等异常方式的下线。</p>
+<h3 id="临时节点-长连接"><a href="#临时节点-长连接" class="headerlink" title="临时节点+长连接"></a>临时节点+长连接</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在 zookeeper 中存在持久化节点和临时节点的概念。持久化节点一经创建，只要不主动删除，便会一直持久化存在；<strong>临时节点的生命周期则是和客户端的连接同生共死的，应用连接到 zookeeper 时创建一个临时节点，使用长连接维持会话，这样无论何种方式服务发生下线，zookeeper 都可以感知到，进而删除临时节点</strong>。zookeeper 的这一特性和服务下线的需求契合的比较好，所以临时节点被广泛应用。</p>
+<h3 id="主动下线-心跳检测"><a href="#主动下线-心跳检测" class="headerlink" title="主动下线+心跳检测"></a>主动下线+心跳检测</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;并不是所有注册中心都有临时节点的概念，另外一种感知服务下线的方式是主动下线。例如在 eureka 中，会有 eureka-server 和 eureka-client 两个角色，其中 eureka-server 保存注册信息，地位等同于 zookeeper。当 eureka-client 需要关闭时，会发送一个通知给 eureka-server，从而让 eureka-server 摘除自己这个节点。但这么做最大的一个问题是，如果仅仅只有主动下线这么一个手段，一旦 eureka-client 非正常下线（如断电，断网），eureka-server 便会一直存在一个已经下线的服务节点，一旦被其他服务发现进而调用，便会带来问题。<strong>为了避免出现这样的情况，需要给 eureka-server 增加一个心跳检测功能，它会对服务提供者进行探测，比如每隔30s发送一个心跳，如果三次心跳结果都没有返回值，就认为该服务已下线</strong>。</p>
+<h2 id="注册中心对比"><a href="#注册中心对比" class="headerlink" title="注册中心对比"></a>注册中心对比</h2><table>
+<thead>
+<tr>
+<th style="text-align:left">Feature</th>
+<th style="text-align:left">Consul</th>
+<th style="text-align:left">zookeeper</th>
+<th style="text-align:left">etcd</th>
+<th style="text-align:left">euerka</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">服务健康检查</td>
+<td style="text-align:left">服务状态，内存，硬盘等</td>
+<td style="text-align:left">(弱)长连接，keepalive</td>
+<td style="text-align:left">连接心跳</td>
+<td style="text-align:left">可配支持</td>
+</tr>
+<tr>
+<td style="text-align:left">多数据中心</td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">—</td>
+<td style="text-align:left">—</td>
+<td style="text-align:left">—</td>
+</tr>
+<tr>
+<td style="text-align:left">kv存储服务</td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">—</td>
+</tr>
+<tr>
+<td style="text-align:left">一致性</td>
+<td style="text-align:left">raft</td>
+<td style="text-align:left">paxos</td>
+<td style="text-align:left">raft</td>
+<td style="text-align:left">—</td>
+</tr>
+<tr>
+<td style="text-align:left">cap</td>
+<td style="text-align:left">ca</td>
+<td style="text-align:left">cp</td>
+<td style="text-align:left">cp</td>
+<td style="text-align:left">ap</td>
+</tr>
+<tr>
+<td style="text-align:left">使用接口(多语言能力)</td>
+<td style="text-align:left">支持http和dns</td>
+<td style="text-align:left">客户端</td>
+<td style="text-align:left">http/grpc</td>
+<td style="text-align:left">http（sidecar）</td>
+</tr>
+<tr>
+<td style="text-align:left">watch支持</td>
+<td style="text-align:left">全量/支持long polling</td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">支持 long polling</td>
+<td style="text-align:left">支持 long polling/大部分增量</td>
+</tr>
+<tr>
+<td style="text-align:left">自身监控</td>
+<td style="text-align:left">metrics</td>
+<td style="text-align:left">—</td>
+<td style="text-align:left">metrics</td>
+<td style="text-align:left">metrics</td>
+</tr>
+<tr>
+<td style="text-align:left">安全</td>
+<td style="text-align:left">acl /https</td>
+<td style="text-align:left">acl</td>
+<td style="text-align:left">https支持（弱）</td>
+<td style="text-align:left">—</td>
+</tr>
+<tr>
+<td style="text-align:left">spring cloud集成</td>
+<td style="text-align:left">已支持</td>
+<td style="text-align:left">已支持</td>
+<td style="text-align:left">已支持</td>
+<td style="text-align:left">已支持</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;一般而言注册中心的特性决定了其使用的场景，例如很多框架支持 zookeeper，在我自己看来是因为其老牌，易用，但业界也有很多人认为 zookeeper 不适合做注册中心，它本身是一个分布式协调组件，并不是为注册服务而生，server 端注册一个服务节点，client 端并不需要在同一时刻拿到完全一致的服务列表，只要最终一致性即可。在跨IDC，多数据中心等场景下 consul 发挥了很大的优势，这也是很多互联网公司选择使用 consul 的原因。 eureka 是 ap 注册中心，并且是 spring cloud 默认使用的组件，spring cloud eureka 较为贴近 spring cloud 生态。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;注册中心主要用于解耦服务调用中的定位问题，是分布式系统必须面对的一个问题。更多专业性的对比，可以期待 spring4all.com 的注册中心专题讨论，相信会有更为细致地对比。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/服务注册与发现/" rel="tag"># 服务注册与发现</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/30/缓存穿透、缓存击穿、缓存雪崩、热点数据失效/" rel="next" title="缓存穿透、缓存击穿、缓存雪崩、热点数据失效">
+                <i class="fa fa-chevron-left"></i> 缓存穿透、缓存击穿、缓存雪崩、热点数据失效
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/30/基于Redis实现滚动排行榜【最近N期榜】/" rel="prev" title="基于Redis实现滚动排行榜【最近N期榜】">
+                基于Redis实现滚动排行榜【最近N期榜】 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#深入理解RPC之服务注册与发现篇"><span class="nav-number">1.</span> <span class="nav-text">深入理解RPC之服务注册与发现篇</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#注册中心的抽象"><span class="nav-number">1.1.</span> <span class="nav-text">注册中心的抽象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注册信息概览"><span class="nav-number">1.2.</span> <span class="nav-text">注册信息概览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注册信息详解"><span class="nav-number">1.3.</span> <span class="nav-text">注册信息详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Server-节点"><span class="nav-number">1.3.1.</span> <span class="nav-text">Server 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Client-节点"><span class="nav-number">1.3.2.</span> <span class="nav-text">Client 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UnavailableServer-节点"><span class="nav-number">1.3.3.</span> <span class="nav-text">UnavailableServer 节点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#感知服务的下线"><span class="nav-number">1.4.</span> <span class="nav-text">感知服务的下线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#临时节点-长连接"><span class="nav-number">1.4.1.</span> <span class="nav-text">临时节点+长连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主动下线-心跳检测"><span class="nav-number">1.4.2.</span> <span class="nav-text">主动下线+心跳检测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注册中心对比"><span class="nav-number">1.5.</span> <span class="nav-text">注册中心对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

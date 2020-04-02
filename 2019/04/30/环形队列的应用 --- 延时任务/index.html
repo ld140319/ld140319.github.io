@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,延时队列,消息队列,延时任务处理,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="环形队列的应用 — 延时任务一、缘起(10w延时任务，如何高效触发超时)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;很多时候，业务有定时任务或者定时超时的需求，当任务量很大时，可能需要维护大量的timer，或者进行低效的扫描。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;例如：实时消息通道 检测APP登录状态 每3秒发送一个包 如果连续30s">
+<meta name="keywords" content="架构,延时队列,消息队列,延时任务处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="环形队列的应用 --- 延时任务">
+<meta property="og:url" content="http://blog.com/2019/04/30/环形队列的应用 --- 延时任务/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="环形队列的应用 — 延时任务一、缘起(10w延时任务，如何高效触发超时)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;很多时候，业务有定时任务或者定时超时的需求，当任务量很大时，可能需要维护大量的timer，或者进行低效的扫描。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;例如：实时消息通道 检测APP登录状态 每3秒发送一个包 如果连续30s">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/30/环形队列的应用%20---%20延时任务/环形队列.webp">
+<meta property="og:image" content="http://blog.com/2019/04/30/环形队列的应用%20---%20延时任务/58到家应用.webp">
+<meta property="og:updated_time" content="2019-04-30T14:08:24.937Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="环形队列的应用 --- 延时任务">
+<meta name="twitter:description" content="环形队列的应用 — 延时任务一、缘起(10w延时任务，如何高效触发超时)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;很多时候，业务有定时任务或者定时超时的需求，当任务量很大时，可能需要维护大量的timer，或者进行低效的扫描。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;例如：实时消息通道 检测APP登录状态 每3秒发送一个包 如果连续30s">
+<meta name="twitter:image" content="http://blog.com/2019/04/30/环形队列的应用%20---%20延时任务/环形队列.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/30/环形队列的应用 --- 延时任务/">
+
+
+
+
+
+  <title>环形队列的应用 --- 延时任务 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/30/环形队列的应用 --- 延时任务/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">环形队列的应用 --- 延时任务</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-30T12:12:57+08:00">
+                2019-04-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/" itemprop="url" rel="index">
+                    <span itemprop="name">延时队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/延时任务处理/" itemprop="url" rel="index">
+                    <span itemprop="name">延时任务处理</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="环形队列的应用-—-延时任务"><a href="#环形队列的应用-—-延时任务" class="headerlink" title="环形队列的应用 — 延时任务"></a>环形队列的应用 — 延时任务</h1><h2 id="一、缘起-10w延时任务，如何高效触发超时"><a href="#一、缘起-10w延时任务，如何高效触发超时" class="headerlink" title="一、缘起(10w延时任务，如何高效触发超时)"></a>一、缘起(10w延时任务，如何高效触发超时)</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>很多时候，业务有定时任务或者定时超时的需求，当任务量很大时，可能需要维护大量的timer，或者进行低效的扫描</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如：实时消息通道 检测<code>APP</code>登录状态 每3秒发送一个包 如果连续30s没有请求包（例如登录，消息，<code>keepalive</code>包），服务端就要将这个用户的状态置为离线状态</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般来说怎么实现这类需求呢？</p>
+<h2 id="二、轮询扫描法"><a href="#二、轮询扫描法" class="headerlink" title="二、轮询扫描法"></a>二、轮询扫描法</h2><p>1）用一个<code>Map&lt;uid, last_packet_time&gt;</code>来记录每一个<code>uid</code>最近一次请求时间<code>last_packet_time</code></p>
+<p>2）当某个用户<code>uid</code>有请求包来到，实时更新这个<code>Map</code></p>
+<p>3）<strong>启动一个<code>timer</code>，当<code>Map</code>中不为空时，轮询扫描这个<code>Map</code>，看每个<code>uid</code>的<code>last_packet_time</code>是否超过30s，如果超过则进行超时处理</strong></p>
+<h2 id="三、多timer触发法"><a href="#三、多timer触发法" class="headerlink" title="三、多timer触发法"></a>三、多timer触发法</h2><p>1）用一个<code>Map&lt;uid, last_packet_time&gt;</code>来记录每一个<code>uid</code>最近一次请求时间<code>last_packet_time</code></p>
+<p>2）<strong>当某个用户<code>uid</code>有请求包来到，实时更新这个<code>Map</code>，并同时对这个uid请求包启动一个<code>timer</code>，30s之后触发</strong></p>
+<p>3）每个<code>uid</code>请求包对应的<code>timer</code>触发后，看<code>Map</code>中，查看这个<code>uid</code>的<code>last_packet_time</code>是否超过30s，如果超过则进行超时处理</p>
+<p>方案一：只启动一个<code>timer</code>，但需要轮询，效率较低</p>
+<p>方案二：<strong>不需要轮询，但每个请求包要启动一个<code>timer</code>，比较耗资源</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>特别在同时在线量很大时，很容易CPU100%</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如何高效维护和触发大量的定时/超时任务，是本文要讨论的问题。</p>
+<h2 id="四、环形队列法"><a href="#四、环形队列法" class="headerlink" title="四、环形队列法"></a>四、环形队列法</h2><p><strong>三个重要的数据结构：</strong></p>
+<p>1）30s超时，就创建一个<code>index</code>从0到30的环形队列（<strong>本质是个数组</strong>）</p>
+<p>2）环上每一个<code>slot</code>是一个<code>Set&lt;uid&gt;</code>，<strong>任务集合</strong></p>
+<p>3）同时还有一个<code>Map&lt;uid, index&gt;</code>，记录<code>uid</code>落在环上的哪个<code>slot</code>里</p>
+<p><img src="//blog.com/2019/04/30/环形队列的应用 --- 延时任务/环形队列.webp" alt="环形队列的应用--定时任务"></p>
+<p><strong>原理：</strong></p>
+<p>1）启动一个<code>timer</code>，每隔<code>1s</code>，在上述环形队列中移动一格，<code>0-&gt;1-&gt;2-&gt;3…-&gt;29-&gt;30-&gt;0</code>…</p>
+<p>2）有一个<code>Current Index</code>指针来标识刚检测过的slot</p>
+<p><strong>当有某用户<code>uid</code>有请求包到达时</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1）从Map结构中，查找出这个uid存储在哪一个slot里</span><br><span class="line"></span><br><span class="line">2）从这个slot的Set结构中，删除这个uid</span><br><span class="line"></span><br><span class="line">3）将uid重新加入到新的slot中，具体是哪一个slot呢 =&gt; Current Index指针所指向的上一个slot，因为这个slot，会被timer在30s之后扫描到</span><br><span class="line"></span><br><span class="line">（4）更新Map，这个uid对应slot的index值</span><br></pre></td></tr></table></figure>
+<p><strong>哪些元素会被超时掉呢？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Current Index</code>每秒种移动一个<code>slot</code>，这个<code>slot</code>对应的<code>Set&lt;uid&gt;</code>中所有<code>uid</code>都应该被集体超时！如果最近30s有请求包来到，一定被放到<code>Current Index</code>的前一个<code>slot了</code>，<code>Current Index</code>所在的<code>slot</code>对应<code>Set</code>中所有元素，都是最近30s没有请求包来到的。所以，当没有超时时，<code>Current Index</code>扫到的每一个<code>slot</code>的<code>Set</code>中应该都没有元素。</p>
+<p><strong>环形队列的优势</strong></p>
+<p>（1）只需要1个<code>timer</code></p>
+<p>（2）<code>timer</code>每1s只需要一次触发，消耗<code>CPU</code>很低</p>
+<p>（3）批量超时，<code>Current Inde</code>x扫到的<code>slot</code>，<code>Set</code>中所有元素都应该被超时掉</p>
+<h2 id="应用场景–订单自动评价"><a href="#应用场景–订单自动评价" class="headerlink" title="应用场景–订单自动评价"></a>应用场景–订单自动评价</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如：滴滴打车订单完成后，如果用户一直不评价，48小时后会将自动评价为5星。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般来说怎么实现这类“48小时后自动评价为5星”需求呢？</p>
+<h3 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>常见方案：启动一个cron定时任务，每小时跑一次，将完成时间超过48小时的订单取出，置为5星，并把评价状态置为已评价。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设订单表的结构为：<code>t_order(oid, finish_time, stars, status, …)</code>，更具体的，定时任务每隔一个小时会这么做一次：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select oid from t_order where finish_time &gt; 48hours and status=0;</span><br><span class="line"></span><br><span class="line">update t_order set stars=5 and status=1 where oid in[…];</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果数据量很大，需要分页查询，分页update，这将会是一个for循环。</p>
+<p>方案的不足：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">（1）轮询效率比较低</span><br><span class="line"></span><br><span class="line">（2）每次扫库，已经被执行过记录，仍然会被扫描（只是不会出现在结果集中），有重复计算的嫌疑</span><br><span class="line"></span><br><span class="line">（3）时效性不够好，如果每小时轮询一次，最差的情况下，时间误差会达到1小时</span><br><span class="line"></span><br><span class="line">（4）如果通过增加cron轮询频率来减少（3）中的时间误差，（1）中轮询低效和（2）中重复计算的问题会进一步凸显</span><br></pre></td></tr></table></figure>
+<h3 id="环形队列"><a href="#环形队列" class="headerlink" title="环形队列"></a>环形队列</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;高效延时消息，包含两个重要的数据结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">（1）环形队列，例如可以创建一个包含3600个slot的环形队列（本质是个数组）</span><br><span class="line"></span><br><span class="line">（2）任务集合，环上每一个slot是一个Set&lt;Task&gt;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Task</code>结构中有两个很重要的属性：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">（1）Cycle-Num：当Current Index第几圈扫描到这个Slot时，执行任务</span><br><span class="line"></span><br><span class="line">（2）Task-Function：需要执行的任务指针</span><br></pre></td></tr></table></figure>
+<p><img src="//blog.com/2019/04/30/环形队列的应用 --- 延时任务/58到家应用.webp" alt="58到家应用"></p>
+<p><strong>原理</strong>: </p>
+<p>(1) <strong>启动一个<code>timer</code>，这个<code>timer</code>每隔1s，在上述环形队列中移动一格</strong></p>
+<p>(2) <strong>有一个<code>Current Index</code>指针来标识正在检测的<code>slot</code></strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设当前<code>Current Index</code>指向第一格，当有延时消息到达之后，例如希望3610秒之后，触发一个延时消息任务，只需：</p>
+<p>（1）计算这<code>个Task</code>应该放在哪一个<code>slot</code>，现在指向1，3610秒之后，应该是第11格，所以这个<code>Task</code>应该放在第11个<code>slot</code>的<code>Set&lt;Task&gt;</code>中</p>
+<p>（2）计算这个<code>Task</code>的<code>Cycle-Num</code>，由于环形队列是3600格（每秒移动一格，正好1小时），这个任务是3610秒后执行，所以应该绕3610/3600=1圈之后再执行，于是<code>Cycle-Num</code>=1</p>
+<p><strong>轮数的处理</strong>: </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Current Index</code>不停的移动，每秒移动到一个新<code>slot</code>，这个<code>slot</code>中对应的<code>Set&lt;Task&gt;</code>，每个<code>Task</code>看<code>Cycle-Num</code>是不是0：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">（1）如果不是0，说明还需要多移动几圈，将Cycle-Num减1</span><br><span class="line"></span><br><span class="line">（2）如果是0，说明马上要执行这个Task了，取出Task-Funciton执行（可以用单独的线程来执行Task），并把这个Task从Set&lt;Task&gt;中删除</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用了“延时消息”方案之后，“订单48小时后关闭评价”的需求，只需将在订单关闭时，触发一个48小时之后的延时消息即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">（1）无需再轮询全部订单，效率高</span><br><span class="line"></span><br><span class="line">（2）一个订单，任务只执行一次</span><br><span class="line"></span><br><span class="line">（3）时效性好，精确到秒（控制timer移动频率可以控制精度）</span><br></pre></td></tr></table></figure>
+<p><strong>优化 — 保证单个set不会特别大</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着时间轮的转动，当<code>TimerTaskList</code>到期时，原本定时为<code>450ms</code>的任务还剩下<code>50ms</code>的时间，还不能执行这个任务的到期操作。便会有个时间轮降级的操作，会将这个剩余时间<code>50ms</code>的定时任务重新提交到下一层级的时间轮中，所以该任务被放到第二层时间轮到期时间为<code>[40ms,60ms)</code>的时间格中。再经历了<code>40ms</code>之后，此时这个任务又被触发到，不过还剩余<code>10ms</code>，还是不能立即执行到期操作。所以还要再一次的降级，此任务会被添加到第一层时间轮到期时间为<code>[10ms,11ms)</code>的时间格中，之后再经历<code>10ms</code>后，此任务真正到期，最终执行相应的到期操作。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个环形队列法是一个通用的方法，Set和Map中可以是任何task。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/延时队列/" rel="tag"># 延时队列</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+            <a href="/tags/延时任务处理/" rel="tag"># 延时任务处理</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/27/命令行通配符教程/" rel="next" title="命令行通配符教程">
+                <i class="fa fa-chevron-left"></i> 命令行通配符教程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/30/空对象模式/" rel="prev" title="空对象模式">
+                空对象模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#环形队列的应用-—-延时任务"><span class="nav-number">1.</span> <span class="nav-text">环形队列的应用 — 延时任务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、缘起-10w延时任务，如何高效触发超时"><span class="nav-number">1.1.</span> <span class="nav-text">一、缘起(10w延时任务，如何高效触发超时)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、轮询扫描法"><span class="nav-number">1.2.</span> <span class="nav-text">二、轮询扫描法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、多timer触发法"><span class="nav-number">1.3.</span> <span class="nav-text">三、多timer触发法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、环形队列法"><span class="nav-number">1.4.</span> <span class="nav-text">四、环形队列法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用场景–订单自动评价"><span class="nav-number">1.5.</span> <span class="nav-text">应用场景–订单自动评价</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#定时任务"><span class="nav-number">1.5.1.</span> <span class="nav-text">定时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#环形队列"><span class="nav-number">1.5.2.</span> <span class="nav-text">环形队列</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

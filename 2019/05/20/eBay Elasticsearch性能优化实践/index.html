@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="eBay Elasticsearch性能优化实践  原文地址：https://blog.csdn.net/dev_csdn/article/details/79044930   摘要：Elasticsearch是基于Apache Lucene的开源搜索和分析引擎，允许用户以近乎实时的方式存储，搜索和分析数据。虽然Elasticsearch专为快速查询而设计，但其性能在很大程度上取决于用于应用程序的">
+<meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene">
+<meta property="og:type" content="article">
+<meta property="og:title" content="eBay Elasticsearch性能优化实践">
+<meta property="og:url" content="http://blog.com/2019/05/20/eBay Elasticsearch性能优化实践/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="eBay Elasticsearch性能优化实践  原文地址：https://blog.csdn.net/dev_csdn/article/details/79044930   摘要：Elasticsearch是基于Apache Lucene的开源搜索和分析引擎，允许用户以近乎实时的方式存储，搜索和分析数据。虽然Elasticsearch专为快速查询而设计，但其性能在很大程度上取决于用于应用程序的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180111162906901.png">
+<meta property="og:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180111163256760.png">
+<meta property="og:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180112141237179.png">
+<meta property="og:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180111164231991.png">
+<meta property="og:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180111164303247.png">
+<meta property="og:updated_time" content="2019-05-21T03:47:58.993Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="eBay Elasticsearch性能优化实践">
+<meta name="twitter:description" content="eBay Elasticsearch性能优化实践  原文地址：https://blog.csdn.net/dev_csdn/article/details/79044930   摘要：Elasticsearch是基于Apache Lucene的开源搜索和分析引擎，允许用户以近乎实时的方式存储，搜索和分析数据。虽然Elasticsearch专为快速查询而设计，但其性能在很大程度上取决于用于应用程序的">
+<meta name="twitter:image" content="http://blog.com/2019/05/20/eBay%20Elasticsearch性能优化实践/20180111162906901.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/20/eBay Elasticsearch性能优化实践/">
+
+
+
+
+
+  <title>eBay Elasticsearch性能优化实践 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/20/eBay Elasticsearch性能优化实践/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">eBay Elasticsearch性能优化实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-20T12:12:57+08:00">
+                2019-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">Elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/" itemprop="url" rel="index">
+                    <span itemprop="name">搜索引擎</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/Lucene/" itemprop="url" rel="index">
+                    <span itemprop="name">Lucene</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="eBay-Elasticsearch性能优化实践"><a href="#eBay-Elasticsearch性能优化实践" class="headerlink" title="eBay Elasticsearch性能优化实践"></a>eBay Elasticsearch性能优化实践</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://blog.csdn.net/dev_csdn/article/details/79044930" target="_blank" rel="noopener">https://blog.csdn.net/dev_csdn/article/details/79044930</a></p>
+</blockquote>
+<p><br></p>
+<p><em>摘要：<code>Elasticsearch</code>是基于<code>Apache Lucene</code>的开源搜索和分析引擎，允许用户以近乎实时的方式存储，搜索和分析数据。虽然<code>Elasticsearch</code>专为快速查询而设计，但其性能在很大程度上取决于用于应用程序的场景，索引的数据量以及应用程序和用户查询数据的速率。这篇文章概述了挑战和调优过程，以及Pronto团队以战略方式构建应对挑战的工具。它还以各种图形配置展示了进行基准测试的一些结果。以下是译文。</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Elasticsearch</code>是基于<code>Apache Lucene</code>的开源搜索和分析引擎，允许用户以近乎实时的方式存储，搜索和分析数据。Pronto是在eBay网站上托管<code>Elasticsearch</code>集群的平台，该平台使得eBay网内部客户易于部署，操作用于全文搜索，实时分析和日志/事件监控的大规模的<code>Elasticsearch</code>。当前Pronto平台管理着60多个<code>Elasticsearch</code>集群和2000多个节点，日采集量达到180亿份文档，日均搜索请求达到35亿份。平台提供从条款，补救以及安全到监控，报警和诊断的全方位的信息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;虽然<code>Elasticsearch</code>专为快速查询而设计，但其性能在很大程度上取决于用于应用程序的场景，索引的数据量以及应用程序和用户查询数据的速率。这篇文章概述了挑战和调优过程，以及Pronto团队以战略方式构建应对挑战的工具。它还以各种图形配置展示了进行基准测试的一些结果。</p>
+<h3 id="挑战"><a href="#挑战" class="headerlink" title="挑战"></a>挑战</h3><p>迄今为止所观察到的<code>Pronto / Elasticsearch</code>使用案例面临的挑战包括：</p>
+<ol>
+<li>高吞吐量：一些集群每天摄取高达5TB的数据，一些集群每天的搜索请求超过4亿。如果<code>Elasticsearch</code>无法及时处理这些请求，那么这些请求将在上游累积。</li>
+<li>搜索延迟低：对于性能关键的集群，尤其是面向站点的系统，低搜索延迟的特性是必须具有的，否则用户体验将会受到影响。</li>
+<li>由于数据或查询是可变的，所以最佳设置总是在变化。所有情况都没有最佳设置。例如，将索引拆分成更多的分片（代表索引分片，<code>Elasticsearch</code>可以把一个完整的索引分成多个分片，这样的好处是可以把一个大的索引拆分成多个，分布到不同的节点上。构成分布式搜索。<strong>分片的数量只能在索引创建前指定，并且索引创建后不能更改</strong>。）对于耗时的查询是很有好处的，但是这可能会损害其它查询性能。</li>
+</ol>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了帮助客户应对这些挑战，Pronto团队从用户案例开始入手并持续整个集群生命周期，构建性能测试、调优和监控的战略方法。</p>
+<ol>
+<li><strong>评估集群大小</strong>：在一个新的用户案例部署之前，收集客户提供的信息，诸如吞吐量，文档大小，文档数量和搜索类型，以评估<code>Elasticsearch</code>集群的初始大小。</li>
+<li><strong>优化索引设计</strong>：与客户一起评审索引设计。</li>
+<li><strong>调优索引性能</strong>：根据用户场景调优索引性能和搜索性能。</li>
+<li><strong>调优搜索性能</strong>：使用用户真实数据/查询运行性能测试，用<code>Elasticsearch</code>配置参数的组合比较和分析测试结果。</li>
+<li><strong>运行性能测试</strong>：在案例启动以后，集群将受到监控，每当数据发生变化，查询更改或者流量增加时，用户都可以自由地重新运行性能测试。</li>
+</ol>
+<h3 id="评估集群大小"><a href="#评估集群大小" class="headerlink" title="评估集群大小"></a>评估集群大小</h3><p>Pronto团队为每种类型的机器和每个支持的<code>Elasticsearch</code>版本运行基准测试，以收集性能数据，然后将其与客户提供的信息一起用于评估集群的初始大小，这些信息包括：</p>
+<ul>
+<li>索引吞吐量</li>
+<li>文档大小</li>
+<li>搜索吞吐量</li>
+<li>查询类型</li>
+<li>热索引文档计数</li>
+<li>保留策略</li>
+<li>响应时间要求</li>
+<li><code>SLA</code>级别</li>
+</ul>
+<h3 id="优化索引设计"><a href="#优化索引设计" class="headerlink" title="优化索引设计"></a>优化索引设计</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在开始摄取数据并运行查询之前，请三思而后行。索引代表着什么？Elastic的官方回答是“具有相似特征的文档集合”。那么下一个问题是“应该使用哪些特征来对数据进行分组？应该把所有文件放入一个索引还是多个索引呢？”答案是，这取决于所使用的查询。下面是关于如何根据最常用的查询分组索引的一些建议。</p>
+<ul>
+<li><p><strong>如果查询有一个过滤字段并且它的值是可枚举的，那么把数据分成多个索引。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如，有大量的全球产品信息被摄取到<code>Elasticsearch</code>中，大多数查询都有一个过滤子句“region”（区域），并且很少有机会运行跨区域查询。查询主体可以优化为：</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;bool&quot;: &#123;</span><br><span class="line">            &quot;must&quot;: &#123;</span><br><span class="line">                &quot;match&quot;: &#123;</span><br><span class="line">                    &quot;title&quot;: &quot;$&#123;title&#125;&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;filter&quot;: &#123;</span><br><span class="line">                &quot;term&quot;: &#123;</span><br><span class="line">                    &quot;region&quot;: &quot;US&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这种情况下，如果索引按照美国，欧洲等地区分成几个较小的索引，就可以获得更好的性能。然后可以从查询中删除过滤子句。如果需要运行一个跨区域查询，可以将多个索引或通配符传递给<code>Elasticsearch</code>。</p>
+<ul>
+<li><p><strong>如果查询具有过滤字段并且其值不可枚举，请使用路由</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以通过使用过滤字段值作为路由键来将索引拆分成多个分片，然后删除过滤条件。关于<code>ElasticSearch</code>里的路由功能请参见这篇<a href="http://blog.csdn.net/u010454030/article/details/73554652" target="_blank" rel="noopener">文章</a>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如，<code>Elasticsearch</code>有数以百万计的订单，大多数查询需要通过买家ID查询订单。为每个买家创建索引是不可能的，所以不能通过买家ID将数据拆分成多个索引。一个合适的解决方案是使用路由将具有相同买家ID的所有订单放入同一个分片中，然后几乎所有的查询都可以在匹配路由键的分片内完成。</p>
+</li>
+<li><p><strong>如果查询具有日期范围过滤条件，则按日期分组数据</strong>。这适用于大多数日志记录或监控场景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以以每天，每周或每月分组索引，然后可以在指定的日期范围内获得索引列表。<code>Elasticsearch</code>只需要查询一个较小的数据集而不是整个数据集。此外，当数据过期时，很容易缩小/删除旧的索引。</p>
+</li>
+<li><p><strong>明确地设置映射</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Elasticsearch</code>可以动态地创建映射，但可能并不适用于所有场景。例如，<code>Elasticsearch5.x</code>中默认的字符串字段映射是“关键字”和“文本”类型，这在很多场景下是没有必要的。</p>
+</li>
+<li><p><strong>如果文档使用用户定义的ID或路由索引，请避免不平衡分片。</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>Elasticsearch</code>采用随机ID生成器和哈希算法来确保文档均匀地分配给分片。当使用用户定义的ID或路由时，ID或路由键可能不够随机，并且一些分片可能明显比其它分片更大。在这种情况下，在这个分片上的读/写操作将比在其它分片上慢得多。可以优化ID /路由键或使用<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-routing-field.html#routing-index-partition" target="_blank" rel="noopener">index.routing_partition_size</a> （在5.3和更高版本中可用）。</p>
+</li>
+<li><p><strong>使分片均匀分布在节点上</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果一个节点比其它节点有更多的分片，则会比其它节点承担更多的负载，并很有可能成为整个系统的瓶颈。</p>
+</li>
+</ul>
+<h3 id="调优索引性能"><a href="#调优索引性能" class="headerlink" title="调优索引性能"></a>调优索引性能</h3><p>用于索引诸如日志和监控之类的重场景，索引性能是关键指标。这里有一些建议：</p>
+<ul>
+<li><p><strong>使用批量请求</strong>。</p>
+</li>
+<li><p><strong>使用多个线程/工作来发送请求</strong>。</p>
+</li>
+<li><p><strong>增加刷新间隔</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每次刷新事件发生时，<code>Elasticsearch</code>都会创建一个新的<code>Lucene</code>段，并在稍后进行合并。增加刷新间隔将降低创建/合并的成本。请注意，<strong>只有在刷新事件发生后才能进行文件搜索</strong>。</p>
+</li>
+</ul>
+<p>  <img src="//blog.com/2019/05/20/eBay Elasticsearch性能优化实践/20180111162906901.png" alt="这里写图片描述"></p>
+<p>  性能和刷新间隔之间的关系</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图可以看出，随着刷新间隔的增大，吞吐量增加，响应时间变快。可以使用下面的请求来检查有多少段以及刷新和合并花费了多少时间。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Index/_stats?filter_path= indices.**.refresh,indices.**.segments,indices.**.merges1</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p><strong>减少副本数量</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Elasticsearch需要为每个索引请求将文档写入主要和所有副本分片</strong>。显然，一个大的副本数会减慢索引速度，但另一方面，增加副本数量将提高搜索性能。这个话题将在本文后面讨论。副本的作用一是提高系统的容错性，当某个节点某个分片损坏或丢失时可以从副本中恢复；二是提高<code>Elasticsearch</code>的查询效率，<code>Elasticsearch</code>会自动对搜索请求进行负载均衡 </p>
+</li>
+</ul>
+<p>  <img src="//blog.com/2019/05/20/eBay Elasticsearch性能优化实践/20180111163256760.png" alt="这里写图片描述"></p>
+<p>  性能和副本数量之间的关系</p>
+<p>从上面的图中，可以看到随着副本数量的增加，吞吐量下降，响应时间也变慢。</p>
+<ul>
+<li><p><strong>如果可能，使用自动生成的ID</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Elasticsearch</code>自动生成的ID可以确保是唯一的，以避免版本查询</strong>。如果客户真的需要使用自定义的ID，建议选择一个对<code>Lucene</code>友好的ID，比如零填充顺序ID，<code>UUID-1或者Nano time</code>。这些ID具有一致的顺序模式，压缩良好。相比之下，像<code>UUID-4</code>这样的ID本质上仍旧是随机的，它提供了较差的压缩比，并降低了Lucene的速度。</p>
+</li>
+</ul>
+<h3 id="调优搜索性能"><a href="#调优搜索性能" class="headerlink" title="调优搜索性能"></a>调优搜索性能</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用<code>Elasticsearch</code>的主要原因是其支持通过数据进行搜索。用户应该能够快速地找到所需要查找的信息。搜索性能取决于很多因素：</p>
+<ul>
+<li><p><strong>如果可能的话，使用过滤语境而不是查询语境</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个查询子句用于回答“这个文档如何与查询子句匹配？” ，<strong>过滤子句用于回答“这个文档是否匹配这个过滤子句？”</strong>。<code>Elasticsearch</code>只需要回答“是”或“否”。<strong>它不需要计算过滤子句的相关性得分，并且可以高速缓存过滤结果</strong>。有关详细信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html" target="_blank" rel="noopener">查询和过滤语境</a>。 </p>
+</li>
+</ul>
+<p>  <img src="//blog.com/2019/05/20/eBay Elasticsearch性能优化实践/20180112141237179.png" alt="这里写图片描述"></p>
+<p>比较查询和过滤</p>
+<ul>
+<li><p><strong>增加刷新间隔</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;正如在<a href="https://www.ebayinc.com/stories/blogs/tech/elasticsearch-performance-tuning-practice-at-ebay/#tune_indexing_performance" target="_blank" rel="noopener">调优索引性能</a>部分所提到的，<code>Elasticsearch</code>每次刷新时都会创建一个新的段。增加刷新间隔将有助于减少段数并降低搜索的IO成本。而且一旦发生刷新并且数据改变，缓存将无效。增加刷新间隔可以使<code>Elasticsearch</code>更高效地利用缓存。</p>
+</li>
+<li><p><strong>增加副本数量</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Elasticsearch可以在主分片或副本分片上执行搜索。拥有的副本越多，搜索中涉及的节点就越多。</p>
+</li>
+</ul>
+<p><img src="//blog.com/2019/05/20/eBay Elasticsearch性能优化实践/20180111164231991.png" alt="这里写图片描述"></p>
+<p>性能和副本数量之间的关系</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图可以看出，搜索吞吐量几乎与副本数量成线性关系。注意在这个测试中，测试集群有足够的数据节点来确保每个分片都有一个独占节点，如果这个条件不能满足，搜索吞吐量就不会那么好。</p>
+<ul>
+<li><p><strong>尝试不同的分片数量</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;“应该为索引设置多少分片？” 这可能是最常见的问题。不幸的是，所有场景都没有标准的数字，这完全取决于当时的实际情况。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>太小的分片数量会使搜索无法扩展</strong>。例如，如果分片数量设置为1，则索引中的所有文档都将存储在一个分片中。对于每个搜索，只能涉及一个节点。如果有很多文件，那是很耗费时间的。另一方面，<strong>创建索引的分片太多也会对性能造成危害，因为<code>Elasticsearch</code>需要在所有分片上运行查询，除非在请求中指定了路由键，然后将所有返回的结果一起取出并合并</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据经验来说，如果索引小于1G，可以将分片数设置为1。对于大多数情况，可以将分片数保留为默认值5，但是如果分片大小超过30GB，应该增加分片数量将索引分成更多的分片。创建索引后，分片数量不能更改，但是可以创建新的索引并使用<code>reindex API</code>转移数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这里测试了一个拥有1亿个文档，大约150GB的索引，使用了100个线程发送搜索请求。</p>
+<p><img src="//blog.com/2019/05/20/eBay Elasticsearch性能优化实践/20180111164303247.png" alt="这里写图片描述"></p>
+<p>性能和分片数量之间的关系</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图中可以看出，优化后的分片数量为11个。开始的时候，搜索吞吐量增加（响应时间减少），但随着分片数量的增加，搜索吞吐量减少（响应时间增加）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请注意，在这个测试中，就像在副本数量测试中一样，每个分片都有一个独占节点。如果这个条件不能满足，搜索吞吐量就不会像上图所示那样好。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这种情况下，建议尝试一个小于优化值的分片数，因为如果使用大分片数，并且使每个分片都有一个独占数据节点，那么就需要很多个节点。</p>
+<ul>
+<li><p><strong>节点查询缓存</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-cache.html" target="_blank" rel="noopener">节点查询缓存</a>只缓存正在过滤语境中使用的查询。<strong>与查询子句不同，过滤子句是“是”或“否”的问题</strong>。<strong><code>Elasticsearch</code>使用一个位设置机制来缓存过滤结果，以便后面的查询使用相同的过滤条件进行加速</strong>。请注意，只有保存超过10,000个文档的分段（或文档总数的3％，以较大者为准）才能启用节点查询缓存。有关缓存的更多详细信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/filter-caching.html#_independent_query_caching" target="_blank" rel="noopener">关于缓存</a>。</p>
+</li>
+</ul>
+<p>可以使用下面的请求来检验一个节点查询缓存是否有效。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">GET index_name/_stats?filter_path=indices.**.query_cache</span><br><span class="line">&#123;</span><br><span class="line">  &quot;indices&quot;: &#123;</span><br><span class="line">    &quot;index_name&quot;: &#123;</span><br><span class="line">      &quot;primaries&quot;: &#123;</span><br><span class="line">        &quot;query_cache&quot;: &#123;</span><br><span class="line">          &quot;memory_size_in_bytes&quot;: 46004616,</span><br><span class="line">          &quot;total_count&quot;: 1588886,</span><br><span class="line">          &quot;hit_count&quot;: 515001,</span><br><span class="line">          &quot;miss_count&quot;: 1073885,</span><br><span class="line">          &quot;cache_size&quot;: 630,</span><br><span class="line">          &quot;cache_count&quot;: 630,</span><br><span class="line">          &quot;evictions&quot;: 0</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;total&quot;: &#123;</span><br><span class="line">        &quot;query_cache&quot;: &#123;</span><br><span class="line">          &quot;memory_size_in_bytes&quot;: 46004616,</span><br><span class="line">          &quot;total_count&quot;: 1588886,</span><br><span class="line">          &quot;hit_count&quot;: 515001,</span><br><span class="line">          &quot;miss_count&quot;: 1073885,</span><br><span class="line">          &quot;cache_size&quot;: 630,</span><br><span class="line">          &quot;cache_count&quot;: 630,</span><br><span class="line">          &quot;evictions&quot;: 0</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p><strong>分片查询缓存</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果大多数查询是聚合查询，应该看看<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/shard-request-cache.html#_cache_invalidation" target="_blank" rel="noopener">分片查询缓存</a>，它可以缓存聚合结果，以便<code>Elasticsearch</code>直接以低成本提供请求。有几件事情需要注意：</p>
+<p>o 设置<code>“size”：0</code>。分片查询缓存只缓存聚合结果和建议。它不会缓存操作过程，因此如果将大小设置为非零，则无法从缓存中获益。</p>
+<p>o 有效负载JSON必须相同。分片查询缓存使用JSON主体作为缓存键，因此需要确保JSON主体不会更改，并确保JSON主体中的键具有相同的顺序。</p>
+<p>o Round日期时间。不要直接在查询中使用像Date.now这样的变量，Round它。否则，每个请求都会有不同的有效负载主体，从而导致缓存始终无效。建议Round日期时间为小时或天，以便更有效地利用缓存。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以使用下面的请求来检验分片查询缓存是否有效果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">GET index_name/_stats?filter_path=indices.**.request_cache</span><br><span class="line">&#123;</span><br><span class="line">  &quot;indices&quot;: &#123;</span><br><span class="line">    &quot;index_name&quot;: &#123;</span><br><span class="line">      &quot;primaries&quot;: &#123;</span><br><span class="line">        &quot;request_cache&quot;: &#123;</span><br><span class="line">          &quot;memory_size_in_bytes&quot;: 0,</span><br><span class="line">          &quot;evictions&quot;: 0,</span><br><span class="line">          &quot;hit_count&quot;: 541,</span><br><span class="line">          &quot;miss_count&quot;: 514098</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;total&quot;: &#123;</span><br><span class="line">        &quot;request_cache&quot;: &#123;</span><br><span class="line">          &quot;memory_size_in_bytes&quot;: 0,</span><br><span class="line">          &quot;evictions&quot;: 0,</span><br><span class="line">          &quot;hit_count&quot;: 982,</span><br><span class="line">          &quot;miss_count&quot;: 947321</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>仅检索必要的字段**。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果文档很大，并且只需要几个字段，请使用 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-stored-fields.html" target="_blank" rel="noopener">stored_fields</a> 检索所需要的字段而不是所有字段。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>避免搜索停用词</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;诸如“a”和“the”这样的停用词可能导致查询命中结果计数爆炸。设想有一百万个文件，搜索“fox”可能会返回几十个结果，但搜索<code>“the fox”</code>可能会返回索引中的所有文件，因为“the”出现在几乎所有的文件中。<code>Elasticsearch</code>需要对所有命中的结果进行评分和排序，导致像“the fox”这样的查询减慢整个系统。可以使用停止标记过滤来删除停用词，或使用“和”运算符将查询从<code>“the fox”</code>更改为<code>“the AND fox”</code>，以获得更精确的结果。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果某些词在索引中经常使用，但不在默认停用词列表中，则可以使用<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#query-dsl-match-query-cutoff" target="_blank" rel="noopener">截止频率</a>来动态处理它们。</p>
+<ul>
+<li><p><strong>如果不关心文档返回的顺序，则按_doc排序</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Elasticsearch</code>使用“_score”字段按默认分数排序。如果不关心顺序，可以使用<code>“sort”：“_doc”</code>让<code>Elasticsearch</code>按索引顺序返回。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>避免使用脚本查询来计算不固定的匹配</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在索引时存储计算的字段。例如，有一个包含大量用户信息的索引，需要查询以“1234”开头的所有用户。或许想运行一个脚本查询，如<code>“source”：“doc [‘num’].value.startsWith（’1234’）</code>。” 这个查询是非常耗费资源的，并且减慢整个系统。索引时考虑添加一个名为<code>“num_prefix”</code>的字段，然后只需要查询<code>“name_prefix”：“1234”</code>。</p>
+</li>
+</ul>
+<ul>
+<li><strong>避免通配符查询</strong>。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Elasticsearch/" rel="tag"># Elasticsearch</a>
+          
+            <a href="/tags/搜索引擎/" rel="tag"># 搜索引擎</a>
+          
+            <a href="/tags/Lucene/" rel="tag"># Lucene</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/19/迭代器模式应用分析/" rel="next" title="迭代器模式应用分析">
+                <i class="fa fa-chevron-left"></i> 迭代器模式应用分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/20/使用ElasticSearch的44条建议/" rel="prev" title="使用ElasticSearch的44条建议">
+                使用ElasticSearch的44条建议 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#eBay-Elasticsearch性能优化实践"><span class="nav-number">1.</span> <span class="nav-text">eBay Elasticsearch性能优化实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#挑战"><span class="nav-number">1.0.1.</span> <span class="nav-text">挑战</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解决方案"><span class="nav-number">1.0.2.</span> <span class="nav-text">解决方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#评估集群大小"><span class="nav-number">1.0.3.</span> <span class="nav-text">评估集群大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化索引设计"><span class="nav-number">1.0.4.</span> <span class="nav-text">优化索引设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调优索引性能"><span class="nav-number">1.0.5.</span> <span class="nav-text">调优索引性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调优搜索性能"><span class="nav-number">1.0.6.</span> <span class="nav-text">调优搜索性能</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

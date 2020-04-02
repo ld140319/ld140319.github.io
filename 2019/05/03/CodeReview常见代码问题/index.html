@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="代码规范与技巧,代码技巧,Code Review,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="CodeReview常见代码问题空值常见错误有：  a. 值为NULL导致空指针异常；b. 参数字符串含有前导或后缀空格没有Trim导致查询为空； 导致以上结果的原因主要有： 1. 无此记录2. 有此记录但由于SQL访问异常而没查到 (网络调用失败、记录中有脏数据、参数没传) 1原则上，对于任何异常， 希望能够打印出具体的错误信息，根据错误信息很快明白是什么原因， 而不是一个 null ，还要在代">
+<meta name="keywords" content="代码规范与技巧,代码技巧,Code Review">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CodeReview常见代码问题">
+<meta property="og:url" content="http://blog.com/2019/05/03/CodeReview常见代码问题/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="CodeReview常见代码问题空值常见错误有：  a. 值为NULL导致空指针异常；b. 参数字符串含有前导或后缀空格没有Trim导致查询为空； 导致以上结果的原因主要有： 1. 无此记录2. 有此记录但由于SQL访问异常而没查到 (网络调用失败、记录中有脏数据、参数没传) 1原则上，对于任何异常， 希望能够打印出具体的错误信息，根据错误信息很快明白是什么原因， 而不是一个 null ，还要在代">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-18T14:13:35.173Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CodeReview常见代码问题">
+<meta name="twitter:description" content="CodeReview常见代码问题空值常见错误有：  a. 值为NULL导致空指针异常；b. 参数字符串含有前导或后缀空格没有Trim导致查询为空； 导致以上结果的原因主要有： 1. 无此记录2. 有此记录但由于SQL访问异常而没查到 (网络调用失败、记录中有脏数据、参数没传) 1原则上，对于任何异常， 希望能够打印出具体的错误信息，根据错误信息很快明白是什么原因， 而不是一个 null ，还要在代">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/03/CodeReview常见代码问题/">
+
+
+
+
+
+  <title>CodeReview常见代码问题 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/03/CodeReview常见代码问题/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">CodeReview常见代码问题</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-03T12:12:57+08:00">
+                2019-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/代码规范与技巧/" itemprop="url" rel="index">
+                    <span itemprop="name">代码规范与技巧</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/代码规范与技巧/代码技巧/" itemprop="url" rel="index">
+                    <span itemprop="name">代码技巧</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/代码规范与技巧/代码技巧/Code-Review/" itemprop="url" rel="index">
+                    <span itemprop="name">Code Review</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="CodeReview常见代码问题"><a href="#CodeReview常见代码问题" class="headerlink" title="CodeReview常见代码问题"></a>CodeReview常见代码问题</h1><h2 id="空值"><a href="#空值" class="headerlink" title="空值"></a>空值</h2><p>常见错误有： </p>
+<p><strong>a. 值为<code>NULL</code>导致空指针异常；</strong><br><strong>b. 参数字符串含有前导或后缀空格没有<code>Trim</code>导致查询为空；</strong></p>
+<p>导致以上结果的原因主要有：</p>
+<p><strong>1. 无此记录</strong><br><strong>2. 有此记录但由于<code>SQL</code>访问异常而没查到 (网络调用失败、记录中有脏数据、参数没传)</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">原则上，对于任何异常， 希望能够打印出具体的错误信息，根据错误信息很快明白是什么原因， 而不是一个 null ，还要在代码里去推敲为什么为空。这样我们必须识别出程序中可能的null，并及时检测、捕获和抛出异常。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于空值，最好的防护是“ 防御式编程 ”。<strong>当获取到对象之后，使用之前总是判断是否为空，并适当抛出异常、打错误日志或做其它处理。</strong> 有的人嫌检测为空的 <code>if</code>语句充斥在代码里会破坏代码的可维护性， 对此我的建议是：</p>
+<p><strong>1. 空值检测一定要有， 有胜于无。</strong><br><strong>2. 在空值检测总是存在的前提下， 可以优化空值检测的方法和存在形式。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">比如:集中于一个类NullChecker中管理，并与系统的整体错误处理设计保持一致。集中管理和处理一致性原则可以作为系统设计的一个准则。这样主流程中只要增加一行调用即可，既可以天网恢恢疏而不漏地检测对象为空， 也不会让代码显得难看。</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">class NullChecker &#123;</span><br><span class="line"></span><br><span class="line">    public static void checkNull(Object obj, Error error) &#123;</span><br><span class="line"></span><br><span class="line">            if (obj == null) &#123; throw new BizException(error); &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在参数入口处统一做 <code>trim</code>。 如果在业务逻辑里做 <code>trim</code>， 就会导致有的业务逻辑做了<code>trim</code>， 有的没做，</strong> 体现在产品上就会有令用户困惑的事情发生。 比如搜索和导出业务， 搜索能搜索出来， 导出却没有</p>
+<h2 id="未捕获潜在的异常"><a href="#未捕获潜在的异常" class="headerlink" title="未捕获潜在的异常"></a>未捕获潜在的异常</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>调用<code>API接口</code>、库函数或系统服务等，只顾着享受便利却不做防护，常导致因为局部失败而影响整体的功能。最好的防护依然是“ 防御式编程 ”。 要么在当前方法捕获异常并返回合适的空值或空对象，要么抛给高层处理。<br>切不可默默”吞掉错误和异常”。</strong> 如果这样做了， 出问题了等着加班和耗费大量脑细胞吧！</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>CodeReview</code>的时候一定要仔细询问：<strong>这里是否可能会抛出异常？如果抛异常会怎么处理？是否会影响整体服务和返回结果？</strong></p>
+<h2 id="代码效率太低"><a href="#代码效率太低" class="headerlink" title="代码效率太低"></a>代码效率太低</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;低效率代码会导致产品功能不好用、不可用，甚至导致产品失败。</p>
+<p>常见情况有：</p>
+<p><strong>a. 循环地逐个调用单个接口获取数据或访问数据库; （循环里面查询数据库 循环里面调用远程接口）</strong></p>
+<p><strong>b. 重复创建几乎完全相同的(开销大的)对象； (循环里面创建重复对象 重复计算数组长度)</strong></p>
+<p><strong>c. 数据库访问、网络调用等服务未处理超时的情况；（远程调用超时）</strong></p>
+<p><strong>d. 多重循环对于大数据量处理的算法性能低； （多重循环提取需要的数据）</strong></p>
+<p><strong>e. 大量字符串拼接时使用了<code>String</code>而非<code>StringBuilder</code>；</strong></p>
+<p>解决方案：</p>
+<p><strong>a，最好提供批量接口或批量并发获取数据；</strong></p>
+<p><strong>b, 将可复用对象抽离出循环，一次创建多次使用； (提前计算数组长度 在循环外面定义需要使用的对象)</strong><br><strong>c，设置合理的超时时间并捕获超时异常处理；  （设置超时时间）</strong></p>
+<p><strong>d，使用预排序或预处理， 构造合适的数据结构， 使得算法平均性能在 <code>O(n)</code>或<code>O(nlogn)</code> ；  （重新组织数据结构）</strong></p>
+<p><strong>e, 少量字符串拼接使用<code>String</code>, 大量字符串拼接使用<code>StringBuilder</code>， 通常不会使用到 <code>StringBuffer</code>；</strong></p>
+<h2 id="重复代码"><a href="#重复代码" class="headerlink" title="重复代码"></a>重复代码</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;重复代码在当前可能不会造成<code>BUG</code>，但上线后，<strong>需要维护多处的事实一致性；时间一长，后续修改的时候就特别容易遗漏或处理不一致导致 <code>BUG</code>；</strong>重复代码是公认的“代码坏味”，必当尽力清除。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>方法： 抽离通用的部分，定制差异。重复代码还有一种情况出现，即创造新函数时，先看看是否既有方法已经实现过。</strong></p>
+<h2 id="硬编码"><a href="#硬编码" class="headerlink" title="硬编码"></a>硬编码</h2><p>硬编码主要有三种情况： </p>
+<p><strong>a. “魔数”； (不明白具体含义的数字或字符串)</strong></p>
+<p><strong>b. 写死的配置；</strong></p>
+<p><strong>c. 临时加的逻辑和文案；</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;“魔数”与重复代码类似，当前或许不会引发问题，<strong>时间一长，为了弄清楚其代表的含义，增加很多沟通维护成本，且分散在各处很容易导致修改的时候遗漏不一致</strong>。务必清清除。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方法：<strong>定义含义明显的枚举或常量，代表这个魔数在代码中发言。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;“写死的配置”不会影响业务功能， 不过<strong>在环境变更或系统调优的时候，就显得很不方便了</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方法：<strong>尽量将配置抽离出来做成配置项放到配置文件里</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;“临时加的逻辑和文案”也是一种<strong>破坏系统可维护性</strong>的做法。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方法：<strong>抽离出来放在单独的函数或方法里，并特别加以注释</strong></p>
+<h2 id="代码层次不合理"><a href="#代码层次不合理" class="headerlink" title="代码层次不合理"></a>代码层次不合理</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;代码改动逻辑是正确的，然而代码的放置位置不符合当前架构设计约定，导致<strong>后续维护成本增加</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>代码层次不合理可能导致重复代码。</strong></p>
+<blockquote>
+<p>​      比如获取操作人和操作记录，如果写在类 <code>XController</code>里， 那么类 <code>YController</code> 就面临尴尬局面： 如果写在<code>YController</code>， 就会导致重复代码； 如果跨层去调用<code>XController</code>方法，又是非常不推荐的做法。因此， 获取操作人和操作记录，最好写在 <code>Service</code> 层， <code>Controller</code>层只负责参数传入、检测和结果转译、返回。</p>
+</blockquote>
+<h2 id="修改方法签名"><a href="#修改方法签名" class="headerlink" title="修改方法签名"></a>修改方法签名</h2><p>对某个方法有业务改动时，程序猿媛们倾向直接修改原方法的签名。这时，要特别注意：</p>
+<p><strong>a. 不要修改原方法的参数顺序.</strong><br><strong>b. 在最后面增加可选参数.</strong></p>
+<p>从另一个角度来看，复杂的业务方法应当分两层：            </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. 最外层负责调度，方法参数具有包容性，里面包含的字段比较多 ；   </span><br><span class="line"></span><br><span class="line">2. 内层方法负责特定业务逻辑的实现，方法参数少而精；</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;修改原方法签名本身就是容易产生问题的习惯， <strong>篡改原方法的参数顺序更是大忌</strong>。 另外，<strong>增加参数，必须对参数增加默认值</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>最好的方法是新建一个方法去复用原方法， 然后调用新的方法。代码变更始终铭记“开闭”原则。</strong></p>
+<h2 id="打印日志太多"><a href="#打印日志太多" class="headerlink" title="打印日志太多"></a>打印日志太多</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>打印过多的日志并不好</strong>。一方面<strong>遮掩真正需要的信息，导致排查耗费时间</strong>，另一方面造成<strong>服务器空间浪费、影响性能</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生产环境日志一般只开放<code>INFO</code>及以上级别的日志； <code>Debug</code> 日志只在调试或排错的时候使用，生产环境可以禁止<code>debug</code>日志。</p>
+<h2 id="多级数据结构"><a href="#多级数据结构" class="headerlink" title="多级数据结构"></a>多级数据结构</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>使用多级数据结构时，要确定父级数据一定有值，或者进行检测</strong>。比如 <code>$order[&#39;baole&#39;][&#39;ump&#39;][&#39;money&#39;]</code>，必须确保 <code>$order[&#39;baole&#39;], $order[&#39;baole&#39;][&#39;money&#39;]</code>一定有值或做非空检测。</p>
+<h2 id="缺乏必要的注释"><a href="#缺乏必要的注释" class="headerlink" title="缺乏必要的注释"></a>缺乏必要的注释</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对重要和关键点的代码缺乏必要的注释，使用到的重要算法缺乏必要的引用出处，对特别的处理缺乏必要的说明</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>原则上， 每个方法至少要用一个简短的单行注释， 适宜地描述了方法的用途、业务逻辑、作者及日期</strong>。对于特殊甚至奇葩的需求的特别实现，要加一些注释。 这样后续维护时有个基础。</p>
+<h2 id="参数检测缺乏或不足"><a href="#参数检测缺乏或不足" class="headerlink" title="参数检测缺乏或不足"></a>参数检测缺乏或不足</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>参数检测是对业务处理的第一层重要过滤。如果参数检测不足够，就会导致脏数据进入服务处理，轻则导致异常，重则插入脏数据到数据库，对后续维护都会造成很多维护成本。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>方法： 采用“契约式编程”，规定前置条件，并使用单测进行覆盖。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于复杂的业务应用， 优雅的参数检测处理尤为重要。 根据<strong>“集中管理和处理一致性原则”</strong>， 可以建立一个 <code>param checker</code>包， 设计一个可复用的微框架来对应用中所有的参数进行<strong>统一集中化检测。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;参数检测主要包括： </p>
+<p>(1) <strong>参数的值类型</strong>， 可以根据不同值类型做基础的检测；<br>(2) <strong>参数的业务类型</strong>， 有基础非业务参数， 基础业务参数和具体业务参数；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的参数业务类型有不同的处理。 <strong>将参数值类型与参数业务类型结合起来， 结合一致性的异常捕获处理， 就可以实现一个可复用的参数检测框架</strong>。参数检测既可以采用普通的分支语句，也可以采用注解方式。采用注解方式更可读，不过单测编写更具技巧。</p>
+<h2 id="缺乏必要日志"><a href="#缺乏必要日志" class="headerlink" title="缺乏必要日志"></a>缺乏必要日志</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于重要而关键的实例状态、代码路径及<code>API</code>调用，应当添加适当的<code>INFO</code>日志；对于异常，应当捕获并添加<code>Error</code>日志。</strong>缺乏日志并不会影响业务功能，但出现问题排查时，就会非常不方便，甚至错失极宝贵的机会(不易重现的情况尤其如此)。此外，缺乏日志也会导致可控性差，难以做数据统计和分析。</p>
+<h2 id="错误码不符合规范"><a href="#错误码不符合规范" class="headerlink" title="错误码不符合规范"></a>错误码不符合规范</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;错误码本身不算是代码问题，不过基于整个组织和工程的可维护性来说，可以将错误码不符合规范作为一种错误加以避免。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>方法： 对错误码进行可控的管理和遵循规范使用。可以使用公共文档维护， 也可以开发错误码管理系统来避免相同的错误码。</strong></p>
+<h2 id="引用错误"><a href="#引用错误" class="headerlink" title="引用错误"></a>引用错误</h2><p><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于动态语言， 由于缺乏强大的静态代码检测，修改了类引用的地方尤其要注意，很可能导致依赖的其他业务出错;</strong>尤其是修改重名引用时。有线上故障教训。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>PHP</code>工程中含有两个 <code>Format</code>类， 一个基础的一个业务相关的， 被改动的类文件里开始没有指明引用，默认采用了基础<code>Format</code>类的实现， 然后提交者在改动文件头增加了对业务 <code>Format</code> 的引用， 导致依赖于基础<code>Format</code>类的其他业务不能正常工作。<strong>避免引用错误的方法： 当要在文件里增加新的类引用时， 先在文件里搜索是否有重名类的引用</strong>。如果有， 就要格外小心了。</p>
+<h2 id="细节错误"><a href="#细节错误" class="headerlink" title="细节错误"></a>细节错误</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>比如数组越界、<code>JSON</code>解析出错、函数参数传递出错、<code>API</code>版本不对、使用网上拷贝的未经测试的代码、不成熟的算法、传值与传引用、相等性比较等。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于数组越界错误， 通常要对空数组、针对数组大小的边界值+1和-1写单测来避免；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用网上拷贝的代码，诚然可节省时间，也一定要加工一下并用单测覆盖；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传值和传引用可通过单测来避免错误； 对象的相等性比较切忌使用等号=。</p>
+<h2 id="多重条件"><a href="#多重条件" class="headerlink" title="多重条件"></a>多重条件</h2><p>类似 <code>if ((!A || !B) &amp;&amp; C || (D &amp;&amp; E))</code> 的多重条件要仔细推敲。</p>
+<p><strong>方法： 最好拆分成多个有含义变量。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">isNotDelay = !A || !B ;</span><br><span class="line"></span><br><span class="line">isNormal = C ;</span><br><span class="line"></span><br><span class="line">isAllow = D &amp;&amp; E ; </span><br><span class="line"></span><br><span class="line">cond = isNotDelay &amp;&amp; isNormal || isAllow ;</span><br></pre></td></tr></table></figure>
+<h2 id="通用逻辑与定制业务逻辑耦合"><a href="#通用逻辑与定制业务逻辑耦合" class="headerlink" title="通用逻辑与定制业务逻辑耦合"></a>通用逻辑与定制业务逻辑耦合</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这大概是每个媛猿们在开发生涯中遇到的最恶心的事情之一了。通用逻辑与具体的各种业务逻辑混杂交错，想插根针都难。遇到这种情况，只能先祈福，然后抽离一个新的函数，严格判断相应条件满足后去调用它。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果是新创建逻辑，可以使用函数式编程或基于接口的编程，将通用处理流程抽离出来，而将具体业务逻辑以回调函数的形式传入处理。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不要让不同的业务共用相同的函数，然后在函数里一堆 <code>if-else plus switch</code> ， 而是<strong>每个业务都有各自的函数， 并可复用相同的通用逻辑和流程处理； 或者各个业务可以覆写同样命名的函数。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;复用，而非混杂。</p>
+<h2 id="直接在原方法里加逻辑"><a href="#直接在原方法里加逻辑" class="headerlink" title="直接在原方法里加逻辑"></a>直接在原方法里加逻辑</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有业务改动时，猿媛们图方便倾向于直接在原方法里加判断和逻辑。这样做是很不好的习惯。<strong>一方面，增加了原方法的长度，破坏了其可维护性；另一方面，有可能对原方法的既有逻辑造成破坏。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>可靠的方式是： 新增一个函数，然后在原方法中调用并说明原因。</strong></p>
+<h2 id="多业务耦合"><a href="#多业务耦合" class="headerlink" title="多业务耦合"></a>多业务耦合</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在业务边界未仔细划分清晰的情况下出现，一个业务过多深入和掺杂另一个非相关业务的实现细节。</strong>在项目和系统设计之初，特别要注意<strong>先划分业务边界，定义好接口设计和服务依赖关系</strong>，再着手开发；否则，延迟到后期做这些工作，很可能会导致重复的工作量，含糊复杂的交互、增加后期系统维护和问题排查的许多成本。磨刀不误砍柴工。<strong>划分清晰的业务、服务、接口边界</strong>就属于磨刀的功夫。</p>
+<h2 id="与原有业务逻辑不兼容"><a href="#与原有业务逻辑不兼容" class="headerlink" title="与原有业务逻辑不兼容"></a>与原有业务逻辑不兼容</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;改动针对当前需求是合理的，却与原有业务逻辑不兼容，也是常见的问题。比如增加一个搜索条件， 却不能与原有条件联合查询。</p>
+<p>与原有业务不兼容， 一般出现在：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">一对一与一对多的变化：</span><br><span class="line"></span><br><span class="line">比如原来的关系是一个订单对应一个物流信息， 后来变化为一个订单可能对应多个物流信息；</span><br><span class="line">原来的逻辑是一个订单显示多个物流信息可以更改，后来要求一个订单只展示最近一次的物流信息可以修改；</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">多个业务组合：</span><br><span class="line">业务 A 与业务 B 原来是分开发展的， 后来开展一种活动，将业务A与业务B进行一种组合营销。 此时，多半会出现很多 if-else 语句。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>业务逻辑的兼容问题一般体现在系统的复用性和可扩展机制上。</strong>良好的系统可复用性和可扩展性可以更容易地做到业务逻辑兼容。 主要有如下几种级别：</p>
+<p>（1） <code>自动兼容</code>。 增加一种类型， 只是 <code>biz_type</code> 的值多了一种， 系统自动将已有功能适配给新的 <code>biz_type</code>；一点改动。增加一个分支语句， 对 <code>biz_type</code> 的某个特性进行扩展；</p>
+<p>（2） <code>一些改动</code>。 需要见缝插针地增加一个单独的分支判断和逻辑处理模块， 对整体可扩展性没有影响， 但会造成局部的复杂化；</p>
+<p>（3） <code>一部分功能改动</code>。 只需要对其中一个功能模块做个扩展；</p>
+<p>（4） <code>多处改动</code>。 需要对多个功能模块做相应的改造，不过更多是新增而不是修改；</p>
+<p>（5） <code>难以改动</code>。 需要深入到功能模块内部做艰难的修改， 并要保证原有功能不受影响。</p>
+<p>如何应对呢？</p>
+<ol>
+<li><strong>针对关联关系， 在项目之初， 可以询问清楚： 将来在产品上是否有可扩展的变化？ 及早预留空间</strong>。</li>
+<li><strong>确定产品上的对策； 在代码实现上，兼顾考虑一对一到一对多，或一对多到一对一的关联变化</strong>。比如使用列表来表达单个信息， 使用索引从列表中获取单个信息。</li>
+<li><strong>针对业务组合， 明确各业务的核心部分， 抽离出业务的可复用的部分，形成 API</strong> ；<br>考虑组合模式和装饰器模式来进行扩展。</li>
+</ol>
+<p><strong>核心不变， 外围定制化</strong>。</p>
+<h2 id="不用多余的代码"><a href="#不用多余的代码" class="headerlink" title="不用多余的代码"></a>不用多余的代码</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;工程中常常会有一些不用的代码。或者是一些暂时未用到的<code>Util</code>工具或库函数，或者是由于业务变更导致已经废弃不用的代码，或者是由于一时写出后来又重写的代码。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>方法：尽量清除掉不用多余的代码，对系统可维护性是一种很好的改善，同时也有利于<code>CodeReview</code>。</strong></p>
+<h2 id="使用全局变量"><a href="#使用全局变量" class="headerlink" title="使用全局变量"></a>使用全局变量</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用全局变量并没有“错”，错的是，一旦出现问题，排查和调试问题起来，真的会让人“一夜之间白了头”，耗费数个小时是轻微惩罚。此外，全局变量还能“顺手牵羊”地破坏函数的通用性，导致可维护性变差。务必消除全局变量的使用。当然，<strong>全局常量是可以的。</strong></p>
+<h2 id="影响范围过大"><a href="#影响范围过大" class="headerlink" title="影响范围过大"></a>影响范围过大</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对多个模块依赖的公共函数的修改，容易造成影响范围超过当前业务改动，无意识地破坏依赖于该公共函数的其他业务。要特别慎重。</p>
+<p><strong>可靠的方式是：</strong></p>
+<p><strong>1. 先查看该公共函数的调用， 如果只有自己的业务用，可适当大胆一些； </strong></p>
+<p><strong>2. 如果有多个地方依赖，抽离一个新的函数，抽离原函数里的可复用部分，然后基于可复用部分构建新的函数。</strong></p>
+<p><strong>3. 修改原则遵循“开闭”原则，才能尽可能使改动影响降低到最小化。</strong></p>
+<p><strong>基类及实例字段和方法也属于公共函数的范畴</strong>。<strong>尽量不要修改基类的东西</strong>。</p>
+<h2 id="跨语言或跨系统交互"><a href="#跨语言或跨系统交互" class="headerlink" title="跨语言或跨系统交互"></a>跨语言或跨系统交互</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;稍具规模的互联网创业公司通常会采用多语言开发，比如<code>PHP</code>作为前端，<code>Java</code>作为后台服务。当动态类型语言与静态类型语言交互时，会有一些问题产生。比如<code>PHP</code>的对象通常是一个<code>Map</code>, 如果是空对象就会写成<code>[]</code>,然而 <code>[]</code>会被 <code>Java</code>解析成列表。这样， 如果数据库的值是通过 <code>PHP</code>写入，那么这个值既有可能是<code>JSON</code>对象字符串，也可能是空数组字符串，<code>Java</code> 来解析就有点尴尬了。 同样，当 <code>Java</code> 调用 <code>PHP</code> 接口时， 不规范的<code>PHP接口既可能返回列表，也可能返回</code>true or false<code>，</code>Java` 解析返回结果也会比较尴尬。 因此， <strong>在跨语言交互的边界处，要特别注意这些类型转换的差异</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>跨系统交互则主要是接口设计与约定的问题：</strong></p>
+<p><strong>1. 同一个项目里不同业务团队之间的业务接口设计与约定， 不同企业里开放接口的设计与约定，要在最初深思熟虑，一旦开放，在后期很少有接口设计改动的空间。</strong></p>
+<p><strong>2. 开放接口设计要符合小而美、正交的特性， 命名要贴切一致， 参数取值要指明约束，枚举参数要给出列表， 结果返回要规范一致，可以采用通用的 <code>{“code”:200, “msg”: “success”, “data”: xxx}</code>。</strong></p>
+<p><strong>3. 跨系统交互也要统一对术语和接口的理解的一致。</strong></p>
+<h2 id="可维护性问题"><a href="#可维护性问题" class="headerlink" title="可维护性问题"></a>可维护性问题</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可维护性问题是“在当前业务变更的范围内通常不会导致<code>BUG</code>、故障，却会在日后埋下地雷，引发<code>BUG</code>、故障、维护成本大幅增加”的类别。</p>
+<h2 id="更难发现的错误"><a href="#更难发现的错误" class="headerlink" title="更难发现的错误"></a>更难发现的错误</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;更难发现的错误是指“复杂并发场景下的有一定技术难度的、需要丰富开发与设计经验才能看出来的错误”。</p>
+<h2 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;并发的问题更难检测、复现和调试。常见的问题有：</p>
+<p><strong>a. 在可能由多线程并发访问的对象中含有共享变量却没有同步保护；</strong></p>
+<p><strong>b. 在代码中手动创建缺乏控制的线程或线程池；</strong></p>
+<p><strong>c. 并发访问数据库时没有做任何同步措施；</strong></p>
+<p><strong>d. 多个线程对同一对象的互斥操作没有同步保护。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 a, 在大部分<code>Java</code>应用中，通常由<code>Spring</code>框架来控制和创建请求和服务实例，因此，<strong>保证“<code>Controller, Service</code> 类中的实例变量只允许 <code>Service, DAO</code>的单例</strong>，不允许业务变量实例”基本确保没有并发不正确更新的问题；不过，包含缓存策略的对象要特别注意多线程并发访问的问题，出于性能考量， 尽量只对共享实例部分加锁。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 b, <strong>禁止在应用中手动创建线程或线程池</strong>，失控的线程池很容易导致应用崩溃(有线上应用崩溃的教训)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 c, <strong>并发访问数据库时，要特别注意时序和状态同步</strong>。如果时序控制不对，会导致状态同步和更新出错。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 d, <strong>对同一对象的互斥操作需要加分布式锁同步</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用线程池、并发库、并发类、同步工具而不是线程对象、并发原语。在复杂并发场景下，还需注意多个同步对象上的锁是否按合适的顺序获得和释放以避免死锁，相应的错误处理代码是否合理。</p>
+<h2 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事务方面常出现的问题是：多个紧密关联的业务操作和<code>SQL</code>语句没有事务保证。 在资金业务操作或数据强一致性要求的业务操作中，要注意<strong>使用事务，保证数据更新的一致性和完整性</strong>。</p>
+<h2 id="SQL问题"><a href="#SQL问题" class="headerlink" title="SQL问题"></a>SQL问题</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SQL</code>的正确性通常可以通过 <code>DAO</code>测试来保证。<strong><code>SQL</code>问题主要是指潜在的性能问题和安全问题</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<ol>
+<li>要避免<code>SQL</code>性能问题， <strong>在表设计的时候就要做好索引工作</strong></li>
+<li>在表数据量非常大的情况下，<code>SQL</code>语句编写要非常小心</li>
+<li>查询<code>SQL</code>需要添加必要索引，添加合适的查询条件和查询顺序，加快查询效率， 避免慢查</li>
+<li><strong>尽量避免使用<code>Join</code>, 子查询</strong></li>
+<li><strong>避免<code>SQL注入</code></strong></li>
+</ol>
+<h2 id="安全问题"><a href="#安全问题" class="headerlink" title="安全问题"></a>安全问题</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;安全问题一向是互联网产品研发中极容易被忽视、而在爆发后又极引发热议的议题。安全和隐私是用户的心理红线之一。应用、数据、资金的安全性应当仅次于产品功能的准确性和使用体验。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;安全问题的<code>CodeReview</code>可参见检查点清单： 信息安全 。主要是如下措施：</p>
+<p>a. <strong>严格检查和屏蔽非法输入</strong>； </p>
+<p>b. <strong>对含敏感信息的请求加密通信</strong>； </p>
+<p>c. <strong>业务处理后消除任何敏感私密信息的任何痕迹</strong>； </p>
+<p>d. <strong>结果返回前在反序列化中清除敏感私密信息</strong>； </p>
+<p>e. <strong>敏感私密信息在数据存储设备中应当加密存储</strong>； </p>
+<p>f. <strong>应用有严格的角色、权限、操作、数据访问分级和控制</strong>；</p>
+<p>g. <strong>切忌暴露服务器的重要的安全性信息，防止服务器被攻击影响正常服务运行</strong>。</p>
+<h2 id="设计问题"><a href="#设计问题" class="headerlink" title="设计问题"></a>设计问题</h2><p>设计问题通常体现在： </p>
+<p>a. 是否有潜在的<strong>性能问题</strong>； </p>
+<p>b. 是否有<strong>安全问题</strong>； </p>
+<p>c. 业务变化时<strong>是否容易扩展</strong>； </p>
+<p>d. <strong>是否有遗漏的点</strong>。</p>
+<h2 id="较轻微的问题"><a href="#较轻微的问题" class="headerlink" title="较轻微的问题"></a>较轻微的问题</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;较轻微问题是指“没有技术难度、通过良好习惯即可避免的问题”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;较轻微问题一般不会造成负面影响的<code>BUG</code>或故障，不过建立一些好的习惯，主动使用代码检测工具，消除这些较轻微错误，也是一种修行。</p>
+<h2 id="命名不贴切"><a href="#命名不贴切" class="headerlink" title="命名不贴切"></a>命名不贴切</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>命名不贴切不会影响功能实现，却会误导理解或增加理解难度</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方法：先查查字典，找个通俗易懂而且比较贴近的名字。可以参考<code>jdk</code>的命名、通用词汇和行业词汇； 作用域小的采用短命名，作用域大的采用长命名。取名字是一种重要技能，—— 多少父母为此愁灰了头！</p>
+<h2 id="声明时未初始化"><a href="#声明时未初始化" class="headerlink" title="声明时未初始化"></a>声明时未初始化</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;声明时未初始化通常情况下都不会是问题，因为后面会进行赋值。不过，如果赋值的过程中出现异常，那么可能会返回空值，从而导致空值异常。通常，<strong>变量声明时赋予默认初始值是个好习惯</strong>。</p>
+<h2 id="风格与整体有不一致"><a href="#风格与整体有不一致" class="headerlink" title="风格与整体有不一致"></a>风格与整体有不一致</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;工程通常求稳，一致性能更好地维护。在工程项目中，最好能够<strong>遵循工程约定的风格</strong>，在个人项目中可以凸显个性风格。<code>Java</code>编程一般要遵循《<code>Java</code>编程规范》，有追求的程序猿媛还会追求更高层次的，比如《<code>Google Java</code> 规范》等。</p>
+<h2 id="类型转换错误"><a href="#类型转换错误" class="headerlink" title="类型转换错误"></a>类型转换错误</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编程语言的类型系统是非常重要的。如何在不同类型之间可靠地互转，尤其是在父子类型之间相互赋值，也是一个微技能。滥用类型转换，也会导致<code>BUG</code> 。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Java</code> 中容易出现的错误是：</p>
+<p>a. 字符串转数值，字符串含有非数字部分；</p>
+<p>b. <strong><code>JSON</code>字符串转对象，某个字段含有不兼容的值类型导致解析出错</strong>；</p>
+<p>c. <strong>子类型转不兼容的父类型</strong>，滋生运行时异常 <code>ClassCastException</code>；</p>
+<p>d<strong>. 相同特质的类型不兼容</strong>。比如 <code>Long</code>与 <code>Integer</code>都是数值型，却不能互转。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>类型转换中最容易出BUG的地方是非布尔类型取反</strong>。受C语言的影响，很多高级语言支持各种数据类型转布尔类型，比如 <code>PHP</code> 字符串、数组、数字等都可以转布尔类型，相应的就喜欢写 <code>if (!notBoolVar)</code>这种表达式， 容易隐藏看不出的<code>BUG</code>甚至错误。</p>
+<h2 id="否定式风格"><a href="#否定式风格" class="headerlink" title="否定式风格"></a>否定式风格</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;变量含义、表达式语句倾向于使用否定式风格，可能不知不觉耗费大量脑细胞，因为每次理解的时候都要绕个弯子。 比如<code>isNoExpress</code>是否无需物流， 就有点绕。 为什么呢？ 无需物流是针对快递发货的， 如果快递发货占发货的90%， 无需物流只占10%，那么,<code>isNoExpress = false</code> 几乎总为真。 涉及到判断的时候，可能不得不写 <code>if (!isNoExpress)</code> ， 双重否定足够弄晕你。</p>
+<h2 id="容器遍历的结构变更"><a href="#容器遍历的结构变更" class="headerlink" title="容器遍历的结构变更"></a>容器遍历的结构变更</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝大多数语言都承袭了<code>C</code>语言的 <code>for(int i=0;i&lt;N;i++)</code>循环形式。不过，现代编程语言通常都提供了迭代器遍历、或 <code>foreach</code>遍历。<code>foreach</code> 遍历通常基于迭代器遍历实现。</p>
+<p> <strong>1. 只要对容器结构不做变更，推荐使用 <code>foreach</code></strong>；</p>
+<p> <strong>2. 若要遍历的同时做修改或更新，推荐迭代器模式</strong>。</p>
+<p> <strong>3. 遍历容器的时候同时做删除元素操作，要特别留意，很可能导致越界错误</strong>。</p>
+<p><strong>4. 更可靠的方式时，直接生成新的容器，如果不涉及空间效率的话</strong>。</p>
+<h2 id="API参数传递错误"><a href="#API参数传递错误" class="headerlink" title="API参数传递错误"></a>API参数传递错误</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果<code>API参数</code>有多个，而且相邻参数的类型相同，那么要特别留意是否参数顺序是正确的，而不会张冠李戴。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，<strong>在设计<code>API参数</code>的时候，就可以仔细用更精准类型进行区分，并将相同类型的参数错开</strong>。比如<code>calc(int accountNo, int pay, int timestamp)</code> ， 就容易传错，比较可靠的是<code>calc(int accountNo, Currency pay, Timestamp now)</code>，这样是不可能将参数传递错误的。</p>
+<h2 id="单行调用括号过多"><a href="#单行调用括号过多" class="headerlink" title="单行调用括号过多"></a>单行调用括号过多</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了简便，常常会写出 <code>wapper(calc(now, String.format(“%s ”, new BufferedFileReader(filename, “UTF-8″).readLines() )))</code>的语句 , 嗯，你得好好瞧瞧和算算右边的括号数量是否正确了。更糟糕的时候，结合<code>API</code>参数传递错误，<code>IDE</code> 可能没有报错， 而你很可能没有意识到自己的参数传递错误了。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>可靠的方式是， 拆出一部分变量，并将调用之间的括号用空格隔开，显示出层次感。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String fileContent = new BufferedFileReader(filename, &quot;UTF-8&quot;).readLines();</span><br><span class="line"></span><br><span class="line">wapper( calc( now, String.format(&quot;%s &quot;, fileContent) ) )</span><br></pre></td></tr></table></figure>
+<h2 id="作用域过大"><a href="#作用域过大" class="headerlink" title="作用域过大"></a>作用域过大</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于<code>C</code>语言的影响，猿媛们会在开头就定义好一些变量或要返回的对象，在很靠后的地方才使用到。不必要的过大的作用域对变量和对象的变化产生不可测的影响，并增大理解的成本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可靠的方法是，<strong>仅当在使用时才定义，并尽快返回结果</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另一种情况是，暴露的访问域过大，比如 <code>public 字段</code>。 <strong>尽可能地缩小可访问的范围，可以增大变更和 重构的空间</strong>； 减少可变性，则可以自然地获得并发安全性，降低<code>CodeReview</code>的理解成本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如，<strong>不可变的类和字段定义成 <code>final</code> , 最小化包，类，接口，方法和域的可访问性，默认为 <code>private</code> , 若需要继承，可定义为 <code>protected</code> , 仅当需要作为 <code>API</code> 服务暴露出去时，使用 <code>public</code></strong>.</p>
+<h2 id="分支与循环"><a href="#分支与循环" class="headerlink" title="分支与循环"></a>分支与循环</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;条件与循环偶尔也会导致错误， 不过通常错误可以在发布前解决掉。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于<code>if-else</code> 嵌套条件， 需要仔细检查是否符合业务逻辑； 如果嵌套太深，是否可以使用另一种方式“解结” </strong>； </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于 <code>switch</code> 语句， 大多数语言的 <code>case</code> 有 <code>fall through</code> 问题， 要注意加上<code>break</code>； 最好加上 <code>default 的处理</code></strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于<code>for</code> 循环， 编写合理的结束条件避免死循环； 对于循环变量的控制， 避免出现 -1或 +1 错误， 消除越界错误</strong>； </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>for</code>循环也要特别注意对空值和空容器的处理，避免抛出空值异常</strong>。可以通过单测来确保<code>for</code>循环的准确性。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/代码规范与技巧/" rel="tag"># 代码规范与技巧</a>
+          
+            <a href="/tags/代码技巧/" rel="tag"># 代码技巧</a>
+          
+            <a href="/tags/Code-Review/" rel="tag"># Code Review</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/03/让繁琐的if……else逼格高一点点/" rel="next" title="让繁琐的if……else逼格高一点点">
+                <i class="fa fa-chevron-left"></i> 让繁琐的if……else逼格高一点点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/03/使用PHPCS检查是否符合代码规范/" rel="prev" title="使用PHPCS检查是否符合代码规范">
+                使用PHPCS检查是否符合代码规范 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CodeReview常见代码问题"><span class="nav-number">1.</span> <span class="nav-text">CodeReview常见代码问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#空值"><span class="nav-number">1.1.</span> <span class="nav-text">空值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#未捕获潜在的异常"><span class="nav-number">1.2.</span> <span class="nav-text">未捕获潜在的异常</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码效率太低"><span class="nav-number">1.3.</span> <span class="nav-text">代码效率太低</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重复代码"><span class="nav-number">1.4.</span> <span class="nav-text">重复代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#硬编码"><span class="nav-number">1.5.</span> <span class="nav-text">硬编码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码层次不合理"><span class="nav-number">1.6.</span> <span class="nav-text">代码层次不合理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修改方法签名"><span class="nav-number">1.7.</span> <span class="nav-text">修改方法签名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#打印日志太多"><span class="nav-number">1.8.</span> <span class="nav-text">打印日志太多</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多级数据结构"><span class="nav-number">1.9.</span> <span class="nav-text">多级数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缺乏必要的注释"><span class="nav-number">1.10.</span> <span class="nav-text">缺乏必要的注释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数检测缺乏或不足"><span class="nav-number">1.11.</span> <span class="nav-text">参数检测缺乏或不足</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缺乏必要日志"><span class="nav-number">1.12.</span> <span class="nav-text">缺乏必要日志</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#错误码不符合规范"><span class="nav-number">1.13.</span> <span class="nav-text">错误码不符合规范</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用错误"><span class="nav-number">1.14.</span> <span class="nav-text">引用错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#细节错误"><span class="nav-number">1.15.</span> <span class="nav-text">细节错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多重条件"><span class="nav-number">1.16.</span> <span class="nav-text">多重条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通用逻辑与定制业务逻辑耦合"><span class="nav-number">1.17.</span> <span class="nav-text">通用逻辑与定制业务逻辑耦合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接在原方法里加逻辑"><span class="nav-number">1.18.</span> <span class="nav-text">直接在原方法里加逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多业务耦合"><span class="nav-number">1.19.</span> <span class="nav-text">多业务耦合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#与原有业务逻辑不兼容"><span class="nav-number">1.20.</span> <span class="nav-text">与原有业务逻辑不兼容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不用多余的代码"><span class="nav-number">1.21.</span> <span class="nav-text">不用多余的代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用全局变量"><span class="nav-number">1.22.</span> <span class="nav-text">使用全局变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#影响范围过大"><span class="nav-number">1.23.</span> <span class="nav-text">影响范围过大</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#跨语言或跨系统交互"><span class="nav-number">1.24.</span> <span class="nav-text">跨语言或跨系统交互</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可维护性问题"><span class="nav-number">1.25.</span> <span class="nav-text">可维护性问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更难发现的错误"><span class="nav-number">1.26.</span> <span class="nav-text">更难发现的错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并发"><span class="nav-number">1.27.</span> <span class="nav-text">并发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#事务"><span class="nav-number">1.28.</span> <span class="nav-text">事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL问题"><span class="nav-number">1.29.</span> <span class="nav-text">SQL问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安全问题"><span class="nav-number">1.30.</span> <span class="nav-text">安全问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计问题"><span class="nav-number">1.31.</span> <span class="nav-text">设计问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#较轻微的问题"><span class="nav-number">1.32.</span> <span class="nav-text">较轻微的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#命名不贴切"><span class="nav-number">1.33.</span> <span class="nav-text">命名不贴切</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#声明时未初始化"><span class="nav-number">1.34.</span> <span class="nav-text">声明时未初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#风格与整体有不一致"><span class="nav-number">1.35.</span> <span class="nav-text">风格与整体有不一致</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类型转换错误"><span class="nav-number">1.36.</span> <span class="nav-text">类型转换错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#否定式风格"><span class="nav-number">1.37.</span> <span class="nav-text">否定式风格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#容器遍历的结构变更"><span class="nav-number">1.38.</span> <span class="nav-text">容器遍历的结构变更</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#API参数传递错误"><span class="nav-number">1.39.</span> <span class="nav-text">API参数传递错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单行调用括号过多"><span class="nav-number">1.40.</span> <span class="nav-text">单行调用括号过多</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#作用域过大"><span class="nav-number">1.41.</span> <span class="nav-text">作用域过大</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分支与循环"><span class="nav-number">1.42.</span> <span class="nav-text">分支与循环</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

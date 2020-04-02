@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Docker,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="如何编写优雅的Dockerfile 原文地址：https://mp.weixin.qq.com/s/yPY1iEAP_Gbxk8C6VetSbQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Kubernetes要从容器化开始，而容器又需要从Dockerfile开始，本文将介绍如何写出一个优雅的Dockerfile文件。 文章主要内容包括：  Docker容器 Dockerfile 使用多阶构">
+<meta name="keywords" content="Docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何编写优雅的Dockerfile">
+<meta property="og:url" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="如何编写优雅的Dockerfile 原文地址：https://mp.weixin.qq.com/s/yPY1iEAP_Gbxk8C6VetSbQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Kubernetes要从容器化开始，而容器又需要从Dockerfile开始，本文将介绍如何写出一个优雅的Dockerfile文件。 文章主要内容包括：  Docker容器 Dockerfile 使用多阶构">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/1.webp">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/2.webp">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/3.webp">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/4.webp">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/5.webp">
+<meta property="og:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/6.webp">
+<meta property="og:updated_time" content="2019-03-26T02:12:29.105Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何编写优雅的Dockerfile">
+<meta name="twitter:description" content="如何编写优雅的Dockerfile 原文地址：https://mp.weixin.qq.com/s/yPY1iEAP_Gbxk8C6VetSbQ  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Kubernetes要从容器化开始，而容器又需要从Dockerfile开始，本文将介绍如何写出一个优雅的Dockerfile文件。 文章主要内容包括：  Docker容器 Dockerfile 使用多阶构">
+<meta name="twitter:image" content="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/">
+
+
+
+
+
+  <title>如何编写优雅的Dockerfile | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/26/如何编写优雅的Dockerfile/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">如何编写优雅的Dockerfile</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-26T12:12:57+08:00">
+                2019-03-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Docker/" itemprop="url" rel="index">
+                    <span itemprop="name">Docker</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="如何编写优雅的Dockerfile"><a href="#如何编写优雅的Dockerfile" class="headerlink" title="如何编写优雅的Dockerfile"></a>如何编写优雅的Dockerfile</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/yPY1iEAP_Gbxk8C6VetSbQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/yPY1iEAP_Gbxk8C6VetSbQ</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Kubernetes要从容器化开始，而容器又需要从Dockerfile开始，本文将介绍如何写出一个优雅的Dockerfile文件。</p>
+<p>文章主要内容包括：</p>
+<ul>
+<li>Docker容器</li>
+<li>Dockerfile</li>
+<li>使用多阶构建</li>
+</ul>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/1.webp" alt="img"></p>
+<h2 id="1-Docker容器"><a href="#1-Docker容器" class="headerlink" title="1. Docker容器"></a>1. Docker容器</h2><h3 id="1-1-容器的特点"><a href="#1-1-容器的特点" class="headerlink" title="1.1 容器的特点"></a>1.1 容器的特点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;我们都知道容器就是一个标准的软件单元，它有以下特点：</p>
+<ul>
+<li><strong>随处运行</strong>：容器可以将代码与配置文件和相关依赖库进行打包，从而确保在任何环境下的运行都是一致的。</li>
+<li><strong>高资源利用率</strong>：容器提供进程级的隔离，因此可以更加精细地设置CPU和内存的使用率，进而更好地利用服务器的计算资源。</li>
+<li><strong>快速扩展：</strong>每个容器都可作为单独的进程予以运行，并且可以共享底层操作系统的系统资源，这样一来可以加快容器的启动和停止效率。</li>
+</ul>
+<h3 id="1-2-Docker容器"><a href="#1-2-Docker容器" class="headerlink" title="1.2 Docker容器"></a>1.2 Docker容器</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;目前市面上的主流容器引擎有Docker、Rocket/rkt、OpenVZ/Odin等等，而独霸一方的容器引擎就是使用最多的Docker容器引擎。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Docker容器是与系统其他部分隔离开的一系列进程，运行这些进程所需的所有文件都由另一个镜像提供，从开发到测试再到生产的整个过程中，Linux 容器都具有可移植性和一致性。相对于依赖重复传统测试环境的开发渠道，容器的运行速度要快得多，并且支持在多种主流云平台（PaaS）和本地系统上部署。Docker容器很好地解决了“开发环境能正常跑，一上线就各种崩”的尴尬。</p>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/2.webp" alt="img"></p>
+<p><strong>Docker容器的特点：</strong></p>
+<ul>
+<li><p><strong>轻量</strong>：容器是进程级的资源隔离，而虚拟机是操作系统级的资源隔离，所以Docker容器相对于虚拟机来说可以节省更多的资源开销，因为Docker容器不再需要GuestOS这一层操作系统了。</p>
+</li>
+<li><p><strong>快速：</strong>容器的启动和创建无需启动GuestOS，可以实现秒级甚至毫秒级的启动。</p>
+</li>
+<li><p><strong>可移植性：</strong>Docker容器技术是将应用及所依赖的库和运行时的环境技术改造包成容器镜像，可以在不同的平台运行。</p>
+</li>
+<li><p><strong>自动化：</strong>容器生态中的容器编排工作（如：Kubernetes）可帮助我们实现容器的自动化管理。</p>
+</li>
+</ul>
+<h2 id="2-Dockerfile"><a href="#2-Dockerfile" class="headerlink" title="2. Dockerfile"></a>2. Dockerfile</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;Dockerfile是用来描述文件的构成的文本文档，其中包含了用户可以在使用行调用以组合Image的所有命令，用户还可以使用Docker build实现连续执行多个命令指今行的自动构建。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过编写Dockerfile生磁镜像，可以为开发、测试团队提供基本一致的环境，从而提升开发、测试团队的效率，不用再为环境不统一而发愁，同时运维也能更加方便地管理我们的镜像。</p>
+<p>Dockerfile的语法非常简单，常用的只有11个：</p>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/3.webp" alt="img"></p>
+<h3 id="2-1-编写优雅地Dockerfile"><a href="#2-1-编写优雅地Dockerfile" class="headerlink" title="2.1 编写优雅地Dockerfile"></a>2.1 编写优雅地Dockerfile</h3><p><strong>编写优雅的Dockerfile主要需要注意以下几点：</strong></p>
+<ul>
+<li>Dockerfile文件不宜过长，层级越多最终制作出来的镜像也就越大。</li>
+<li>构建出来的镜像不要包含不需要的内容，如日志、安装临时文件等。</li>
+<li>尽量使用运行时的基础镜像，不需要将构建时的过程也放到运行时的Dockerfile里。</li>
+</ul>
+<p>为了方便大家了解，我们用两个Dockerfile实例进行简单的对比：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> ubuntu:<span class="number">16.04</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> apt-get update</span></span><br><span class="line"><span class="bash">RUN apt-get install -y apt-utils libjpeg-dev \     </span></span><br><span class="line"><span class="bash">python-pip</span></span><br><span class="line"><span class="bash">RUN pip install --upgrade pip</span></span><br><span class="line"><span class="bash">RUN easy_install -U setuptools</span></span><br><span class="line"><span class="bash">RUN apt-get clean</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> ubuntu:<span class="number">16.04</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> apt-get update &amp;&amp; apt-get install -y apt-utils \</span></span><br><span class="line"><span class="bash">  libjpeg-dev python-pip \</span></span><br><span class="line"><span class="bash">           &amp;&amp; pip install --upgrade pip \</span></span><br><span class="line"><span class="bash">      &amp;&amp; easy_install -U setuptools \</span></span><br><span class="line"><span class="bash">    &amp;&amp; apt-get clean</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们看第一个Dockerfile，乍一看条理清晰，结构合理，似乎还不错。再看第二个Dockerfile，紧凑，不易阅读，为什么要这么写？</p>
+<ul>
+<li>第一个Dockerfile的好处是：当正在执行的过程某一层出错，对其进行修正后再次Build，前面已经执行完成的层不会再次执行。这样能大大减少下次Build的时间，而它的问题就是会因层级变多了而使镜像占用的空间也变大。</li>
+<li>第二个Dockerfile把所有的组件全部在一层解决，这样做能一定程度上减少镜像的占用空间，但在制作基础镜像的时候若其中某个组编译出错，修正后再次Build就相当于重头再来了，前面编译好的组件在一个层里，得全部都重新编译一遍，比较消耗时间。</li>
+</ul>
+<p>从下表可以看出两个Dockerfile所编译出来的镜像大小：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker images | grep ubuntu      REPOSITORY      TAG     IMAGE ID    CREATED     SIZE                                                                                             ubuntu                   16.04       9361ce633ff1  1 days ago 422MB</span><br><span class="line">ubuntu                   16.04-1     3f5b979df1a9  1 days ago  412MB</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;呃…. 好像并没有特别的效果，但若Dockerfile非常长的话可以考虑减少层次，因为<strong>Dockerfile最高只能有127层</strong>。</p>
+<h2 id="3-使用多阶构建"><a href="#3-使用多阶构建" class="headerlink" title="3. 使用多阶构建"></a>3. 使用多阶构建</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;Docker在升级到Docker 17.05之后就能支持多阶构建了，为了使镜像更加小巧，我们采用多阶构建的方式来打包镜像。在多阶构建出现之前我们通常使用一个Dockerfile或多个Dockerfile来构建镜像。</p>
+<h3 id="3-1-单文件构建"><a href="#3-1-单文件构建" class="headerlink" title="3.1 单文件构建"></a><strong>3.1 单文件构建</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在多阶构建出来之前使用单个文件进行构建，单文件就是将所有的构建过程（包括项目的依赖、编译、测试、打包过程）全部包含在一个Dockerfile中之下：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.11</span>.<span class="number">4</span>-alpine3.<span class="number">8</span> AS build-<span class="keyword">env</span></span><br><span class="line"><span class="keyword">ENV</span> GO111MODULE=off</span><br><span class="line"><span class="keyword">ENV</span> GO15VENDOREXPERIMENT=<span class="number">1</span></span><br><span class="line"><span class="keyword">ENV</span> BUILDPATH=github.com/lattecake/hello</span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mkdir -p /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span></span></span><br><span class="line"><span class="bash">COPY ./ /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span></span></span><br><span class="line"><span class="bash">RUN <span class="built_in">cd</span> /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span> &amp;&amp; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install –v</span></span><br><span class="line"><span class="bash"></span></span><br><span class="line"><span class="bash">CMD [/go/bin/hello]</span></span><br></pre></td></tr></table></figure>
+<p>这种的做法会带来一些问题：</p>
+<ul>
+<li>Dockerfile文件会特别长，当需要的东西越来越多的时候可维护性指数级将会下降；</li>
+<li>镜像层次过多，镜像的体积会逐步增大，部署也会变得越来越慢；</li>
+<li>代码存在泄漏风险。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;以Golang为例，它运行时不依赖任何环境，只需要有一个编译环境，那这个编译环境在实际运行时是没有任务作用的，编译完成后，那些源码和编译器已经没有任务用处了也就没必要留在镜像里。</p>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/4.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上表可以看到，单文件构建最终占用了312MB的空间。</p>
+<h3 id="3-2-多文件构建"><a href="#3-2-多文件构建" class="headerlink" title="3.2 多文件构建"></a><strong>3.2 多文件构建</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在多阶构建出来之前有没有好的解决方案呢？有，比如采用多文件构建或在构建服务器上安装编译器，不过在构建服务器上安装编译器这种方法我们就不推荐了，因为在构建服务器上安装编译器会导致构建服务器变得非常臃肿，需要适配各个语言多个版本、依赖，容易出错，维护成本高。所以我们只介绍多文件构建的方式。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;多文件构建，其实就是使用多个Dockerfile，然后通过脚本将它们进行组合。假设有三个文件分别是：Dockerfile.run、Dockerfile.build、build.sh。</p>
+<ul>
+<li><strong>Dockerfile.run</strong>就是运行时程序所必须需要的一些组件的Dockerfile，它包含了最精简的库；</li>
+<li><strong>Dockerfile.build</strong>只是用来构建，构建完就没用了；</li>
+<li><strong>build.sh</strong>的功能就是将Dockerfile.run和Dockerfile.build进行组成，把Dockerfile.build构建好的东西拿出来，然后再执行Dockerfile.run，算是一个调度的角色。</li>
+</ul>
+<p><strong>Dockerfile.build</strong></p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.11</span>.<span class="number">4</span>-alpine3.<span class="number">8</span> AS build-<span class="keyword">env</span></span><br><span class="line"><span class="keyword">ENV</span> GO111MODULE=off</span><br><span class="line"><span class="keyword">ENV</span> GO15VENDOREXPERIMENT=<span class="number">1</span></span><br><span class="line"><span class="keyword">ENV</span> BUILDPATH=github.com/lattecake/hello</span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mkdir -p /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span></span></span><br><span class="line"><span class="bash">COPY ./ /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span></span></span><br><span class="line"><span class="bash">RUN <span class="built_in">cd</span> /go/src/<span class="variable">$&#123;BUILDPATH&#125;</span> &amp;&amp; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install –v</span></span><br></pre></td></tr></table></figure>
+<p><strong>Dockerfile.run</strong></p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> apk –no-cache add ca-certificates</span></span><br><span class="line"><span class="bash">WORKDIR /root</span></span><br><span class="line"><span class="bash">ADD hello .</span></span><br><span class="line"><span class="bash">CMD [<span class="string">"./hello"</span>]</span></span><br></pre></td></tr></table></figure>
+<p><strong>Build.sh</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">docker build -t –rm hello:build . -f Dockerfile.build</span><br><span class="line">docker create –name extract hello:build</span><br><span class="line">docker cp extract:/go/bin/hello ./hello</span><br><span class="line">docker rm -f extract</span><br><span class="line">docker build –no-cache -t –rm hello:run . -f Dockerfile.run</span><br><span class="line">rm -rf ./hello</span><br></pre></td></tr></table></figure>
+<p>执行build.sh完成项目的构建。</p>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/5.webp" alt="img"></p>
+<p>从上表可以看到，多文件构建大大减小了镜像的占用空间，但它有三个文件需要管理，维护成本也更高一些。</p>
+<h3 id="3-3-多阶构建"><a href="#3-3-多阶构建" class="headerlink" title="3.3 多阶构建"></a><strong>3.3 多阶构建</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;多阶段构建我们只需要在Dockerfile中多次使用FORM声明，每次FROM指令可以使用不同的基础镜像，并且每次FROM指令都会开始新的构建，我们可以<strong>选择将一个阶段的构建结果复制到另一个阶段，在最终的镜像中只会留下最后一次构建的结果</strong>，这样就可以很容易地解决前面提到的问题，并且只需要编写一个Dockerfile文件。这里值得注意的是：<strong>需要确保Docker的版本在17.05及以上</strong>。</p>
+<p>在Dockerfile里可以使用as来为某一阶段取一个别名”build-env”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FROM golang:1.11.2-alpine3.8 AS build-env</span><br></pre></td></tr></table></figure>
+<p>然后从上一阶段的镜像中复制文件，也可以复制任意镜像中的文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">COPY –from=build-env /go/bin/hello /usr/bin/hello</span><br></pre></td></tr></table></figure>
+<p>看一个简单的例子：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.11</span>.<span class="number">4</span>-alpine3.<span class="number">8</span> AS build-<span class="keyword">env</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">ENV</span> GO111MODULE=off</span><br><span class="line"><span class="keyword">ENV</span> GO15VENDOREXPERIMENT=<span class="number">1</span></span><br><span class="line"><span class="keyword">ENV</span> GITPATH=github.com/lattecake/hello</span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mkdir -p /go/src/<span class="variable">$&#123;GITPATH&#125;</span></span></span><br><span class="line"><span class="bash">COPY ./ /go/src/<span class="variable">$&#123;GITPATH&#125;</span></span></span><br><span class="line"><span class="bash">RUN <span class="built_in">cd</span> /go/src/<span class="variable">$&#123;GITPATH&#125;</span> &amp;&amp; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -v</span></span><br><span class="line"><span class="bash"> </span></span><br><span class="line"><span class="bash">FROM alpine:latest</span></span><br><span class="line"><span class="bash">ENV apk –no-cache add ca-certificates</span></span><br><span class="line"><span class="bash">COPY --from=build-env /go/bin/hello /root/hello</span></span><br><span class="line"><span class="bash">WORKDIR /root</span></span><br><span class="line"><span class="bash">CMD [<span class="string">"/root/hello"</span>]</span></span><br></pre></td></tr></table></figure>
+<p>执行docker build -t –rm hello3 .后再执行docker images ，然后我们来看镜像的大小：</p>
+<p><img src="//blog.com/2019/03/26/如何编写优雅的Dockerfile/6.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;多阶构建给我们带来很多便利，<strong>最大的优势是在保证运行镜像足够小</strong>的情况下还减轻了Dockerfile的维护负担，因此我们极力推荐使用多阶构建来将你的代码打包成Docker 镜像。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Docker/" rel="tag"># Docker</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/26/挂载主机目录/" rel="next" title="挂载主机目录">
+                <i class="fa fa-chevron-left"></i> 挂载主机目录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/26/HEALTHCHECK 健康检查/" rel="prev" title="HEALTHCHECK 健康检查">
+                HEALTHCHECK 健康检查 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何编写优雅的Dockerfile"><span class="nav-number">1.</span> <span class="nav-text">如何编写优雅的Dockerfile</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Docker容器"><span class="nav-number">1.1.</span> <span class="nav-text">1. Docker容器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-容器的特点"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 容器的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-Docker容器"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 Docker容器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Dockerfile"><span class="nav-number">1.2.</span> <span class="nav-text">2. Dockerfile</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-编写优雅地Dockerfile"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 编写优雅地Dockerfile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-使用多阶构建"><span class="nav-number">1.3.</span> <span class="nav-text">3. 使用多阶构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-单文件构建"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 单文件构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-多文件构建"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 多文件构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-多阶构建"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3 多阶构建</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

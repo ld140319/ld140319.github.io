@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Redis,缓存,Redis最佳实践,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="热点 Key 问题的发现与解决  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/热点 Key 问题的发现与解决.md   热点问题概述产生原因 热点问题产生的原因大致有以下两种：  用户消费的数据远大于生产的数据（热卖商品、热点新闻、热点评论、明星直播）。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;">
+<meta name="keywords" content="架构,Redis,缓存,Redis最佳实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="热点 Key 问题的发现与解决">
+<meta property="og:url" content="http://blog.com/2019/06/02/热点 Key 问题的发现与解决/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="热点 Key 问题的发现与解决  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/热点 Key 问题的发现与解决.md   热点问题概述产生原因 热点问题产生的原因大致有以下两种：  用户消费的数据远大于生产的数据（热卖商品、热点新闻、热点评论、明星直播）。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135355f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135365f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135375f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135385f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135395f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333136305f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333136315f7a682d434e2e706e67.png">
+<meta property="og:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/1.png">
+<meta property="og:updated_time" content="2019-06-02T15:29:19.485Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="热点 Key 问题的发现与解决">
+<meta name="twitter:description" content="热点 Key 问题的发现与解决  原文地址：https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/热点 Key 问题的发现与解决.md   热点问题概述产生原因 热点问题产生的原因大致有以下两种：  用户消费的数据远大于生产的数据（热卖商品、热点新闻、热点评论、明星直播）。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;">
+<meta name="twitter:image" content="http://blog.com/2019/06/02/热点%20Key%20问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135355f7a682d434e2e706e67.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/02/热点 Key 问题的发现与解决/">
+
+
+
+
+
+  <title>热点 Key 问题的发现与解决 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/02/热点 Key 问题的发现与解决/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">热点 Key 问题的发现与解决</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-02T12:12:57+08:00">
+                2019-06-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/架构/缓存/Redis最佳实践/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis最佳实践</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="热点-Key-问题的发现与解决"><a href="#热点-Key-问题的发现与解决" class="headerlink" title="热点 Key 问题的发现与解决"></a>热点 Key 问题的发现与解决</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/热点" target="_blank" rel="noopener">https://github.com/AlibabaCloudDocs/kvstore/blob/master/cn.zh-CN/最佳实践/热点</a> Key 问题的发现与解决.md</p>
+</blockquote>
+<p><br></p>
+<h2 id="热点问题概述"><a href="#热点问题概述" class="headerlink" title="热点问题概述"></a>热点问题概述</h2><p><strong>产生原因</strong></p>
+<p>热点问题产生的原因大致有以下两种：</p>
+<ul>
+<li><p><strong>用户消费的数据远大于生产的数据</strong>（热卖商品、热点新闻、热点评论、明星直播）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在日常工作生活中一些突发的的事件，例如：双十一期间某些热门商品的降价促销，当这其中的某一件商品被数万次点击浏览或者购买时，会形成一个较大的需求量，这种情况下就会造成热点问题。同理，被大量刊发、浏览的热点新闻、热点评论、明星直播等，这些典型的读多写少的场景也会产生热点问题。</p>
+</li>
+<li><p><strong>请求分片集中，超过单 <code>Server</code>的性能极限</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在服务端读数据进行访问时，往往会对数据进行分片切分，此过程中会在某一主机 <code>Server</code>上对相应的 <code>Key</code> 进行访问，当访问超过<code>Server</code> 极限时，就会导致热点 <code>Key</code> 问题的产生。</p>
+</li>
+</ul>
+<h2 id="热点问题的危害"><a href="#热点问题的危害" class="headerlink" title="热点问题的危害"></a>热点问题的危害</h2><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135355f7a682d434e2e706e67.png" alt="img"></p>
+<ul>
+<li><strong>流量集中，达到物理网卡上限</strong>。</li>
+<li><strong>请求过多，缓存分片服务被打垮</strong>。</li>
+<li><strong><code>DB</code> 击穿，引起业务雪崩</strong>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如前文讲到的，当某一热点 <code>Key</code>的请求在某一主机上超过该主机网卡上限时，由于流量的过度集中，会导致服务器中其它服务无法进行。如果热点过于集中，热点 <code>Key</code>的缓存过多，超过目前的缓存容量时，就会导致缓存分片服务被打垮现象的产生。当缓存服务崩溃后，此时再有请求产生，会缓存到后台 <code>DB</code> 上，由于<code>DB</code> 本身性能较弱，在面临大请求时很容易发生请求穿透现象，会进一步导致雪崩现象，严重影响设备的性能。</p>
+<h2 id="常见解决方案"><a href="#常见解决方案" class="headerlink" title="常见解决方案"></a>常见解决方案</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常的解决方案主要集中在对客户端和 <code>Server</code>端进行相应的改造。</p>
+<h3 id="服务端缓存方案"><a href="#服务端缓存方案" class="headerlink" title="服务端缓存方案"></a>服务端缓存方案</h3><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135365f7a682d434e2e706e67.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先 <code>Client</code> 会将请求发送至 <code>Server</code>上，而 <code>Server</code>又是一个多线程的服务，<strong>本地就具有一个基于 <code>Cache LRU</code> 策略的缓存空间</strong>。<code>Server</code> 不会直接将请求发送给<code>DB</code>而是先在本地缓存中查询。命中后直接返回，未命中才会将<code>Client</code>请求发送至 <code>DB</code>，并且将该数据重新写入到缓存中。此时就完成了缓存的访问跟重建。</p>
+<p>但该方案也存在以下问题：</p>
+<ul>
+<li><strong>基于本地Cache LRU淘汰策略的缓存</strong></li>
+</ul>
+<ul>
+<li><strong>缓存失效，多线程构建缓存问题</strong>             <ol>
+<li>【缓存失效时，大量请求打向<code>DB</code> =》加锁，只允许一个线程请求<code>DB</code>】</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><strong>缓存丢失，缓存构建问题</strong>                        <ol start="2">
+<li>【重启，缓存数据丢失 =》大量请求打向<code>DB</code> =》加锁，只允许一个线程请求<code>DB</code>  】</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p><strong>脏读问题 </strong>                                                  </p>
+<ol>
+<li>【多<code>Server</code> =》不太可能每一个<code>Server</code>都进行缓存更新 （设置过期时间，自动更新），只会更新一个 <code>Server</code>，两次请求落到不同的<code>Server</code>就会不一致 】</li>
+</ol>
+<p>​     （1） 基于消息队列订阅来更新 ，每个<code>Server</code>都会部署一个缓存数据变更队列的消费进程</p>
+<p>​     （2）基于<code>zookeeper</code>的watch机制来实现更新</p>
+</li>
+</ul>
+<h3 id="使用-Memcache、Redis-方案"><a href="#使用-Memcache、Redis-方案" class="headerlink" title="使用 Memcache、Redis 方案"></a>使用 Memcache、Redis 方案</h3><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135375f7a682d434e2e706e67.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该方案通过在客户端单独部署缓存的方式来解决热点<code>Key</code>问题。使用过程中<code>Client</code> <strong>首先访问服务层，再对同一主机上的缓存层进行访问</strong>。该种解决方案具有就近访问、速度快、没有带宽限制的优点，但是同时也存在以下问题。</p>
+<ul>
+<li><strong>客户端单独部署缓存</strong></li>
+</ul>
+<ul>
+<li><strong>基于Memcache、Redis 的淘汰策略</strong></li>
+</ul>
+<ul>
+<li><p><strong>内存资源浪费</strong></p>
+<p>【每一个<code>Server</code>都要单独部署一个<code>Memcache、Redis</code>，分配单独的内存空间，<strong>增加了单台主机的内存要求 ，成本增加</strong>】</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>脏读问题</strong></p>
+<ol>
+<li>【对于<code>DB</code>更新时，如果只更新本<code>Server</code>机器对应的缓存数据，其它机器的缓存数据就是旧数据。若要更新所有机器的缓存数据，成本太大，会增加接口的时延（一般是对缓存数据设置一个过期时间，到期后从<code>DB</code>重新读取）】</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p><strong>缓存丢失，缓存构建问题</strong> </p>
+<ol>
+<li>【重启，若没有开启持久化，导致缓存数据丢失 =》大量请求打向<code>DB</code> =》加锁，重建时只允许一个线程请求<code>DB</code>  】</li>
+</ol>
+</li>
+</ul>
+<h3 id="使用本地缓存方案"><a href="#使用本地缓存方案" class="headerlink" title="使用本地缓存方案"></a>使用本地缓存方案</h3><p>使用本地缓存则存在以下问题：</p>
+<ul>
+<li><p>需要<strong>提前获知热点</strong>   </p>
+<ol>
+<li>热点是在发生变化的，无法提前捕获   </li>
+<li>数据是单台<code>Server</code>的，数据不完整，会影响我们的判断</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p><strong>缓存容量有限</strong></p>
+<ol>
+<li>单台机器的内存是有限的</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p><strong>不一致性时间增长 </strong></p>
+<ol>
+<li><code>DB</code>变化，如何通知所有的服务层机器更新，无法立刻更新到所有<code>Server</code></li>
+<li>对所有缓存数据都设置一个合理的过期时间，到期后再从<code>DB</code>获取到最新数据</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p><strong>热点 Key 遗漏</strong></p>
+<ol>
+<li>数据是单台<code>Server</code>的，数据不完整，会影响我们的判断</li>
+</ol>
+</li>
+</ul>
+<p>传统的热点解决方案都存在各种各样的问题，那么究竟该如何解决热点问题呢？</p>
+<h2 id="阿里云数据库解热点之道"><a href="#阿里云数据库解热点之道" class="headerlink" title="阿里云数据库解热点之道"></a>阿里云数据库解热点之道</h2><h3 id="读写分离方案解决热读"><a href="#读写分离方案解决热读" class="headerlink" title="读写分离方案解决热读"></a>读写分离方案解决热读</h3><p><strong>认为所有数据都是热点数据</strong></p>
+<p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135385f7a682d434e2e706e67.png" alt="img"></p>
+<p>架构中各节点的作用如下：</p>
+<ul>
+<li><code>SLB</code> 层做负载均衡</li>
+<li><code>Proxy</code>层做读写分离自动路由</li>
+<li><code>Master</code> 负责写请求</li>
+<li><code>ReadOnly</code> 节点负责读请求</li>
+<li><strong><code>Slave</code> 节点和 <code>Master</code> 节点做高可用，一个热备，通过<code>keepalived</code>实现</strong></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实际过程中 <code>Client</code>将请求传到 <code>SLB</code>，<code>SLB</code> 又将其分发至多个 <code>Proxy</code>内，通过 <code>Proxy</code> 对请求的识别，将其进行分类发送。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如，将同为<code>Write</code>的请求发送到<code>Master</code>模块内，而将<code>Read</code> 的请求发送至 <code>ReadOnly</code>模块。而<strong>模块中的只读节点可以进一步扩充，从而有效解决热点读的问题</strong>。<strong>读写分离同时具有可以灵活扩容读热点能力、可以存储大量热点<code>Key</code>、对客户端友好等优点</strong>。</p>
+<ul>
+<li><p><strong>灵活扩充</strong></p>
+</li>
+<li><p><strong>对客户端友好</strong></p>
+</li>
+<li><p><strong>可以存储大量热点<code>Key</code></strong></p>
+</li>
+</ul>
+<h3 id="热点数据解决方案"><a href="#热点数据解决方案" class="headerlink" title="热点数据解决方案"></a>热点数据解决方案</h3><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333135395f7a682d434e2e706e67.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该方案通过主动发现热点并对其进行存储来解决热点 <code>Key</code> 的问题。首先 <code>Client</code> 也会访问 <code>SLB</code>，并且通过 <code>SLB</code>将各种请求分发至 <code>Proxy</code>中，<code>Proxy</code>会按照基于路由的方式将请求转发至后端的 <code>Redis</code>中。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在热点 <code>key</code>的解决上是采用在服务端增加缓存的方式进行。具体来说就是<strong>在 <code>Proxy</code>上增加本地缓存，本地缓存采用<code>LRU</code>算法来缓存热点数据，后端 <code>db</code>节点增加热点数据计算模块来返回热点数据</strong>。</p>
+<p><code>Proxy</code> 架构的主要有以下优点：</p>
+<ul>
+<li><code>Proxy</code><strong>本地缓存热点，读能力可水平扩展</strong></li>
+<li><code>Redis</code>节点定时计算热点数据集合</li>
+<li><code>Redis</code>反馈<code>Proxy</code> 热点数据</li>
+<li><strong>对客户端完全透明，不需做任何兼容</strong></li>
+</ul>
+<h4 id="热点-key-处理"><a href="#热点-key-处理" class="headerlink" title="热点 key 处理"></a>热点 key 处理</h4><h5 id="热点数据的读取"><a href="#热点数据的读取" class="headerlink" title="热点数据的读取"></a>热点数据的读取</h5><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333136305f7a682d434e2e706e67.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在热点 <code>Key</code> 的处理上主要分为写入跟读取两种形式，在数据写入过程当 <code>SLB</code> 收到数据 <code>K1</code>并将其通过某一个 <code>Proxy</code>写入一个 <code>Redis</code>，完成数据的写入。假若经过后端热点模块计算发现<code>K1</code>成为热点 <code>key</code>后，<code>Proxy</code>会将该热点进行缓存，当下次客户端再进行访问 <code>K1</code>时，可以不经 <code>Redis</code>。最后由于<code>proxy</code>是可以水平扩充的，因此可以任意增强热点数据的访问能力。</p>
+<h3 id="热点数据的发现"><a href="#热点数据的发现" class="headerlink" title="热点数据的发现"></a>热点数据的发现</h3><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/687474703a2f2f7374617469632d616c6979756e2d646f632e6f73732d636e2d68616e677a686f752e616c6979756e63732e636f6d2f6173736574732f696d672f333136362f333136315f7a682d434e2e706e67.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 <code>redis</code>上热点数据的发现，首先会在一个周期内对 <code>Key</code>进行请求统计，在达到请求量级后会对热点<code>Key</code>进行热点定位，并<strong>将所有的热点 <code>Key</code>放入一个小的<code>LRU</code>链表内</strong>，在通过 <code>Proxy</code>请求进行访问时，若 <code>Redis</code>发现待访点是一个热点，就会进入一个反馈阶段，同时对该数据进行标记。（有效时间设置为<code>ms</code>）</p>
+<p><code>Redis</code>计算热点时，主要运用的方法和优势有：</p>
+<ul>
+<li><p><strong>基于统计阀值的热点统计 </strong>  </p>
+<p>（访问了多少次，如<code>3w、4w</code>……）</p>
+</li>
+<li><p><strong>基于统计周期的热点统计</strong>    </p>
+<p>（限制统计周期  如<code>1s</code>……，<strong>如果不限制，会受到历史数据影响，导致不能发现最近的热点数据</strong>）</p>
+<p>（周期越短，需要统计的<code>key</code>就越少）</p>
+</li>
+<li><p><strong>基于版本号实现的无需重置初值统计方法</strong></p>
+<p>（因为每一个统计周期的统计都会遍历所有<code>key</code>，非常耗时，如果<strong>在下一次请求时要清除这些统计信息也是非常耗时<code>O(n)</code>的</strong>  =》 加入版本号<code>O(1)</code>，读取最新版本数据即可）</p>
+</li>
+<li><p><code>Redis</code> 计算同时具有对性能影响极其微小、内存占用极其微小等优点</p>
+</li>
+</ul>
+<ul>
+<li><strong>Proxy缓存热点，读能力可水平扩展</strong></li>
+<li><strong>Redis自动计算热点Key</strong></li>
+<li><strong>对客户端完全透明，不需要兼容</strong></li>
+</ul>
+<h3 id="参数设置"><a href="#参数设置" class="headerlink" title="参数设置"></a>参数设置</h3><p><code>Proxy</code>上缓存的时间的设置：影响数据的最终一致性                【毫秒级别   降低脏读的可能性】</p>
+<p><code>Proxy</code>上缓存空间大小的设置：影响热点命中率</p>
+<p><code>Redis</code>上计算周期的设置：影响统计<code>Key</code>的数量</p>
+<p><code>Redis</code>上热点<code>Key</code>的过期时间设置：影响热点<code>Key</code>的更新         【时间越短，热点<code>Key</code>的更新更快速】</p>
+<h3 id="两种方案对比"><a href="#两种方案对比" class="headerlink" title="两种方案对比"></a>两种方案对比</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过上述对比分析可以看出，阿里云在解决热点 <code>Key</code>上较传统方法相比都有较大的提高，无论是基于读写分离方案还是热点数据解决方案，在实际处理环境中都可以做<strong>灵活的水平能力扩充、都对客户端透明、都有一定的数据不一致性</strong>。此外<strong>读写分离模式可以存储更大量的热点数据，而基于<code>Proxy</code>的模式有成本上的优势</strong>。</p>
+<h2 id="基于LFU判断热点Key"><a href="#基于LFU判断热点Key" class="headerlink" title="基于LFU判断热点Key"></a>基于LFU判断热点Key</h2><p><img src="//blog.com/2019/06/02/热点 Key 问题的发现与解决/1.png" alt=""></p>
+<p>最多存储256个key</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+            <a href="/tags/Redis最佳实践/" rel="tag"># Redis最佳实践</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/02/Redis开发规范/" rel="next" title="Redis开发规范">
+                <i class="fa fa-chevron-left"></i> Redis开发规范
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/02/事务/" rel="prev" title="事务">
+                事务 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#热点-Key-问题的发现与解决"><span class="nav-number">1.</span> <span class="nav-text">热点 Key 问题的发现与解决</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#热点问题概述"><span class="nav-number">1.1.</span> <span class="nav-text">热点问题概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#热点问题的危害"><span class="nav-number">1.2.</span> <span class="nav-text">热点问题的危害</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见解决方案"><span class="nav-number">1.3.</span> <span class="nav-text">常见解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#服务端缓存方案"><span class="nav-number">1.3.1.</span> <span class="nav-text">服务端缓存方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-Memcache、Redis-方案"><span class="nav-number">1.3.2.</span> <span class="nav-text">使用 Memcache、Redis 方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用本地缓存方案"><span class="nav-number">1.3.3.</span> <span class="nav-text">使用本地缓存方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阿里云数据库解热点之道"><span class="nav-number">1.4.</span> <span class="nav-text">阿里云数据库解热点之道</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#读写分离方案解决热读"><span class="nav-number">1.4.1.</span> <span class="nav-text">读写分离方案解决热读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#热点数据解决方案"><span class="nav-number">1.4.2.</span> <span class="nav-text">热点数据解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#热点-key-处理"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">热点 key 处理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#热点数据的读取"><span class="nav-number">1.4.2.1.1.</span> <span class="nav-text">热点数据的读取</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#热点数据的发现"><span class="nav-number">1.4.3.</span> <span class="nav-text">热点数据的发现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参数设置"><span class="nav-number">1.4.4.</span> <span class="nav-text">参数设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#两种方案对比"><span class="nav-number">1.4.5.</span> <span class="nav-text">两种方案对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于LFU判断热点Key"><span class="nav-number">1.5.</span> <span class="nav-text">基于LFU判断热点Key</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Redis,Lua,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Lua在Redis的应用Redis 从 2.6 版本起，也已开始支持 Lua 脚本，我们可以更加得心应手地使用或扩展 Redis，特别是在高并发场景下 Lua 脚本提供了更高效、可靠的解决方案。">
+<meta name="keywords" content="Redis,Lua">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua在Redis的应用">
+<meta property="og:url" content="http://blog.com/2019/09/19/Lua在Redis的应用/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Lua在Redis的应用Redis 从 2.6 版本起，也已开始支持 Lua 脚本，我们可以更加得心应手地使用或扩展 Redis，特别是在高并发场景下 Lua 脚本提供了更高效、可靠的解决方案。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/09/19/Lua在Redis的应用/3916d13312c22d84d29d3860b59544a9.png">
+<meta property="og:image" content="http://blog.com/2019/09/19/Lua在Redis的应用/3916d13312c22d84d29d3860b59544a9.png">
+<meta property="og:image" content="http://blog.com/2019/09/19/Lua在Redis的应用/ae7223b50754e37b7cd89cfe24fc13dd.png">
+<meta property="og:updated_time" content="2019-09-19T14:57:40.906Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lua在Redis的应用">
+<meta name="twitter:description" content="Lua在Redis的应用Redis 从 2.6 版本起，也已开始支持 Lua 脚本，我们可以更加得心应手地使用或扩展 Redis，特别是在高并发场景下 Lua 脚本提供了更高效、可靠的解决方案。">
+<meta name="twitter:image" content="http://blog.com/2019/09/19/Lua在Redis的应用/3916d13312c22d84d29d3860b59544a9.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/19/Lua在Redis的应用/">
+
+
+
+
+
+  <title>Lua在Redis的应用 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/19/Lua在Redis的应用/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Lua在Redis的应用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-19T12:12:57+08:00">
+                2019-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/Lua/" itemprop="url" rel="index">
+                    <span itemprop="name">Lua</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Lua在Redis的应用"><a href="#Lua在Redis的应用" class="headerlink" title="Lua在Redis的应用"></a>Lua在Redis的应用</h1><p>Redis 从 2.6 版本起，也已开始支持 <a href="https://redis.io/commands/eval" target="_blank" rel="noopener">Lua 脚本</a>，我们可以更加得心应手地使用或扩展 Redis，特别是在高并发场景下 Lua 脚本提供了更高效、可靠的解决方案。</p>
+<p><img src="//blog.com/2019/09/19/Lua在Redis的应用/3916d13312c22d84d29d3860b59544a9.png" alt=""><a id="more"></a></p>
+<h2 id="为什么要使用Lua"><a href="#为什么要使用Lua" class="headerlink" title="为什么要使用Lua"></a>为什么要使用Lua</h2><p>我们先看一个抢购场景下 <a href="">商品库存</a> 的问题，用 PHP 可简单实现为：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$key = <span class="string">'number:string'</span>;</span><br><span class="line">$redis = <span class="keyword">new</span> Redis();</span><br><span class="line">$number = $redis-&gt;get($key);</span><br><span class="line"><span class="keyword">if</span> ($number &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">$redis-&gt;decr($key);</span><br><span class="line"><span class="keyword">return</span> $number--;</span><br></pre></td></tr></table></figure>
+<p>这段代码其实存在问题，高并发时会出现库存超卖的情况，因为上述操作在 Redis 中不是原子操作，会导致库存逻辑的判断失效。尽管可以通过优化代码来解决问题，比如使用 <a href="">Decr</a> 原子操作命令、或者使用 <a href="">锁</a> 的方式，但这里使用 Lua 脚本来解决。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> key = <span class="string">'number:string'</span></span><br><span class="line"><span class="keyword">local</span> number = <span class="built_in">tonumber</span>(redis.call(<span class="string">"GET"</span>, key))</span><br><span class="line"><span class="keyword">if</span> number &lt;= <span class="number">0</span> <span class="keyword">then</span></span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">redis.call(<span class="string">"DECR"</span>, key)</span><br><span class="line"><span class="keyword">return</span> number<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+<p>这段脚本代码虽然是 Lua 语言编写（ <a href="https://www.fanhaobai.com/2017/09/lua.html" target="_blank" rel="noopener">进入Lua的世界</a>），但是其实就是 PHP 版本的翻译版。那为什么这样，Lua 脚本就能解决库存问题了呢？</p>
+<p>Redis 中嵌入 Lua 脚本，所具有的几个特性为：</p>
+<ul>
+<li><a href="">原子操作</a>：Redis 将整个 Lua 脚本作为一个原子执行，无需考虑并发，无需使用事务来保证数据一致性；</li>
+<li><a href="">高性能</a>：嵌入 Lua 脚本后，可以减少多个命令执行的网络开销，进而间接提高 Redis 性能；</li>
+<li><a href="">可复用</a>：Lua 脚本会保存于 Redis 中，客户端都可以使用这些脚本；</li>
+</ul>
+<h2 id="在Redis中嵌入Lua"><a href="#在Redis中嵌入Lua" class="headerlink" title="在Redis中嵌入Lua"></a>在Redis中嵌入Lua</h2><p><img src="//blog.com/2019/09/19/Lua在Redis的应用/3916d13312c22d84d29d3860b59544a9.png" alt=""></p>
+<h3 id="使用Lua解析器"><a href="#使用Lua解析器" class="headerlink" title="使用Lua解析器"></a>使用Lua解析器</h3><p>Redis 提供了 EVAL（直接执行脚本） 和 EVALSHA（执行 SHA1 值的脚本） 这两个命令，可以使用内置的 Lua 解析器执行 Lua 脚本。语法格式为：</p>
+<ul>
+<li><a href="">EVAL</a>  script  numkeys  key [key …]  arg [arg …] </li>
+<li><a href="">EVALSHA</a>  sha1  numkeys  key [key …]  arg [arg …] </li>
+</ul>
+<p>参数说明：</p>
+<ul>
+<li>script / sha1：EVAL 命令的第一个参数为需要执行的 Lua 脚本字符，EVALSHA 命令的一个参数为 Lua 脚本的 <a href="https://redis.io/commands/eval#bandwidth-and-evalsha" target="_blank" rel="noopener">SHA1 值</a></li>
+<li>numkeys：表示 key 的个数</li>
+<li>key [key …]：从第三个参数开始算起，表示在脚本中所用到的那些 Redis 键（key），这些键名参数可以在 Lua 中通过全局数组 KYES[i] 访问</li>
+<li>arg [arg …]：附加参数，在 Lua 中通过全局数组 ARGV[i] 访问</li>
+</ul>
+<p>EVAL 命令的使用示例：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; EVAL <span class="string">"return &#123;KEYS[1],KEYS[2],ARGV[1],ARGV[2]&#125;"</span> <span class="number">2</span> key1 key2 first second</span><br><span class="line"><span class="number">1</span>) <span class="string">"key1"</span></span><br><span class="line"><span class="number">2</span>) <span class="string">"key2"</span></span><br><span class="line"><span class="number">3</span>) <span class="string">"first"</span></span><br><span class="line"><span class="number">4</span>) <span class="string">"second"</span></span><br></pre></td></tr></table></figure>
+<p>每次使用 EVAL 命令都会传递需执行的 Lua 脚本内容，这样增加了宽带的浪费。Redis 内部会永久保存被运行在脚本缓存中，所以使用 EVALSHA（建议使用） 命令就可以根据脚本 SHA1 值执行对应的 Lua 脚本。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; SCRIPT LOAD <span class="string">"return 'hello'"</span></span><br><span class="line"><span class="string">"1b936e3fe509bcbc9cd0664897bbe8fd0cac101b"</span></span><br><span class="line">&gt; EVALSHA <span class="number">1</span>b936e3fe509bcbc9cd0664897bbe8fd0cac101b <span class="number">0</span></span><br><span class="line"><span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Redis 中执行 Lua 脚本都是以原子方式执行，所以是原子操作。另外，redis-cli 命令行客户端支持直接使用<code>--eval lua_file</code>参数执行 Lua 脚本。</p>
+</blockquote>
+<p>Redis 中有关脚本的命令除了 EVAL 和 EVALSHA 外，<a href="">其他常用命令</a> 如下：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SCRIPT EXISTS script [script …]</td>
+<td>查看脚本是是否保存在缓存中</td>
+</tr>
+<tr>
+<td>SCRIPT FLUSH</td>
+<td>从缓存中移除所有脚本</td>
+</tr>
+<tr>
+<td>SCRIPT KILL</td>
+<td>杀死当前运行的脚本</td>
+</tr>
+<tr>
+<td>SCRIPT LOAD script</td>
+<td>将脚本添加到缓存中,不立即执行<br>返回脚本SHA1值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="数据类型的转换"><a href="#数据类型的转换" class="headerlink" title="数据类型的转换"></a>数据类型的转换</h3><p>由于 Redis 和 Lua 都有各自定义的数据类型，所以在使用执行完 Lua 脚本后，会存在一个数据类型转换的过程。</p>
+<p>Lua 到 Redis 类型转换与 Redis 到 Lua 类型转换相同部分关系：</p>
+<table>
+<thead>
+<tr>
+<th><a href="https://www.fanhaobai.com/2017/09/lua.html#数据类型" target="_blank" rel="noopener">Lua 类型</a></th>
+<th><a href="http://www.redis.cn/topics/protocol.html" target="_blank" rel="noopener">Redis 返回类型</a></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>number</td>
+<td>integer</td>
+<td>浮点数会转换为整数<br>3.333–&gt;3</td>
+</tr>
+<tr>
+<td>string</td>
+<td>bulk</td>
+<td></td>
+</tr>
+<tr>
+<td>table（array）</td>
+<td>multi bulk</td>
+<td></td>
+</tr>
+<tr>
+<td>boolean false</td>
+<td>nil</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; EVAL <span class="string">"return 3.333"</span> <span class="number">0</span></span><br><span class="line">(integer) <span class="number">3</span></span><br><span class="line">&gt; EVAL <span class="string">"return 'fhb'"</span> <span class="number">0</span></span><br><span class="line"><span class="string">"fhb"</span></span><br><span class="line">&gt; EVAL <span class="string">"return &#123;'fhb', 'lw', 'lbf'&#125;"</span> <span class="number">0</span></span><br><span class="line"><span class="number">1</span>) <span class="string">"fhb"</span></span><br><span class="line"><span class="number">2</span>) <span class="string">"lw"</span></span><br><span class="line"><span class="number">3</span>) <span class="string">"lbf"</span></span><br><span class="line">&gt; EVAL <span class="string">"return false"</span> <span class="number">0</span></span><br><span class="line">(<span class="literal">nil</span>)</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，从 Lua 转化为 Redis 类型比 Redis 转化为 Lua 类型多了一条 <a href="">额外</a> 规则：</p>
+<table>
+<thead>
+<tr>
+<th>Lua 类型</th>
+<th>Redis 返回类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>boolean true</td>
+<td>integer</td>
+<td>返回整型 1</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; EVAL <span class="string">"return true"</span> <span class="number">0</span></span><br><span class="line">(integer) <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>总而言之，<a href="">类型转换的原则</a> 是将一个 Redis 值转换成 Lua 值，之后再将转换所得的 Lua 值转换回 Redis 值，那么这个转换所得的 Redis 值应该和最初时的 Redis 值一样。</p>
+<h3 id="全局变量保护"><a href="#全局变量保护" class="headerlink" title="全局变量保护"></a>全局变量保护</h3><p>为了防止不必要的数据泄漏进 Lua 环境， Redis 脚本不允许创建全局变量。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 定义全局函数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span><span class="params">(n)</span></span></span><br><span class="line">    <span class="keyword">return</span> n * <span class="number">2</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">return</span> f(<span class="number">4</span>);</span><br></pre></td></tr></table></figure>
+<p>执行<code>redis-cli --eval function.lua</code>命令，会抛出尝试定义全局变量的错误：</p>
+<figure class="highlight dos"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(error) ERR Error running script (<span class="keyword">call</span> to f_0a602c93c4a2064f8dc648c402aa27d68b69514f): @enable_strict_lua:<span class="number">8</span>: user_script:<span class="number">1</span>: Script attempted to create global variable 'f'</span><br></pre></td></tr></table></figure>
+<h2 id="Lua脚本调用Redis命令"><a href="#Lua脚本调用Redis命令" class="headerlink" title="Lua脚本调用Redis命令"></a>Lua脚本调用Redis命令</h2><p>Redis 创建了用于与 Lua 环境协作的组件—— 伪客户端，它负责执行 Lua 脚本中的 Redis 命令。</p>
+<p><img src="//blog.com/2019/09/19/Lua在Redis的应用/ae7223b50754e37b7cd89cfe24fc13dd.png" alt=""></p>
+<h3 id="调用Redis命令"><a href="#调用Redis命令" class="headerlink" title="调用Redis命令"></a>调用Redis命令</h3><p>在 Redis 内置的 Lua 解析器中，调用 redis.call() 和 redis.pcall() 函数执行 Redis 的命令。它们除了处理错误的行为不一样外，其他行为都保持一致。调用 格式：</p>
+<ul>
+<li>redis.call(command, [key …], arg [arg …] )</li>
+<li>redis.pcall(command, [key …], arg [arg …] )</li>
+</ul>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; EVAL <span class="string">"return redis.call('SET', 'name', 'fhb')"</span> <span class="number">0</span></span><br><span class="line">&gt; EVAL <span class="string">"return redis.pcall('GET', 'name')"</span> <span class="number">0</span></span><br><span class="line"><span class="string">"fhb"</span></span><br></pre></td></tr></table></figure>
+<h3 id="Redis日志"><a href="#Redis日志" class="headerlink" title="Redis日志"></a>Redis日志</h3><p>在 Lua 脚本中，可以通过调用 redis.log()  函数来写 Redis 日志。格式为：</p>
+<p>redis.log(loglevel, message)</p>
+<p>loglevel 参数可以是 redis.LOG_DEBUG、redis.LOG_VERBOSE、redis.LOG_NOTICE、redis.LOG_WARNING 的任意值。</p>
+<p>查看<code>redis.conf</code>日志配置信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> logleval必须一致才会记录</span><br><span class="line">loglevel notice</span><br><span class="line">logfile "/home/logs/redis.log"</span><br></pre></td></tr></table></figure>
+<p>Lua 写 Redis 日志示例：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; EVAL <span class="string">"redis.log(redis.LOG_NOTICE, 'I am fhb')"</span> <span class="number">0</span></span><br><span class="line"><span class="number">113</span>:M <span class="number">04</span> Sep <span class="number">13</span>:<span class="number">12</span>:<span class="number">36.229</span> * I am fhb</span><br></pre></td></tr></table></figure>
+<h2 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h2><h3 id="API-访问速率控制"><a href="#API-访问速率控制" class="headerlink" title="API 访问速率控制"></a>API 访问速率控制</h3><p>通过 Lua 实现一个针对用户的 API 访问速率控制，Lua 代码如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> key = <span class="string">"rate.limit:string:"</span> .. KEYS[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">local</span> limit = <span class="built_in">tonumber</span>(ARGV[<span class="number">1</span>])</span><br><span class="line"><span class="keyword">local</span> expire_time = <span class="built_in">tonumber</span>(ARGV[<span class="number">2</span>])</span><br><span class="line"><span class="keyword">local</span> times = redis.call(<span class="string">"INCR"</span>, key)</span><br><span class="line"><span class="keyword">if</span> times == <span class="number">1</span> <span class="keyword">then</span></span><br><span class="line">    redis.call(<span class="string">"EXPIRE"</span>, key, expire_time)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">if</span> times &gt; limit <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">return</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>KEYS[1] 可以用 API 的 URI + 用户 uid 组成，ARGV[1] 为单位时间限制访问的次数，ARGV[2] 为限制的单位时间。</p>
+<h3 id="批量HGETTALL"><a href="#批量HGETTALL" class="headerlink" title="批量HGETTALL"></a>批量HGETTALL</h3><p>这个例子演示通过 Lua 实现批量 HGETALL，当然也可以使用 <a href="https://www.fanhaobai.com/2017/08/redis-pipelining.html" target="_blank" rel="noopener">管道</a> 实现。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- KEYS为uid数组</span></span><br><span class="line"><span class="keyword">local</span> users = &#123;&#125;</span><br><span class="line"><span class="keyword">for</span> i,uid <span class="keyword">in</span> <span class="built_in">ipairs</span>(KEYS) <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">local</span> user = redis.call(<span class="string">'hgetall'</span>, uid)</span><br><span class="line">    <span class="keyword">if</span> user ~= <span class="literal">nil</span> <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">table</span>.<span class="built_in">insert</span>(users, i, user)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">return</span> users</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Lua/" rel="tag"># Lua</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/19/Lua收集Nginx请求参数/" rel="next" title="Lua收集Nginx请求参数">
+                <i class="fa fa-chevron-left"></i> Lua收集Nginx请求参数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/19/lua中的self/" rel="prev" title="lua中的self">
+                lua中的self <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Lua在Redis的应用"><span class="nav-number">1.</span> <span class="nav-text">Lua在Redis的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要使用Lua"><span class="nav-number">1.1.</span> <span class="nav-text">为什么要使用Lua</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在Redis中嵌入Lua"><span class="nav-number">1.2.</span> <span class="nav-text">在Redis中嵌入Lua</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Lua解析器"><span class="nav-number">1.2.1.</span> <span class="nav-text">使用Lua解析器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据类型的转换"><span class="nav-number">1.2.2.</span> <span class="nav-text">数据类型的转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#全局变量保护"><span class="nav-number">1.2.3.</span> <span class="nav-text">全局变量保护</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lua脚本调用Redis命令"><span class="nav-number">1.3.</span> <span class="nav-text">Lua脚本调用Redis命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调用Redis命令"><span class="nav-number">1.3.1.</span> <span class="nav-text">调用Redis命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis日志"><span class="nav-number">1.3.2.</span> <span class="nav-text">Redis日志</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#案例"><span class="nav-number">1.4.</span> <span class="nav-text">案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#API-访问速率控制"><span class="nav-number">1.4.1.</span> <span class="nav-text">API 访问速率控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#批量HGETTALL"><span class="nav-number">1.4.2.</span> <span class="nav-text">批量HGETTALL</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

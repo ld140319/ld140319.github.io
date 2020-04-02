@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,高并发,系统设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="你的系统如何支撑高并发？ 参考文章：https://learnku.com/laravel/t/24359  原始架构单台web服务器 + 单台数据库服务器 机器CPU负载高集群 + 负载均衡&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;系统内处理的是较为复杂的一些业务逻辑，是那种重业务逻辑的系统的话，是比较耗费CPU的。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="keywords" content="架构,高并发,系统设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="你的系统如何支撑高并发？">
+<meta property="og:url" content="http://blog.com/2019/02/23/你的系统如何支撑高并发？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="你的系统如何支撑高并发？ 参考文章：https://learnku.com/laravel/t/24359  原始架构单台web服务器 + 单台数据库服务器 机器CPU负载高集群 + 负载均衡&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;系统内处理的是较为复杂的一些业务逻辑，是那种重业务逻辑的系统的话，是比较耗费CPU的。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-02-23T06:21:09.312Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="你的系统如何支撑高并发？">
+<meta name="twitter:description" content="你的系统如何支撑高并发？ 参考文章：https://learnku.com/laravel/t/24359  原始架构单台web服务器 + 单台数据库服务器 机器CPU负载高集群 + 负载均衡&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;系统内处理的是较为复杂的一些业务逻辑，是那种重业务逻辑的系统的话，是比较耗费CPU的。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/02/23/你的系统如何支撑高并发？/">
+
+
+
+
+
+  <title>你的系统如何支撑高并发？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/02/23/你的系统如何支撑高并发？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">你的系统如何支撑高并发？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-23T12:12:57+08:00">
+                2019-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/高并发/" itemprop="url" rel="index">
+                    <span itemprop="name">高并发</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/高并发/系统设计/" itemprop="url" rel="index">
+                    <span itemprop="name">系统设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="你的系统如何支撑高并发？"><a href="#你的系统如何支撑高并发？" class="headerlink" title="你的系统如何支撑高并发？"></a>你的系统如何支撑高并发？</h1><blockquote>
+<p>参考文章：<a href="https://learnku.com/laravel/t/24359" target="_blank" rel="noopener">https://learnku.com/laravel/t/24359</a></p>
+</blockquote>
+<h2 id="原始架构"><a href="#原始架构" class="headerlink" title="原始架构"></a>原始架构</h2><p><strong>单台web服务器 + 单台数据库服务器</strong></p>
+<h3 id="机器CPU负载高"><a href="#机器CPU负载高" class="headerlink" title="机器CPU负载高"></a>机器CPU负载高</h3><h4 id="集群-负载均衡"><a href="#集群-负载均衡" class="headerlink" title="集群 + 负载均衡"></a>集群 + 负载均衡</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;系统内处理的是较为复杂的一些业务逻辑，是那种重业务逻辑的系统的话，是比较耗费CPU的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>挂一个负载均衡层，把请求均匀打到系统层面，让系统可以用多台机器集群化支撑更高的并发压力</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;负载均衡又分为四层负载均衡和七层负载均衡。<strong>四层负载均衡工作在OSI模型的传输层，主要工作是转发，它在接收到客户端的流量以后通过修改数据包的地址信息将流量转发到应用服务器</strong>。</p>
+<blockquote>
+<p>负载均衡设备在接收到第一个来自客户端的SYN 请求时，即通过上述方式选择一个最佳的服务器，并对报文中目标IP地址进行修改(改为后端服务器IP），直接转发给该服务器。TCP的连接建立，即三次握手是客户端和服务器直接建立的，<strong>负载均衡设备只是起到一个类似路由器的转发动作</strong>。在某些部署情况下，为保证服务器回包可以正确返回给负载均衡设备，在转发报文的同时可能还会<strong>对报文原来的源地址进行修改</strong></p>
+</blockquote>
+<p>　&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>七层负载均衡工作在OSI模型的应用层</strong>，因为它需要解析应用层流量，所以七层负载均衡在接到客户端的流量以后，还需要一个完整的TCP/IP协议栈。七层负载均衡会与客户端建立一条完整的连接并将应用层的请求流量解析出来，再按照调度算法选择一个应用服务器，并与应用服务器建立另外一条连接将请求发送过去，因此<strong>七层负载均衡的主要工作就是代理</strong>。<strong>可以通过客户端ip、url信息等信息来进行转发分流</strong>。
+　</p>
+<blockquote>
+<p>　所谓七层负载均衡，也称为“内容交换”，也就是主要通过报文中的真正有意义的应用层内容，再加上负载均衡设备设置的服务器选择方式，决定最终选择的内部服务器。</p>
+</blockquote>
+<blockquote>
+<p>以常见的TCP为例，负载均衡设备如果要<strong>根据真正的应用层内容再选择服务器</strong>，只能先代理最终的服务器和客户端建立连接(三次握手)后，才可能接受到客户端发送的真正应用层内容的报文，然后再根据该报文中的特定字段，再加上负载均衡设备设置的服务器选择方式，决定最终选择的内部服务器。</p>
+</blockquote>
+<h5 id="技术选型"><a href="#技术选型" class="headerlink" title="技术选型"></a>技术选型</h5><h6 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h6><p>Nginx作为负载均衡组件，<strong>工作在七层，针对http应用做一些分流的策略</strong></p>
+<p><code>优点</code>：</p>
+<ol>
+<li><strong>针对域名、目录结构、域名、url、header头，进行转发分流</strong></li>
+<li>它的<strong>正则规则</strong>比HAProxy更为强大和灵活</li>
+<li>Nginx<strong>安装和配置比较简单</strong>，测试起来比较方便</li>
+<li>Nginx<strong>对网络稳定性的依赖非常小</strong>，理论上能ping通就就能进行负载功能，这个也是它的优势之一；相反LVS对网络稳定性依赖比较大</li>
+<li>可以承担高负载压力且稳定，在硬件不差的情况下一般能支撑几万次的并发量，<strong>负载度比LVS相对小些</strong></li>
+<li>Nginx<strong>可以通过端口检测到服务器内部的故障</strong>，比如根据服务器处理网页返回的状态码、超时等等，并且会把返回错误的请求重新提交到另一个节点</li>
+</ol>
+<p><code>缺点</code>:</p>
+<ol>
+<li><strong>仅能支持http、https和Email协议</strong></li>
+<li><strong>不支持通过url来检测</strong></li>
+<li><strong>不支持Session的直接保持，但能通过ip_hash来解决</strong></li>
+</ol>
+<p><strong>Keepalived实现热备</strong></p>
+<h6 id="LVS"><a href="#LVS" class="headerlink" title="LVS"></a>LVS</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LVS：使用<strong>Linux内核</strong>集群实现一个高性能、高可用的负载均衡服务器，它具有很好的可伸缩性（Scalability)、可靠性（Reliability)和可管理性（Manageability)。</p>
+<p><code>优点</code>：</p>
+<p>1、抗负载能力强、是工作<strong>在网络4层(传输层：TCP协议)之上仅作分发之用</strong>，没有流量的产生，这个特点也决定了它在负载均衡软件里的性能最强的，<strong>对内存和cpu资源消耗比较低</strong>。<br>3、工作稳定，因为其本身<strong>抗负载能力很强</strong>，<strong>自身有完整的双机热备方案</strong>，如Keepalived + LVS/DR<br>4、<strong>无流量，LVS只分发请求</strong>，而流量并不从它本身出去，这点保证了均衡器IO的性能不会收到大流量的影响。<br>5、<strong>应用范围比较广</strong>，因为LVS工作在4层，所以它几乎可以对所有应用做负载均衡，包括http、数据库、在线聊天室等等。</p>
+<p><code>缺点</code>:</p>
+<ol>
+<li><strong>配置较为复杂</strong></li>
+<li>软件本身<strong>不支持正则表达式处理，不能做动静分离</strong>；而现在许多网站在这方面都有较强的需求，这个是Nginx/HAProxy+Keepalived的优势所在</li>
+</ol>
+<h6 id="HAProxy"><a href="#HAProxy" class="headerlink" title="HAProxy"></a>HAProxy</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>HAProxy同时TCP（四层）和HTTP（七层）负载均衡</strong></p>
+<p><code>优点</code>：</p>
+<ol>
+<li><strong>支持Session的保持，Cookie的引导</strong></li>
+<li><strong>支持通过获取指定的url来检测后端服务器的状态</strong></li>
+<li><strong>支持TCP协议的负载均衡转发</strong></li>
+<li><strong>负载均衡策略丰富</strong></li>
+<li><strong>HAProxy可以对Mysql进行负载均衡，对后端的DB节点进行检测和负载均衡</strong></li>
+</ol>
+<h5 id="负载均衡算法"><a href="#负载均衡算法" class="headerlink" title="负载均衡算法"></a>负载均衡算法</h5><h6 id="1-随机算法"><a href="#1-随机算法" class="headerlink" title="1. 随机算法"></a>1. 随机算法</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Random随机，按权重设置随机概率。在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重。</p>
+<h6 id="2-轮询及加权轮询"><a href="#2-轮询及加权轮询" class="headerlink" title="2. 轮询及加权轮询"></a>2. 轮询及加权轮询</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;轮询(Round Robbin)当<strong>服务器群中各服务器的处理能力相同</strong>时，且每笔业务处理量差异不大时，最适合使用这种算法。 轮循，按公约后的权重设置轮循比率。存在慢的提供者累积请求问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;加权轮询(Weighted Round Robbin)为轮询中的每台服务器附加一定权重的算法。比如服务器1权重1，服务器2权重2，服务器3权重3，则顺序为1-2-2-3-3-3-1-2-2-3-3-3- ……</p>
+<h6 id="3-最小连接及加权最小连接"><a href="#3-最小连接及加权最小连接" class="headerlink" title="3. 最小连接及加权最小连接"></a>3. 最小连接及加权最小连接</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最少连接(Least Connections)在多个服务器中，<strong>与处理连接数(会话数)最少的服务器进行通信</strong>的算法。即使在每台服务器处理能力各不相同，每笔业务处理量也不相同的情况下，也能够在一定程度上降低服务器的负载。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;加权最少连接(Weighted LeastConnection)为最少连接算法中的每台服务器附加权重的算法，该算法事先为每台服务器分配处理连接的数量，并将客户端请求转至连接数最少的服务器上。</p>
+<h6 id="4-哈希算法"><a href="#4-哈希算法" class="headerlink" title="4. 哈希算法"></a>4. 哈希算法</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>普通哈希：相同参数的请求总是发到同一提供者</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>一致性哈希：当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动</strong></p>
+<ol>
+<li>IP地址散列<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过<strong>将用户请求ip散列</strong>，将来自同一发送方的分组(或发送至同一目的地的分组)统一转发到相同服务器的算法。当客户端有一系列业务需要处理而必须和一个服务器反复通信时，该算法能够以流(会话)为单位，<strong>保证来自相同客户端的通信能够一直在同一服务器中进行处理</strong>。</li>
+</ol>
+<blockquote>
+<p>可以实现会话session的保持，不会出现登录身份失效的情况</p>
+</blockquote>
+<p>   2.URL散列</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过管理客户端请求URL信息的散列，将发送至<strong>相同URL的请求转发至同一服务器</strong>的算法</p>
+<blockquote>
+<p>可以将某些比较耗费性能的请求，分配至配置高的服务器</p>
+</blockquote>
+<h3 id="数据库服务器压力大"><a href="#数据库服务器压力大" class="headerlink" title="数据库服务器压力大"></a>数据库服务器压力大</h3><h4 id="读压力大"><a href="#读压力大" class="headerlink" title="读压力大"></a>读压力大</h4><h5 id="主从复制，读写分离"><a href="#主从复制，读写分离" class="headerlink" title="主从复制，读写分离"></a>主从复制，读写分离</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用mysql主从复制以及一些常见ORM框架，实现读写分离，写请求操作主库，读请求操作从库</p>
+<h5 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果系统的流量特别大，查询对数据库的压力仍然较大，可以引入redis作缓存，将一些热点数据和不常变化的数据存储到缓存中</p>
+<h4 id="写压力大"><a href="#写压力大" class="headerlink" title="写压力大"></a>写压力大</h4><h5 id="分库"><a href="#分库" class="headerlink" title="分库"></a>分库</h5><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据业务将数据拆分到多个库中进行存储，每个业务部署单独的服务器，降低服务之间的相互影响。如：用户、订单、产品、支付……</p>
+<h5 id="分表"><a href="#分表" class="headerlink" title="分表"></a>分表</h5><h6 id="水平拆分"><a href="#水平拆分" class="headerlink" title="水平拆分"></a>水平拆分</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;针对一些大表（500w以上），如果不做拆分写入和查询都很慢，这时候可以考虑水平拆分。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;水平拆分指将表中不同的数据行按照一定规律分布到不同的数据库表中（这些表保存在同一个数据库中），这样来<strong>降低单表数据量</strong>，优化查询性能。最常见的拆分策略有主键范围、hash取余、时间范围等，可以根据业务特点来选择。</p>
+<h6 id="垂直拆分"><a href="#垂直拆分" class="headerlink" title="垂直拆分"></a>垂直拆分</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;针对表中<strong>一些占用存储空间较大或者访问频率不高</strong>的字段，可以考虑将其拆分到一个单独的表进行存储，<strong>表之间通过主键进行关联</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通俗的说法叫做“大表拆小表”，拆分是基于关系型数据库中的“列”（字段）进行的。通常情况，某个表中的字段比较多，可以新建立一张“扩展表”，将不经常使用或者长度较大的字段拆分出去放到“扩展表”中。</p>
+<p><strong>可以通过join关联来取数据</strong>   视图</p>
+<blockquote>
+<p>行溢出<br>这个主要是大字段的拆分，因为字段本身可能非常大，超出行的可变长度，这个是在使用varchar可变类型情况下，因为数据库的行格式会存储变长字段的长度，而这个存储的字段最多就2字节，这样的话可变长度最多就可以达到65535，达到这个长度的话，计算了一下，一行数据的可变长度的列总和不超过64k左右（没精准算），超过的话会溢出行到blob页，这里还衍生了个问题，因为页存储就16k，而一行数据就远远超出，这样就失去了b+树的意义了，所以一般mysql会拆分前缀存储额外数据到额外页，一页保持至少两行数据。</p>
+</blockquote>
+<blockquote>
+<p>查询缓存<br>mysql的查询缓存具体是根据查询语句来的，这里具体可以去看《高性能MYSQL》一书，大概表达的意思是查询语句不能有变量或者函数，例如current_timestamp之类的，这样不会有缓存，有点跑偏了。这里的意思是，垂直拆分表后，有些字段是常修改的，例如用户的个性签名之类的，而更新操作会让查询缓存无效，所以垂直拆分会优化查询效率。</p>
+</blockquote>
+<blockquote>
+<p>数据页的影响<br>页是什么呢？<strong>页应该算作数据库的存储最小单位</strong>，在mysql中例如，insert_buffer_pool，AIO，索引查找都是以页为单位，首先垂直拆分表的话，随着字段的减少，每页里面的数据行也会增多，理论上页里面的数据行越多性能越好。<br>例如图中所示假如未分表之前页分布是这样的，如果要查询id=1和id=9的话可能是需要两次索引查询，两次磁盘IO，这里为啥说页1和页3呢，因为异步IO的可能性，innodb不会去等待第一个扫描结果，而是先扫描，然后去取数据，例如如果是id=1和id=6，根据page判断数据是相邻页，因为页是顺序存储的，所以会合并也就一次磁盘IO取出两页数据。像上面这样，<strong>页里的行数增多，就可以减少一部分磁盘的IO，这样也就增加了查询效率</strong>  <strong>预读取</strong>。</p>
+</blockquote>
+<blockquote>
+<p>对写入更新的影响<br>写入和更新其实还是页的问题，同样的问题，<strong>页的减少，就会影响脏页的刷新</strong>，insert_buffer的mergy，这样都会影响iops，如果页的减少，数据也会存储更有顺序性，对于写入与读取的话，顺序读比离散读要快，性能也能得到提升。</p>
+</blockquote>
+<h6 id="拆分后带来的问题"><a href="#拆分后带来的问题" class="headerlink" title="拆分后带来的问题"></a>拆分后带来的问题</h6><p>1.分布式事务问题</p>
+<p><strong>我认为通过消息队列来实现最终一致是一个可行的方案</strong></p>
+<p>2.跨节点Join的问题</p>
+<p>（1）全局表 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所谓全局表，就是有可能系统中所有模块都可能会依赖到的一些表。比较类似我们理解的“数据字典”。为了避免跨库 join 查询，我们可以<strong>将这类表在其他每个数据库中均保存一份</strong>。同时，这类数据通常也很少发生修改（甚至几乎不会），所以也不用太担心“一致性”问题。</p>
+<p>（2）字段冗余 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这是一种典型的反范式设计，在互联网行业中比较常见，通常是为了性能来避免 join 查询。</p>
+<blockquote>
+<p>举个电商业务中很简单的场景：</p>
+</blockquote>
+<p>“订单表”中保存“卖家 Id”的同时，将卖家的“Name”字段也冗余，这样查询订单详情的时候就不需要再去查询“卖家用户表”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;字段冗余能带来便利，是一种“空间换时间”的体现。但其适用场景也比较有限，<strong>比较适合依赖字段较少的情况。最复杂的还是数据一致性问题</strong>，这点很难保证，可以借助数据库中的触发器或者在业务代码层面去保证。当然，也需要结合实际业务场景来看一致性的要求。就像上面例子，如果卖家修改了 Name 之后，是否需要在订单信息中同步更新呢？</p>
+<p>（3）数据同步</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;定时 A 库中的 tab_a 表和 B 库中 tbl_b 有关联，可以定时将指定的表做同步。当然，同步本来会对数据库带来一定的影响，需要性能影响和数据时效性中取得一个平衡。这样来避免复杂的跨库查询。笔者曾经在项目中是通过 ETL 工具来实施的。</p>
+<p>（4) 系统层组装</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在系统层面，通过调用不同模块的组件或者服务，获取到数据并进行字段拼装。解决这一问题的普遍做法是<strong>分两次查询实现</strong>。在第一次查询的结果集中找出关联数据的id,根据这些id发起第二次请求得到关联数据。</p>
+<blockquote>
+<p>简单字段组装的情况下，我们只需要先获取“主表”数据，然后再根据关联关系，调用其他模块的组件或服务来获取依赖的其他字段（如例中依赖的用户信息），最后将数据进行组装。通常，我们都会通过缓存来避免频繁 RPC 通信和数据库查询的开销。</p>
+</blockquote>
+<blockquote>
+<p>列表查询带条件过滤的情况</p>
+<ol>
+<li>先根据自身服务过滤出目标服务对应的数据库表主键</li>
+<li>然后将主键列表以及限制对方服务的条件传递过去得到最终的结果集</li>
+</ol>
+</blockquote>
+<p>3.跨节点的count,order by,group by以及聚合函数问题<br>      这些是一类问题，因为它们都需要基于全部数据集合进行计算。多数的代理都不会自动处理合并工作。解决方案：与解决跨节点join问题的类似，<strong>分别在各个节点上得到结果后在应用程序端进行合并</strong>join不同的是每个结点的查询可以并行执行，因此很多时候它的速度要比单一大表快很多。但<strong>结果集很大，对应用程序内存的消耗是一个问题</strong></p>
+<h2 id="系统之间耦合严重，处理响应慢"><a href="#系统之间耦合严重，处理响应慢" class="headerlink" title="系统之间耦合严重，处理响应慢"></a>系统之间耦合严重，处理响应慢</h2><p><strong>引入消息队列中间件，以事件监听的方式进行解耦</strong></p>
+<p>消息队列的作用？</p>
+<p>1）异步处理耗时任务</p>
+<p>2）降低系统之间的耦合性</p>
+<p>如：<br>支付完成后，订单状态更新为已支付</p>
+<p>订单支付完成后，通知扣减库存</p>
+<p>3）流量削峰</p>
+<p>原理：将并行的任务串行化，顺序执行，防止大量请求直接打到DB层，造成雪崩效应</p>
+<p>4）日志处理</p>
+<p>5）消息通讯</p>
+<p>什么时候使用MQ？</p>
+<p>1）数据驱动的任务依赖</p>
+<p>2）上游不关心多下游执行结果</p>
+<p>3）异步返回执行时间长</p>
+<h2 id="如何解决不规则搜索难题"><a href="#如何解决不规则搜索难题" class="headerlink" title="如何解决不规则搜索难题"></a>如何解决不规则搜索难题</h2><p><strong>不再依赖mysql like，可能不会使用索引</strong></p>
+<p><strong>引入搜索引擎 elasticsearch</strong></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/高并发/" rel="tag"># 高并发</a>
+          
+            <a href="/tags/系统设计/" rel="tag"># 系统设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/15/小心Nginx的add_header指令/" rel="next" title="小心Nginx的add_header指令">
+                <i class="fa fa-chevron-left"></i> 小心Nginx的add_header指令
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/23/内存淘汰机制/" rel="prev" title="内存淘汰机制">
+                内存淘汰机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#你的系统如何支撑高并发？"><span class="nav-number">1.</span> <span class="nav-text">你的系统如何支撑高并发？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原始架构"><span class="nav-number">1.1.</span> <span class="nav-text">原始架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#机器CPU负载高"><span class="nav-number">1.1.1.</span> <span class="nav-text">机器CPU负载高</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#集群-负载均衡"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">集群 + 负载均衡</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#技术选型"><span class="nav-number">1.1.1.1.1.</span> <span class="nav-text">技术选型</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#Nginx"><span class="nav-number">1.1.1.1.1.1.</span> <span class="nav-text">Nginx</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#LVS"><span class="nav-number">1.1.1.1.1.2.</span> <span class="nav-text">LVS</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#HAProxy"><span class="nav-number">1.1.1.1.1.3.</span> <span class="nav-text">HAProxy</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#负载均衡算法"><span class="nav-number">1.1.1.1.2.</span> <span class="nav-text">负载均衡算法</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-随机算法"><span class="nav-number">1.1.1.1.2.1.</span> <span class="nav-text">1. 随机算法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-轮询及加权轮询"><span class="nav-number">1.1.1.1.2.2.</span> <span class="nav-text">2. 轮询及加权轮询</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-最小连接及加权最小连接"><span class="nav-number">1.1.1.1.2.3.</span> <span class="nav-text">3. 最小连接及加权最小连接</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-哈希算法"><span class="nav-number">1.1.1.1.2.4.</span> <span class="nav-text">4. 哈希算法</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库服务器压力大"><span class="nav-number">1.1.2.</span> <span class="nav-text">数据库服务器压力大</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#读压力大"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">读压力大</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#主从复制，读写分离"><span class="nav-number">1.1.2.1.1.</span> <span class="nav-text">主从复制，读写分离</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#缓存"><span class="nav-number">1.1.2.1.2.</span> <span class="nav-text">缓存</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#写压力大"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">写压力大</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#分库"><span class="nav-number">1.1.2.2.1.</span> <span class="nav-text">分库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#分表"><span class="nav-number">1.1.2.2.2.</span> <span class="nav-text">分表</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#水平拆分"><span class="nav-number">1.1.2.2.2.1.</span> <span class="nav-text">水平拆分</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#垂直拆分"><span class="nav-number">1.1.2.2.2.2.</span> <span class="nav-text">垂直拆分</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#拆分后带来的问题"><span class="nav-number">1.1.2.2.2.3.</span> <span class="nav-text">拆分后带来的问题</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统之间耦合严重，处理响应慢"><span class="nav-number">1.2.</span> <span class="nav-text">系统之间耦合严重，处理响应慢</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何解决不规则搜索难题"><span class="nav-number">1.3.</span> <span class="nav-text">如何解决不规则搜索难题</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

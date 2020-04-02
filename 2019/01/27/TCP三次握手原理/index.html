@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,网络,Tcp,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="TCP三次握手原理问题描述 场景：JAVA的client和server，使用socket通信。server使用NIO。   1.间歇性得出现client向server建立连接三次握手已经完成，但server的selector没有响应到这连接。 2.出问题的时间点，会同时有很多连接出现这个问题。 3.selector没有销毁重建，一直用的都是一个。 4.程序刚启动的时候必会出现一些，之后会间歇性出现">
+<meta name="keywords" content="Linux,网络,Tcp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP三次握手原理">
+<meta property="og:url" content="http://blog.com/2019/01/27/TCP三次握手原理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="TCP三次握手原理问题描述 场景：JAVA的client和server，使用socket通信。server使用NIO。   1.间歇性得出现client向server建立连接三次握手已经完成，但server的selector没有响应到这连接。 2.出问题的时间点，会同时有很多连接出现这个问题。 3.selector没有销毁重建，一直用的都是一个。 4.程序刚启动的时候必会出现一些，之后会间歇性出现">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/正常的三次握手.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/队列溢出1.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/溢出后处理.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/TCP握手过程中建连接的流程和队列.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/syn攻击.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/client%20ack重发次数.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/netstat统计.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/ss统计.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/java指定backlog.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/netstat%20-tn.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/netstat%20-tn1.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/验证.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/tomcat.webp">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP三次握手原理/nginx.webp">
+<meta property="og:updated_time" content="2019-03-30T15:32:07.250Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP三次握手原理">
+<meta name="twitter:description" content="TCP三次握手原理问题描述 场景：JAVA的client和server，使用socket通信。server使用NIO。   1.间歇性得出现client向server建立连接三次握手已经完成，但server的selector没有响应到这连接。 2.出问题的时间点，会同时有很多连接出现这个问题。 3.selector没有销毁重建，一直用的都是一个。 4.程序刚启动的时候必会出现一些，之后会间歇性出现">
+<meta name="twitter:image" content="http://blog.com/2019/01/27/TCP三次握手原理/正常的三次握手.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/27/TCP三次握手原理/">
+
+
+
+
+
+  <title>TCP三次握手原理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/27/TCP三次握手原理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">TCP三次握手原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-27T12:12:57+08:00">
+                2019-01-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Linux/Tcp/" itemprop="url" rel="index">
+                    <span itemprop="name">Tcp</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="TCP三次握手原理"><a href="#TCP三次握手原理" class="headerlink" title="TCP三次握手原理"></a>TCP三次握手原理</h1><h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a><strong>问题描述</strong></h3><blockquote>
+<p>场景：JAVA的client和server，使用socket通信。server使用NIO。</p>
+</blockquote>
+<blockquote>
+<p>1.间歇性得出现client向server建立连接三次握手已经完成，但server的selector没有响应到这连接。</p>
+<p>2.出问题的时间点，会同时有很多连接出现这个问题。</p>
+<p>3.selector没有销毁重建，一直用的都是一个。</p>
+<p>4.程序刚启动的时候必会出现一些，之后会间歇性出现。</p>
+</blockquote>
+<h3 id="分析问题"><a href="#分析问题" class="headerlink" title="分析问题"></a><strong>分析问题</strong></h3><h4 id="正常TCP建连接三次握手过程："><a href="#正常TCP建连接三次握手过程：" class="headerlink" title="正常TCP建连接三次握手过程："></a><strong>正常TCP建连接三次握手过程：</strong></h4><p><img src="//blog.com/2019/01/27/TCP三次握手原理/正常的三次握手.webp" alt="三次握手"></p>
+<ul>
+<li>第一步：client 发送 syn 到server 发起握手；</li>
+<li>第二步：server 收到 syn后回复syn+ack给client；</li>
+<li>第三步：client 收到syn+ack后，回复server一个ack表示收到了server的syn+ack（此时client的56911端口的连接已经是established）。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从问题的描述来看，有点像TCP建连接的时候全连接队列（accept队列，后面具体讲）满了，尤其是症状2、4. 为了证明是这个原因，马上通过 <code>netstat -s | egrep &quot;listen&quot;</code>去看队列的溢出统计数据：    </p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/队列溢出1.webp" alt="队列溢出1">反复看了几次之后发现这个<code>overflowed 一直在增加</code>，那么可以明确的是server上全连接队列一定溢出了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -s | egrep "listen"</span><br></pre></td></tr></table></figure>
+<p>接着查看溢出后，OS怎么处理：</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/溢出后处理.webp" alt="溢出后处理"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/sys/net/ipv4/tcp_abort_on_overflow</span><br></pre></td></tr></table></figure>
+<p><strong>tcp_abort_on_overflow 为0表示如果三次握手第三步的时候全连接队列满了那么server扔掉client 发过来的ack（在server端认为连接还没建立起来）</strong></p>
+<p><strong>tcp_abort_on_overflow为1表示如果全连接队列满了，server发送一个reset包给client，表示废掉这个握手过程和这个连接（本来在server端这个连接就还没建立起来）</strong></p>
+<p>Nginx报错信息如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0:Connection timed out</span><br><span class="line">	[error] 3800#0: *20747 upstream timed out (110: Connection timed out) while reading response header from upstream, client: 127.0.0.1, server: 37_finance.com, request: &quot;GET /admin/index/index?pro_user_id=5876 HTTP/1.0&quot;, upstream: &quot;fastcgi://127.0.0.1:9000&quot;, host: &quot;XXX&quot;</span><br><span class="line">1:Connection reset by peer</span><br><span class="line">	[error] 3735#0: *22192 recv() failed (104: Connection reset by peer) while reading response header from upstream, client: 127.0.0.1, server: 37_finance.com, request: &quot;GET /admin/index/index?pro_user_id=5876 HTTP/1.0&quot;, upstream: &quot;fastcgi://127.0.0.1:9000&quot;, host: &quot;XXX&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了证明客户端应用代码的异常跟全连接队列满有关系，我先把tcp_abort_on_overflow修改成 1，1表示第三步的时候如果全连接队列满了，server发送一个<code>reset包</code>给client，表示废掉这个握手过程和这个连接（本来在server端这个连接就还没建立起来）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着测试，这时在客户端异常中可以看到很多<code>connection reset by peer</code>的错误，到此证明客户端错误是这个原因导致的（逻辑严谨、快速证明问题的关键点所在）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;于是开发同学翻看java 源代码发现socket 默认的backlog（这个值控制全连接队列的大小，后面再详述）是50，于是改大重新跑，经过12个小时以上的压测，这个错误一次都没出现了，同时观察到 overflowed 也不再增加了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;到此问题解决，简单来说<strong>TCP三次握手后有个accept队列，进到这个队列才能从Listen变成accept，默认backlog 值是50，很容易就满了。满了之后握手第三步的时候server就忽略了client发过来的ack包（隔一段时间server重发握手第二步的syn+ack包给client），如果这个连接一直排不上队就异常了</strong>。</p>
+<h3 id="深入理解TCP握手过程中建连接的流程和队列"><a href="#深入理解TCP握手过程中建连接的流程和队列" class="headerlink" title="深入理解TCP握手过程中建连接的流程和队列"></a><strong>深入理解TCP握手过程中建连接的流程和队列</strong></h3><p><img src="//blog.com/2019/01/27/TCP三次握手原理/TCP握手过程中建连接的流程和队列.webp" alt="TCP握手过程中建连接的流程和队列"></p>
+<p>如上图所示，这里有两个队列：<code>syns queue(半连接队列）</code>；<code>accept queue（全连接队列）</code>。</p>
+<p><strong>全连接队列的大小取决于：min(backlog, somaxconn) . backlog是在socket创建的时候传入的，somaxconn【默认为128】是一个os级别的系统参数</strong>。</p>
+<p><strong>半连接队列的大小取决于：max(64,  /proc/sys/net/ipv4/tcp_max_syn_backlog)，不同版本的os会有些差异。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;三次握手中，在第一步server<strong>收到client的syn</strong>后，把这个连接信息放到<strong>半连接队列</strong>中，同时回复syn+ack给client（第二步）；</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/syn攻击.webp" alt="syn攻击"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;第三步的时候server<strong>收到client的ack</strong>，如果这时<strong>全连接队列没满</strong>，那么从半连接队列拿出这个连接的信息<strong>放入到全连接队列</strong>中，否则按tcp_abort_on_overflow指示的执行。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这时如果全连接队列满了并且<code>tcp_abort_on_overflow</code>是0的话，server过一段时间<strong>再次发送syn+ack</strong>给  client（也就是重新走握手的第二步），如果client超时等待比较短，client就很容易异常了。</p>
+<blockquote>
+<p>tcp_max_syn_backlog<br>——————-<br>端口最大 backlog 内核限制。此参数限制 服务端应用程序 可以设置的端口最大 backlog 值 (对应于端口的 syn_backlog 和 backlog 队列长度)。动机是在内存有限的服务器上限制/避免应用程序配置超大 backlog 值而耗尽内核内存。如果应用程序设置 backlog 大于此值，操作系统将自动将之限制到此值。</p>
+</blockquote>
+<blockquote>
+<p>tcp_abort_on_overflow<br>———————<br>当 tcp 建立连接的 3 路握手完成后，将连接置入 ESTABLISHED 状态并交付给应用程序的 backlog 队列时，会检查 backlog 队列是否已满。若已满，通常行为是将连接还原至 SYN_ACK 状态，以造成 3 路握手最后的 ACK 包意外丢失假象 —— 这样在客户端等待超时后可重发 ACK —— 以再次尝试进入 ESTABLISHED 状态 —— 作为一种修复/重试机制。如果启用 tcp_abort_on_overflow 则在检查到 backlog 队列已满时，直接发 RST 包给客户端终止此连接 —— 此时客户端程序会收到 104 Connection reset by peer 错误。</p>
+</blockquote>
+<p>警告：启用此选项可能导致高峰期用户访问体验到 104: Connection reset by peer 或 白屏 错误(视浏览器而定)。在考虑启用此选项前应先设法优化提高 服务端应用程序 的性能，使之能更快 接管、处理 连接。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在我们的os中retry 第二步的默认次数是2（centos默认是5次）：</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/client ack重发次数.webp" alt="client ack重发次数"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Linux内核协议栈为一个TCP连接管理使用两个队列，一个是半链接队列SYN QUEUE（用来保存处于SYN_SENT和SYN_RECV状态的请求），一个是ACCEPT队列 ACCEPT QUEUE（用来保存处于established状态，但是应用层没有调用accept取走的请求）。</span><br><span class="line"></span><br><span class="line">当client 建立连接时发送SYN包到server端，server收到之后如果SYN QUEUE队列已满，直接丢弃不回ACK。客户端超时后经过3秒、9秒…的间隔时候不断重发SYN包。</span><br><span class="line"></span><br><span class="line">当server的SYN QUEUE没有满时，server会回复SYN+ACK给client，如果client收到请求，则将状态修改为ESTABLISHED，并发送ACK给server。</span><br><span class="line"></span><br><span class="line">server收到ACK，将状态修改为ESTABLISHED，并把该请求从SYN QUEUE中放到ACCEPT QUEUE。</span><br></pre></td></tr></table></figure>
+<h3 id="如果TCP连接队列溢出，有哪些指标可以看呢？"><a href="#如果TCP连接队列溢出，有哪些指标可以看呢？" class="headerlink" title="如果TCP连接队列溢出，有哪些指标可以看呢？"></a>如果TCP连接队列溢出，有哪些指标可以看呢？</h3><h4 id="netstat-s"><a href="#netstat-s" class="headerlink" title="netstat -s"></a>netstat -s</h4><p><img src="//blog.com/2019/01/27/TCP三次握手原理/netstat统计.webp" alt="netstat统计"></p>
+<p>比如上面看到的 <strong>667399 times ，表示全连接队列溢出的次数，隔几秒钟执行下，如果这个数字一直在增加的话肯定全连接队列偶尔满了</strong>。</p>
+<h4 id="ss-命令"><a href="#ss-命令" class="headerlink" title="ss 命令"></a>ss 命令</h4><p><img src="//blog.com/2019/01/27/TCP三次握手原理/ss统计.webp" alt="ss统计"></p>
+<p>上面看到的<strong>第二列Send-Q 值是50，表示第三列的listen端口上的全连接队列最大为50，第一列Recv-Q为全连接队列当前使用了多少</strong>。</p>
+<p><strong>全连接队列的大小取决于：min(backlog, somaxconn) . backlog是在socket创建的时候传入的，somaxconn【默认为128】是一个os级别的系统参数</strong>。</p>
+<p>这个时候可以跟我们的代码建立联系了，比如Java创建ServerSocket的时候会让你传入backlog的值：</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/java指定backlog.webp" alt="java指定backlog"></p>
+<p><strong>半连接队列的大小取决于：max(64,  /proc/sys/net/ipv4/tcp_max_syn_backlog)，不同版本的os会有些差异。</strong></p>
+<h4 id="解惑避坑"><a href="#解惑避坑" class="headerlink" title="解惑避坑"></a>解惑避坑</h4><p><strong>netstat 命令</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;netstat跟ss命令一样也能看到<code>Send-Q、Recv-Q</code>这些状态信息，不过如果这个连接不是<strong>Listen状态</strong>的话，<strong>Recv-Q就是指收到的数据还在缓存中，还没被进程读取，这个值就是还没被进程读取的 bytes；而 Send 则是发送队列中没有被远程主机确认的 bytes 数</strong>。</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/netstat -tn.webp" alt="netstat -tn"></p>
+<p><strong>netstat -tn 看到的 Recv-Q 跟全连接半连接没有关系</strong>，这里特意拿出来说一下是因为容易跟 ss -lnt 的 Recv-Q 搞混淆，顺便建立知识体系，巩固相关知识点 。  </p>
+<p>比如如下netstat -t 看到的Recv-Q有大量数据堆积，那么一般是CPU处理不过来导致的：</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/netstat -tn1.webp" alt="netstat -tn1"></p>
+<h3 id="实践验证一下上面的理解"><a href="#实践验证一下上面的理解" class="headerlink" title="实践验证一下上面的理解"></a><strong>实践验证一下上面的理解</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;把java中backlog改成10（越小越容易溢出），继续跑压力，这个时候client又开始报异常了，然后在server上通过 ss 命令观察到：</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/验证.webp" alt="验证"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;按照前面的理解，这个时候我们能看到3306这个端口上的服务全连接队列最大是10，但是现在有11个在队列中和等待进队列的，肯定有一个连接进不去队列要overflow掉，同时也确实能看到overflow的值在不断地增大。</p>
+<h4 id="Tomcat和Nginx中的Accept队列参数"><a href="#Tomcat和Nginx中的Accept队列参数" class="headerlink" title="Tomcat和Nginx中的Accept队列参数"></a><strong>Tomcat和Nginx中的Accept队列参数</strong></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tomcat默认短连接，backlog（Tomcat里面的术语是Accept count）Ali-tomcat默认是200, Apache Tomcat默认100。</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/tomcat.webp" alt="tomcat"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nginx默认是511</p>
+<p><img src="//blog.com/2019/01/27/TCP三次握手原理/nginx.webp" alt="nginx"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为Nginx是<strong>多进程模式</strong>，所以看到了多个8085，也就是多个进程都监听同一个端口以尽量避免上下文切换来提升性能   </p>
+<h3 id="backlog大小设置为多少合适？"><a href="#backlog大小设置为多少合适？" class="headerlink" title="backlog大小设置为多少合适？"></a>backlog大小设置为多少合适？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上面的结论中可以看出，这跟<strong>FPM的处理能力</strong>有关，<code>backlog太大了，导致FPM处理不过来</code>，nginx那边等待超时，断开连接，报<code>504 gateway timeout</code>错。同时FPM处理完准备write 数据给nginx时，发现TCP连接断开了，报<code>“Broken pipe”</code>。<code>backlog太小</code>的话，NGINX之类client，根本<code>进入不了FPM的accept queue</code>，报<code>“502 Bad Gateway”</code>错。所以，这还得去<strong>根据FPM的QPS来决定backlog的大小，计算方式最好为QPS=backlog</strong>。对了这里的QPS是正常业务下的QPS，千万别用echo hello world这种结果的QPS去欺骗自己。当然，backlog的数值，如果指定在FPM中的话，<strong>记得把操作系统的net.core.somaxconn设置的起码比它大</strong>。另外，ubuntu server 1404上<code>/proc/sys/net/core/somaxconn</code>跟<code>/proc/sys/net/ipv4/tcp_max_syn_backlog</code> 默认值都是128<br>对于测试时，TCP数据包已经drop掉的未进入syns queue，以及未进入accept queue的数据包，可以用netstat -s</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root@vmware-cnxct:/# netstat -s</span><br><span class="line">TcpExt:</span><br><span class="line">    //...</span><br><span class="line">    91855 times the listen queue of a socket overflowed</span><br><span class="line">    102324 SYNs to LISTEN sockets dropped   //未进入syns queue的数据包数量</span><br><span class="line">    444 packets directly queued to recvmsg prequeue.</span><br><span class="line">    30408 bytes directly in process context from backlog</span><br><span class="line">    //...</span><br><span class="line">    TCPSackShiftFallback: 27</span><br><span class="line">    TCPBacklogDrop: 2334    //未进入accept queue的数据包数量</span><br><span class="line">    TCPTimeWaitOverflow: 229347</span><br><span class="line">    TCPReqQFullDoCookies: 11591</span><br><span class="line">    TCPRcvCoalesce: 29062</span><br><span class="line">    //...</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>backlog与max_children无关, 不管子进程数为多少backlog固定，只是最终有多少连接报错会受影响，因为子进程数决定了处理能力</strong></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>​     <strong>backlog可以看做FPM待处理队列</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;全连接队列、半连接队列溢出这种问题很容易被忽视，但是又很关键，特别是对于一些短连接应用（比如Nginx、PHP，当然他们也是支持长连接的）更容易爆发。<strong>一旦溢出，从cpu、线程状态看起来都比较正常，但是压力上不去，在client看来rt也比较高（rt=网络+排队+真正服务时间），但是从server日志记录的真正服务时间来看rt又很短</strong>。</p>
+<p>​      <strong>排队时间 = 接入backlog到被FPM处理的时间</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jdk、netty等一些框架默认backlog比较小，可能有些情况下导致性能上不去。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a href="https://mp.weixin.qq.com/s/yH3PzGEFopbpA-jw4MythQ" target="_blank" rel="noopener">1. 阿里技术:TCP 三次握手原理，你真的理解吗？</a></p>
+<p><a href="http://jaseywang.me/2014/07/20/tcp-queue-%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98/" target="_blank" rel="noopener">2. TCP queue 的一些问题</a></p>
+<p><a href="https://huoding.com/2014/08/13/367" target="_blank" rel="noopener">3. 火丁笔记:一次优化引发的血案 </a></p>
+<p><a href="https://www.cnxct.com/something-about-phpfpm-s-backlog/" target="_blank" rel="noopener">4. TCP SOCKET中backlog参数的用途是什么？</a></p>
+<p><a href="https://www.cnblogs.com/zengkefu/p/5606696.html" target="_blank" rel="noopener">5. linux诡异的半连接(SYN_RECV)队列长度(一)</a></p>
+<p><a href="http://veithen.github.io/2014/01/01/how-tcp-backlog-works-in-linux.html" target="_blank" rel="noopener">6. How TCP backlog works in Linux</a></p>
+<p><a href="https://blog.csdn.net/varyall/article/details/79681562" target="_blank" rel="noopener">7. TCP三次握手-backlog队列问题</a></p>
+<p><a href="http://www.cnxct.com/something-about-phpfpm-s-backlog/" target="_blank" rel="noopener">8. TCP SOCKET中backlog参数的用途是什么？</a></p>
+<p><a href="https://github.com/php/php-src/commit/ebf4ffc9354f316f19c839a114b26a564033708a" target="_blank" rel="noopener">9. php-fpm backlog的变化</a></p>
+<p><a href="https://blog.csdn.net/rain_qingtian/article/details/41864589" target="_blank" rel="noopener">10. 部分 TCP 内核参数彻底了解</a></p>
+<p><a href="https://blog.csdn.net/gaojinshan/article/details/38399347" target="_blank" rel="noopener">11. nginx访问日志,错误日志参数说明</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/网络/" rel="tag"># 网络</a>
+          
+            <a href="/tags/Tcp/" rel="tag"># Tcp</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/25/理解分布式事务/" rel="next" title="理解分布式事务">
+                <i class="fa fa-chevron-left"></i> 理解分布式事务
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/27/三次握手与四次挥手详解/" rel="prev" title="三次握手与四次挥手详解">
+                三次握手与四次挥手详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TCP三次握手原理"><span class="nav-number">1.</span> <span class="nav-text">TCP三次握手原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题描述"><span class="nav-number">1.0.1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分析问题"><span class="nav-number">1.0.2.</span> <span class="nav-text">分析问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#正常TCP建连接三次握手过程："><span class="nav-number">1.0.2.1.</span> <span class="nav-text">正常TCP建连接三次握手过程：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深入理解TCP握手过程中建连接的流程和队列"><span class="nav-number">1.0.3.</span> <span class="nav-text">深入理解TCP握手过程中建连接的流程和队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如果TCP连接队列溢出，有哪些指标可以看呢？"><span class="nav-number">1.0.4.</span> <span class="nav-text">如果TCP连接队列溢出，有哪些指标可以看呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#netstat-s"><span class="nav-number">1.0.4.1.</span> <span class="nav-text">netstat -s</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ss-命令"><span class="nav-number">1.0.4.2.</span> <span class="nav-text">ss 命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解惑避坑"><span class="nav-number">1.0.4.3.</span> <span class="nav-text">解惑避坑</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实践验证一下上面的理解"><span class="nav-number">1.0.5.</span> <span class="nav-text">实践验证一下上面的理解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Tomcat和Nginx中的Accept队列参数"><span class="nav-number">1.0.5.1.</span> <span class="nav-text">Tomcat和Nginx中的Accept队列参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#backlog大小设置为多少合适？"><span class="nav-number">1.0.6.</span> <span class="nav-text">backlog大小设置为多少合适？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.0.7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文章"><span class="nav-number">1.0.8.</span> <span class="nav-text">参考文章</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Redis,数据分片,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案  原文地址：https://mp.weixin.qq.com/s/tMsQryUhBJsPUFVYgpVJ3w   Redis 集群简介&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis Cluster 是 Redis的分布式解决方案，在 3.0 版本正式推出，有效地解决了 Redis分布式方面的需求。 &amp;n">
+<meta name="keywords" content="架构,Redis,数据分片">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式缓存中数据分片、数据迁移、客户端路由的解决方案">
+<meta property="og:url" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案  原文地址：https://mp.weixin.qq.com/s/tMsQryUhBJsPUFVYgpVJ3w   Redis 集群简介&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis Cluster 是 Redis的分布式解决方案，在 3.0 版本正式推出，有效地解决了 Redis分布式方面的需求。 &amp;n">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTJTwC59L1ymHBLVVoLhFslvET0rfIZBlEFMGDncv2pic2qMfvTVMIBtQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTsFEN89VZIMCcrw6V2oI3BITHRZawgV43xGwiaj57KGkAicXL3ygSq4nw.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZT2FGA4dRgicLiaNjVAWN2l5ibCziaWRBE5PgDyGF13LC7IosgiaVzdrY8yCw.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTaoibVQuHKcDuibVX5C8NGJFnlz4GD74I7LjedK4vty0Jyhz4GRzibnickw.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTy4ia0qKdHy1sjagMMcan6MuTmf0SIPdiboWUnT1WypOnAuvcib0ytib4sQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTFicjtPVNzoMiaBF4FWKZtWLT5roUf6b5PPXWqWuqWZtpJMXe8XiavXFtg.png">
+<meta property="og:updated_time" content="2019-06-22T02:49:05.007Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式缓存中数据分片、数据迁移、客户端路由的解决方案">
+<meta name="twitter:description" content="分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案  原文地址：https://mp.weixin.qq.com/s/tMsQryUhBJsPUFVYgpVJ3w   Redis 集群简介&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis Cluster 是 Redis的分布式解决方案，在 3.0 版本正式推出，有效地解决了 Redis分布式方面的需求。 &amp;n">
+<meta name="twitter:image" content="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTJTwC59L1ymHBLVVoLhFslvET0rfIZBlEFMGDncv2pic2qMfvTVMIBtQ.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/">
+
+
+
+
+
+  <title>分布式缓存中数据分片、数据迁移、客户端路由的解决方案 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">分布式缓存中数据分片、数据迁移、客户端路由的解决方案</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-22T12:12:57+08:00">
+                2019-06-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Redis/数据分片/" itemprop="url" rel="index">
+                    <span itemprop="name">数据分片</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案"><a href="#分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案" class="headerlink" title="分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案"></a>分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案</h2><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/tMsQryUhBJsPUFVYgpVJ3w" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/tMsQryUhBJsPUFVYgpVJ3w</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="Redis-集群简介"><a href="#Redis-集群简介" class="headerlink" title="Redis 集群简介"></a>Redis 集群简介</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis Cluster</code> 是 <code>Redis</code>的分布式解决方案，在 3.0 版本正式推出，有效地解决了 <code>Redis</code>分布式方面的需求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis Cluster</code>一般由多个节点组成，节点数量至少为 6 个才能保证组成完整高可用的集群，其中三个为主节点，三个为从节点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;三个主节点会分配槽，处理客户端的命令请求，而从节点可用在主节点故障后，顶替主节点。如下图：</p>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTJTwC59L1ymHBLVVoLhFslvET0rfIZBlEFMGDncv2pic2qMfvTVMIBtQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图所示，该集群中包含 6 个 <code>Redis</code> 节点，3主3从，分别为<code>M1，M2，M3，S1，S2，S3</code>。除了主从 <code>Redis</code> 节点之间进行数据复制外，所有 <code>Redis</code>节点之间采用<code>Gossip</code>协议进行通信，交换维护节点元数据信息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般来说，主 <code>Redis</code> 节点会处理<code>Clients</code>的读写操作，而从节点只处理读操作。</p>
+<h2 id="数据分片策略"><a href="#数据分片策略" class="headerlink" title="数据分片策略"></a>数据分片策略</h2><blockquote>
+<p>分布式数据存储方案中最为重要的一点就是数据分片，也就是所谓的 Sharding。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了使得集群能够水平扩展，首要解决的问题就是如何将整个数据集按照一定的规则分配到多个节点上</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;常用的数据分片的方法有：<strong>范围分片，哈希分片，一致性哈希算法和虚拟哈希槽</strong>等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;范围分片假设数据集是有序，将顺序相临近的数据放在一起，可以很好的支持遍历操作。范围分片的缺点是面对顺序写时，会存在热点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如日志类型的写入，一般日志的顺序都是和时间相关的，时间是单调递增的，因此写入的热点永远在最后一个分片。</p>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTsFEN89VZIMCcrw6V2oI3BITHRZawgV43xGwiaj57KGkAicXL3ygSq4nw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于关系型的数据库，因为经常性的需要表扫描或者索引扫描，基本上都会使用范围的分片策略。</p>
+<h2 id="Redis-虚拟哈希槽"><a href="#Redis-虚拟哈希槽" class="headerlink" title="Redis  虚拟哈希槽"></a>Redis  虚拟哈希槽</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们接下来主要来看<code>Redis Cluster</code> 的虚拟哈希槽策略。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Redis Cluster</code>采用虚拟哈希槽分区，所有的键根据哈希函数映射到<code>0 ~ 16383</code> 整数槽内</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;计算公式：<strong><code>slot = CRC16(key) &amp; 16383</code>，每一个节点负责维护一部分槽以及槽所映射的键值数据</strong>。</p>
+<h3 id="Redis-虚拟槽分区的特点"><a href="#Redis-虚拟槽分区的特点" class="headerlink" title="Redis 虚拟槽分区的特点"></a>Redis 虚拟槽分区的特点</h3><ul>
+<li><strong>解耦数据和节点之间的关系，简化了节点扩容和收缩难度</strong>。</li>
+<li><strong>节点自身维护槽的映射关系，不需要客户端或者代理服务维护槽分区元数据</strong></li>
+<li><strong>支持节点、槽和键之间的映射查询，用于数据路由，在线集群伸缩等场景</strong>。</li>
+</ul>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZT2FGA4dRgicLiaNjVAWN2l5ibCziaWRBE5PgDyGF13LC7IosgiaVzdrY8yCw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code> 集群提供了灵活的节点扩容和收缩方案，在不影响集群对外服务的情况下，可以为集群添加节点进行扩容也可以下线部分节点进行缩容。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以说，<strong>槽是 Redis 集群管理数据的基本单位</strong>，集群伸缩就是槽和数据在节点之间的移动。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面我们就先来看一下<code>Redis</code>集群伸缩的原理。然后再了解当 <code>Redis</code> 节点数据迁移过程中或者故障恢复时如何保证集群可用。</p>
+<h3 id="扩容集群"><a href="#扩容集群" class="headerlink" title="扩容集群"></a>扩容集群</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了让读者更好的理解上线节点时的扩容操作，我们通过 <code>Redis Cluster</code> 的命令来模拟整个过程。</p>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTaoibVQuHKcDuibVX5C8NGJFnlz4GD74I7LjedK4vty0Jyhz4GRzibnickw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当一个<code>Redis</code>新节点运行并加入现有集群后，我们需要为其迁移槽和数据。首先要为新节点指定槽的迁移计划，确保迁移后每个节点负责相似数量的槽，从而保证这些节点的数据均匀。</p>
+<p><strong>1)</strong> 首先启动一个 <code>Redis</code> 节点，记为<code>M4</code>。 </p>
+<p><strong>2)</strong> 使用<code>cluster meet</code>命令，让新 <code>Redis</code>节点加入到集群中。新节点刚开始都是主节点状态，由于没有负责的槽，所以不能接受任何读写操作，后续我们就给他迁移槽和填充数据。 </p>
+<p><strong>3)</strong> 对<code>M4</code> 节点发送 <code>cluster setslot { slot } importing { sourceNodeId }</code> 命令，让目标节点准备导入槽的数据。 </p>
+<p><strong>4)</strong> 对源节点，也就是 <code>M1，M2，M3</code>节点发送 <code>cluster setslot { slot } migrating { targetNodeId }</code>命令，让源节点准备迁出槽的数据。 </p>
+<p><strong>5)</strong> 源节点执行 <code>cluster getkeysinslot { slot } { count }</code>命令，获取<code>count</code> 个属于槽<code>{ slot }</code>的键，然后执行步骤六的操作进行迁移键值数据。 </p>
+<p><strong>6)</strong> 在源节点上执行 <code>migrate { targetNodeIp} &quot; &quot; 0 { timeout } keys { key... }</code>命令，把获取的键通过 pipeline 机制批量迁移到目标节点，批量迁移版本的 <code>migrate</code>命令在 <code>Redis 3.0.6</code> 以上版本提供。 </p>
+<p><strong>7)</strong> 重复执行步骤 5 和步骤 6 直到槽下所有的键值数据迁移到目标节点。 </p>
+<p><strong>8)</strong> 向集群内所有主节点发送 <code>cluster setslot { slot } node { targetNodeId }</code>命令，通知槽分配给目标节点。为了保证槽节点映射变更及时传播，需要遍历发送给所有主节点更新被迁移的槽执行新节点。</p>
+<h3 id="收缩集群"><a href="#收缩集群" class="headerlink" title="收缩集群"></a>收缩集群</h3><p>收缩节点就是将 <code>Redis</code> 节点下线，整个流程需要如下操作流程。</p>
+<p><strong>1)</strong> 首先需要确认下线节点是否有负责的槽，如果是，需要把槽迁移到其他节点，保证节点下线后整个集群槽节点映射的完整性。 </p>
+<p><strong>2)</strong> 当下线节点不再负责槽或者本身是从节点时，就可以通知集群内其他节点忘记下线节点，当所有的节点忘记改节点后可以正常关闭。</p>
+<p>下线节点需要将节点自己负责的槽迁移到其他节点，原理与之前节点扩容的迁移槽过程一致。</p>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTy4ia0qKdHy1sjagMMcan6MuTmf0SIPdiboWUnT1WypOnAuvcib0ytib4sQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;迁移完槽后，还需要通知集群内所有节点忘记下线的节点，也就是说让其他节点不再与要下线的节点进行 <code>Gossip</code>消息交换。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code>集群使用 <code>cluster forget { downNodeId }</code>命令来讲指定的节点加入到禁用列表中，在禁用列表内的节点不再发送 <code>Gossip</code>消息。</p>
+<h3 id="客户端路由"><a href="#客户端路由" class="headerlink" title="客户端路由"></a>客户端路由</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在集群模式下，<code>Redis</code> 节点接收任何键相关命令时首先计算键对应的槽，在根据槽找出所对应的节点，如果节点是自身，则处理键命令；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;否则回复 <strong><code>MOVED</code> 重定向错误，通知客户端请求正确的节点</strong>。这个过程称为 <code>MOVED</code> 重定向。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>需要注意的是 Redis 计算槽时并非只简单的计算键值内容，当键值内容包括大括号时，则只计算括号内的内容。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如说，<code>key</code> 为 <code>user:{10000}:books</code>时，计算哈希值只计算10000。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>MOVED</code> 错误示例显示的信息如下，<strong>键 <code>x</code> 所属的哈希槽 <code>3999</code> ，以及负责处理这个槽的节点的 IP 和端口号 <code>127.0.0.1:6381</code></strong> 。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端需要根据这个 <code>IP</code> 和端口号， <strong>向所属的节点重新发送一次<code>GET</code>命令请求</strong>。</p>
+<ul>
+<li><code>GET x-MOVED 3999 127.0.0.1:6381</code></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于请求重定向会增加 <code>IO</code>开销，这不是 <code>Redis</code>集群高效的使用方式，而是要使用 <code>Smart</code>集群客户端。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Smart</code> 客户端通过在内部维护<code>slot</code> 到<code>Redis</code> 节点的映射关系，本地就可以实现键到节点的查找，从而保证 <code>IO</code> 效率的最大化，而 <code>MOVED</code> 重定向负责协助客户端更新映射关系</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Redis</code> 集群支持在线迁移槽( <code>slot</code> ) 和数据来完成水平伸缩，当 <code>slot</code>对应的数据从源节点到目标节点迁移过程中，客户端需要做到智能迁移，保证键命令可正常执行</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如当 <code>slot</code> 数据从源节点迁移到目标节点时，期间可能出现一部分数据在源节点，而另一部分在目标节点。如下图所示：</p>
+<p><img src="//blog.com/2019/06/22/分布式缓存中数据分片、数据迁移、客户端路由的解决方案/q3blumn0btAr9XcewRE2EMia6rVEgm8ZTFicjtPVNzoMiaBF4FWKZtWLT5roUf6b5PPXWqWuqWZtpJMXe8XiavXFtg.png" alt="img"></p>
+<p>所以，综合上述情况，客户端命令执行流程如下所示：</p>
+<ul>
+<li>客户端根据本地 <code>slot</code> 缓存发送命令到源节点，如果存在键对应则直接执行并返回结果给客户端。</li>
+<li>如果节点返回<code>MOVED</code>错误，更新本地的<code>slot</code>到<code>Redis</code> 节点的映射关系，然后重新发起请求。</li>
+<li>如果数据正在迁移中，节点会回复<code>ASK</code> 重定向异常。格式如下: <code>( error ) ASK { slot } { targetIP } : { targetPort }</code></li>
+<li>客户端从 <code>ASK</code> 重定向异常提取出目标节点信息，发送<code>asking</code>命令到目标节点打开客户端连接标识，再执行键命令。</li>
+</ul>
+<p><code>ASK</code> 和 <code>MOVED</code> 虽然都是对客户端的重定向控制，但是有着本质区别。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>ASK</code> 重定向说明集群正在进行 <code>slot</code> 数据迁移，客户端无法知道什么时候迁移完成，因此只能是临时性的重定向，客户端不会更新 <code>slot</code> 到<code>Redis</code> 节点的映射缓存</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是<strong><code>MOVED</code> 重定向说明键对应的槽已经明确指定到新的节点，因此需要更新<code>slot</code> 到<code>Redis</code> 节点的映射缓存</strong>。</p>
+<h3 id="故障转移"><a href="#故障转移" class="headerlink" title="故障转移"></a>故障转移</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当<code>Redis</code>集群内少量节点出现故障时通过自动故障转移保证集群可以正常对外提供服务。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当某一个<code>Redis</code>节点客观下线时，<code>Redis</code> 集群会从其从节点中通过选主选出一个替代它，从而保证集群的高可用性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是，有一点要注意。默认情况下，当集群 <code>16384</code> 个槽任何一个没有指派到节点时整个集群不可用。执行任何键命令返回 <code>CLUSTERDOWN Hash slot not served</code> 命令。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当持有槽的主节点下线时，从故障发现到自动完成转移期间整个集群是不可用状态，对于大多数业务无法忍受这情况</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>因此建议将参数 cluster-require-full-coverage 配置为 no ，当主节点故障时只影响它负责槽的相关命令执行，不会影响其他主节点的可用性</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/数据分片/" rel="tag"># 数据分片</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/22/微服务化的十个设计要点/" rel="next" title="微服务化的十个设计要点">
+                <i class="fa fa-chevron-left"></i> 微服务化的十个设计要点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/22/编程中的幂等性 —— HTTP幂等性/" rel="prev" title="高并发下接口幂等性解决方案">
+                高并发下接口幂等性解决方案 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案"><span class="nav-number">1.</span> <span class="nav-text">分布式缓存中【数据分片、数据迁移、客户端路由】的解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis-集群简介"><span class="nav-number">2.</span> <span class="nav-text">Redis 集群简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据分片策略"><span class="nav-number">3.</span> <span class="nav-text">数据分片策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis-虚拟哈希槽"><span class="nav-number">4.</span> <span class="nav-text">Redis  虚拟哈希槽</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-虚拟槽分区的特点"><span class="nav-number">4.1.</span> <span class="nav-text">Redis 虚拟槽分区的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#扩容集群"><span class="nav-number">4.2.</span> <span class="nav-text">扩容集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#收缩集群"><span class="nav-number">4.3.</span> <span class="nav-text">收缩集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端路由"><span class="nav-number">4.4.</span> <span class="nav-text">客户端路由</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#故障转移"><span class="nav-number">4.5.</span> <span class="nav-text">故障转移</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

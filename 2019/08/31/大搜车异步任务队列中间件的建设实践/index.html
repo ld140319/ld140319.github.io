@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Redis,消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="大搜车异步任务队列中间件的建设实践 原文地址：https://mp.weixin.qq.com/s/DvuRdY74C0xO_fLVF7lONg  前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;异步任务处理在系统设计中是一个十分常见的场景, 例如将耗时任务异步化, 流量削峰, 接口的延时回调等等。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="keywords" content="Redis,消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大搜车异步任务队列中间件的建设实践">
+<meta property="og:url" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="大搜车异步任务队列中间件的建设实践 原文地址：https://mp.weixin.qq.com/s/DvuRdY74C0xO_fLVF7lONg  前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;异步任务处理在系统设计中是一个十分常见的场景, 例如将耗时任务异步化, 流量削峰, 接口的延时回调等等。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/1.webp">
+<meta property="og:image" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/2.webp">
+<meta property="og:image" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/3.webp">
+<meta property="og:image" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/4.webp">
+<meta property="og:updated_time" content="2019-08-31T09:49:05.481Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="大搜车异步任务队列中间件的建设实践">
+<meta name="twitter:description" content="大搜车异步任务队列中间件的建设实践 原文地址：https://mp.weixin.qq.com/s/DvuRdY74C0xO_fLVF7lONg  前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;异步任务处理在系统设计中是一个十分常见的场景, 例如将耗时任务异步化, 流量削峰, 接口的延时回调等等。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="twitter:image" content="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/">
+
+
+
+
+
+  <title>大搜车异步任务队列中间件的建设实践 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">大搜车异步任务队列中间件的建设实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-31T12:12:57+08:00">
+                2019-08-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="大搜车异步任务队列中间件的建设实践"><a href="#大搜车异步任务队列中间件的建设实践" class="headerlink" title="大搜车异步任务队列中间件的建设实践"></a>大搜车异步任务队列中间件的建设实践</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/DvuRdY74C0xO_fLVF7lONg" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/DvuRdY74C0xO_fLVF7lONg</a></p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步任务处理在系统设计中是一个十分常见的场景, 例如将耗时任务异步化, 流量削峰, 接口的延时回调等等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于异步任务, 最最常见的一种实现方式就是 <strong>JDK 的线程池</strong>了, 使用线程池可以满足大多数异步化的场景, 但它还是有一些局限性:</p>
+<ul>
+<li>一方面它是<strong>基于内存</strong>的, 一旦<strong>机器宕机异步任务就丢失了, 可靠性不足</strong>;</li>
+<li>另一方面它是<strong>单机处理</strong>任务, 不适合分布式场景, 当单机处理任务的能力不足时，<strong>无法水平拓展</strong></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而对于<strong>分布式异步任务</strong>的处理需求, 我们通常使用 <strong>MQ</strong> 来实现分布式异步处理: 生产者将异步任务以消息的形式丢入消息队列, 消费者异步地从消费队列里获取消息进行任务处理。<br><img src="//blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/1.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这也是大多数 <code>Java</code> 程序员的选择, 但是使用 <code>MQ</code> 实现异步队列也存在一些<strong>不足之处</strong>:</p>
+<ul>
+<li>基于 MQ 开发异步任务还是有些复杂的, 开发人员需要写不少业务逻辑之外的代码, 理想的状态是, 开发人员可以专注于任务处理本身的业务逻辑, 将维护异步化操作这类的系统控制交给中间件来完成。</li>
+<li>缺少一个可视化的页面查看任务执行情况, 包括有哪些任务正在执行, 正在哪台机器上执行, 已成功/失败的任务等等。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;放眼其他语言的异步任务队列, 我们知道<code>Python</code> 有 <code>Celery</code>,<code>Ruby</code> 有 <code>Sidekiq</code>, 使用起来非常轻量级，只需要额外做一些简单的配置, 就能<strong>像调用本地方法一样调用异步任务的执行逻辑</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以, 为了解决基于 <code>MQ</code> 开发异步任务过于复杂的问题, 让Java程序员也能使用轻量级的异步任务队列, <strong>Optimus-AsyncTask</strong> 便应运而生了。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Optimus-AsyncTask</strong> 是我们公司的中间件团队研发的一款分布式异步任务中间件, 追求轻量级和高性能, 特点是<strong>配置简单</strong>, <strong>功能丰富</strong>, <strong>编程模型简单</strong>, 可以像调用本地方法一样调用异步任务, 让开发同学可以专注于业务逻辑的开发, 提高开发效率。</p>
+<h2 id="如何设计一个分布式异步任务队列"><a href="#如何设计一个分布式异步任务队列" class="headerlink" title="如何设计一个分布式异步任务队列"></a>如何设计一个分布式异步任务队列</h2><ul>
+<li><p><strong>支持高并发</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;能够支持至少万级的<code>QPS</code></p>
+</li>
+<li><p><strong>任务持久化</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;常见的数据存储中间件, 如数据库, <code>Redis</code>, 或者 <code>MQ</code></p>
+</li>
+<li><p><strong>任务状态流转</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在一个任务的生命周期中可能存在多个状态, 这些状态包括: 准备执行, 正在执行, 执行结束(成功), 执行失败之后进入待重试状态, 执行失败后进入死亡状态等等.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在状态流转的过程中, 需要保证数据的一致性</p>
+</li>
+<li><p><strong>可靠性保障</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;保证任务不丢失, 任务不被重复执行</p>
+</li>
+<li><p><strong>支持水平拓展</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以动态地添加执行器</p>
+</li>
+<li><p><strong>合理的负载策略</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以合理地分配执行资源, 保证各个执行器对任务进行有效的负载</p>
+</li>
+<li><p><strong>支持重试机制</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户可以配置重试次数, 在任务执行失败或超时的时候进行自动重试</p>
+</li>
+<li><p><strong>幂等性支持</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;保证幂等性是分布式场景中的一个重要课题, 可以在异步任务中间件里提供幂等性支持:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户提交任务时提供一个业务ID, 业务ID相同的任务只会执行一次</p>
+</li>
+<li><p><strong>友好的API</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对用户屏蔽异步任务的底层实现细节, 像调用本地方法一样调用异步方法</p>
+</li>
+<li><p><strong>提供控制台查看任务状态</strong></p>
+</li>
+</ul>
+<h2 id="核心实现"><a href="#核心实现" class="headerlink" title="核心实现"></a>核心实现</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在抛出以上几个问题之后, 下面我们开始介绍 <code>Optimus-AsyncTask</code> 的具体实现:</p>
+<h3 id="任务生命周期"><a href="#任务生命周期" class="headerlink" title="任务生命周期"></a>任务生命周期</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任务执行超时/失败之后会进入“重试”队列等待下一次执行, 超时/失败次数超过用户设置的最大重试次数之后任务就会变成“死亡”状态, 结束生命周期<br><img src="//blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/2.webp" alt="img"></p>
+<h3 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h3><p><img src="//blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/3.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个集群(每个应用实例的代码都是相同的)配置一个<code>Redis</code>, 一个机器提交任务, 任意一台机器执行。</p>
+<h3 id="任务流转"><a href="#任务流转" class="headerlink" title="任务流转"></a>任务流转</h3><h4 id="任务提交"><a href="#任务提交" class="headerlink" title="任务提交"></a>任务提交</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SDK</code> 向<code>Redis</code> 提交任务, 普通异步任务的初始状态为<code>ready</code>, 延时任务为    <code>delayed</code>。 </p>
+<h4 id="任务状态变更"><a href="#任务状态变更" class="headerlink" title="任务状态变更"></a>任务状态变更</h4><p><code>SDK</code> 不断轮询 <code>Redis</code>, 修改任务的状态:</p>
+<ul>
+<li><code>delayed -&gt; ready</code> (延时任务到达执行时间)</li>
+<li><code>retry -&gt; ready</code> (重试任务到达执行时间)</li>
+<li><code>ready -&gt; working</code> (开始执行任务)</li>
+<li><code>working -&gt; retry/dead</code> (任务执行超时进入重试或者死亡状态)  </li>
+</ul>
+<h4 id="任务执行"><a href="#任务执行" class="headerlink" title="任务执行"></a>任务执行</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SDK</code> 将任务的状态从<code>ready</code>修改为<code>working</code>后, 从 <code>Redis</code>中获取该任务信息, 在本地执行任务。</p>
+<h4 id="执行结果上报"><a href="#执行结果上报" class="headerlink" title="执行结果上报"></a>执行结果上报</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任务执行结束后, <code>SDK</code> 向 <code>Redis</code>上报执行结果, 修改任务的状态:</p>
+<ul>
+<li><code>working -&gt; success</code> (执行成功)</li>
+<li><code>working -&gt; retry/dead</code> (执行失败)</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SDK</code> 中专门开辟了一个线程池用来执行异步任务, 执行线程池的线程数量是开放给用户配置的,<code>SDK</code>只有在本地存在空闲线程时才去获取任务, 由此可以保证对执行资源的有效分配。 </p>
+<h3 id="任务存储"><a href="#任务存储" class="headerlink" title="任务存储"></a>任务存储</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先, 为了保障高性能, 我们选择 <code>Redis</code> 作为任务存储层。</p>
+<h4 id="Redis-vs-MySQL"><a href="#Redis-vs-MySQL" class="headerlink" title="Redis vs MySQL"></a>Redis vs MySQL</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们观察到市场上的一些开源 <code>Java</code>异步任务中间件(如 <strong>jmppok/AsyncTask</strong>, <strong>bojiw/asyncmd</strong>) 都是基于 <code>MySQL</code> 的, 选择 <code>MySQL</code> 的好处是, 基于关系型数据库我们可以很方便地实现任务查询和任务状态流转:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM task WHERE status = &apos;ready&apos;;</span><br><span class="line"></span><br><span class="line">UPDATE task SET status = &apos;working&apos; WHERE id = 1;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;像这样通过简单的 <code>SQL</code> 就可以实现, 开发成本较低。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但如果使用 <code>Redis</code> 的话, 因为<strong><code>Redis</code>的数据结构较为简单, 不适合 <code>MySQL</code> 这种条件查询和数据嵌套(为了让一个<code>Task</code>元素包含多个属性字段, 在<code>Redis</code> 里只能用<code>JSON</code>字符串来表示)</strong>, 为了实现相同的语义, 需要设计更复杂的数据结构(下文会具体介绍), 开发成本更高。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但即便如此, 我们依然<strong>选择<code>Redis</code>而不是<code>MySQL</code>, 主要还是考虑到 <code>MySQL</code>对高并发的支持不是很好</strong>, 在我们公司的 C 端场景下异步任务的提交频率会很高, 所以高并发场景是我们必须要考虑的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此外, 选择<code>MySQL</code>的话, 还需要创建额外的表, 对业务数据库有一定的侵入性。</p>
+<h4 id="Redis-vs-MQ"><a href="#Redis-vs-MQ" class="headerlink" title="Redis vs MQ"></a>Redis vs MQ</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们没有使用 <code>MQ</code> 作为任务存储层是因为 <code>MQ</code> 的运维流程比较复杂, 需要事先申请 <code>Topic</code>, 消费组等信息, 没有<code>Redis</code>那么轻量。</p>
+<h3 id="Redis-数据结构设计"><a href="#Redis-数据结构设计" class="headerlink" title="Redis 数据结构设计"></a>Redis 数据结构设计</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一种任务状态对应一个 <code>Redis</code>集合, 任务数据以<code>JSON</code>字符串的形式存储。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[zset] delayed (延时任务), retry (待重试任务). zset 的 score 是预期执行时间, value 是任务数据</span><br><span class="line">	</span><br><span class="line">[hash] working (正在执行中的任务). hash 的 field 代表任务 ID, value 表示任务数据 (json 字符串的形式))</span><br><span class="line"></span><br><span class="line">[list] ready (就绪的任务)</span><br><span class="line">[list] success:&#123;date&#125; (处理完成的任务，每天生成一个 list, value 是任务信息，保存180天)</span><br><span class="line">[list] dead:&#123;date&#125; (死亡任务: value 是任务信息，过期时间180天)</span><br></pre></td></tr></table></figure>
+<h3 id="原子性保障"><a href="#原子性保障" class="headerlink" title="原子性保障"></a>原子性保障</h3><p>每次切换任务状态, 至少需要三个步骤:</p>
+<ol>
+<li><p>从原来的集合里删除元素;</p>
+</li>
+<li><p>对于取出的任务数据, 修改<code>JSON</code> 的部分 <code>value</code>, 也就是任务的属性，如<code>&#39;executionTime&#39;</code>,<code>&#39;finishTime&#39;</code>等;</p>
+</li>
+<li><p>将元素加入到新的集合里。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了保证操作的原子性, 需要使用<code>lua</code> 脚本来变更任务状态, 例如从<code>ready</code> 切换到<code>working</code> 状态, 对应的 <code>lua</code>伪代码如下:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- ready(list) to working(hash)</span></span><br><span class="line"><span class="keyword">local</span> src = KEYS[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">local</span> dest = KEYS[<span class="number">2</span>]</span><br><span class="line"><span class="keyword">local</span> currTime = ARGV[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">local</span> clientId = ARGV[<span class="number">2</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">-- get json and delete from 'ready'</span></span><br><span class="line"><span class="keyword">local</span> srcJson = redis.call(<span class="string">'LPOP'</span>, src)</span><br><span class="line"><span class="keyword">if</span> (srcJson == <span class="literal">false</span>) <span class="keyword">then</span> <span class="keyword">return</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- update 'executionTime' and 'clientId' fields of json</span></span><br><span class="line"><span class="keyword">local</span> destTask = &#123;&#125;</span><br><span class="line"><span class="keyword">local</span> srcTask = cjson.decode(srcJson)</span><br><span class="line"><span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="built_in">pairs</span>(srcTask) <span class="keyword">do</span></span><br><span class="line">    destTask[k] = v</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">destTask[<span class="string">'executionTime'</span>] = currTime</span><br><span class="line">destTask[<span class="string">'clientId'</span>] = clientId</span><br><span class="line"><span class="keyword">local</span> destJson = cjson.encode(destTask)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- add into 'working'</span></span><br><span class="line">redis.call(<span class="string">'HSET'</span>, dest, destTask[<span class="string">'taskId'</span>], destJson)</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> destJson</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;借助 <code>Redis</code>的原子性特性,  对于一个任务, 可以保证只有一台机器能够成功获取到该任务, 从而保证该任务不会在多台机器上重复执行。</p>
+<h3 id="高可用保障"><a href="#高可用保障" class="headerlink" title="高可用保障"></a>高可用保障</h3><h4 id="轮询时间间隔"><a href="#轮询时间间隔" class="headerlink" title="轮询时间间隔"></a>轮询时间间隔</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了防止机器数量增加导致访问 <code>Redis</code> 过于频繁, 所以<strong>根据机器的数量来动态调整轮询的间隔时间, 并且加入随机因子让每次间隔时间都是随机变化的，保证各台机器可以错开访问，防止类似雪崩之类的系统故障</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">设avgInterval为15秒, random是随机变量, 取值范围为[0, 1], size是客户端机器数</span><br><span class="line">每台机器实际的轮询时间间隔为：avgInterval * (1/2 + random) * size</span><br><span class="line"></span><br><span class="line">在概率统计的意义上, 对整个机器集群来讲，整体的平均轮询间隔时间为15秒。</span><br></pre></td></tr></table></figure>
+<h4 id="任务重试的等待时间"><a href="#任务重试的等待时间" class="headerlink" title="任务重试的等待时间"></a>任务重试的等待时间</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任务失败后需要等一段时间再重试执行, 这里借鉴了 <code>Sidekiq</code>的实现方式, 等待时间的计算方式如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// retryCount是重试次数, random是随机变量, 取值范围为[0, 1]</span><br><span class="line">retryCount ^ 4 + 15 + random * 30 * (retryCount + 1)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>等待时间以指数级的形式增长</strong>, 之所以加入了随机变量是为了防止这样一种情况: </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>多个异步任务的执行时间相隔很近, 访问某一个资源, 由于并发访问的原因, 资源提供方的负载过高, 导致这些异步任务都执行失败, 如果任务重试的等待时间里没有加入随机因子的话, 这几个任务又会在相近的时间内一起执行, 并发访问资源, 由于同样的原因导致任务执行失败, 如此反复</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>加入随机因子可以错开这些任务的执行时间</strong>, 避免这种情况的出现。</p>
+<h4 id="状态上报失败后的重试补偿"><a href="#状态上报失败后的重试补偿" class="headerlink" title="状态上报失败后的重试补偿"></a>状态上报失败后的重试补偿</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任务执行结束后需要上报成功/重试/死亡的状态, 但由于网络原因可能导致访问<code>Redis</code>失败, 当出现上报失败时, <code>SDK</code>会将此次上报放到一个<strong>内存队列</strong>里, 通过后台的<strong>定时任务</strong>, 不断地重试上报过程。</p>
+<h3 id="编程模型"><a href="#编程模型" class="headerlink" title="编程模型"></a>编程模型</h3><h4 id="开发一个异步任务"><a href="#开发一个异步任务" class="headerlink" title="开发一个异步任务:"></a>开发一个异步任务:</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@OpAsyncTask</span>(timeout = <span class="number">600</span>, maxRetry = <span class="number">3</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoAsyncTaskHandler</span> <span class="keyword">implements</span> <span class="title">BaseAsyncTaskHandler</span>&lt;<span class="title">CustomPOJO</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可以在TaskHandler里注入其他bean</span></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> DemoDao demoDao;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">performAsync</span><span class="params">(CustomPOJO params)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//任务的执行逻辑</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 业务方需要实现这个回调方法，根据自己传给perform方法的params参数，返回一个bizId,</span></span><br><span class="line"><span class="comment">     * 以实现任务去重: 对于一个taskHandler, 多次提交bizId相同的任务, 框架只会执行一次。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> params 调用方传给perform方法的参数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getBizId</span><span class="params">(CustomPOJO params)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//基于params参数生成bizId</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="提交异步任务"><a href="#提交异步任务" class="headerlink" title="提交异步任务:"></a>提交异步任务:</h4><p>就像调用一个普通的本地方法 (基于 <code>Spring</code>动态代理实现)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// TaskHandler就是一个Spring Bean, 你可以像注入其他Bean一样注入TaskHandler</span></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> DemoAsyncTaskHandler asyncTaskHandler;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 提交普通异步任务</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invokeAsync</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        CustomPOJO param = <span class="keyword">new</span> CustomPOJO(<span class="string">"a"</span>, <span class="string">"b"</span>);</span><br><span class="line">        asyncTaskHandler.performAsync(param);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Web控制台"><a href="#Web控制台" class="headerlink" title="Web控制台"></a>Web控制台</h3><p>查看任务的执行状态</p>
+<p><img src="//blog.com/2019/08/31/大搜车异步任务队列中间件的建设实践/4.webp" alt="img"></p>
+<hr>
+<h2 id="进阶功能"><a href="#进阶功能" class="headerlink" title="进阶功能"></a>进阶功能</h2><h3 id="任务依赖"><a href="#任务依赖" class="headerlink" title="任务依赖"></a>任务依赖</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了上文提到的普通异步任务和延时任务, 我们还提供了一种任务依赖的功能, 使用场景如下:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如A任务和B任务都是外部系统触发的, 但是B任务需要在A任务执行结束后才能执行成功, A, B触发时机的先后次序是不一定的, B的触发时机可能会先于A的, 这个时候B任务没法立即执行, 需要等待A的完成。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这些任务执行次序的逻辑控制由业务方实现的话会比较麻烦, 可以交给<code>OpAsyncTask</code> 来完成:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;把A和B声明为依赖任务, 且B依赖于A, 在被外部系统触发时, 分别提交A任务和B任务, A和B的执行次序交给 <code>OpAsyncTask</code> 来协调, 业务方只要专注于任务本身的处理逻辑就可以了。</p>
+<h3 id="事务支持"><a href="#事务支持" class="headerlink" title="事务支持"></a>事务支持</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当在<code>Spring</code>的事务内调用 <code>TaskHandler</code> 的 <code>perform</code> 方法(既提交任务)时,如果执行出现异常导致事务回滚操作, 那么异步任务提交也会回滚, 既任务不会被提交;</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果执行正常, 那么事务正常提交后, 异步任务就会被正常提交。</p>
+<p><strong>实现原理:</strong> 在 <code>TaskHandler</code> 的<code>perform</code>方法被调用时, <code>OpAsyncTask</code>会判断当前线程是否处于 <code>Spring</code> 事务中, 如果不是的话就直接提交异步任务, 如果是的话会“延迟提交异步任务” —— 事务成功提交之后再去提交异步任务。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// delay the submitting if it's in a transaction</span></span><br><span class="line"><span class="keyword">if</span> (TransactionSynchronizationManager.isActualTransactionActive()) &#123;</span><br><span class="line">    log.info(<span class="string">"It's in a active transaction, delay the task submitting"</span>);</span><br><span class="line">    TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> TransactionSynchronizationAdapter() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterCommit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            log.info(<span class="string">"Submitting async task after committing transaction"</span>);</span><br><span class="line">            submitAsyncTask();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    log.info(<span class="string">"It's not in a active transaction, submit task directly"</span>);</span><br><span class="line">    submitAsyncTask();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>注意事项</strong>: 本质上把异步任务的提交行为推迟到事务成功提交之后执行, 所以<strong>异步任务的提交这一行为和事务中的行为(如 DB 操作)不是原子性的(要么都成功执行, 要么都不执行)</strong>, 最终提交异步任务时有可能因为网络原因导致异步任务提交失败, 这时候事务已经提交了, 其他事务行为已经生效了, 例如 DB 操作都已生效, 可异步任务没有成功提交, 所以无法严格保证其同时成功执行:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>事务行为不成功的话, 异步任务提交一定不成功; 但事务行为成功的话, 有一定概率出现异步任务提交不成功的情况</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/29/PHP session锁：如何避免session阻塞PHP请求/" rel="next" title="PHP session锁：如何避免session阻塞PHP请求">
+                <i class="fa fa-chevron-left"></i> PHP session锁：如何避免session阻塞PHP请求
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/31/滑动窗口实现访问频率控制/" rel="prev" title="滑动窗口实现访问频率控制">
+                滑动窗口实现访问频率控制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#大搜车异步任务队列中间件的建设实践"><span class="nav-number">1.</span> <span class="nav-text">大搜车异步任务队列中间件的建设实践</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何设计一个分布式异步任务队列"><span class="nav-number">1.2.</span> <span class="nav-text">如何设计一个分布式异步任务队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#核心实现"><span class="nav-number">1.3.</span> <span class="nav-text">核心实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#任务生命周期"><span class="nav-number">1.3.1.</span> <span class="nav-text">任务生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#架构图"><span class="nav-number">1.3.2.</span> <span class="nav-text">架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#任务流转"><span class="nav-number">1.3.3.</span> <span class="nav-text">任务流转</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#任务提交"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">任务提交</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#任务状态变更"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">任务状态变更</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#任务执行"><span class="nav-number">1.3.3.3.</span> <span class="nav-text">任务执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行结果上报"><span class="nav-number">1.3.3.4.</span> <span class="nav-text">执行结果上报</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#任务存储"><span class="nav-number">1.3.4.</span> <span class="nav-text">任务存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis-vs-MySQL"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">Redis vs MySQL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis-vs-MQ"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">Redis vs MQ</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-数据结构设计"><span class="nav-number">1.3.5.</span> <span class="nav-text">Redis 数据结构设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#原子性保障"><span class="nav-number">1.3.6.</span> <span class="nav-text">原子性保障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高可用保障"><span class="nav-number">1.3.7.</span> <span class="nav-text">高可用保障</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#轮询时间间隔"><span class="nav-number">1.3.7.1.</span> <span class="nav-text">轮询时间间隔</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#任务重试的等待时间"><span class="nav-number">1.3.7.2.</span> <span class="nav-text">任务重试的等待时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#状态上报失败后的重试补偿"><span class="nav-number">1.3.7.3.</span> <span class="nav-text">状态上报失败后的重试补偿</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编程模型"><span class="nav-number">1.3.8.</span> <span class="nav-text">编程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开发一个异步任务"><span class="nav-number">1.3.8.1.</span> <span class="nav-text">开发一个异步任务:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提交异步任务"><span class="nav-number">1.3.8.2.</span> <span class="nav-text">提交异步任务:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web控制台"><span class="nav-number">1.3.9.</span> <span class="nav-text">Web控制台</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进阶功能"><span class="nav-number">1.4.</span> <span class="nav-text">进阶功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#任务依赖"><span class="nav-number">1.4.1.</span> <span class="nav-text">任务依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事务支持"><span class="nav-number">1.4.2.</span> <span class="nav-text">事务支持</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

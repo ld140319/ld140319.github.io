@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,索引,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="索引原理详解 原文地址：https://mp.weixin.qq.com/s/EcrygGRQ9P9RpjT2pAuREg ​           https://blog.csdn.net/qqqqq1993qqqqq/article/details/71479928  设计初衷&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们非常容易想象出一个只有单关键字组成的表如何">
+<meta name="keywords" content="数据库,MySql,索引">
+<meta property="og:type" content="article">
+<meta property="og:title" content="索引原理详解">
+<meta property="og:url" content="http://blog.com/2019/01/24/索引原理详解/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="索引原理详解 原文地址：https://mp.weixin.qq.com/s/EcrygGRQ9P9RpjT2pAuREg ​           https://blog.csdn.net/qqqqq1993qqqqq/article/details/71479928  设计初衷&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们非常容易想象出一个只有单关键字组成的表如何">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091503903957.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/微信图片_20190119102102.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/微信图片_20190119102118.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/微信图片_20190119104833.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/微信图片_20190119104843.jpg">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/4o22OFcmzHlcmReMJo7XnbaqGKKicBs8iamTNevCdzzJHxPv9c9p5WCyELsm1seyjjVqR5LHHudUozzRX2jot55w/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091512695110.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091523976520.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091541081339.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091551111655.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091600910753.png">
+<meta property="og:image" content="http://www.admin10000.com/UploadFiles/Document/201410/27/20141027091608678237.PNG?_=4743324">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091620754769.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091631948071.png">
+<meta property="og:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091642165340.png">
+<meta property="og:updated_time" content="2019-01-24T15:10:46.058Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="索引原理详解">
+<meta name="twitter:description" content="索引原理详解 原文地址：https://mp.weixin.qq.com/s/EcrygGRQ9P9RpjT2pAuREg ​           https://blog.csdn.net/qqqqq1993qqqqq/article/details/71479928  设计初衷&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们非常容易想象出一个只有单关键字组成的表如何">
+<meta name="twitter:image" content="http://blog.com/2019/01/24/索引原理详解/20141027091503903957.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/24/索引原理详解/">
+
+
+
+
+
+  <title>索引原理详解 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/24/索引原理详解/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">索引原理详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-24T12:12:57+08:00">
+                2019-01-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/索引/" itemprop="url" rel="index">
+                    <span itemprop="name">索引</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="索引原理详解"><a href="#索引原理详解" class="headerlink" title="索引原理详解"></a>索引原理详解</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/EcrygGRQ9P9RpjT2pAuREg" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/EcrygGRQ9P9RpjT2pAuREg</a></p>
+<p>​           <a href="https://blog.csdn.net/qqqqq1993qqqqq/article/details/71479928" target="_blank" rel="noopener">https://blog.csdn.net/qqqqq1993qqqqq/article/details/71479928</a></p>
+</blockquote>
+<h2 id="设计初衷"><a href="#设计初衷" class="headerlink" title="设计初衷"></a>设计初衷</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们非常容易想象出一个只有单关键字组成的表如何使用B+树进行索引，只要将关键字存储到树的节点即可。当数据库一条记录里包含多个字段时，一棵B+树就只能存储主键，<strong>如果检索的是非主键字段，则主键索引失去作用，又变成顺序查找了</strong>。这时应该在第二个要检索的列上建立第二套索引。  这个索引由独立的B+树来组织。有两种常见的方法可以解决<strong>多个B+树访问同一套表数据</strong>的问题，<strong>一种叫做聚簇索引（clustered index ），一种叫做非聚簇索引（secondary index）</strong>。这两个名字虽然都叫做索引，但这并不是一种单独的索引类型，而是一种<strong>数据存储方式</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于聚簇索引存储来说，行数据和主键B+树存储在一起</strong>，<strong>非聚簇索引B+树只存储索引值和主键</strong>，主键和非主键B+树几乎是两种类型的树。对于非聚簇索引存储来说，非主键B+树在叶子节点存储指向真正数据行的指针，而非主键。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>InnoDB使用的是聚簇索引，将主键组织到一棵B+树中，而行数据就储存在叶子节点上</strong>，若使用”where id = 14”这样的条件查找主键，则按照B+树的检索算法即可查找到对应的叶节点，之后获得行数据。若对Name列进行条件搜索，则需要<strong>两个步骤</strong>：第一步在非聚簇索引B+树中检索Name，到达其叶子节点获取对应的<strong>主键</strong>。第二步使用主键在聚簇索引索引B+树种再执行一次B+树检索操作，最终到达叶子节点即可获取<strong>整行数据</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MyISAM使用的是非聚簇索引，非聚簇索引的两棵B+树看上去没什么不同，<strong>节点的结构完全一致只是存储的内容不同而已，主键索引B+树的节点存储了主键，辅助键索引B+树存储了辅助键。表数据存储在独立的地方，这两颗B+树的叶子节点都使用一个地址指向真正的表数据</strong>，对于表数据来说，这两个键没有任何差别。由于索引树是独立的，<strong>通过辅助键检索无需访问主键的索引树</strong>。  </p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091503903957.png" alt=""></p>
+<h3 id="InnoDB"><a href="#InnoDB" class="headerlink" title="InnoDB"></a>InnoDB</h3><p>InnoDB主键索引示意图如下，<strong>非叶子节点上没有实际的数据，只有叶子节点上才有实际的数据，并且叶子节点之间有指针串联指向下一个叶子节点，这样能够提升范围查询的效率</strong>：</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/微信图片_20190119102102.jpg" alt="InnoDB B+Tree主键索引示意图">InnoDB B+Tree聚簇索引示意图</p>
+<p>InnoDB使用了聚簇索引（Clustered），即所有二级索引聚集在主键索引上，对InnoDB存储引擎表的任何访问，<strong>最终一定要搜索主键索引树</strong>，二级索引的示意图如下：</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/微信图片_20190119102118.jpg" alt="InnoDB B+Tree二级索引示意图">InnoDB B+Tree非聚簇索引示意图</p>
+<p>在InnoDB中，二级索引（所有不是主键索引的索引）上没有实际的数据，<strong>取而代之的是主键索引的值</strong>。这样的话，<strong>如果是基于二级索引的查询，会先在二级索引上搜索得到主键索引的值，然后再去主键索引树上搜索，得到最终的行数据</strong>。</p>
+<p>这就意味着，<strong>至少有一次索引查找，可能会有两次索引查找，其中一定有一次主键索引查找</strong>。</p>
+<h3 id="MyISAM"><a href="#MyISAM" class="headerlink" title="MyISAM"></a>MyISAM</h3><p><strong>叶子节点存储行数据地址，索引之间不相互影响，没有依赖</strong></p>
+<p>MyISAM没有使用聚簇索引，所以主键就是一个普通的唯一索引，并且基于索引查询只会搜索当前索引，不会和其他索引有任何关系，<strong>任意两个索引之间互不影响</strong>。如下图所示，是MyISAM的主键索引示意图，我们可以看到，<strong>索引树的叶子节点上只有表中行数据的地址，而不是和InnoDB一样，有实际的数据</strong>：</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/微信图片_20190119104833.jpg" alt="MyISAM的主键索引示意图">MyISAM的主键索引示意图</p>
+<p>如下图所示，是MyISAM的二级索引示意图，我们可以看到，其结构几乎和主键索引示意图一样，<strong>叶子结点上也有表中行数据的地址</strong>：</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/微信图片_20190119104843.jpg" alt="MyISAM的二级索引示意图">MyISAM的二级索引示意图</p>
+<h2 id="为什么主键要设计的尽量小的原因"><a href="#为什么主键要设计的尽量小的原因" class="headerlink" title="为什么主键要设计的尽量小的原因"></a>为什么主键要设计的尽量小的原因</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在InnoDB中，主键要设计的尽量小，主键越小，二级索引也会越小</strong>。满足需求的情况下，SMALLINT优先于INT，INT优先于BITINT，INTEGER类型优先于VARCHAR类型。<strong>如果主键用更大的数据类型，由于二级索引上有主键索引的值，那么不只是主键索引树变的更大更高，其他的二级索引树也会更大更高</strong>，这绝对是一个糟糕的做法。</p>
+<h2 id="Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址"><a href="#Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址" class="headerlink" title="Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址"></a>Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;非聚簇索引使用主键作为”指针” 而不是使用地址值作为指针的好处是，<strong>减少了当出现行移动或者数据页分裂时辅助索引的维护工作</strong>，使用主键值当作指针会让非聚簇索引占用更多的空间，<strong>换来的好处是InnoDB在移动行时无须更新非聚簇索引中的这个”指针”</strong>。也就是说<strong>行的位置（实现中通过16K的Page来定位）会随着数据库里数据的修改而发生变化（B+树节点分裂以及Page的分裂）</strong>，使用主键就可以保证不管这个主键B+树的节点如何变化，非聚簇索引树都不受影响。</p>
+<h2 id="InnoDb聚簇索引的好处"><a href="#InnoDb聚簇索引的好处" class="headerlink" title="InnoDb聚簇索引的好处"></a>InnoDb聚簇索引的好处</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于行数据和叶子节点存储在一起，这样<strong>主键和行数据是一起被载入内存的，找到叶子节点就可以立刻将行数据返回了</strong>，如果按照主键Id来组织数据，获得数据更快。</p>
+<h2 id="索引查找过程"><a href="#索引查找过程" class="headerlink" title="索引查找过程"></a>索引查找过程</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>B+树索引并不能找到一个键值对应的具体行。b+树索引只能查到被查找数据行所在的页，然后数据库通过把页读入内存，再在内存中查找，最后得到结果</strong>。</p>
+<h2 id="B-TREE高度"><a href="#B-TREE高度" class="headerlink" title="B+ TREE高度"></a>B+ TREE高度</h2><p>​      <strong>表的行数和索引列的大小一起决定了B+ Tree的高度</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;了解B+Tree索引的大概结构后，我们接下来讲解一下如何计算索引树的高度。</p>
+<p>我们先做如下假设：</p>
+<ol>
+<li>表的记录数是N；</li>
+<li>每个BTREE节点平均有B个索引KEY（即1,2,3,4,5… …）；</li>
+</ol>
+<p>很明显，这时候B+TREE索引树的高度就是logBN（等价于logN/logB）。需要说明的是，这里的对数以及接下来有对数的地方应该是下图中的对数，笔者不知道如何将word中的对数复制过来，所以请将就一下下（尴尬￣□￣）：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/4o22OFcmzHlcmReMJo7XnbaqGKKicBs8iamTNevCdzzJHxPv9c9p5WCyELsm1seyjjVqR5LHHudUozzRX2jot55w/640?wx_fmt=png&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="对数">对数</p>
+<p>另外我们知道，<strong>由于索引树每个节点大小固定，所以索引KEY越小，B值就越大，即每个BTREE节点上可以保存更多的索引KEY</strong>。并且索引树的高度是logBN，那么B值越大，索引树的高度越小，那么基于索引查询的性能就越高。所以我们可以得到结论：<strong>相同表记录数的情况下，索引KEY越小，索引树高度就越小</strong>。</p>
+<p>现在，我们假设表有1600w条记录（因为2^24≈1600w，便于接下来的计算），如果每个节点保存64个索引KEY，那么索引高度就是 (log10^7)/log64 ≈ 24/6 = 4。</p>
+<p>所以，由上面的演算可知，我们要计算一张表的索引树的高度，还只需要知道一个节点有多大，从而就能知道每个节点能存储多少个索引KEY。现代数据库经过不断的探索和优化，并结合磁盘的预读特点，<strong>每个索引节点一般都是操作系统页的整数倍</strong>，操作系统页可通过命令<code>getconf PAGESIZE</code>得到该值得大小，且一般是4094，即4k。而<strong>InnoDB的pageSize可以通过命令<code>show variables like &#39;innodb_page_size&#39;</code>得到，默认值是16k</strong>。</p>
+<blockquote>
+<p><strong>关于预读</strong>：在索引树上查到某个KEY（例如id=3），需要先找到这个KEY所在的叶子节点（因为B+Tree索引只有叶子节点上有具体的数据），这个查找过程从根节点到叶子节点，需要经过整个树。当找到叶子节点后，<strong>会根据预读原理将整个节点数据全部加载到内存中，然后基于二分法找到最终的KEY</strong>。</p>
+</blockquote>
+<p>OK，到这里，我们距离真正计算一个拥有1600w数据的表的索引树的高度，只差每个索引KEY所占空间了。</p>
+<p>以BIGINT为例，存储大小为8个字节。INT存储大小为4个字节（32位）。索引树上每个节点除了存储KEY，还需要存储指针。所以<strong>每个节点保存的KEY的数量为pagesize/(keysize+pointsize)（如果是B-TREE索引结构，则是pagesize/(keysize+datasize+pointsize)）</strong>。</p>
+<ul>
+<li>假设平均指针大小是4个字节，那么索引树的每个节点可以存储16k/((8+4)*8)≈171。那么：一个拥有1600w数据，且主键是BIGINT类型的表的主键索引树的高度就是(log10^7)/log171 ≈ 24/7.4 ≈ 3.2。</li>
+<li>假设平均指针大小是6个字节，那么索引树的每个节点可以存储16k/((8+6)*8)≈146。那么：一个拥有1600w数据，且主键是BIGINT类型的表的主键索引树的高度就是(log10^7)/log146 ≈ 24/7.2 ≈ 3.3。</li>
+<li>假设平均指针大小是8个字节，那么索引树的每个节点可以存储16k/((8+8)*8)≈128。那么：一个拥有1600w数据，且主键是BIGINT类型的表的主键索引树的高度就是(log10^7)/log128 ≈ 24/7 ≈ 3.4。</li>
+</ul>
+<p>由上面的计算可知：<strong>一个千万量级，且存储引擎是MyISAM或者InnoDB的表，其索引树的高度在3~5之间</strong>。</p>
+<p><strong>说明</strong>：这一段对索引树高度的计算，都是基于B+Tree，即InnoDB和MyISAM存储引擎的索引用到的数据结构。而<strong>B-TREE索引节点上不仅保存了索引和指针，还保存了具体的行数据</strong>，索引树的高度算法略有不同。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;索引树的高度是一个非常重要的东西，因为当查找的条件能用到索引时，就不用全表扫描，而是只需要在索引上搜索，从索引的根节点到叶子节点。并且很明显的是：<strong>索引树越高，性能就会越差</strong>。我们假设在最糟糕的情况下，索引一点没有被加载到内存中，而是全部持久化在磁盘上。那么<strong>索引树有多高，就表示查询至少需要多少次IO操作</strong>。即使实际情况中，由于表的数据更多，索引也会很大，不大可能全部被保存在缓存中。而且<strong>如果是二级索引搜索，IO次数还要翻倍（二级索引搜索+主键索引搜索）</strong>，这对性能是一个很大的影响。</p>
+<p>这也是MySQL数据库使用B+Tree作为索引结构的原因：<strong>尽可能降低索引树的高度</strong>。而红黑树等其他数据结构，树的高度要深的多的多。</p>
+<p>最后再总结一下影响索引树的高度：</p>
+<ol>
+<li><strong>表的行数</strong>：这很容易理解，<strong>表中的数据越多，索引就越大，索引树就越高</strong>。</li>
+<li><strong>索引列的大小</strong>：这个也很容易理解，一个INT或者BITINT类型的自增主键索引，相比CHAR(32)定长字符串索引，<strong>在表记录数相同的情况下，前者索引树要比后者更小，高度也更浅</strong>。因为前者的索引树是需要保存1、2、3、4、5、… …，而后者是保存c4ca4238a0b923820dcc509a6f75849b、c81e728d9d4c2f636f067f89cc14862c、eccbc87e4b5ce2fe28308fd9f2a7baf3、a87ff679a2f3e71d9181a67b7542122c、e4da3b7fbbce2345d7772b0674a318d5、… …。</li>
+</ol>
+<h2 id="Page结构"><a href="#Page结构" class="headerlink" title="Page结构"></a>Page结构</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Page是整个InnoDB存储的最基本构件，也是InnoDB磁盘管理的最小单位</strong>，与数据库相关的所有内容都存储在这种Page结构里。Page分为几种类型，常见的页类型有数据页（B-tree Node）Undo页（Undo Log Page）系统页（System Page） 事务数据页（Transaction System Page）等。<strong>单个Page的默认大小是16K</strong>（编译宏UNIV_PAGE_SIZE控制），<strong>每个Page使用一个32位的int值来唯一标识</strong>，这也正好对应InnoDB 最大64TB的存储容量（16Kib * 2^32 = 64Tib）。一个Page的基本结构如下图所示：</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091512695110.png" alt="img"></p>
+<p>　　每个Page都有通用的头和尾，但是中部的内容根据Page的类型不同而发生变化。Page的头部里有我们关心的一些数据，下图把Page的头部详细信息显示出来：</p>
+<p> <img src="//blog.com/2019/01/24/索引原理详解/20141027091523976520.png" alt="img"></p>
+<p>　　我们重点关注和数据组织结构相关的字段：<strong>Page的头部保存了两个指针，分别指向前一个Page和后一个Page</strong>，头部还有Page的类型信息和用来唯一标识Page的编号。根据这两个指针我们很容易想象出<strong>Page链接起来就是一个双向链表的结构</strong>。</p>
+<p>　　再看看Page的主体内容，我们主要关注行数据和索引的存储，他们都位于Page的User Records部分，<strong>User Records占据Page的大部分空间，User Records由一条一条的Record组成，每条记录代表索引树上的一个节点（非叶子节点和叶子节点）</strong>。在一个Page内部，单链表的头尾由固定内容的两条记录来表示，字符串形式的”Infimum”代表开头，”Supremum”代表结尾。这两个用来代表开头结尾的Record存储在System Records的段里，这个System Records和User Records是两个平行的段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;InnoDB存在4种不同的Record，它们分别是主键索引树非叶节点、 主键索引树叶子节点、 辅助键索引树非叶节点 、辅助键索引树叶子节点。这4种节点的Record格式有一些差异，但是它们都<strong>存储着Next指针指向下一个Record</strong>，现在只需要<strong>把Record当成一个存储了数据同时含有Next指针的单链表节点即可</strong>。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091541081339.png" alt="img"></p>
+<p>　　User Record在Page内以单链表的形式存在，最初数据是<strong>按照插入的先后顺序排列</strong>的，但是随着<a href="https://www.baidu.com/s?wd=%E6%96%B0%E6%95%B0%E6%8D%AE&amp;tn=24004469_oem_dg&amp;rsv_dl=gh_pl_sl_csd" target="_blank" rel="noopener">新数据</a>的插入和旧数据的删除，<strong>数据物理顺序会变得混乱，但他们依然保持着逻辑上的先后顺序</strong>。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091551111655.png" alt="img"></p>
+<p>　　把User Record的组织形式和若干Page组合起来，就看到了稍微完整的形式。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091600910753.png" alt="img"></p>
+<p>　　现在看下如何定位一个Record：</p>
+<p>　　1 通过根节点开始遍历一个索引的B+树，通过各层非叶子节点最终到达一个Page，这个Page里存放的都是叶子节点。</p>
+<p>　　2 在Page内从”Infimum”节点开始遍历单链表（这种遍历往往会被优化），如果找到该键则成功返回。如果记录到达了”supremum”，说明当前Page里没有合适的键，这时要借助Page的Next Page指针，跳转到下一个Page继续从”Infimum”开始逐个查找。</p>
+<p><img src="http://www.admin10000.com/UploadFiles/Document/201410/27/20141027091608678237.PNG?_=4743324" alt="img"></p>
+<p>　　详细看下不同类型的Record里到底存储了什么数据，根据B+树节点的不同，User Record可以被分成四种格式，下图种按照颜色予以区分。</p>
+<p>　　<strong>1 主索引树非叶节点（绿色）</strong></p>
+<p>　　1 子节点存储的主键里最小的值（Min Cluster Key on Child），这是B+树必须的，作用是在一个Page里定位到具体的记录的位置。</p>
+<p><strong>解释：这里只存储主键里最小的值的原因是当前节点有下一个节点的指针，下一个节点的最小值即为当前节点的最大值</strong></p>
+<p>　　2 最小的值所在的Page的编号（Child Page Number），作用是定位Record。</p>
+<p>　　<strong>2 主索引树叶子节点（黄色）</strong></p>
+<p>　　1 主键（Cluster Key Fields），B+树必须的，也是数据行的一部分</p>
+<p>　　2 除去主键以外的所有列（Non-Key Fields），这是数据行的除去主键的其他所有列的集合。</p>
+<p>　　这里的1和2两部分加起来就是一个完整的数据行。</p>
+<p>　　<strong>3 辅助索引树非叶节点（蓝色）</strong></p>
+<p>　　1 子节点里存储的辅助键值里的最小的值（Min Secondary-Key on Child），这是B+树必须的，作用是在一个Page里定位到具体的记录的位置。</p>
+<p>　　2 主键值（Cluster Key Fields），非叶子节点为什么要存储主键呢？因为辅助索引是可以不唯一的（因为不是主键列），但是B+树要求键的值必须唯一，所以这里把辅助键的值和主键的值合并起来作为在B+树中的真正键值，保证了唯一性。但是这也导致在辅<strong>助索引B+树<a href="https://www.baidu.com/s?wd=%E4%B8%AD%E9%9D%9E&amp;tn=24004469_oem_dg&amp;rsv_dl=gh_pl_sl_csd" target="_blank" rel="noopener">中非</a>叶节点反而比叶子节点多了4个字节</strong>。（即下图中蓝色节点反而比红色多了4字节）</p>
+<p>　　3 最小的值所在的Page的编号（Child Page Number），作用是定位Record。</p>
+<p>　　<strong>4 辅助索引树叶子节点（红色）</strong></p>
+<p>　　1 辅助索引键值（Secondary Key Fields），这是B+树必须的。</p>
+<p>　　2 主键值（Cluster Key Fields），用来在主索引树里再做一次B+树检索来找到整条记录。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091620754769.png" alt="img"></p>
+<p>　　下面是本篇最重要的部分了，结合B+树的结构和前面介绍的4种Record的内容，我们终于可以画出一幅全景图。由于辅助索引的B+树与主键索引有相似的结构，这里只画出了主键索引树的结构图，只包含了”主键非叶节点”和”主键叶子节点”两种节点，也就是上图的的绿色和黄色的部分。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091631948071.png" alt="img"></p>
+<p>　　把上图还原成下面这个更简洁的树形示意图，这就是B+树的一部分。注意<strong>Page和B+树节点之间并没有一一对应的关系，Page只是作为一个Record的保存容器，它存在的目的是便于对磁盘空间进行批量管理</strong>，上图中的编号为47的Page在树形结构上就被拆分成了两个独立节点。</p>
+<p><img src="//blog.com/2019/01/24/索引原理详解/20141027091642165340.png" alt="img"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/索引/" rel="tag"># 索引</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/24/mysql order by 值相同的时候出现的bug/" rel="next" title="mysql order by 值相同的时候出现的bug">
+                <i class="fa fa-chevron-left"></i> mysql order by 值相同的时候出现的bug
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/24/4种事务的隔离级别，InnoDB如何巧妙实现？/" rel="prev" title="4种事务的隔离级别，InnoDB如何巧妙实现？">
+                4种事务的隔离级别，InnoDB如何巧妙实现？ <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#索引原理详解"><span class="nav-number">1.</span> <span class="nav-text">索引原理详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计初衷"><span class="nav-number">1.1.</span> <span class="nav-text">设计初衷</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB"><span class="nav-number">1.1.1.</span> <span class="nav-text">InnoDB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MyISAM"><span class="nav-number">1.1.2.</span> <span class="nav-text">MyISAM</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么主键要设计的尽量小的原因"><span class="nav-number">1.2.</span> <span class="nav-text">为什么主键要设计的尽量小的原因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址"><span class="nav-number">1.3.</span> <span class="nav-text">Innodb为什么非聚簇索引要存储主键的值，而不是行数据地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDb聚簇索引的好处"><span class="nav-number">1.4.</span> <span class="nav-text">InnoDb聚簇索引的好处</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引查找过程"><span class="nav-number">1.5.</span> <span class="nav-text">索引查找过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-TREE高度"><span class="nav-number">1.6.</span> <span class="nav-text">B+ TREE高度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Page结构"><span class="nav-number">1.7.</span> <span class="nav-text">Page结构</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

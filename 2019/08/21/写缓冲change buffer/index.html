@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,Innodb,buffer,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="写缓冲change buffer 原文地址：https://mp.weixin.qq.com/s/PF21mUtpM8-pcEhDN4dOIw  为什么需要写缓冲change buffer简单回顾一下：  （1）MySQL数据存储包含内存与磁盘两个部分； （2）内存缓冲池(buffer pool)以页为单位，缓存最热的数据页(data page)与索引页(index page)； （3）InnoD">
+<meta name="keywords" content="数据库,MySql,Innodb,buffer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="写缓冲change buffer">
+<meta property="og:url" content="http://blog.com/2019/08/21/写缓冲change buffer/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="写缓冲change buffer 原文地址：https://mp.weixin.qq.com/s/PF21mUtpM8-pcEhDN4dOIw  为什么需要写缓冲change buffer简单回顾一下：  （1）MySQL数据存储包含内存与磁盘两个部分； （2）内存缓冲池(buffer pool)以页为单位，缓存最热的数据页(data page)与索引页(index page)； （3）InnoD">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/2.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/3.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/4.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/5.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/6.jpg">
+<meta property="og:updated_time" content="2019-08-21T02:31:29.455Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="写缓冲change buffer">
+<meta name="twitter:description" content="写缓冲change buffer 原文地址：https://mp.weixin.qq.com/s/PF21mUtpM8-pcEhDN4dOIw  为什么需要写缓冲change buffer简单回顾一下：  （1）MySQL数据存储包含内存与磁盘两个部分； （2）内存缓冲池(buffer pool)以页为单位，缓存最热的数据页(data page)与索引页(index page)； （3）InnoD">
+<meta name="twitter:image" content="http://blog.com/2019/08/21/写缓冲change%20buffer/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/21/写缓冲change buffer/">
+
+
+
+
+
+  <title>写缓冲change buffer | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/21/写缓冲change buffer/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">写缓冲change buffer</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-21T12:12:57+08:00">
+                2019-08-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/" itemprop="url" rel="index">
+                    <span itemprop="name">Innodb</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/buffer/" itemprop="url" rel="index">
+                    <span itemprop="name">buffer</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写缓冲change-buffer"><a href="#写缓冲change-buffer" class="headerlink" title="写缓冲change buffer"></a>写缓冲change buffer</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/PF21mUtpM8-pcEhDN4dOIw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/PF21mUtpM8-pcEhDN4dOIw</a></p>
+</blockquote>
+<h2 id="为什么需要写缓冲change-buffer"><a href="#为什么需要写缓冲change-buffer" class="headerlink" title="为什么需要写缓冲change buffer"></a>为什么需要写缓冲change buffer</h2><p>简单回顾一下：</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/1.jpg" alt="img"></p>
+<p>（1）<code>MySQL</code>数据存储包含内存与磁盘<strong>两个部分</strong>；</p>
+<p>（2）内存缓冲池(<code>buffer pool</code>)以页为单位，缓存最热的数据页(<code>data page</code>)与索引页(<code>index page</code>)；</p>
+<p>（3）<code>InnoDB</code>以变种<code>LRU</code>算法管理缓冲池，并能够解决“<strong>预读失效</strong>”与“<strong>缓冲池污染</strong>”的问题；</p>
+<p>毫无疑问，对于读请求，缓冲池能够减少磁盘<code>IO</code>，提升性能。问题来了，<strong>那写请求呢？</strong></p>
+<p><strong>情况一</strong></p>
+<p>假如要修改页号为4的索引页，而这个页正好在缓冲池内。</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/2.jpg" alt="img"></p>
+<p>如上图序号1-2：</p>
+<p>（1）直接修改缓冲池中的页，一次内存操作；</p>
+<p>（2）写入<code>redo log</code>，一次磁盘顺序写操作；</p>
+<p>这样的效率是最高的。</p>
+<p><em>画外音：像写日志这种<strong>顺序写</strong>，每秒几万次没问题。</em></p>
+<p><strong>是否会出现一致性问题呢？</strong></p>
+<p>并不会。</p>
+<p>（1）读取，会命中缓冲池的页；</p>
+<p>（2）缓冲池<code>LRU</code>数据淘汰，会将“脏页”刷回磁盘；</p>
+<p>（3）数据库异常奔溃，能够从<code>redo log</code>中恢复数据；</p>
+<p><strong>什么时候缓冲池中的页，会刷到磁盘上呢？</strong></p>
+<p>定期刷磁盘，而不是每次刷磁盘，能够降低磁盘<code>IO</code>，提升<code>MySQL</code>的性能。</p>
+<p><em>画外音：<strong>批量写</strong>，是常见的优化手段。</em></p>
+<p><strong>情况二</strong></p>
+<p>假如要修改页号为40的索引页，而这个页正好<strong>不</strong>在缓冲池内。</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/3.jpg" alt="img"></p>
+<p>此时麻烦一点，如上图需要1-3：</p>
+<p>（1）先把需要为40的索引页，从磁盘加载到缓冲池，一次磁盘随机读操作；</p>
+<p>（2）修改缓冲池中的页，一次内存操作；</p>
+<p>（3）写入<code>redo log</code>，一次磁盘顺序写操作；</p>
+<p>没有命中缓冲池的时候，<strong>至少产生一次磁盘IO</strong>，对于写多读少的业务场景，<strong>是否还有优化的空间呢？</strong></p>
+<p>这即是InnoDB考虑的问题，又是本文将要讨论的写缓冲(<code>change buffer</code>)。</p>
+<p><em>画外音：从名字容易看出，<strong>写缓冲是降低磁盘<code>IO</code>，提升数据库写性能的一种机制</strong>。</em></p>
+<h2 id="什么是InnoDB的写缓冲？"><a href="#什么是InnoDB的写缓冲？" class="headerlink" title="什么是InnoDB的写缓冲？"></a>什么是InnoDB的写缓冲？</h2><p>在MySQL 5.5之前，叫插入缓冲(<code>insert buffer</code>)，只针对<code>insert</code>做了优化；现在对<code>delete</code>和<code>update</code>也有效，叫做写缓冲(<code>change buffer</code>)。</p>
+<p>它是一种应用在<strong>非唯一普通索引页</strong>(<code>non-unique secondary index page</code>)不在缓冲池中，对页进行了写操作，并不会立刻将磁盘页加载到缓冲池，而<strong>仅仅记录缓冲变更(<code>buffer changes</code>)，等未来数据被读取时，再将数据合并<code>(merge</code>)恢复到缓冲池中</strong>的技术。写缓冲的目的是降低写操作的磁盘IO，提升数据库性能。</p>
+<p><em>画外音：R了狗了，这个句子，好长。</em></p>
+<p><strong>InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？</strong></p>
+<p>假如要修改页号为40的索引页，而这个页正好<strong>不</strong>在缓冲池内。</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/4.jpg" alt="img"></p>
+<p>加入写缓冲优化后，流程优化为：</p>
+<p>（1）在写缓冲中记录这个操作，一次内存操作；</p>
+<p>（2）写入<code>redo log</code>，一次磁盘顺序写操作；</p>
+<p>其性能与，这个索引页在缓冲池中，相近。</p>
+<p><em>画外音：可以看到，40这一页，并没有加载到缓冲池中。</em></p>
+<p><strong>是否会出现一致性问题呢？</strong></p>
+<p>也不会。</p>
+<p>（1）数据库异常奔溃，能够从<code>redo log</code>中恢复数据；</p>
+<p>（2）写缓冲不只是一个内存结构，它也会被<strong>定期刷盘</strong>到写缓冲系统表空间；</p>
+<p>（3）<strong>数据读取时，有另外的流程，将数据合并到缓冲池</strong>；</p>
+<p>不妨设，稍后的一个时间，有请求查询索引页40的数据。</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/5.jpg" alt="img"></p>
+<p>此时的流程如序号1-3：</p>
+<p>（1）载入索引页，缓冲池未命中，这次磁盘<code>IO</code>不可避免；</p>
+<p>（2）从写缓冲读取相关信息；</p>
+<p>（3）恢复索引页，放到缓冲池<code>LRU</code>里；</p>
+<p><em>画外音：可以看到，40这一页，在真正被读取时，才会被加载到缓冲池中。</em></p>
+<p>还有一个遗漏问题，<strong>为什么写缓冲优化，仅适用于非唯一普通索引页呢？</strong></p>
+<p>如果索引设置了唯一(<code>unique</code>)属性，在进行修改操作时，<code>InnoDB</code>必须进行唯一性检查。也就是说，<strong>索引页即使不在缓冲池，磁盘上的页读取无法避免(否则怎么校验是否唯一？)，此时就应该直接把相应的页放入缓冲池再进行修改，而不应该再整写缓冲这个幺蛾子</strong>。</p>
+<p>除了数据页被访问，<strong>还有哪些场景会触发刷写缓冲中的数据呢？</strong></p>
+<p>还有这么几种情况，会刷写缓冲中的数据：</p>
+<p>（1）有一个后台线程，会认为数据库空闲时；</p>
+<p>（2）数据库缓冲池不够用时；</p>
+<p>（3）数据库正常关闭时；</p>
+<p>（4）<code>redo log</code>写满时；</p>
+<p><em>画外音：几乎不会出现redo log写满，此时整个数据库处于无法写入的不可用状态。</em></p>
+<h2 id="什么业务场景，适合开启InnoDB的写缓冲机制？"><a href="#什么业务场景，适合开启InnoDB的写缓冲机制？" class="headerlink" title="什么业务场景，适合开启InnoDB的写缓冲机制？"></a>什么业务场景，适合开启InnoDB的写缓冲机制？</h2><p>先说什么时候不适合，如上文分析，当：</p>
+<p>（1）<strong>数据库都是唯一索引</strong>；</p>
+<p>（2）或者，<strong>写入一个数据后，会立刻读取它</strong>；</p>
+<p>这两类场景，在写操作进行时（进行后），本来就要进行进行页读取，本来相应页面就要入缓冲池，此时写缓存反倒成了负担，增加了复杂度。</p>
+<p>什么时候适合使用写缓冲，如果：</p>
+<p>（1）<strong>数据库大部分是非唯一索引</strong>；</p>
+<p>（2）<strong>业务是写多读少，或者不是写后立刻读取</strong>；</p>
+<p>可以使用写缓冲，将原本每次写入都需要进行磁盘IO的SQL，优化定期批量写磁盘。</p>
+<p><em>画外音：例如，账单流水业务。</em></p>
+<h2 id="对应InnoDB里哪些参数？"><a href="#对应InnoDB里哪些参数？" class="headerlink" title="对应InnoDB里哪些参数？"></a>对应InnoDB里哪些参数？</h2><p>有两个比较重要的参数。</p>
+<p><img src="//blog.com/2019/08/21/写缓冲change buffer/6.jpg" alt="img"></p>
+<p><strong>参数</strong>：<code>innodb_change_buffer_max_size</code></p>
+<p><strong>介绍</strong>：配置写缓冲的大小，占整个缓冲池的比例，默认值是25%，最大值是50%。</p>
+<p><em>画外音：写多读少的业务，才需要调大这个值，读多写少的业务，25%其实也多了。</em></p>
+<p><strong>参数</strong>：<code>innodb_change_buffering</code></p>
+<p><strong>介绍</strong>：配置哪些写操作启用写缓冲，可以设置成<code>all/none/inserts/deletes</code>等。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><strong>写时，写内存页，write ahead log，保证不丢</strong>。</li>
+<li><strong>多个写内存页以后，批量刷磁盘</strong>。</li>
+<li><strong>用缓冲区避免每次都写磁盘</strong>。</li>
+<li><strong>用顺序写代替随机写，提高写性能</strong>。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/Innodb/" rel="tag"># Innodb</a>
+          
+            <a href="/tags/buffer/" rel="tag"># buffer</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/18/数据库与缓存一致性/" rel="next" title="数据库与缓存一致性">
+                <i class="fa fa-chevron-left"></i> 数据库与缓存一致性
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/21/计数系统架构实践一次搞定/" rel="prev" title="计数系统架构实践一次搞定">
+                计数系统架构实践一次搞定 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写缓冲change-buffer"><span class="nav-number">1.</span> <span class="nav-text">写缓冲change buffer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要写缓冲change-buffer"><span class="nav-number">1.1.</span> <span class="nav-text">为什么需要写缓冲change buffer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是InnoDB的写缓冲？"><span class="nav-number">1.2.</span> <span class="nav-text">什么是InnoDB的写缓冲？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么业务场景，适合开启InnoDB的写缓冲机制？"><span class="nav-number">1.3.</span> <span class="nav-text">什么业务场景，适合开启InnoDB的写缓冲机制？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对应InnoDB里哪些参数？"><span class="nav-number">1.4.</span> <span class="nav-text">对应InnoDB里哪些参数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

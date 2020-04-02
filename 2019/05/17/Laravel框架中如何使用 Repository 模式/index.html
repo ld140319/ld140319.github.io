@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="PHP,Laravel,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Laravel框架中如何使用 Repository 模式&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;若将数据库逻辑都写在model，会造成model的肥大而难以维护，基于SOLID原则，我们应该使用Repository模式辅助model，将相关的数据库逻辑封装在不同的repository，方便中大型项目的维护。 数据库逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="keywords" content="PHP,Laravel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Laravel框架中如何使用 Repository 模式">
+<meta property="og:url" content="http://blog.com/2019/05/17/Laravel框架中如何使用 Repository 模式/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Laravel框架中如何使用 Repository 模式&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;若将数据库逻辑都写在model，会造成model的肥大而难以维护，基于SOLID原则，我们应该使用Repository模式辅助model，将相关的数据库逻辑封装在不同的repository，方便中大型项目的维护。 数据库逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-17T16:02:13.907Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Laravel框架中如何使用 Repository 模式">
+<meta name="twitter:description" content="Laravel框架中如何使用 Repository 模式&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;若将数据库逻辑都写在model，会造成model的肥大而难以维护，基于SOLID原则，我们应该使用Repository模式辅助model，将相关的数据库逻辑封装在不同的repository，方便中大型项目的维护。 数据库逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/17/Laravel框架中如何使用 Repository 模式/">
+
+
+
+
+
+  <title>Laravel框架中如何使用 Repository 模式 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/17/Laravel框架中如何使用 Repository 模式/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Laravel框架中如何使用 Repository 模式</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T12:12:57+08:00">
+                2019-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/" itemprop="url" rel="index">
+                    <span itemprop="name">PHP</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/Laravel/" itemprop="url" rel="index">
+                    <span itemprop="name">Laravel</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Laravel框架中如何使用-Repository-模式"><a href="#Laravel框架中如何使用-Repository-模式" class="headerlink" title="Laravel框架中如何使用 Repository 模式"></a>Laravel框架中如何使用 Repository 模式</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;若将数据库逻辑都写在model，会造成model的肥大而难以维护，基于SOLID原则，我们应该使用Repository模式辅助model，将相关的数据库逻辑封装在不同的repository，方便中大型项目的维护。</p>
+<h2 id="数据库逻辑"><a href="#数据库逻辑" class="headerlink" title="数据库逻辑"></a>数据库逻辑</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在CRUD中，CUD比较稳定，但R的部分则千变万化，大部分的数据库逻辑都在描述R的部分，若将数据库逻辑写在controller或model都不适当，会造成controller与model肥大，造成日后难以维护。</p>
+<h2 id="Model"><a href="#Model" class="headerlink" title="Model"></a>Model</h2><p>使用repository之后，model仅当成Eloquent class即可，不要包含数据库逻辑，仅保留以下部分：</p>
+<ul>
+<li><p><strong>Property</strong>：如$table，$fillable…等。</p>
+</li>
+<li><p><strong>Mutator</strong>:包括mutator与accessor。</p>
+</li>
+<li><p><strong>Method</strong>：relation类的method，如使用hasMany（）与belongsTo（）。</p>
+</li>
+<li><p><strong>注释</strong>：因为Eloquent会根据数据库字段动态产生property与method，等。若使用Laravel IDE Helper，会直接在model加上<a href="https://github.com/property" target="_blank" rel="noopener">@property</a>与<a href="https://github.com/method" target="_blank" rel="noopener">@method</a>描述model的动态property与method。<br><strong>User.php</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">app/User.php</span><br><span class="line"><span class="keyword">namespace</span> <span class="title">MyBlog</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Auth</span>\<span class="title">Authenticatable</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Eloquent</span>\<span class="title">Model</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Auth</span>\<span class="title">Passwords</span>\<span class="title">CanResetPassword</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Foundation</span>\<span class="title">Auth</span>\<span class="title">Access</span>\<span class="title">Authorizable</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">Authenticatable</span> <span class="title">as</span> <span class="title">AuthenticatableContract</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">Access</span>\<span class="title">Authorizable</span> <span class="title">as</span> <span class="title">AuthorizableContract</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">CanResetPassword</span> <span class="title">as</span> <span class="title">CanResetPasswordContract</span>;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* MyBlog\User</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> integer $id</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $name</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $email</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $password</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $remember_token</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> \Carbon\Carbon $created_at</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> \Carbon\Carbon $updated_at</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereId($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereName($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereEmail($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User wherePassword($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereRememberToken($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereCreatedAt($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereUpdatedAt($value)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> <span class="keyword">extends</span> <span class="title">Model</span> <span class="keyword">implements</span> <span class="title">AuthenticatableContract</span>,</span></span><br><span class="line"><span class="class">                                  <span class="title">AuthorizableContract</span>,</span></span><br><span class="line"><span class="class">                                  <span class="title">CanResetPasswordContract</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="keyword">use</span> <span class="title">Authenticatable</span>, <span class="title">Authorizable</span>, <span class="title">CanResetPassword</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The database table used by the model.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@var</span> string</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> $table = <span class="string">'users'</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The attributes that are mass assignable.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@var</span> array</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> $fillable = [<span class="string">'name'</span>, <span class="string">'email'</span>, <span class="string">'password'</span>];</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The attributes excluded from the model's JSON form.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@var</span> array</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> $hidden = [<span class="string">'password'</span>, <span class="string">'remember_token'</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>12行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* MyBlog\User</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> integer $id</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $name</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $email</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $password</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> string $remember_token</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> \Carbon\Carbon $created_at</span></span><br><span class="line"><span class="comment">* <span class="doctag">@property</span> \Carbon\Carbon $updated_at</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereId($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereName($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereEmail($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User wherePassword($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereRememberToken($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereCreatedAt($value)</span></span><br><span class="line"><span class="comment">* <span class="doctag">@method</span> static \Illuminate\Database\Query\Builder|\MyBlog\User whereUpdatedAt($value)</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>IDE-Helper帮我们替model加上注释，让我们可以在PhpStorm的语法提示使用model的property与method</p>
+</li>
+</ul>
+<h2 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h2><p>  初学者常会在controller直接调用model写数据库逻辑：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">index</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  $users = User::where(<span class="string">'age'</span>, <span class="string">'&gt;'</span>, <span class="number">20</span>)</span><br><span class="line">              -&gt;orderBy(<span class="string">'age'</span>)</span><br><span class="line">              -&gt;get();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> view(<span class="string">'users.index'</span>, compact(<span class="string">'users'</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  数据库逻辑是要抓20岁以上的数据。</p>
+<h2 id="Repository实践"><a href="#Repository实践" class="headerlink" title="Repository实践"></a>Repository实践</h2><p>  ​      <strong>在中大型项目，会有几个问题：</strong></p>
+<ol>
+<li><strong>将数据库逻辑写在controller，造成controller的肥大难以维护；</strong></li>
+<li><strong>违反SOLID的单一职责原则：数据库逻辑不应该写在controller；</strong></li>
+<li><strong>controller直接相依于model，使得我们无法对controller做单元测试；</strong></li>
+</ol>
+<p> <strong>比较好的方式是使用repository：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">4. **将model依赖注入到repository；**</span><br><span class="line"></span><br><span class="line">5. **将数据库逻辑写在repository；**</span><br><span class="line"></span><br><span class="line">6. **将repository依赖注入到service；**</span><br></pre></td></tr></table></figure>
+<p><strong>UserRepository.php</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">app/Repositories/UserRepository.php</span><br><span class="line"><span class="keyword">namespace</span> <span class="title">MyBlog</span>\<span class="title">Repositories</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Doctrine</span>\<span class="title">Common</span>\<span class="title">Collections</span>\<span class="title">Collection</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">MyBlog</span>\<span class="title">User</span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserRepository</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"><span class="comment">/** <span class="doctag">@var</span> User 注入的User model */</span></span><br><span class="line"><span class="keyword">protected</span> $user;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* UserRepository constructor.</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> User $user</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(User $user)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> <span class="keyword">$this</span>-&gt;user = $user;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 回传大于？年纪的数据</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> integer $age</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span> Collection</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getAgeLargerThan</span><span class="params">($age)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;user</span><br><span class="line">     -&gt;where(<span class="string">'age'</span>, <span class="string">'&gt;'</span>, $age)</span><br><span class="line">     -&gt;orderBy(<span class="string">'age'</span>)</span><br><span class="line">     -&gt;get();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** <span class="doctag">@var</span> User 注入的User model */</span></span><br><span class="line"><span class="keyword">protected</span> $user;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* UserRepository constructor.</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> User $user</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(User $user)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">$this</span>-&gt;user = $user;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 将相依的User model依赖注入到UserRepository。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 回传大于？年纪的数据</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> integer $age</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span> Collection</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getAgeLargerThan</span><span class="params">($age)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">$this</span>-&gt;user</span><br><span class="line"> -&gt;where(<span class="string">'age'</span>, <span class="string">'&gt;'</span>, $age)</span><br><span class="line"> -&gt;orderBy(<span class="string">'age'</span>)</span><br><span class="line"> -&gt;get();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 将抓20岁以上的数据的数据库逻辑写在getAgeLargerThan（）。<br> 不是使用User facade，而是使用注入的$this-&gt;user<br> <strong>UserController.php</strong><br> <strong>app/Http/Controllers/UserController.php</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Http</span>\<span class="title">Controllers</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">App</span>\<span class="title">Http</span>\<span class="title">Requests</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">MyBlog</span>\<span class="title">Repositories</span>\<span class="title">UserRepository</span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserController</span> <span class="keyword">extends</span> <span class="title">Controller</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"><span class="comment">/** <span class="doctag">@var</span>  UserRepository 注入的UserRepository */</span></span><br><span class="line"><span class="keyword">protected</span> $userRepository;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* UserController constructor.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> UserRepository $userRepository</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(UserRepository $userRepository)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> <span class="keyword">$this</span>-&gt;userRepository = $userRepository;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Display a listing of the resource.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span> \Illuminate\Http\Response</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">index</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> $users = <span class="keyword">$this</span>-&gt;userRepository</span><br><span class="line">     -&gt;getAgeLargerThan(<span class="number">20</span>);</span><br><span class="line"></span><br><span class="line"> <span class="keyword">return</span> view(<span class="string">'users.index'</span>, compact(<span class="string">'users'</span>));</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** <span class="doctag">@var</span>  UserRepository 注入的UserRepository */</span></span><br><span class="line"><span class="keyword">protected</span> $userRepository;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* UserController constructor.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> UserRepository $userRepository</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(UserRepository $userRepository)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">$this</span>-&gt;userRepository = $userRepository;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 将相依的UserRepository依赖注入到UserController。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Display a listing of the resource.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span> \Illuminate\Http\Response</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">index</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">$users = <span class="keyword">$this</span>-&gt;userRepository</span><br><span class="line"> -&gt;getAgeLargerThan(<span class="number">20</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> view(<span class="string">'users.index'</span>, compact(<span class="string">'users'</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 从原本直接相依的User model，改成依赖注入的UserRepository。</p>
+<p> 改用这种写法，有几个优点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. 将数据库逻辑写在repository，解决controller肥大问题。</span><br><span class="line">2. 符合SOLID的单一职责原则：数据库逻辑写在repository，没写在controller。</span><br><span class="line">3. 符合SOLID的依赖反转原则：controller并非直接相依于repository，而是将repository依赖注入进controller。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>实际上建议repository仅依赖注入于service，而不要直接注入在controller，本示例因为还没介绍到servie模式，为了简化起见，所以直接注入于controller。</strong></p>
+<h3 id="是否该建立Repository-Interface？"><a href="#是否该建立Repository-Interface？" class="headerlink" title="是否该建立Repository Interface？"></a>是否该建立Repository Interface？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;理论上使用依赖注入时，应该使用interface，不过interface目的在于抽象化方便抽换，让代码达到开放封闭的要求，但是实务上要抽换repository的机会不高，除非你有抽换数据库的需求，如从MySQL抽换到MongoDB，此时就该建立repository interface。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不过由于我们使用了依赖注入，将来要从class改成interface也很方便，只要在constructor的type hint改成interface即可，维护成本很低，所以在此大可使用repository class即可，不一定得用interface而造成over design，等真正需求来时再重构成interface即可</p>
+<h3 id="是否该使用Query-Scope？"><a href="#是否该使用Query-Scope？" class="headerlink" title="是否该使用Query Scope？"></a>是否该使用Query Scope？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Laravel 4.2就有query scope，到5.1都还留着，它让我们可以将商业逻辑写在model，解决了维护与重复使用的问题。<br>User.php<br>app/User.php</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">MyBlog</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Auth</span>\<span class="title">Authenticatable</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Eloquent</span>\<span class="title">Builder</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Eloquent</span>\<span class="title">Model</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Auth</span>\<span class="title">Passwords</span>\<span class="title">CanResetPassword</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Foundation</span>\<span class="title">Auth</span>\<span class="title">Access</span>\<span class="title">Authorizable</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">Authenticatable</span> <span class="title">as</span> <span class="title">AuthenticatableContract</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">Access</span>\<span class="title">Authorizable</span> <span class="title">as</span> <span class="title">AuthorizableContract</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Auth</span>\<span class="title">CanResetPassword</span> <span class="title">as</span> <span class="title">CanResetPasswordContract</span>;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * (註解:略)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> <span class="keyword">extends</span> <span class="title">Model</span> <span class="keyword">implements</span> <span class="title">AuthenticatableContract</span>,</span></span><br><span class="line"><span class="class">                                    <span class="title">AuthorizableContract</span>,</span></span><br><span class="line"><span class="class">                                    <span class="title">CanResetPasswordContract</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">use</span> <span class="title">Authenticatable</span>, <span class="title">Authorizable</span>, <span class="title">CanResetPassword</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The database table used by the model.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $table = <span class="string">'users'</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The attributes that are mass assignable.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> array</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $fillable = [<span class="string">'name'</span>, <span class="string">'email'</span>, <span class="string">'password'</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The attributes excluded from the model's JSON form.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> array</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $hidden = [<span class="string">'password'</span>, <span class="string">'remember_token'</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 回传大于？年纪的数据</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> Builder $query</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> integer $age</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> Builder</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">scopeGetAgerLargerThan</span><span class="params">($query, $age)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> $query-&gt;where(<span class="string">'age'</span>, <span class="string">'&gt;'</span>, $age)</span><br><span class="line">            -&gt;orderBy(<span class="string">'age'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>42行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 回传大于？年纪的数据</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> Builder $query</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> integer $age</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> Builder</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">scopeGetAgerLargerThan</span><span class="params">($query, $age)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> $query-&gt;where(<span class="string">'age'</span>, <span class="string">'&gt;'</span>, $age)</span><br><span class="line">        -&gt;orderBy(<span class="string">'age'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Query scope必须以scope为prefix，第1个参数为query builder，一定要加，是Laravel要用的。<br>第2个参数以后为自己要传入的参数。<br>由于回传也必须是一个query builder，因此不加上get（）。<br><strong>UserController.php</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">app/Http/Controllers/UserController.php</span><br><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Http</span>\<span class="title">Controllers</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">App</span>\<span class="title">Http</span>\<span class="title">Requests</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">MyBlog</span>\<span class="title">User</span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserController</span> <span class="keyword">extends</span> <span class="title">Controller</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Display a listing of the resource.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> \Illuminate\Http\Response</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">index</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $users = User::getAgerLargerThan(<span class="number">20</span>)-&gt;get();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> view(<span class="string">'users.index'</span>, compact(<span class="string">'users'</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在controller呼叫query scope时，不要加上prefix，由于其本质是query builder，所以还要加上get（）才能抓到Collection。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于query scope是写在model，不是写在controller，所以基本上解决了controller肥大与违反SOLID的单一职责原则的问题，controller也可以重复使用query scope，已经比直接将数据库逻辑写在controller好很多了。</p>
+<p>不过若在中大型项目，仍有以下问题：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. Model已经有原来的责任，若再加上query scope，造成model过于肥大难以维护。</span><br><span class="line">2. 若数据库逻辑很多，可以拆成多repository，可是却很难拆成多model。</span><br><span class="line">3. 单元测试困难，必须面临mock Eloquent的问题。</span><br></pre></td></tr></table></figure>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>实际上可以一开始1个repository对应1个model，但不用太执着于1个repository一定要对应1个model，可将repository视为逻辑上的数据库逻辑类别即可，可以横跨多个model处理，也可以1个model拆成多个repository，端看需求而定</strong>。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Repository使得数据库逻辑从controller或model中解放，不仅更容易维护、更容易扩展、更容易重复使用，且更容易测试。</p>
+<h2 id="Sample-Code"><a href="#Sample-Code" class="headerlink" title="Sample Code"></a>Sample Code</h2><p>完整的示例可以在我的<a href="https://github.com/oomusou/Laravel51Repository_demo" target="_blank" rel="noopener">GitHub</a>上找到。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
+          
+            <a href="/tags/Laravel/" rel="tag"># Laravel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/laravel启动分析/" rel="next" title="laravel启动分析">
+                <i class="fa fa-chevron-left"></i> laravel启动分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/PHP设计模式实现/" rel="prev" title="PHP设计模式实现">
+                PHP设计模式实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Laravel框架中如何使用-Repository-模式"><span class="nav-number">1.</span> <span class="nav-text">Laravel框架中如何使用 Repository 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库逻辑"><span class="nav-number">1.1.</span> <span class="nav-text">数据库逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Model"><span class="nav-number">1.2.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Repository"><span class="nav-number">1.3.</span> <span class="nav-text">Repository</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Repository实践"><span class="nav-number">1.4.</span> <span class="nav-text">Repository实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#是否该建立Repository-Interface？"><span class="nav-number">1.4.1.</span> <span class="nav-text">是否该建立Repository Interface？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#是否该使用Query-Scope？"><span class="nav-number">1.4.2.</span> <span class="nav-text">是否该使用Query Scope？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">1.5.</span> <span class="nav-text">Conclusion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sample-Code"><span class="nav-number">1.6.</span> <span class="nav-text">Sample Code</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

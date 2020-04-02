@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,MySql 性能监控,慢查询,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="线上慢查询优化思路  原文地址：https://mp.weixin.qq.com/s/FwGZVw5UbqEcbtld0pf9tA   一、前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;不管是开发同学还是DBA，想必大家都遇到慢查询(select,update,insert,delete 语句慢)，影响业务稳定性。这里说的慢，有两个含义：  一是比正常的慢，有可能正常">
+<meta name="keywords" content="数据库,MySql,MySql 性能监控,慢查询">
+<meta property="og:type" content="article">
+<meta property="og:title" content="线上慢查询优化思路">
+<meta property="og:url" content="http://blog.com/2019/06/07/线上慢查询优化思路/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="线上慢查询优化思路  原文地址：https://mp.weixin.qq.com/s/FwGZVw5UbqEcbtld0pf9tA   一、前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;不管是开发同学还是DBA，想必大家都遇到慢查询(select,update,insert,delete 语句慢)，影响业务稳定性。这里说的慢，有两个含义：  一是比正常的慢，有可能正常">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/1.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/2.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/3.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/4.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/5.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/6.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/7.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/8.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/9.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/10.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/12.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/11.webp">
+<meta property="og:updated_time" content="2019-06-07T14:26:38.230Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="线上慢查询优化思路">
+<meta name="twitter:description" content="线上慢查询优化思路  原文地址：https://mp.weixin.qq.com/s/FwGZVw5UbqEcbtld0pf9tA   一、前言&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;不管是开发同学还是DBA，想必大家都遇到慢查询(select,update,insert,delete 语句慢)，影响业务稳定性。这里说的慢，有两个含义：  一是比正常的慢，有可能正常">
+<meta name="twitter:image" content="http://blog.com/2019/06/07/线上慢查询优化思路/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/07/线上慢查询优化思路/">
+
+
+
+
+
+  <title>线上慢查询优化思路 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/07/线上慢查询优化思路/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">线上慢查询优化思路</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-07T12:12:57+08:00">
+                2019-06-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySql-性能监控/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql 性能监控</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySql-性能监控/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySql-性能监控/MySql/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySql-性能监控/MySql/数据库/慢查询/" itemprop="url" rel="index">
+                    <span itemprop="name">慢查询</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="线上慢查询优化思路"><a href="#线上慢查询优化思路" class="headerlink" title="线上慢查询优化思路"></a>线上慢查询优化思路</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/FwGZVw5UbqEcbtld0pf9tA" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/FwGZVw5UbqEcbtld0pf9tA</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不管是开发同学还是<code>DBA</code>，想必大家都遇到慢查询(<code>select,update,insert,delete</code> 语句慢)，影响业务稳定性。这里说的<strong>慢</strong>，有两个含义：</p>
+<ul>
+<li>一是<strong>比正常的慢</strong>，有可能正常执行时间是<code>10ms</code>，异常的是<code>100ms</code> 。</li>
+<li>二是<strong>sql执行时间超过设置的慢查询标准，</strong>比如<code>500ms</code>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文从<code>IT</code>架构以及数据库纬度来分析导致<code>sql</code>执行慢的原因/场景，抛砖引玉，有不足之处还请大家多多提建议。</p>
+<h2 id="二、基础知识"><a href="#二、基础知识" class="headerlink" title="二、基础知识"></a>二、基础知识</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分析慢查询之前，我们先看看<code>sql</code>执行的路径,理清楚可能会影响<code>sql</code>执行速度的相关因素。</p>
+<h4 id="执行路径"><a href="#执行路径" class="headerlink" title="执行路径"></a>执行路径</h4><p><code>app ---[proxy]---db</code></p>
+<p><code>app --- db</code></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前大部分的数据库架构基本都是上面的路径，<code>sql</code>从<code>app</code>的应用服务器发起经过<code>proxy</code>然后到<code>db</code>，<code>db</code>执行<code>sql</code>进过<code>proxy</code>或者直接返回给<code>app</code>应用服务器。分析这个过程我们可以得到几个会影响<code>sql</code>执行速度的因素</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1 网络，各个节点之间的网络</span><br><span class="line"></span><br><span class="line">2 OS系统 ，即数据库服务器</span><br><span class="line"></span><br><span class="line">3 MySQL数据库本身</span><br></pre></td></tr></table></figure>
+<h2 id="三、基础系统层面"><a href="#三、基础系统层面" class="headerlink" title="三、基础系统层面"></a>三、基础系统层面</h2><h3 id="网络层面"><a href="#网络层面" class="headerlink" title="网络层面"></a>网络层面</h3><h4 id="网络丢包，重传"><a href="#网络丢包，重传" class="headerlink" title="网络丢包，重传"></a>网络丢包，重传</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实这个比较容易理解。当<code>sql</code>从<code>app</code>端发送到数据库，执行完毕，数据库将结果返回给<code>app</code>端，这个将数据返回给<code>app</code>端的过程本质是网络包传输。<strong>因为链路的不稳定性，如果在传输过程中发送丢包会导致数据包重传，进而增加数据传输时间</strong>。从<code>app</code>端来看，就会觉得<code>sql</code>执行慢。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/1.webp" alt="img"></p>
+<h4 id="网卡满-比如大字段"><a href="#网卡满-比如大字段" class="headerlink" title="网卡满 比如大字段"></a>网卡满 比如大字段</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个场景可能不容易遇到，如果公司业务体量很大，比如平时每天<code>300w</code>订单的电商平台，平台大促(双十一，618)的时候极有可能出现网卡被打满。网卡带宽被占满类似各种节假日高速公路收费站(网卡)拥堵导致车流(数据包传输的速度)行动缓慢。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/2.webp" alt="img"></p>
+<h4 id="网络链路变长"><a href="#网络链路变长" class="headerlink" title="网络链路变长"></a>网络链路变长</h4><blockquote>
+<p>该场景会影响应用纬度的一个事务比如交易下单整体耗时。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们知道每个节点之间的数据传输是需要时间的，比如同城跨机房(<code>15KM</code>)之间的访问一般网络耗时<code>1.5ms</code>左右。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>链路1 [app1]--调用--[app2]---[proxy]---[db] 相比 链路2[app1] -- [proxy] --[db]</code></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;执行一条<code>sql</code>请求会增加<code>[app1]--[app2]</code>之间的网络传输耗时大约<code>3ms</code>。如果一个业务事件包含30个<code>sql</code> ，那么链路1要比链路2 多花至少<code>90ms</code>的时间成本。导致业务整体变慢。</p>
+<h3 id="受到影响IO的场景"><a href="#受到影响IO的场景" class="headerlink" title="受到影响IO的场景"></a>受到影响IO的场景</h3><h4 id="磁盘io被其他任务占用"><a href="#磁盘io被其他任务占用" class="headerlink" title="磁盘io被其他任务占用"></a>磁盘io被其他任务占用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有些备份策略为了减少备份空间的使用，基于<code>xtrabckup</code>备份的时候 使用了<code>compress</code>选项将备份集压缩。当我们需要在数据库服务器上恢复一个比较大的实例，而解压缩的过程需要耗费<code>cpu</code>和占用大量<code>io</code>导致数据库实例所在的磁盘<code>io</code>使用率<code>100%</code>，会影响<code>MySQL</code> 从磁盘获取数据的速度，导致大量慢查询。</p>
+<h4 id="raid卡-充放电，raid-卡重置"><a href="#raid卡-充放电，raid-卡重置" class="headerlink" title="raid卡 充放电，raid 卡重置"></a>raid卡 充放电，raid 卡重置</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RAID</code>卡都有写<code>cache(Battery Backed Write Cache)</code>,写<code>cache</code>对<code>IO</code>性能的提升非常明显,因为掉电会丢失数据,所以必须由电池提供支持。电池会定期充放电,一般为90天左右,当发现电量低于某个阀值时,会<strong>将写<code>cache</code>策略从<code>writeback</code>置为<code>writethrough</code>,相当于写<code>cache</code>会失效,这时如果系统有大量的<code>IO</code>操作,可能会明显感觉到<code>IO</code>响应速度变慢,<code>cpu</code> 队列堆积系统<code>load</code>飙高</strong>。下面是一个<code>raid</code>充放电导致<code>sql</code>慢查的案例。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@rac1#megacli  -FwTermLog dsply -aALL11/08/14  3:36:58: prCallback: PR completed for pd=0a11/08/14  3:36:58: PR cycle complete11/08/14  3:36:58: EVT#14842-11/03/12  3:36:58:  35=Patrol Read complete11/08/14  3:36:58: Next PR scheduled to start at 11/10/12  3:01:59 11/08/14  0:48:04: EVT#14843-11/04/12  0:48:04:  44=Time established as 11/04/12  0:48:04; (25714971 seconds since power on)11/08/14 15:30:13: EVT#14844-11/05/12 15:30:13: 195=BBU disabled; changing WB virtual disks to WT  ---问题的原因11/08/14 15:30:13: Change in current cache property detected for LD : 0!11/08/14 15:30:13: EVT#14845-11/05/12 15:30:13:  54=Policy change on VD 00/0 to [ID=00,dcp=0d,ccp=0c,ap=0,dc=0,dbgi=0,S=0|0] from [ID=00,dcp=0d,ccp=0d,ap=0,dc=0,dbgi=0,S=0|0]</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>raid 卡充电</strong>将磁盘的写策略有<code>write back</code>修改为<code>write through</code>，<code>io</code>性能急剧下降导致<code>sql</code>慢查，进而影响应用层的逻辑处理。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>raid 卡重置</strong> 当<code>raid</code>卡遇到异常时，会进行重置，相当于程序重启，导致系统<code>io hang</code>。此时也会导致<code>sql</code>慢。 下图是生产中遇到的 <code>RAID</code>卡重置案例。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/3.webp" alt="img"></p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/4.webp" alt="img"></p>
+<h4 id="io调度算法"><a href="#io调度算法" class="headerlink" title="io调度算法"></a>io调度算法</h4><p><code>noop</code>（电梯式调度策略）：</p>
+<blockquote>
+<p>​      NOOP实现了一个FIFO队列，它像电梯的工作方式一样对I/O请求进行组织，当有一个新的请求到来时，它将请求合并到最近的请求之后，以此来保证请求同一个介质。NOOP倾向于饿死读而利于写，因此NOOP对于闪存设备，RAM以及嵌入式是最好的选择。</p>
+</blockquote>
+<p><code>deadline</code>（介质时间调度策略）：</p>
+<blockquote>
+<p>​      Deadline确保了在一个截至时间内服务请求，这个截至时间是可调整的，而默认读期限短于写期限。这样就防止了写操作因为不能被读取而饿死的现象。Deadline对数据库类应用是最好的选择。</p>
+</blockquote>
+<p><code>anticipatory</code>（预料I/O调度策略）：</p>
+<blockquote>
+<p>​     本质上与Deadline一样，但在最后一次读操作后，要等待6ms，才能继续进行对其他I/O请求进行调度。它会在每个6ms中插入新的I/O操作，而会将一些小写入流合并成一个大写入流，用写入延时换取最大的写入吞吐量。AS适合于写入较多的环境，比如文件服务器，AS对数据库环境表现很差。</p>
+</blockquote>
+<h3 id="cpu-类型"><a href="#cpu-类型" class="headerlink" title="cpu 类型"></a>cpu 类型</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>cpu</code> 电源策略是控制<code>cpu</code>运行在哪种模式下的耗电策略的，对于数据库服务器推荐<strong>最大性能模式</strong> 以下内容摘自 《<code>Red Hat Enterprise Linux7</code>电源管理指南》</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/5.webp" alt="img"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/pdf/power_management_guide/Red_Hat_Enterprise_Linux-7-Power_Management_Guide-zh-CN.pdf</span><br></pre></td></tr></table></figure>
+<p>指令集  最近遇到的一个性能案例是<code>hw</code>的机器,因为指令集合默认关闭导致性能下降15%。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/6.webp" alt="img"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://support.huawei.com/enterprise/zh/doc/EDOC1000039566/c2662e35</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>自己对CPU并不精通，所以这里的2个点并非CPU优化配置的全部，自建机房的运维朋友依赖官方技术支持的建议或者技术资料的指导来设置cpu相关参数。</p>
+</blockquote>
+<h2 id="四、数据库层面"><a href="#四、数据库层面" class="headerlink" title="四、数据库层面"></a>四、数据库层面</h2><h3 id="没有索引，或者索引不正确"><a href="#没有索引，或者索引不正确" class="headerlink" title="没有索引，或者索引不正确"></a><strong>没有索引，或者索引不正确</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个场景其实比较容易理解。相信每个<code>DBA</code>工作过程中都会或多或少遇到性能案例都和索引设计有关:创建表，没有索引，sql随着数据量增大全表扫描而变慢。这个就不额外举例子了。</p>
+<h3 id="隐式转换"><a href="#隐式转换" class="headerlink" title="隐式转换"></a><strong>隐式转换</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发生隐式转换时，<code>MySQL</code>选择执行计划并不能利用到合适的索引而是选择全表扫描导致慢查询。常见的引发隐式转换的场景如下:</p>
+<blockquote>
+<p>in 参数包含多个类型,<strong>简单说,就是在IN的入口有一个判断, 如果in中的字段类型不兼容, 则认为不可使用索引.</strong>例如 –图</p>
+<p>判断符号左边是字符串，右边是数字 ，比如 where a=1;其中a是字符串</p>
+<p>多表join时，where 左右两边的字段的字符集类型不一致。</p>
+</blockquote>
+<p>推荐阅读 <a href="http://mp.weixin.qq.com/s?__biz=MzI4NjExMDA4NQ==&amp;mid=2648450774&amp;idx=1&amp;sn=efb63a4c5a0396872acb3892a9cd85d8&amp;chksm=f3c97e3cc4bef72a22c59842efe11e410576dc6b3a5fac9d0aab5feab9834a616405498ca1df&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">聊聊隐式转换</a></p>
+<h3 id="执行计划错误"><a href="#执行计划错误" class="headerlink" title="执行计划错误"></a><strong>执行计划错误</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于<code>MySQ</code>L优化器本身的不足，选择执行计划时会导致错误的执行计划使<code>sql</code>走了错误的索引或者没有做索引。比如</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在检查某业务数据库的<code>slowlog</code>时发现一个慢查询,查询时间 1.57s ,检查表结构 <code>where</code>条件字段存在正确的组合索引,正确的情况下优化器应该选择组合索引,而非为啥会导致慢查询呢？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@rac1 10:48:11&gt;explain select id,gmt_create, gmt_modified,order_id,service_id, seller_id,seller_nick, sale_type from lol where seller_id= 1501204 and service_id= 1 and sale_type in(3, 4) and use_status in(3, 4, 5, 6) and process_node_id= 6 order by id desc limit 0,20 \G*************************** 1. row ***************************           id: 1  select_type: SIMPLE        table: lol         type: indexpossible_keys:idx_sellerid,idx_usestatus_saletype,idx_sellerid_saletype,idx_sidustsvidtype          key: PRIMARY  --- 应该选择 idx_sidustsvidtype      key_len: 8          ref: NULL         rows: 3076        Extra: Using where1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>推荐阅读 <a href="https://mp.weixin.qq.com/s?__biz=MzI4NjExMDA4NQ==&amp;mid=2648450419&amp;idx=1&amp;sn=2dfc31ca312e7fdaba4ecff00f34d276&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">order by 主键id导致全表扫描的问题 </a></p>
+<h3 id="数据巨大"><a href="#数据巨大" class="headerlink" title="数据巨大"></a><strong>数据巨大</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;比如<code>select count(*) from t1 where a=&#39;xxxx&#39;;</code> 尽管字段a有索引，但是如果<strong>符合条件的记录数超高10w</strong>，查询速度还是会比较慢。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">select  count(*) from t1 where app = &apos;marketing&apos;;</span><br><span class="line">| count(*) |</span><br><span class="line">|  2671690 |</span><br><span class="line">1 row in set (0.92 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="MetaData-Lock锁等待"><a href="#MetaData-Lock锁等待" class="headerlink" title="MetaData Lock锁等待"></a><strong>MetaData Lock锁等待</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>MDL</code>锁这个场景其实蛮多案例的，比如<code>ddl</code>开始时，针对同一个表的长查询还没结束，后续的写操作都会被堵住导致 <code>thread running</code>飙高。实例整体的<code>sql</code>执行慢。</p>
+<p>案例一 长查询<code>mysqldump</code> 阻塞<code>DDL</code></p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/7.webp" alt="img"></p>
+<p>未提交事务阻塞<code>ddl</code> 阻塞查询</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/8.webp" alt="img"></p>
+<p>推荐阅读 <a href="http://mp.weixin.qq.com/s?__biz=MzI4NjExMDA4NQ==&amp;mid=2648450478&amp;idx=1&amp;sn=86eecbab0af127ab2b75497bf9be8318&amp;chksm=f3c97d44c4bef4523ed28e567634c00e56f443144e1072b303796951e51332acff7c1dff202f&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">MetaData Lock 之三</a></p>
+<h3 id="并发更新同一行"><a href="#并发更新同一行" class="headerlink" title="并发更新同一行"></a><strong>并发更新同一行</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;常见的秒杀场景:数据库并发执行<code>update</code>，更新同一行的动作会被其他已经持有锁的会话堵住，并且需要要进行判断会不会由于自己的加入导致死锁，这个时间复杂度<code>O(n)</code>，如果有1000个请求，每个线程都要检测自己和其他999个线程是否死锁。如果其他线程都没有持有其他锁，约比较<code>50w</code>次(计算方式 <code>999+998+...+1</code>)。这个种锁等待和检查死锁冲突带来巨大的时间成本。 对于<code>OLTP</code>业务高并发大流量访问的情况下，锁等待会直接导致<code>thread running</code>飙高，所有的请求会被阻塞并等待<code>innodb</code>引擎层处理，于是<code>sql</code>会变慢。</p>
+<p>推荐阅读 <a href="https://mp.weixin.qq.com/s?__biz=MzI4NjExMDA4NQ==&amp;mid=2648450906&amp;idx=1&amp;sn=597580c87ee626985da829367e5fd133&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">热点更新优化方案</a></p>
+<h3 id="数据分布不均"><a href="#数据分布不均" class="headerlink" title="数据分布不均"></a><strong>数据分布不均</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实和数据分布相关，常见的比如 字段a 是标记状态0,1，总行数<code>1000w</code>，a=0的值大概几千条，a=1的有<code>999w</code>多。显然执行<code>select count(*) from tab where a=1 ;</code>的查询效率肯定比查询a=0的要慢很多。<code>select count(*) from tab where a=0 ;</code></p>
+<h3 id="sql-姿势不合理"><a href="#sql-姿势不合理" class="headerlink" title="sql 姿势不合理"></a><strong>sql 姿势不合理</strong></h3><p>常见的分页查询 ，使用大分页深度查询。</p>
+<blockquote>
+<p>SELECT * FROM table where kid=1342 and type=1 order id desc limit 149420 ,20;</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该<code>SQL</code>是一个非常典型的排序+分页查询：<code>order by col desc limit N,M</code> ，<code>MySQL</code>执行此类<code>SQL</code>时需要先扫描到<code>N</code>行，然后再去取 <code>M</code>行。对于此类操作，取前面少数几行数据会很快，但是扫描的记录数越多，<code>SQL</code>的性能就会越差，因为<code>N</code>越大，<code>MySQL</code>需要扫描越多的数据来定位到具体的N行，这样耗费大量的<code>IO</code>成本和时间成本。</p>
+<p>针对<code>limit</code> 优化有很多种方式:</p>
+<blockquote>
+<p>1 前端加缓存、搜索，减少落到库的查询操作。比如海量商品可以放到搜索里面，使用瀑布流的方式展现数据，很多电商网站采用了这种方式。</p>
+<p>2 优化SQL 访问数据的方式，直接快速定位到要访问的数据行。</p>
+<p>3 使用书签方式 ，记录上次查询最新/大的id值，向后追溯 M行记录。 对于第二种方式 我们推荐使用”延迟关联”的方法来优化排序操作，何谓”延迟关联” ：通过使用覆盖索引查询返回需要的主键,再根据主键关联原表获得需要的数据。</p>
+</blockquote>
+<p>推荐阅读 <a href="https://mp.weixin.qq.com/s?__biz=MzI4NjExMDA4NQ==&amp;mid=2648450457&amp;idx=1&amp;sn=fff59ff724c2e35cd44875f96436c5ee&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">性能优化之分页查询</a> </p>
+<h3 id="表结构设计"><a href="#表结构设计" class="headerlink" title="表结构设计"></a><strong>表结构设计</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;表结构设计是否合理也是影响sql性能的重要因素之一。以下表格展示了字段类型不同带来的rt性能差异。其中字段c1 为<code>int</code>类型的字段，字段c2则是表名对应的字符串长度类型<code>varchar(200)</code>到<code>varchar(5000)</code> ,还有<code>text</code>字段。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/9.webp" alt="img"></p>
+<blockquote>
+<p>对于读请求，单独查询c1 int类型的性能并无差异。查询字段c2时，随着字段占用的实际字节大小增大，耗费的时间增加，也即rt增大。带宽逐步增大，text的带宽147MB 对于千兆网卡已经满了。</p>
+</blockquote>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/10.webp" alt="img"></p>
+<blockquote>
+<p>对于写请求，因为binlog为row模式，字段长度越大，binlog也越大，网络传输带宽增加。整体rt也增加。</p>
+</blockquote>
+<h3 id="innodb-刷脏页"><a href="#innodb-刷脏页" class="headerlink" title="innodb 刷脏页"></a><strong>innodb 刷脏页</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对数据库运行机制有一定了解的朋友都会知道<code>InnoDB</code>引擎采用<code>Write Ahead Log(WAL)</code>策略，即事务提交时，先写日志(<code>redo log</code>)，再写磁盘。<strong>为了提高IO效率,在写日志的时候会先写buffer，然后集中flush buffer pool 到磁盘。</strong> 这个过程 我们称之为<strong>刷脏页</strong>。官方文档中描述</p>
+<blockquote>
+<p>With heavy DML activity, flushing can fall behind if it is not aggressive enough, resulting in excessive memory use in the buffer pool; or, disk writes due to flushing can saturate your I/O capacity if that mechanism is too aggressive. 这个过程中就有可能导致平时执行很快的SQL突然变慢。</p>
+</blockquote>
+<p>推荐阅读:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">https://dev.mysql.com/doc/refman/5.7/en/innodb-lru-background-flushing.html</span><br><span class="line">https://dev.mysql.com/doc/refman/5.7/en/innodb-performance-adaptive_flushing.html</span><br></pre></td></tr></table></figure>
+<h3 id="undo-没有被purge-回收"><a href="#undo-没有被purge-回收" class="headerlink" title="undo 没有被purge/回收"></a><strong>undo 没有被purge/回收</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>UNDO</code> 日志是 <code>MVCC</code> 的重要组成部分，当一条数据被修改时，<code>UNDO</code> 日志里面保存了记录的历史版本。当事务需要查询记录的历史版本时，可以通过 <code>UNDO</code> 日志构建特定版本的数据。</p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/12.webp" alt="img"></p>
+<p><img src="//blog.com/2019/06/07/线上慢查询优化思路/11.webp" alt="img"></p>
+<blockquote>
+<p>每条行记录上面都有一个指针 DATA_ROLL_PTR，指向最近的 UNDO 记录。同时每条 UNDO 记录包含一个指向前一个 UNDO 记录的指针，这样就构成了一条记录的所有 UNDO 历史的链表。当 UNDO 的记录还存在，那么对应的记录的历史版本就能被构建出来。</p>
+<p>当记录对应的版本通过 DATA_TRX_ID 比对发现不可见时，通过系统列 DATAROLLPTR，找到对应的回滚段记录，继续通过上述判断记录可见的规则，进行判断，如果记录依旧不可见，继续通过回滚段查找之前的版本，直到找到对应可见的版本。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以<strong>当有长事务/异常未提交的情况就会因为其他查询需要构建快照导致<code>undo</code> 不能被及时回收</strong>。<strong>查询遍历的<code>undo</code>越多<code>sql</code>执行的越慢</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/MySql-性能监控/" rel="tag"># MySql 性能监控</a>
+          
+            <a href="/tags/慢查询/" rel="tag"># 慢查询</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/07/mysql binlog应用场景与原理深度剖析/" rel="next" title="mysql binlog应用场景与原理深度剖析">
+                <i class="fa fa-chevron-left"></i> mysql binlog应用场景与原理深度剖析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/07/Redis复制/" rel="prev" title="Redis复制">
+                Redis复制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#线上慢查询优化思路"><span class="nav-number">1.</span> <span class="nav-text">线上慢查询优化思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、前言"><span class="nav-number">1.1.</span> <span class="nav-text">一、前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、基础知识"><span class="nav-number">1.2.</span> <span class="nav-text">二、基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#执行路径"><span class="nav-number">1.2.0.1.</span> <span class="nav-text">执行路径</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、基础系统层面"><span class="nav-number">1.3.</span> <span class="nav-text">三、基础系统层面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络层面"><span class="nav-number">1.3.1.</span> <span class="nav-text">网络层面</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络丢包，重传"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">网络丢包，重传</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网卡满-比如大字段"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">网卡满 比如大字段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络链路变长"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">网络链路变长</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#受到影响IO的场景"><span class="nav-number">1.3.2.</span> <span class="nav-text">受到影响IO的场景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘io被其他任务占用"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">磁盘io被其他任务占用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#raid卡-充放电，raid-卡重置"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">raid卡 充放电，raid 卡重置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#io调度算法"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">io调度算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cpu-类型"><span class="nav-number">1.3.3.</span> <span class="nav-text">cpu 类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、数据库层面"><span class="nav-number">1.4.</span> <span class="nav-text">四、数据库层面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#没有索引，或者索引不正确"><span class="nav-number">1.4.1.</span> <span class="nav-text">没有索引，或者索引不正确</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#隐式转换"><span class="nav-number">1.4.2.</span> <span class="nav-text">隐式转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行计划错误"><span class="nav-number">1.4.3.</span> <span class="nav-text">执行计划错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据巨大"><span class="nav-number">1.4.4.</span> <span class="nav-text">数据巨大</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MetaData-Lock锁等待"><span class="nav-number">1.4.5.</span> <span class="nav-text">MetaData Lock锁等待</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发更新同一行"><span class="nav-number">1.4.6.</span> <span class="nav-text">并发更新同一行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据分布不均"><span class="nav-number">1.4.7.</span> <span class="nav-text">数据分布不均</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql-姿势不合理"><span class="nav-number">1.4.8.</span> <span class="nav-text">sql 姿势不合理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#表结构设计"><span class="nav-number">1.4.9.</span> <span class="nav-text">表结构设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#innodb-刷脏页"><span class="nav-number">1.4.10.</span> <span class="nav-text">innodb 刷脏页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#undo-没有被purge-回收"><span class="nav-number">1.4.11.</span> <span class="nav-text">undo 没有被purge/回收</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

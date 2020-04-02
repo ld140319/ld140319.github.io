@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,Innodb,LRU,算法,数据结构,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Innodb缓冲池  原文地址：https://mp.weixin.qq.com/s/nA6UHBh87U774vu4VvGhyw    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;应用系统分层架构，为了加速数据访问，会把最常访问的数据，放在缓存(cache)里，避免每次都去访问数据库。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;操作系统，">
+<meta name="keywords" content="数据库,MySql,Innodb,LRU,算法,数据结构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Innodb缓冲池">
+<meta property="og:url" content="http://blog.com/2019/06/22/Innodb缓冲池/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Innodb缓冲池  原文地址：https://mp.weixin.qq.com/s/nA6UHBh87U774vu4VvGhyw    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;应用系统分层架构，为了加速数据访问，会把最常访问的数据，放在缓存(cache)里，避免每次都去访问数据库。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;操作系统，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK97qdSBurRUTCWnLQRImCa4enwConyFG6LrgKn6FGdrSBuaQsfN3xRBQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9nDQIXdTHbBD7cFwFnl7hCa8gpTCvXzBFu1U7iauQLyu7QjOkArgHXbA.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK983OBiaVnWMViclXrtPyBsnoJe3lT482kZOQIcK7AJXctFctkJk1FrlDw.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9jF2LGe1LemGaHicwnd1xIiaqZTKsWprA0ftuIibLY0cDHVx2sic6BiaMAWQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9XOiaLNoiaibboSMgGxdofIItGUuicibteYc0SPVJHEc3zUq5Ed24wPxYHibQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK91motSYgHJCN97doViabdM0dgr1iae1cxSENEWsvjML3opibQMMKRPR7cA.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9dohrUhEGPmiaDxHmFzial6iaqwU3Gn4AIVv85IApUsFSLK6ianlSZficIFA.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9K0Dpn58wkKOXrZNfWonE4NAumR9OKCAxta5Hgf3mic7QBbs7QCiadFeA.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK96vE0KSxulgvZicNm4BLOic2grlZYAicfjZCeBiajfpTMu2AcXHvOedZwLA.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9j3taaCODe4IlqAXkAGpO4LAjRjia9Dn9ALSIv0PWGZ6pxZB70hFNiaKg.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK93eicVbOBCktwIPHiarEkIGZ1Vhc9AljFSBKv9veNfFzLpoZhYibAWS7Pw.png">
+<meta property="og:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9TEF67CF9jnN4F6B0TGbSBebsfiaUsjGaLrCialTFQ60AqAiclRN539ssQ.png">
+<meta property="og:updated_time" content="2019-09-13T09:50:01.394Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Innodb缓冲池">
+<meta name="twitter:description" content="Innodb缓冲池  原文地址：https://mp.weixin.qq.com/s/nA6UHBh87U774vu4VvGhyw    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;应用系统分层架构，为了加速数据访问，会把最常访问的数据，放在缓存(cache)里，避免每次都去访问数据库。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;操作系统，">
+<meta name="twitter:image" content="http://blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK97qdSBurRUTCWnLQRImCa4enwConyFG6LrgKn6FGdrSBuaQsfN3xRBQ.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/22/Innodb缓冲池/">
+
+
+
+
+
+  <title>Innodb缓冲池 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/22/Innodb缓冲池/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Innodb缓冲池</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-22T12:12:57+08:00">
+                2019-06-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/" itemprop="url" rel="index">
+                    <span itemprop="name">Innodb</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/LRU/" itemprop="url" rel="index">
+                    <span itemprop="name">LRU</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/LRU/算法/" itemprop="url" rel="index">
+                    <span itemprop="name">算法</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/LRU/算法/数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Innodb缓冲池"><a href="#Innodb缓冲池" class="headerlink" title="Innodb缓冲池"></a>Innodb缓冲池</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/nA6UHBh87U774vu4VvGhyw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/nA6UHBh87U774vu4VvGhyw</a></p>
+</blockquote>
+<p><br></p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK97qdSBurRUTCWnLQRImCa4enwConyFG6LrgKn6FGdrSBuaQsfN3xRBQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;应用系统分层架构，为了加速数据访问，会把最常访问的数据，放在<strong>缓存</strong>(<code>cache</code>)里，避免每次都去访问数据库。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;操作系统，会有<strong>缓冲池</strong>(<code>buffer pool</code>)机制，避免每次访问磁盘，以加速数据的访问。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>MySQL</code>作为一个存储系统，同样具有<strong>缓冲池</strong>(<code>buffer pool</code>)机制，以避免每次查询数据都进行磁盘<code>IO</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;今天，和大家聊一聊<code>InnoDB</code>的缓冲池。</p>
+<h2 id="InnoDB的缓冲池缓存什么？有什么用？"><a href="#InnoDB的缓冲池缓存什么？有什么用？" class="headerlink" title="InnoDB的缓冲池缓存什么？有什么用？"></a>InnoDB的缓冲池缓存什么？有什么用？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>缓存表数据与索引数据，把磁盘上的数据加载到缓冲池，避免每次访问都进行磁盘IO，起到加速访问的作用</strong>。</p>
+<p>速度快，那<strong>为啥不把所有数据都放到缓冲池里</strong>？</p>
+<p>凡事都具备两面性，抛开数据易失性不说，<strong>访问快速的反面是存储容量小</strong>：</p>
+<p>（1）缓存访问快，但容量小，数据库存储了200G数据，缓存容量可能只有64G；</p>
+<p>（2）内存访问快，但容量小，买一台笔记本磁盘有2T，内存可能只有16G；</p>
+<p>因此，<strong>只能把“最热”的数据放到“最近”的地方，以“最大限度”的降低磁盘访问</strong>。</p>
+<h2 id="如何管理与淘汰缓冲池，使得性能最大化呢？"><a href="#如何管理与淘汰缓冲池，使得性能最大化呢？" class="headerlink" title="如何管理与淘汰缓冲池，使得性能最大化呢？"></a>如何管理与淘汰缓冲池，使得性能最大化呢？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在介绍具体细节之前，先介绍下“预读”的概念。</p>
+<h3 id="什么是预读？"><a href="#什么是预读？" class="headerlink" title="什么是预读？"></a>什么是预读？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;磁盘读写，并不是按需读取，而是<strong>按页读取，一次至少读一页数据（一般是4K），如果未来要读取的数据就在页中，就能够省去后续的磁盘IO</strong>，提高效率。</p>
+<h3 id="预读为什么有效？"><a href="#预读为什么有效？" class="headerlink" title="预读为什么有效？"></a>预读为什么有效？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>数据访问，通常都遵循“集中读写”的原则，使用一些数据，大概率会使用附近的数据，这就是所谓的“局部性原理”，它表明提前加载是有效的，确实能够减少磁盘IO</strong>。</p>
+<h3 id="按页-4K-读取，和InnoDB的缓冲池设计有啥关系？"><a href="#按页-4K-读取，和InnoDB的缓冲池设计有啥关系？" class="headerlink" title="按页(4K)读取，和InnoDB的缓冲池设计有啥关系？"></a>按页(4K)读取，和InnoDB的缓冲池设计有啥关系？</h3><p>（1）磁盘访问按页读取能够提高性能，所以<strong>缓冲池一般也是按页缓存数据</strong>；</p>
+<p>（2）预读机制启示了我们，能<strong>把一些“可能要访问”的页提前加入缓冲池，避免未来的磁盘IO操作</strong>；</p>
+<h3 id="InnoDB是以什么算法，来管理这些缓冲页呢？"><a href="#InnoDB是以什么算法，来管理这些缓冲页呢？" class="headerlink" title="InnoDB是以什么算法，来管理这些缓冲页呢？"></a>InnoDB是以什么算法，来管理这些缓冲页呢？</h3><p>最容易想到的，就是<code>LRU(Least recently used)</code>。</p>
+<p><em>画外音：memcache，OS都会用LRU来进行页置换管理，但MySQL的玩法并不一样。</em></p>
+<h2 id="传统的LRU是如何进行缓冲页管理？"><a href="#传统的LRU是如何进行缓冲页管理？" class="headerlink" title="传统的LRU是如何进行缓冲页管理？"></a>传统的LRU是如何进行缓冲页管理？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最常见的玩法是，<strong>把入缓冲池的页放到<code>LRU</code>的头部，作为最近访问的元素，从而最晚被淘汰</strong>。这里又分两种情况：</p>
+<p>（1）<strong>页已经在缓冲池里</strong>，那就只做“移至”<code>LRU</code>头部的动作，而没有页被淘汰；</p>
+<p>（2）<strong>页不在缓冲池里</strong>，除了做“放入”<code>LRU</code>头部的动作，还要做“淘汰”<code>LRU</code>尾部页的动作；</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9nDQIXdTHbBD7cFwFnl7hCa8gpTCvXzBFu1U7iauQLyu7QjOkArgHXbA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，假如管理缓冲池的<code>LRU</code>长度为10，缓冲了页号为1，3，5…，40，7的页。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假如，接下来要访问的数据在页号为4的页中：</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK983OBiaVnWMViclXrtPyBsnoJe3lT482kZOQIcK7AJXctFctkJk1FrlDw.png" alt="img"></p>
+<p>（1）页号为4的页，本来就在缓冲池里；</p>
+<p>（2）把页号为4的页，放到<code>LRU</code>的头部即可，没有页被淘汰；</p>
+<p><em>画外音：<strong>为了减少数据移动，<code>LRU</code>一般用链表实现</strong>。</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假如，再接下来要访问的数据在页号为50的页中：</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9jF2LGe1LemGaHicwnd1xIiaqZTKsWprA0ftuIibLY0cDHVx2sic6BiaMAWQ.png" alt="img"></p>
+<p>（1）页号为50的页，原来不在缓冲池里；</p>
+<p>（2）把页号为50的页，放到<code>LRU</code>头部，同时淘汰尾部页号为7的页；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>传统的LRU缓冲池算法十分直观</strong>，<code>OS，memcache</code>等很多软件都在用，<strong>MySQL为啥这么矫情，不能直接用呢？</strong></p>
+<p>这里有两个问题：</p>
+<p>（1）<strong>预读失效</strong>；</p>
+<p>（2）<strong>缓冲池污染</strong>；</p>
+<h2 id="什么是预读失效？"><a href="#什么是预读失效？" class="headerlink" title="什么是预读失效？"></a>什么是预读失效？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>由于预读(<code>Read-Ahead)</code>，提前把页放入了缓冲池，但最终<code>MySQL</code>并没有从页中读取数据，称为预读失效</strong>。</p>
+<h3 id="如何对预读失效进行优化？"><a href="#如何对预读失效进行优化？" class="headerlink" title="如何对预读失效进行优化？"></a>如何对预读失效进行优化？</h3><p>要优化预读失效，思路是：</p>
+<p>（1）<strong>让预读失败的页，停留在缓冲池<code>LRU</code>里的时间尽可能短</strong>；</p>
+<p>（2）<strong>让真正被读取的页，才挪到缓冲池<code>LRU</code>的头部</strong>；</p>
+<p>以保证，真正被读取的热数据留在缓冲池里的时间尽可能长。</p>
+<h3 id="Innodb针对预读失败的优化"><a href="#Innodb针对预读失败的优化" class="headerlink" title="Innodb针对预读失败的优化"></a>Innodb针对预读失败的优化</h3><p>具体方法是：</p>
+<p>（1）将<code>LRU</code>分为两个部分：</p>
+<ul>
+<li>新生代(<code>new sublist</code>)</li>
+<li>老生代(<code>old sublist</code>)</li>
+</ul>
+<p>（2）<strong>新老生代收尾相连，即：新生代的尾(<code>tail</code>)连接着老生代的头(<code>head</code>)</strong>；</p>
+<p>（3）<strong>新页（例如被预读的页）加入缓冲池时，只加入到老生代头部</strong>：</p>
+<ul>
+<li><strong>如果数据真正被读取（预读成功），才会加入到新生代的头部</strong></li>
+<li><strong>如果数据没有被读取，则会比新生代里的“热数据页”更早被淘汰出缓冲池</strong></li>
+</ul>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9XOiaLNoiaibboSMgGxdofIItGUuicibteYc0SPVJHEc3zUq5Ed24wPxYHibQ.png" alt="img"></p>
+<p>举个例子，整个缓冲池<code>LRU</code>如上图：</p>
+<p>（1）整个<code>LRU</code>长度是10；</p>
+<p>（2）前<code>70%</code>是新生代；</p>
+<p>（3）后<code>30%</code>是老生代；</p>
+<p>（4）新老生代首尾相连；</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK91motSYgHJCN97doViabdM0dgr1iae1cxSENEWsvjML3opibQMMKRPR7cA.png" alt="img"></p>
+<p>假如有一个页号为50的新页被预读加入缓冲池：</p>
+<p>（1）50只会从老生代头部插入，老生代尾部（也是整体尾部）的页会被淘汰掉；</p>
+<p>（2）假设50这一页不会被真正读取，即预读失败，它将比新生代的数据更早淘汰出缓冲池；</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9dohrUhEGPmiaDxHmFzial6iaqwU3Gn4AIVv85IApUsFSLK6ianlSZficIFA.png" alt="img"></p>
+<p>假如50这一页立刻被读取到，例如<code>SQL</code>访问了页内的行<code>row</code>数据：</p>
+<p>（1）它会被立刻加入到新生代的头部；</p>
+<p>（2）新生代的页会被挤到老生代，此时并不会有页面被真正淘汰；</p>
+<p><strong>改进版缓冲池LRU能够很好的解决“预读失败”的问题</strong>。</p>
+<p><em>画外音：但也不要因噎废食，因为害怕预读失败而取消预读策略，大部分情况下，局部性原理是成立的，预读是有效的。</em></p>
+<p><strong>新老生代改进版<code>LRU</code>仍然解决不了缓冲池污染的问题</strong>。</p>
+<h2 id="什么是MySQL缓冲池污染？"><a href="#什么是MySQL缓冲池污染？" class="headerlink" title="什么是MySQL缓冲池污染？"></a>什么是MySQL缓冲池污染？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当某一个<code>SQL</code>语句，<strong>要批量扫描大量数据时，可能导致把缓冲池的所有页都替换出去，导致大量热数据被换出，<code>MySQL</code>性能急剧下降</strong>，这种情况叫缓冲池污染。</p>
+<p>例如，有一个数据量较大的用户表，当执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from user where name like &quot;%shenjian%&quot;;</span><br></pre></td></tr></table></figure>
+<p>虽然结果集可能只有少量数据，但这类<code>like</code>不能命中索引，必须全表扫描，就需要访问大量的页：</p>
+<p>（1）把页加到缓冲池（插入老生代头部）；</p>
+<p>（2）从页里读出相关的<code>row</code>（插入新生代头部）；</p>
+<p>（3）<code>row</code>里的<code>name</code>字段和字符串<code>shenjian</code>进行比较，如果符合条件，加入到结果集中；</p>
+<p>（4）…直到扫描完所有页中的所有<code>row</code>…</p>
+<p>如此一来，<strong>所有的数据页都会被加载到新生代的头部，但只会访问一次，真正的热数据被大量换出</strong>。</p>
+<h3 id="怎么这类扫码大量数据导致的缓冲池污染问题呢？"><a href="#怎么这类扫码大量数据导致的缓冲池污染问题呢？" class="headerlink" title="怎么这类扫码大量数据导致的缓冲池污染问题呢？"></a>怎么这类扫码大量数据导致的缓冲池污染问题呢？</h3><p><code>MySQL</code>缓冲池加入了一个“<strong>老生代停留时间窗口</strong>”的机制：</p>
+<p>（1）假设T=老生代停留时间窗口；</p>
+<p>（2）插入老生代头部的页，即使立刻被访问，并不会立刻放入新生代头部；</p>
+<p>（3）<strong>只有满足“被访问”并且“在老生代停留时间”大于T，才会被放入新生代头部</strong>；</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9K0Dpn58wkKOXrZNfWonE4NAumR9OKCAxta5Hgf3mic7QBbs7QCiadFeA.png" alt="img"></p>
+<p>继续举例，假如批量数据扫描，有51，52，53，54，55等五个页面将要依次被访问。</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK96vE0KSxulgvZicNm4BLOic2grlZYAicfjZCeBiajfpTMu2AcXHvOedZwLA.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果没有“老生代停留时间窗口”的策略，这些批量被访问的页面，会换出大量热数据</strong>。</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9j3taaCODe4IlqAXkAGpO4LAjRjia9Dn9ALSIv0PWGZ6pxZB70hFNiaKg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>加入“老生代停留时间窗口”策略后，短时间内被大量加载的页，并不会立刻插入新生代头部，而是优先淘汰那些，短期内仅仅访问了一次的页</strong>。</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK93eicVbOBCktwIPHiarEkIGZ1Vhc9AljFSBKv9veNfFzLpoZhYibAWS7Pw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>而只有在老生代呆的时间足够久，停留时间大于T，才会被插入新生代头部</strong>。</p>
+<h2 id="上述原理，对应InnoDB里哪些参数？"><a href="#上述原理，对应InnoDB里哪些参数？" class="headerlink" title="上述原理，对应InnoDB里哪些参数？"></a>上述原理，对应InnoDB里哪些参数？</h2><p>有三个比较重要的参数。</p>
+<p><img src="//blog.com/2019/06/22/Innodb缓冲池/YrezxckhYOy291iaib2osRbSOicYG30MaK9TEF67CF9jnN4F6B0TGbSBebsfiaUsjGaLrCialTFQ60AqAiclRN539ssQ.png" alt="img"></p>
+<p><strong>参数</strong>：<code>innodb_buffer_pool_size</code></p>
+<p><strong>介绍</strong>：配置缓冲池的大小，在内存允许的情况下，DBA往往会建议调大这个参数，越多数据和索引放到内存里，数据库的性能会越好。</p>
+<p><strong>参数</strong>：<code>innodb_old_blocks_pct</code></p>
+<p><strong>介绍</strong>：老生代占整个LRU链长度的比例，默认是37，即整个LRU中新生代与老生代长度比例是63:37。</p>
+<p><em>画外音：如果把这个参数设为100，就退化为普通LRU了。</em></p>
+<p><strong>参数</strong>：<code>innodb_old_blocks_time</code></p>
+<p><strong>介绍</strong>：老生代停留时间窗口，单位是毫秒，默认是1000，即同时满足“被访问”与“在老生代停留时间超过1秒”两个条件，才会被插入到新生代头部。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>（1）缓冲池(<code>buffer pool</code>)是一种<strong>常见的降低磁盘访问的机制；</strong></p>
+<p>（2）缓冲池通常<strong>以页(page)为单位缓存数据；</strong></p>
+<p>（3）缓冲池的<strong>常见管理算法是LRU</strong>，<code>memcache，OS，InnoDB</code>都使用了这种算法；</p>
+<p>（4）<code>InnoDB</code>对普通<code>LRU</code>进行了优化：</p>
+<ul>
+<li>将缓冲池分为<strong>老生代和新生代</strong>，入缓冲池的页，优先进入老生代，页被访问，才进入新生代，以解决预读失效的问题</li>
+<li>页被访问，且在老生代<strong>停留时间超过配置阈值</strong>的，才进入新生代，以解决批量数据访问，大量热数据淘汰的问题</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/Innodb/" rel="tag"># Innodb</a>
+          
+            <a href="/tags/LRU/" rel="tag"># LRU</a>
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/数据结构/" rel="tag"># 数据结构</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/21/如何设计高可用的分布式锁/" rel="next" title="如何设计高可用的分布式锁">
+                <i class="fa fa-chevron-left"></i> 如何设计高可用的分布式锁
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/22/注册中心 - SOFARegistr如何支持海量数据/" rel="prev" title="注册中心 - SOFARegistr如何支持海量数据">
+                注册中心 - SOFARegistr如何支持海量数据 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Innodb缓冲池"><span class="nav-number">1.</span> <span class="nav-text">Innodb缓冲池</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB的缓冲池缓存什么？有什么用？"><span class="nav-number">1.1.</span> <span class="nav-text">InnoDB的缓冲池缓存什么？有什么用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何管理与淘汰缓冲池，使得性能最大化呢？"><span class="nav-number">1.2.</span> <span class="nav-text">如何管理与淘汰缓冲池，使得性能最大化呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是预读？"><span class="nav-number">1.2.1.</span> <span class="nav-text">什么是预读？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#预读为什么有效？"><span class="nav-number">1.2.2.</span> <span class="nav-text">预读为什么有效？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#按页-4K-读取，和InnoDB的缓冲池设计有啥关系？"><span class="nav-number">1.2.3.</span> <span class="nav-text">按页(4K)读取，和InnoDB的缓冲池设计有啥关系？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB是以什么算法，来管理这些缓冲页呢？"><span class="nav-number">1.2.4.</span> <span class="nav-text">InnoDB是以什么算法，来管理这些缓冲页呢？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#传统的LRU是如何进行缓冲页管理？"><span class="nav-number">1.3.</span> <span class="nav-text">传统的LRU是如何进行缓冲页管理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是预读失效？"><span class="nav-number">1.4.</span> <span class="nav-text">什么是预读失效？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何对预读失效进行优化？"><span class="nav-number">1.4.1.</span> <span class="nav-text">如何对预读失效进行优化？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Innodb针对预读失败的优化"><span class="nav-number">1.4.2.</span> <span class="nav-text">Innodb针对预读失败的优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是MySQL缓冲池污染？"><span class="nav-number">1.5.</span> <span class="nav-text">什么是MySQL缓冲池污染？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#怎么这类扫码大量数据导致的缓冲池污染问题呢？"><span class="nav-number">1.5.1.</span> <span class="nav-text">怎么这类扫码大量数据导致的缓冲池污染问题呢？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上述原理，对应InnoDB里哪些参数？"><span class="nav-number">1.6.</span> <span class="nav-text">上述原理，对应InnoDB里哪些参数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.7.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

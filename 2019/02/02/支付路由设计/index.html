@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,业务设计,支付网关,支付路由设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="支付路由设计  原文地址：http://doc.cocolian.cn/essay/payment/2017/02/06/account-9-services/  设计目标支付路由在支付系统中的核心作用，除了本职工作路由外，还承担如下职责：  省钱，省钱，省钱，这是支付路由选择支付通道的最主要的规则。 哪个通道省钱，基本会优先考虑这个通道。 提升支付产品的QOS。这体现在系统的可靠性、稳定性、性能">
+<meta name="keywords" content="架构,业务设计,支付网关,支付路由设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="支付路由设计">
+<meta property="og:url" content="http://blog.com/2019/02/02/支付路由设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="支付路由设计  原文地址：http://doc.cocolian.cn/essay/payment/2017/02/06/account-9-services/  设计目标支付路由在支付系统中的核心作用，除了本职工作路由外，还承担如下职责：  省钱，省钱，省钱，这是支付路由选择支付通道的最主要的规则。 哪个通道省钱，基本会优先考虑这个通道。 提升支付产品的QOS。这体现在系统的可靠性、稳定性、性能">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/02/02/支付路由设计/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/02/02/支付路由设计/2.jpg">
+<meta property="og:image" content="http://blog.com/2019/02/02/支付路由设计/1.webp">
+<meta property="og:image" content="http://blog.com/2019/02/02/支付路由设计/2.webp">
+<meta property="og:image" content="http://blog.com/2019/02/02/支付路由设计/3.webp">
+<meta property="og:updated_time" content="2019-02-02T14:56:46.839Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="支付路由设计">
+<meta name="twitter:description" content="支付路由设计  原文地址：http://doc.cocolian.cn/essay/payment/2017/02/06/account-9-services/  设计目标支付路由在支付系统中的核心作用，除了本职工作路由外，还承担如下职责：  省钱，省钱，省钱，这是支付路由选择支付通道的最主要的规则。 哪个通道省钱，基本会优先考虑这个通道。 提升支付产品的QOS。这体现在系统的可靠性、稳定性、性能">
+<meta name="twitter:image" content="http://blog.com/2019/02/02/支付路由设计/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/02/02/支付路由设计/">
+
+
+
+
+
+  <title>支付路由设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/02/02/支付路由设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">支付路由设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-02T12:12:57+08:00">
+                2019-02-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/支付网关/" itemprop="url" rel="index">
+                    <span itemprop="name">支付网关</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/支付网关/支付路由设计/" itemprop="url" rel="index">
+                    <span itemprop="name">支付路由设计</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/支付网关/支付路由设计/业务设计/" itemprop="url" rel="index">
+                    <span itemprop="name">业务设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="支付路由设计"><a href="#支付路由设计" class="headerlink" title="支付路由设计"></a>支付路由设计</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="http://doc.cocolian.cn/essay/payment/2017/02/06/account-9-services/" target="_blank" rel="noopener">http://doc.cocolian.cn/essay/payment/2017/02/06/account-9-services/</a></p>
+</blockquote>
+<h2 id="设计目标"><a href="#设计目标" class="headerlink" title="设计目标"></a>设计目标</h2><p>支付路由在支付系统中的核心作用，除了本职工作路由外，还承担如下职责：</p>
+<ol>
+<li>省钱，省钱，省钱，这是支付路由选择支付通道的最主要的规则。 哪个通道省钱，基本会优先考虑这个通道。</li>
+<li>提升支付产品的QOS。这体现在系统的可靠性、稳定性、性能和可用性上。通过屏蔽掉无法连接、不稳定、性能低的通道来提升这些指标。</li>
+<li>支持营销。通过优先选择有优惠活动的通道，可以帮助业务提升付费客户量。</li>
+<li>降低运营成本。一个设计良好的支付路由，可以大大降低运营投入。</li>
+</ol>
+<h2 id="软件架构"><a href="#软件架构" class="headerlink" title="软件架构"></a>软件架构</h2><p>上述流程，在实现上，参考的架构设计如下：<br><img src="//blog.com/2019/02/02/支付路由设计/1.jpg" alt="支付路由规则"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;支付路由并不会直接对接前端的支付产品或者后端的支付渠道，它是<a href="http://doc.cocolian.cn/essay/2016/11/02/account-7-gateway/" target="_blank" rel="noopener">支付网关</a>的一部分。如果是基于微服务的架构，支付路由作为一个独立的服务，被支付网关所调用。</p>
+<h2 id="影响支付方式的因素-动态调整"><a href="#影响支付方式的因素-动态调整" class="headerlink" title="影响支付方式的因素(动态调整)"></a>影响支付方式的因素(动态调整)</h2><h3 id="计算因子"><a href="#计算因子" class="headerlink" title="计算因子"></a>计算因子</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;路由规则是支付路由的核心。在规则设置上，需要和公司的业务、支付服务的scope来综合考虑。 这里讲述的是通用的规则设计，供具体实现时参考。</p>
+<p><img src="//blog.com/2019/02/02/支付路由设计/2.jpg" alt="支付路由规则"></p>
+<p><strong>产品类型</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当然，路由时首选需要考虑渠道可以支持的支付产品。</p>
+<p><strong>费率</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;费率是路由最重要的一个指标。一般银行是按照额度来收费，部分是按照交易笔数来收费，复杂点的是阶梯收费，比如10万一个费率档次，100万一个费率档次。</p>
+<p><strong>优惠活动</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;银行、第三方支付为了延揽客户，经常也会提供一些补贴给对接的商户，对于使用该渠道的交易进行补贴。而优惠的策略也是多种多样。</p>
+<p><strong>交易限额</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不同通道会限制每次交易的金额上限，以及针对每个账户每天的额度限制。超过这个额度，需要变换通道。</p>
+<p><strong>卡类型</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 通道支持的信用卡或者借记卡。</p>
+<p><strong>通道的QOS</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;掉单率、网络延迟以及接口能支持的TPS，是路由的一个重要衡量因素。</p>
+<p><strong>资金头寸</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;电商公司在银行或者第三方平台的资金头寸。如果资金头寸不足，则不能使用这个通道来执行。</p>
+<p><strong>到账时效</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于转账，资金什么时候到目标账户上，也是影响路由选择的一个因素。</p>
+<p><strong>商户类型</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不同类型的商户可以选择不同的通道。 比如高性能、费率高的通道，预留给高级商户。</p>
+<h3 id="模块设计"><a href="#模块设计" class="headerlink" title="模块设计"></a>模块设计</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;支付路由从架构上来说，一般是作为支付网关的一部分。采用微服务架构时，路由模块作为一个独立的服务来部署，为支付网关所调用。所涉及的模块如上所示:</p>
+<p><strong>支付通道管理</strong></p>
+<p>提供通道支持的产品类型、费率等信息。</p>
+<p><strong>支付通道QOS监控</strong></p>
+<p>收集通道使用过程中的错误信息，接口延迟，超时情况等信息，用于统计QOS。</p>
+<p><strong>资金头寸管理</strong></p>
+<p>用于监控公司在各个支付通道上的头寸，并提供头寸的信息。</p>
+<p><strong>优惠活动</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;银行、第三方支付为了延揽客户，经常也会提供一些补贴给对接的商户，对于使用该渠道的交易进行补贴。而优惠的策略也是多种多样：</p>
+<ol>
+<li>支付策略；针对使用该通道的所有支付进行补贴；仅针对首次使用该通道的用户进行补贴；仅针对绑卡的用户进行补贴。</li>
+<li>补贴时，按照支付金额来设置优惠额度，或者按比例打折。</li>
+<li>一般活动都会设置补贴总额度。该额度用完了就停止补贴。<br>当然，活动也都会设置开始和截止时间。</li>
+</ol>
+<h3 id="路由计算"><a href="#路由计算" class="headerlink" title="路由计算"></a>路由计算</h3><p><strong>人工路由</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;大部分支付系统在接入渠道不多时，人工路由也是一个不错的选择。运营人员指定支付渠道和产品之间的映射关系。出问题时人工切换即可。这种路由的优势是性能高，路由结果可控，出问题时易于排查问题。当接入通道数量增加，营销活动频繁时，人工路由会是一个巨大的投入。</p>
+<p><strong>基于规则的路由</strong></p>
+<p>这是相对比较简单的自动路由设计。 按照业务要求设置各种路由规则，比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if(支付方式==招商借记卡 &amp;&amp; 额度&lt;100) then 目标通道==银联token支付</span><br><span class="line">if(支付方式==招商借记卡 &amp;&amp; 额度&gt;100) then 目标通道==招商快捷支付</span><br></pre></td></tr></table></figure>
+<p>技术上，规则可以使用drools来描述。</p>
+<p><strong>基于权重的路由</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;规则路由的难点各种规则的制定。在路由因子增多的情况下，规则的维护会是一个噩梦。基于权重的路由则可以缓解这个问题。这种计算方式，简单说，就是对各个通道打分，分数最高的就命中。难点在于制定打分的标准以及计算公式。 比如可以从费率、优惠额度、QOS和使用率角度来评分，给优惠额度高一点的比重，这会导致高优惠额度的通道被优先命中。注意每个维度上的计算公式也不是一成不变的，比如使用率和QOS都是动态打分计算。权重的调整是一个挑战，需要在运行过程中不断的调试。必要时，可以使用旁路测试来比较两种算法的优劣。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;路由是支付的核心模块，稳定性是第一要素，其次是性能，最后才是怎么省钱。路由系统的设计，需要和公司业务发展保持一致，并适度超前。简单的if-else实现可以满足大多数场景下的需求。避免在系统建设初期引入过于复杂的路由。</p>
+<h2 id="支付渠道参数如何设计成路由化配置？-配置存库"><a href="#支付渠道参数如何设计成路由化配置？-配置存库" class="headerlink" title="支付渠道参数如何设计成路由化配置？(配置存库)"></a>支付渠道参数如何设计成路由化配置？(配置存库)</h2><p><a href="https://mp.weixin.qq.com/s?__biz=MzU3NDY4NzQwNQ==&amp;mid=2247483700&amp;idx=1&amp;sn=1f8dee1ba7b8232579dd77099e539861&amp;chksm=fd2fd0f6ca5859e0ca524067a1220307b3d23aae67a99527ba46c05aa6f0aaa1c05087f7f7a1&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">支付渠道参数如何设计成路由化配置？</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在开发支付系统的时候，我们经常会涉及到对接多个支付渠道，除常见的支付宝、微信外可能还会根据不同的业务场景对接很多其他的支付渠道，如apple pay、银联甚至一些海外支付渠道如Adyen、Stripe等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;此外，根据公司业务类型的扩展，以及业务范围不断向不同国家、区域的延伸，面临法律、税收、区域产业政策等不同因素的影响，同一个支付渠道也会根据业务类型、国家、区域等因素的不同而申请不同的支付商户号以关联不同的法律主体。</p>
+<p><strong>那么上述情况会究竟造成什么样的问题呢？</strong></p>
+<p><img src="//blog.com/2019/02/02/支付路由设计/1.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从上图杂乱的关系图中可以看到，不同的业务线拥有不同的业务，不同的业务及业务线在又拥有不同的支付方式以及不同的支付渠道商户号，如果业务涉及海外，还会根据不同的国家在具体支付方式选择上有不同的要求及规则。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;而这样的场景也并不是从公司初创开始就这么复杂，而是随着业务发展日积月累产生的，在早期构建支付系统的时候如果不加以考虑，随着业务的快速发展系统就会始终处于一个被动改造的境地，最终代码中充斥着各种个性化逻辑场景，导致维护成本高昂且极容易出错导致线上Bug，并且也会导致支付数据纬度混乱，影响对账、清结算等其他系统逻辑。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;那么怎么设计才能让渠道管理更加具有扩展性呢？</p>
+<p><strong>业务模型的定义</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;根据上述因素，我们可以进行下抽象，具体来说各业务线对于支付平台来说可以理解为<strong>商户</strong>（Merchant），在对接支付系统的时候可以为不同的Merchant开通不同的支付商户ID及接口对接参数；同一个业务线也会有不同的业务，而业务可能比较独立也可能会与其其他业务存在交叉关系，为了更好的厘清关系，我们对同一个商户下的不同业务设计成两个维度：<strong>应用（App）、业务类型（BusiType）。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;另外比较关键的概念就是<strong>渠道（Channel）</strong>了<strong>，</strong>可以为对接的不同支付渠道定义Channel编码进行区分，根据渠道合作方式的不同，有些海外渠道也会存在<strong>子渠道（SubChannel）</strong>的情况<strong>,</strong>这种情况一般是主渠道提供技术接口，而具体不同的子渠道直接对Merchant进行<strong>资金清结算。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不同的渠道也会根据收单场景及不同的<strong>交易类型（TradeType），</strong>如支付、退款、转账、红包等<strong>，</strong>提供不同的<strong>支付方式（PayMethod）</strong>,这些支付方式在国内的情况主要是支付公司根据市场情况的不同而定义的特定支付产品，例如“支付宝App支付”针对移动端App应用的支付场景，“微信小程序支付”针对微信小程序应用的支付场景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;而海外支付渠道则可能会根据不同国家的业务发展情况而定，例如Adyen在香港具备本地收单资质，那么如果希望通过Adyen在香港开展业务，除了可以通过Visa/Master收单外，也可以对接Adyen的ideal（本地化收单）方式。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这里的情况不同渠道表现方式会有所不同，但从我们搭建支付系统的角度看，都可以统一定义为支付方式（PayMethod）。</p>
+<p><img src="//blog.com/2019/02/02/支付路由设计/2.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;采用上述几个概念设计渠道参数配置规则，基本上就能确保支付系统在后续的发展过程中向上能够优雅地适配业务发展的不同要求，向下可以从容扩展不同的渠道了。并且通过这些定义可以有效地区分支付数据的维度，使得后续的对账清结算处理更加便捷。</p>
+<p>考虑到海外情况及渠道接口版本升级问题，可以再加上<strong>国家（Country）、接口版本（Version）</strong>两个要素。</p>
+<p><strong>配置模型设计</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过上述业务模型的定义，在系统实现时我们需要设计一套配置表，并在渠道对接编码时按照配置逻辑进行接口参数路由动作，从而让系统具备渠道管理的配置能力。</p>
+<p><img src="//blog.com/2019/02/02/支付路由设计/3.webp" alt="img"></p>
+<p><strong>这里还需要理一下，有点不清楚</strong>，以下是我暂时的理解</p>
+<p><strong>渠道  =》 商户  =》交易类型  =》 配置</strong></p>
+<p><strong>这里的交易类型指的是：支付、退款、转账、红包……</strong></p>
+<p><strong>这里的业务类型指的是：机票、酒店、火车票……</strong></p>
+<p><strong>应用、业务类型、国家决定了第一步可以选择那些商户，然后交易类型决定读取那个配置</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;基于上述配置模型，我们就可以在业务与渠道参数配置上实现相对灵活的配置与路由了。假设，如果我们在完成微信渠道支付接口的对接并满足了业务A的支付需求，如果业务B也需要采用微信进行支付，并且申请的是独立于业务线A的支付商户信息，那么此时我们只需要完成渠道参数配置表的配置，并且在开通业务线B商户ID及应用ID后进行路由规则设置，系统即可完成支持，而不需要进行硬编码的改造。</p>
+<p><strong>安全风险及其他</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;采用配置化方案设计，可以让支付系统更好地适配后期业务发展带来的复杂性，但是我们也需要考虑到操作风险，根据以往经验，不受控的便捷往往会带来危险，试想下如果因为配置错误，原本应该收到B账户的钱，被收到了A账户，而这两个账户主体完全不同，这种情况不仅会导致资金问题、也会影响支付系统后面的逻辑，例如退款问题等。所以，我们在采用这样方案的同时，也需要制定严格的操作规程，在配置系统上设计更为严格的审查流程。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/业务设计/" rel="tag"># 业务设计</a>
+          
+            <a href="/tags/支付网关/" rel="tag"># 支付网关</a>
+          
+            <a href="/tags/支付路由设计/" rel="tag"># 支付路由设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/30/系统负载/" rel="next" title="系统负载">
+                <i class="fa fa-chevron-left"></i> 系统负载
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/12/ZooKeeper 的功能和原理/" rel="prev" title="ZooKeeper 的功能和原理">
+                ZooKeeper 的功能和原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#支付路由设计"><span class="nav-number">1.</span> <span class="nav-text">支付路由设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计目标"><span class="nav-number">1.1.</span> <span class="nav-text">设计目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#软件架构"><span class="nav-number">1.2.</span> <span class="nav-text">软件架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#影响支付方式的因素-动态调整"><span class="nav-number">1.3.</span> <span class="nav-text">影响支付方式的因素(动态调整)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#计算因子"><span class="nav-number">1.3.1.</span> <span class="nav-text">计算因子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模块设计"><span class="nav-number">1.3.2.</span> <span class="nav-text">模块设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#路由计算"><span class="nav-number">1.3.3.</span> <span class="nav-text">路由计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#支付渠道参数如何设计成路由化配置？-配置存库"><span class="nav-number">1.4.</span> <span class="nav-text">支付渠道参数如何设计成路由化配置？(配置存库)</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,微服务,RPC,分布式系统,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="RPC 框架的可靠性设计1. 背景1.1 分布式调用引入的故障&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在传统的单体架构中，业务服务调用都是本地方法调用，不会涉及到网络通信、协议栈、消息序列化和反序列化等，当使用 RPC框架将业务由单体架构改造成分布式系统之后，本地方法调用将演变成跨进程的远程调用，会引入一些新的故障点，如下所示：  RPC 调用引入的潜在故障点 新引">
+<meta name="keywords" content="架构,微服务,RPC,分布式系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RPC 框架的可靠性设计">
+<meta property="og:url" content="http://blog.com/2019/07/27/RPC 框架的可靠性设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="RPC 框架的可靠性设计1. 背景1.1 分布式调用引入的故障&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在传统的单体架构中，业务服务调用都是本地方法调用，不会涉及到网络通信、协议栈、消息序列化和反序列化等，当使用 RPC框架将业务由单体架构改造成分布式系统之后，本地方法调用将演变成跨进程的远程调用，会引入一些新的故障点，如下所示：  RPC 调用引入的潜在故障点 新引">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/1.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/2.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/3.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/4.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/5.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/6.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/7.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/8.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/9.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/10.webp">
+<meta property="og:updated_time" content="2019-07-28T09:53:52.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RPC 框架的可靠性设计">
+<meta name="twitter:description" content="RPC 框架的可靠性设计1. 背景1.1 分布式调用引入的故障&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在传统的单体架构中，业务服务调用都是本地方法调用，不会涉及到网络通信、协议栈、消息序列化和反序列化等，当使用 RPC框架将业务由单体架构改造成分布式系统之后，本地方法调用将演变成跨进程的远程调用，会引入一些新的故障点，如下所示：  RPC 调用引入的潜在故障点 新引">
+<meta name="twitter:image" content="http://blog.com/2019/07/27/RPC%20框架的可靠性设计/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/27/RPC 框架的可靠性设计/">
+
+
+
+
+
+  <title>RPC 框架的可靠性设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/27/RPC 框架的可靠性设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">RPC 框架的可靠性设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-27T12:12:57+08:00">
+                2019-07-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式系统</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/RPC/" itemprop="url" rel="index">
+                    <span itemprop="name">RPC</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="RPC-框架的可靠性设计"><a href="#RPC-框架的可靠性设计" class="headerlink" title="RPC 框架的可靠性设计"></a>RPC 框架的可靠性设计</h1><h2 id="1-背景"><a href="#1-背景" class="headerlink" title="1. 背景"></a>1. 背景</h2><h3 id="1-1-分布式调用引入的故障"><a href="#1-1-分布式调用引入的故障" class="headerlink" title="1.1 分布式调用引入的故障"></a>1.1 分布式调用引入的故障</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在传统的单体架构中，业务服务调用都是本地方法调用，不会涉及到网络通信、协议栈、消息序列化和反序列化等，当使用 <code>RPC</code>框架将业务由单体架构改造成分布式系统之后，本地方法调用将演变成跨进程的远程调用，会引入一些新的故障点，如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/1.webp" alt="img"></p>
+<p><em>RPC 调用引入的潜在故障点</em></p>
+<p>新引入的潜在故障点包括：</p>
+<p>1．<strong>消息的序列化和反序列化故障</strong>，例如，不支持的数据类型。</p>
+<p>2．<strong>路由故障</strong>：包括服务的订阅、发布故障，服务实例故障之后没有及时刷新路由表，导致 <code>RPC</code> 调用仍然路由到故障节点。</p>
+<p>3．<strong>网络通信故障</strong>，包括网络闪断、网络单通、丢包、客户端浪涌接入等。</p>
+<h3 id="1-2-第三方服务依赖"><a href="#1-2-第三方服务依赖" class="headerlink" title="1.2 第三方服务依赖"></a>1.2 第三方服务依赖</h3><p><code>RPC</code>服务通常会依赖第三方服务，包括数据库服务、文件存储服务、缓存服务、消息队列服务等</p>
+<p>这种第三方依赖同时也引入了潜在的故障：</p>
+<p>1．<strong>网络通信类故障</strong>, 如果采用 <code>BIO</code>调用第三方服务，很有可能被阻塞。</p>
+<p>2．<strong>“雪崩效用”导致的级联故障</strong>，例如服务端处理慢导致客户端线程被阻塞。</p>
+<p>3．<strong>第三方不可用导致 <code>RPC</code> 调用失败</strong>。</p>
+<p><strong>典型的第三方依赖示例如下：</strong></p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/2.webp" alt="img"></p>
+<p><em>RPC 服务端的第三方依赖</em></p>
+<h2 id="2-通信层的可靠性设计"><a href="#2-通信层的可靠性设计" class="headerlink" title="2. 通信层的可靠性设计"></a>2. 通信层的可靠性设计</h2><h3 id="2-1-链路有效性检测"><a href="#2-1-链路有效性检测" class="headerlink" title="2.1  链路有效性检测"></a>2.1  链路有效性检测</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当网络发生单通、连接被防火墙 <code>Hang</code> 住、长时间 <code>GC</code> 或者通信线程发生非预期异常时，会导致链路不可用且不易被及时发现。特别是异常发生在凌晨业务低谷期间，当早晨业务高峰期到来时，由于链路不可用会导致瞬间的大批量业务失败或者超时，这将对系统的可靠性产生重大的威胁。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从技术层面看，<strong>要解决链路的可靠性问题，必须周期性的对链路进行有效性检测</strong>。<strong>目前最流行和通用的做法就是心跳检测</strong>。</p>
+<p>心跳检测机制分为三个层面：</p>
+<ol>
+<li><p><strong><code>TCP</code> 层面的心跳检测，即 <code>TCP</code> 的<code>Keep-Alive</code>机制，它的作用域是整个 <code>TCP</code>协议栈</strong>。</p>
+</li>
+<li><p><strong>协议层的心跳检测，主要存在于长连接协议中</strong>。例如 <code>MQTT</code>协议。</p>
+</li>
+<li><p><strong>应用层的心跳检测，它主要由各业务产品通过约定方式定时给对方发送心跳消息实现</strong>。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>心跳检测的目的就是确认当前链路可用，对方活着并且能够正常接收和发送消息</strong>。做为高可靠的 <code>NIO</code>框架，<code>Netty</code>也提供了心跳检测机制，下面我们一起熟悉下心跳的检测原理。</p>
+<p><strong>心跳检测的原理示意图如下：</strong></p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/3.webp" alt="img"></p>
+<p><em>链路心跳检测</em></p>
+<p>不同的协议，心跳检测机制也存在差异，归纳起来主要分为两类：</p>
+<p>1．<strong><code>Ping-Pong</code>型心跳</strong>：由通信一方定时发送 <code>Ping</code>消息，对方接收到 <code>Ping</code> 消息之后，立即返回<code>Pong</code>应答消息给对方，属于请求 - 响应型心跳。</p>
+<p>2．<strong><code>Ping-Ping</code> 型心跳</strong>：不区分心跳请求和应答，由通信双方按照约定定时向对方发送心跳 <code>Ping</code> 消息，它属于双向心跳。</p>
+<p>心跳检测策略如下：</p>
+<p>1．<strong>连续 N 次心跳检测都没有收到对方的 <code>Pong</code>应答消息或者<code>Ping</code>请求消息，则认为链路已经发生逻辑失效，这被称作心跳超时</strong>。</p>
+<p>2．读取和发送心跳消息的时候如何直接发生了 <code>IO</code>异常，说明链路已经失效，这被称为心跳失败。</p>
+<p>无论发生心跳超时还是心跳失败，都需要<strong>关闭链路，由客户端发起重连操作，保证链路能够恢复正常</strong>。</p>
+<p><code>Netty</code> 的心跳检测实际上是利用了链路空闲检测机制实现的，它的空闲检测机制分为三种：</p>
+<p>1．<strong>读空闲</strong>，链路持续时间 t 没有读取到任何消息。</p>
+<p>2．<strong>写空闲</strong>，链路持续时间 t 没有发送任何消息。</p>
+<p>3．<strong>读写空闲</strong>，链路持续时间 t 没有接收或者发送任何消息。</p>
+<p><code>Netty</code> 的<strong>默认读写空闲机制是发生超时异常，关闭连接</strong>，但是，我们可以定制它的超时实现机制，以便支持不同的用户场景，链路空闲接口定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">channelIdle</span><span class="params">(ChannelHandlerContext ctx, IdleStateEvent evt)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">	ctx.fireUserEventTriggered(evt);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;链路空闲的时候并没有关闭链路，而是触发 <code>IdleStateEvent</code> 事件，<strong>用户订阅 <code>IdleStateEvent</code> 事件，用于自定义逻辑处理，例如关闭链路、客户端发起重新连接、告警和打印日志等</strong>。利用 <code>Netty</code> 提供的链路空闲检测机制，可以非常灵活的实现链路空闲时的有效性检测。</p>
+<h3 id="2-2-客户端断连重连"><a href="#2-2-客户端断连重连" class="headerlink" title="2.2 客户端断连重连"></a>2.2 客户端断连重连</h3><p>当发生如下异常时，客户端需要释放资源，重新发起连接：</p>
+<p>1．<strong>服务端因为某种原因，主动关闭连接，客户端检测到链路被正常关闭</strong>。</p>
+<p>2．<strong>服务端因为宕机等故障，强制关闭连接，客户端检测到链路被 <code>Rest</code> 掉</strong>。</p>
+<p>3．<strong>心跳检测超时，客户端主动关闭连接</strong>。</p>
+<p>4．<strong>客户端因为其它原因（例如解码失败），强制关闭连接</strong>。</p>
+<p>5．<strong>网络类故障，例如网络丢包、超时、单通等，导致链路中断</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端检测到链路中断后，等待 <code>INTERVAL</code>时间，由客户端发起重连操作，如果重连失败，间隔周期 <code>INTERVAL</code> 后再次发起重连，直到重连成功。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>为了保证服务端能够有充足的时间释放句柄资源，在首次断连时客户端需要等待<code>INTERVAL</code> 时间之后再发起重连，而不是失败后就立即重连</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了保证句柄资源能够及时释放，无论什么场景下的重连失败，客户端都必须保证自身的资源被及时释放，包括但不限于 <code>SocketChannel</code>、<code>Socket</code> 等。重连失败后，需要打印异常堆栈信息，方便后续的问题定位。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用 <code>Netty Channel</code> 提供的 <code>CloseFuture</code>，可以非常方便的检测链路状态，一旦链路关闭，相关事件即被触发，可以重新发起连接操作，代码示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">	future.channel().closeFuture().sync();</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">	<span class="comment">// 所有资源释放完成之后，清空资源，再次发起重连操作</span></span><br><span class="line">	executor.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                TimeUnit.SECONDS.sleep(<span class="number">3</span>);<span class="comment">//3 秒之后发起重连，等待句柄释放</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 发起重连操作</span></span><br><span class="line">                    connect(NettyConstant.PORT, NettyConstant.REMOTEIP);         </span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    ...... 异常处理相关代码省略</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-缓存重发"><a href="#2-3-缓存重发" class="headerlink" title="2.3 缓存重发"></a>2.3 缓存重发</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当我们调用消息发送接口的时候，消息并没有真正被写入到<code>Socket</code>中，而是<strong>先放入<code>NIO</code>通信框架的消息发送队列中，由 <code>Reactor</code>线程扫描待发送的消息队列，异步的发送给通信对端</strong>。假如很不幸，消息队列中积压了部分消息，此时链路中断，这会导致部分消息并没有真正发送给通信对端，示例如下：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/4.webp" alt="img"></p>
+<p><em>链路中断导致积压消息没有发送</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发生此故障时，我们希望 <code>NIO</code> 框架能够自动实现消息缓存和重新发送，遗憾的是作为基础的 <code>NIO</code>通信框架，无论是 <code>Mina</code> 还是 <code>Netty</code>，都没有提供该功能，需要通信框架自己封装实现.</p>
+<p>基于 <code>Netty</code> 的实现策略如下：</p>
+<p>1．调用 <code>Netty ChannelHandlerContext</code> 的 <code>write</code> 方法时，返回<code>ChannelFuture</code>对象，我们在 <code>ChannelFuture</code> 中注册发送结果监听 <code>Listener</code>。</p>
+<p>2．在 <code>Listener</code> 的 <code>operationComplete</code> 方法中判断操作结果，如果操作不成功，将之前发送的消息对象添加到重发队列中。</p>
+<p>3．链路重连成功之后，根据策略，将缓存队列中的消息重新发送给通信对端。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要指出的是，<strong>并非所有场景都需要通信框架做重发</strong>，例如服务框架的客户端，如果某个服务提供者不可用，会自动切换到下一个可用的服务提供者之上。假定是链路中断导致的服务提供者不可用，即便链路重新恢复，也没有必要将之前积压的消息重新发送，因为消息已经通过<code>FailOver</code> 机制切换到另一个服务提供者处理。所以，<strong>消息缓存重发只是一种策略，通信框架应该支持链路级重发策略</strong>。</p>
+<h3 id="2-4-客户端超时保护"><a href="#2-4-客户端超时保护" class="headerlink" title="2.4 客户端超时保护"></a>2.4 客户端超时保护</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在传统的同步阻塞编程模式下，客户端 <code>Socket</code> 发起网络连接，往往需要<strong>指定连接超时时间</strong>，这样做的目的主要有两个：</p>
+<p>1．在同步阻塞<code>I/O</code>模型中，连接操作是同步阻塞的，如果不设置超时时间，客户端<code>I/O</code> 线程可能会被长时间阻塞，这会导致系统可用 <code>I/O</code>线程数的减少。</p>
+<p>2．业务层需要：大多数系统都会对业务流程执行时间有限制，例如 <code>WEB</code> 交互类的响应时间要小于 3S。客户端设置连接超时时间是为了实现业务层的超时。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 <code>NIO</code>的 <code>SocketChannel</code>，在非阻塞模式下，它会直接返回连接结果，如果没有连接成功，也没有发生 <code>I/O</code>异常，则需要将<code>SocketChannel</code>注册到<code>Selector</code> 上监听连接结果。所以，<strong>异步连接的超时无法在<code>API</code>层面直接设置，而是需要通过用户自定义定时器来主动监测</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Netty</code> 在创建 <code>NIO</code> 客户端时，支持设置连接超时参数。<code>Netty</code> 的客户端连接超时参数与其它常用的 <code>TCP</code> 参数一起配置，使用起来非常方便，上层用户不用关心底层的超时实现机制。这既满足了用户的个性化需求，又实现了故障的分层隔离。</p>
+<h3 id="2-5-针对客户端的并发连接数流控"><a href="#2-5-针对客户端的并发连接数流控" class="headerlink" title="2.5 针对客户端的并发连接数流控"></a>2.5 针对客户端的并发连接数流控</h3><p>以 <code>Netty</code> 的 <code>HTTPS</code>服务端为例，针对客户端的并发连接数流控原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/5.webp" alt="img"></p>
+<p><em>服务端 HTTS 连接数流控</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于 <code>Netty</code> 的 <code>Pipeline</code>机制，可以对 <code>SSL</code>握手成功、<code>SSL</code>连接关闭做切面拦截（类似于 <code>Spring</code> 的 <code>AOP</code> 机制，但是没采用反射机制，性能更高），通过流控切面接口，对 <code>HTTPS</code>连接做计数，根据计数器做流控↓↓↓</p>
+<p>服务端的流控算法如下：</p>
+<p>1．获取流控阈值。</p>
+<p>2．从全局上下文中获取当前的并发连接数，与流控阈值对比，如果小于流控阈值，则对当前的计数器做原子自增，允许客户端连接接入。</p>
+<p>3．如果等于或者大于流控阈值，则抛出流控异常给客户端。</p>
+<p>4．<code>SSL</code> 连接关闭时，获取上下文中的并发连接数，做原子自减。</p>
+<p><strong>在实现服务端流控时，需要注意如下几点：</strong></p>
+<p>1．流控的 <code>ChannelHandler</code> 声明为 <a href="mailto:`@ChannelHandler.Sharable" target="_blank" rel="noopener">`@ChannelHandler.Sharable</a><code>，这样全局创建一个流控实例，就可以在所有的</code>SSL` 连接中共享。</p>
+<p>2．通过 <code>userEventTriggered</code>方法拦截 <code>SslHandshakeCompletionEvent</code> 和 <code>SslCloseCompletionEvent</code>事件，在 <code>SSL</code>握手成功和 <code>SSL</code>连接关闭时更新流控计数器。</p>
+<p>3．流控并不是单针对 <code>ESTABLISHED</code> 状态的 <code>HTTP</code> 连接，而是针对所有状态的连接，因为客户端关闭连接，并不意味着服务端也同时关闭了连接，只有 <code>SslCloseCompletionEvent</code>事件触发时，服务端才真正的关闭了 <code>NioSocketChannel</code>，<code>GC</code>才会回收连接关联的内存。</p>
+<p>4．流控 <code>ChannelHandler</code> 会被多个<code>NioEventLoop</code> 线程调用，因此对于相关的计数器更新等操作，要保证并发安全性，避免使用全局锁，可以通过原子类等提升性能。</p>
+<h3 id="2-6-内存保护"><a href="#2-6-内存保护" class="headerlink" title="2.6 内存保护"></a><strong>2.6 内存保护</strong></h3><p><code>NIO</code>通信的内存保护主要集中在如下几点：</p>
+<ol>
+<li><p><strong>链路总数的控制</strong>：每条链路都包含接收和发送缓冲区，链路个数太多容易导致内存溢出。</p>
+</li>
+<li><p><strong>单个缓冲区的上限控制</strong>：防止非法长度或者消息过大导致内存溢出。</p>
+</li>
+<li><p><strong>缓冲区内存释放</strong>：防止因为缓冲区使用不当导致的内存泄露。</p>
+</li>
+<li><p><strong><code>NIO</code> 消息发送队列的长度上限控制</strong>。</p>
+</li>
+</ol>
+<p>当我们对消息进行解码的时候，需要创建缓冲区。缓冲区的创建方式通常有两种：</p>
+<ol>
+<li><p><strong>容量预分配，在实际读写过程中如果不够再扩展</strong>。</p>
+</li>
+<li><p><strong>根据协议消息长度创建缓冲区</strong>。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际的商用环境中，如果遇到畸形码流攻击、协议消息编码异常、消息丢包等问题时，可能会解析到一个超长的长度字段。笔者曾经遇到过类似问题，报文长度字段值竟然是 2G 多，由于代码的一个分支没有对长度上限做有效保护，结果导致内存溢出。系统重启后几秒内再次内存溢出，幸好及时定位出问题根因，险些酿成严重的事故。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Netty</code> 提供了编解码框架，因此对于解码缓冲区的上限保护就显得非常重要。下面，我们看下 <code>Netty</code>是如何对缓冲区进行上限保护的：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先，在内存分配的时候指定缓冲区长度上限：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">* Allocate a &#123;<span class="doctag">@link</span> ByteBuf&#125; with the given initial capacity and the given</span></span><br><span class="line"><span class="comment">* maximal capacity. If it is a direct or heap buffer depends on the actual</span></span><br><span class="line"><span class="comment">* implementation.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function">ByteBuf <span class="title">buffer</span><span class="params">(<span class="keyword">int</span> initialCapacity, <span class="keyword">int</span> maxCapacity)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其次，在对缓冲区进行写入操作的时候，如果缓冲区容量不足需要扩展，首先对最大容量进行判断，如果扩展后的容量超过上限，则拒绝扩展：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ByteBuf <span class="title">capacity</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">	ensureAccessible();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (newCapacity &lt; <span class="number">0</span> || newCapacity &gt; maxCapacity()) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"newCapacity: "</span> + newCapacity);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在消息解码的时候，对消息长度进行判断，如果超过最大容量上限，则抛出解码异常，拒绝分配内存，以<code>LengthFieldBasedFrameDecoder</code>的<code>decode</code>方法为例进行说明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (frameLength &gt; maxFrameLength) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> discard = frameLength - in.readableBytes();</span><br><span class="line">    tooLongFrameLength = frameLength;</span><br><span class="line">    <span class="keyword">if</span> (discard &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    	in.skipBytes((<span class="keyword">int</span>) frameLength);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	discardingTooLongFrame = <span class="keyword">true</span>;</span><br><span class="line">	bytesToDiscard = discard;</span><br><span class="line">	in.skipBytes(in.readableBytes());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">failIfNecessary(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="keyword">null</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="img"></p>
+<h2 id="3-RPC-调用层的可靠性设计"><a href="#3-RPC-调用层的可靠性设计" class="headerlink" title="3. RPC 调用层的可靠性设计"></a>3. RPC 调用层的可靠性设计</h2><h3 id="3-1-RPC-调用异常场景"><a href="#3-1-RPC-调用异常场景" class="headerlink" title="3.1 RPC 调用异常场景"></a>3.1 RPC 调用异常场景</h3><p><code>RPC</code> 调用过程中除了通信层的异常，通常也会遇到如下几种故障：</p>
+<ol>
+<li><p><strong>服务路由失败</strong></p>
+</li>
+<li><p><strong>服务端超时</strong></p>
+</li>
+<li><p><strong>服务端调用失败</strong></p>
+</li>
+</ol>
+<p><code>RPC</code> 框架需要能够针对上述常见的异常做容错处理，以提升业务调用的可靠性。</p>
+<h4 id="3-1-1-服务路由失败"><a href="#3-1-1-服务路由失败" class="headerlink" title="3.1.1 服务路由失败"></a>3.1.1 服务路由失败</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code>客户端通常会<strong>基于订阅 / 发布的机制获取服务端的地址列表，并将其缓存到本地</strong>，<code>RPC</code>调用时，根据负载均衡策略从本地缓存的路由表中获取到一个唯一的服务端节点发起调用，原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/6.webp" alt="img"></p>
+<p><em>基于订阅发布机制的 RPC 调用</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过缓存的机制能够提升 <code>RPC</code> 调用的性能，<code>RPC</code>客户端不需要每次调用都向注册中心查询目标服务的地址信息，但是也可能会发生如下两类潜在故障：</p>
+<p>1．<strong>某个 <code>RPC</code> 服务端发生故障，或者下线，客户端没有及时刷新本地缓存的服务地址列表，就会导致<code>RPC</code> 调用失败</strong>。</p>
+<p>2．<strong><code>RPC</code>客户端和服务端都工作正常，但是 <code>RPC</code>客户端和服务端的连接或者网络发生了故障，如果没有链路的可靠性检测机制，就会导致 <code>RPC</code>调用失败</strong>。</p>
+<h4 id="3-1-2-服务端超时"><a href="#3-1-2-服务端超时" class="headerlink" title="3.1.2 服务端超时"></a><strong>3.1.2 服务端超时</strong></h4><p>当<strong>服务端无法在指定的时间内返回应答给客户端，就会发生超时</strong>，导致超时的原因主要有：</p>
+<p>1．<strong>服务端的<code>I/O</code>线程没有及时从网络中读取客户端请求消息</strong>，导致该问题的原因通常是 <code>I/O</code>线程被意外阻塞或者执行长周期操作。</p>
+<p>2．<strong>服务端业务处理缓慢，或者被长时间阻塞</strong>，例如查询数据库，由于没有索引导致全表查询，耗时较长。</p>
+<p>3．<strong>服务端发生长时间 <code>Full GC</code></strong>，导致所有业务线程暂停运行，无法及时返回应答给客户端。</p>
+<h4 id="3-1-3-服务端调用失败"><a href="#3-1-3-服务端调用失败" class="headerlink" title="3.1.3 服务端调用失败"></a>3.1.3 服务端调用失败</h4><p>有时会发生服务端调用失败，导致服务端调用失败的原因主要有如下几种：</p>
+<p>1．<strong>服务端解码失败</strong>，会返回消息解码失败异常。</p>
+<p>2．<strong>服务端发生动态流控</strong>，返回流控异常。</p>
+<p>3．<strong>服务端消息队列积压率超过最大阈值</strong>，返回系统拥塞异常。</p>
+<p>4．<strong>访问权限校验失败</strong>，返回权限相关异常。</p>
+<p>5．<strong>违反 SLA 策略</strong>，返回 SLA 控制相关异常。</p>
+<p>6．<strong>其他系统异常</strong>。</p>
+<p>需要指出的是，服务调用异常<strong>不包括业务层面的处理异常</strong>，例如数据库操作异常、用户记录不存在异常等。</p>
+<h3 id="3-2-RPC-调用可靠性方案"><a href="#3-2-RPC-调用可靠性方案" class="headerlink" title="3.2 RPC 调用可靠性方案"></a>3.2 RPC 调用可靠性方案</h3><h4 id="3-2-1-注册中心与链路检测双保险机制"><a href="#3-2-1-注册中心与链路检测双保险机制" class="headerlink" title="3.2.1 注册中心与链路检测双保险机制"></a>3.2.1 注册中心与链路检测双保险机制</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为注册中心有集群内所有 <code>RPC</code> 客户端和服务端的实例信息，因此<strong>通过注册中心向每个服务端和客户端发送心跳消息，检测对方是否在线，如果连续 N 次心跳超时，或者心跳发送失败，则判断对方已经发生故障或者下线（下线可以通过优雅停机的方式主动告知注册中心，实时性会更好）</strong>。注册中心将故障节点的服务实例信息通过心跳消息发送给客户端，<strong>由客户端将故障的服务实例信息从本地缓存的路由表中删除，后续消息调用不再路由到该节点</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在一些特殊场景下，尽管注册中心与服务端、客户端的连接都没有问题，但是服务端和客户端之间的链路发生了异常，由于发生链路异常的服务端仍然在缓存表中，因此消息还会继续调度到故障节点上，所以，<strong>利用 <code>RPC</code>客户端和服务端之间的双向心跳检测，可以及时发现双方之间的链路问题，利用重连等机制可以快速的恢复连接，如果重连 N 次都失败，则服务路由时不再将消息发送到连接故障的服务节点上</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用注册中心对服务端的心跳检测和通知机制、以及服务端和客户端针对链路层的双向心跳检测机制，可以有效检测出故障节点，提升<code>RPC</code>调用的可靠性，它的原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/7.webp" alt="img"></p>
+<p><em>注册中心与链路双向心跳检测机制原理</em></p>
+<h4 id="3-2-2-集群容错策略"><a href="#3-2-2-集群容错策略" class="headerlink" title="3.2.2 集群容错策略"></a><strong>3.2.2 集群容错策略</strong></h4><p>常用的集群容错策略包括：</p>
+<p>1．失败自动切换 (<code>Failover</code>)</p>
+<p>2．失败通知（<code>Failback</code>）</p>
+<p>3．失败缓存（<code>Failcache</code>）</p>
+<p>4．快速失败（<code>Failfast</code>）</p>
+<h5 id="失败自动切换"><a href="#失败自动切换" class="headerlink" title="失败自动切换"></a>失败自动切换</h5><p><strong>失败自动切换策略：</strong>服务调用失败自动切换策略指的是当发生 <code>RPC</code> 调用异常时，重新选路，查找下一个可用的服务提供者。</p>
+<p>服务发布的时候，可以指定服务的集群容错策略。消费者可以覆盖服务提供者的通用配置，实现个性化的容错策略。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Failover</code>策略的设计思路如下：消费者路由操作完成之后，获得目标地址，调用通信框架的消息发送接口发送请求，监听服务端应答。<strong>如果返回的结果是 <code>RPC</code> 调用异常（超时、流控、解码失败等系统异常），根据消费者集群容错的策略进行容错路由，如果是 <code>Failover</code>，则重新返回到路由 <code>Handler</code> 的入口，从路由节点继续执行</strong>。选路完成之后，对目标地址进行比对，防止重新路由到故障服务节点，过滤掉上次的故障服务提供者之后，调用通信框架的消息发送接口发送请求消息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code> 框架提供 <code>Failover</code> 容错策略，但是用户在使用时需要自己保证用对地方，下面对<code>Failover</code>策略的应用场景进行总结：</p>
+<p>1．读操作，因为通常它是幂等的。</p>
+<p>2．<strong>幂等性服务，保证调用 1 次与 N 次效果相同</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要特别指出的是，失败重试会增加服务调用时延，因此<strong>框架必须对失败重试的最大次数做限制，通常默认为 3，防止无限制重试导致服务调用时延不可控</strong>。</p>
+<h5 id="失败通知"><a href="#失败通知" class="headerlink" title="失败通知"></a>失败通知</h5><p><strong>失败通知（Failback）：</strong>在很多业务场景中，客户端需要能够获取到服务调用失败的具体信息，通过对失败错误码等异常信息的判断，决定后续的执行策略，例如非幂等性的服务调用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Failback</code>的设计方案如下：<code>RPC</code>框架获取到服务提供者返回的 <code>RPC</code> 异常响应之后，根据策略进行容错。如果是 <code>Failback</code> 模式，则不再重试其它服务提供者，而是<strong>将 <code>RPC</code> 异常通知给客户端，由客户端捕获异常进行后续处理</strong>。</p>
+<h5 id="失败缓存"><a href="#失败缓存" class="headerlink" title="失败缓存"></a>失败缓存</h5><p><strong>失败缓存（Failcache）：</strong><code>Failcache</code> 策略是失败自动恢复的一种，在实际项目中它的应用场景如下：</p>
+<p>1．<strong>服务有状态路由，必须定点发送到指定的服务提供者</strong>。当发生链路中断、流控等服务暂时不可用时，<strong><code>RPC</code>框架将消息临时缓存起来，等待周期 T，重新发送，直到服务提供者能够正常处理该消息</strong>。</p>
+<p>2．<strong>对时延要求不敏感的服务</strong>。系统服务调用失败，通常是链路暂时不可用、服务流控、<code>GC</code>挂住服务提供者进程等，这种失败不是永久性的失败，它的恢复是可预期的。<strong>如果客户端对服务调用时延不敏感，可以考虑采用自动恢复模式，即先缓存，再等待，最后重试</strong>。</p>
+<p>3．<strong>通知类服务</strong>。例如通知粉丝积分增长、记录接口日志等，对服务调用的实时性要求不高，可以容忍自动恢复带来的时延增加。</p>
+<p>为了保证可靠性，<code>Failcache</code>策略在设计的时候需要考虑如下几个要素：</p>
+<p>1．<strong>缓存时间、缓存对象上限数等需要做出限制，防止内存溢出</strong>。</p>
+<p>2．<strong>缓存淘汰算法的选择，是否支持用户配置</strong>。</p>
+<p>3．<strong>定时重试的周期 T、重试的最大次数等需要做出限制并支持用户指定</strong>。</p>
+<p>4．<strong>重试达到最大上限仍失败，需要丢弃消息，记录异常日志</strong>。</p>
+<h5 id="快速失败"><a href="#快速失败" class="headerlink" title="快速失败"></a>快速失败</h5><p><strong>快速失败（Failfast）：在业务高峰期，对于一些非核心的服务，希望只调用一次，失败也不再重试，为重要的核心服务节约宝贵的运行资源</strong>。此时，快速失败是个不错的选择。快速失败策略的设计比较简单，<strong>获取到服务调用异常之后，直接忽略异常，记录异常日志</strong>。</p>
+<h2 id="4-第三方服务依赖故障隔离"><a href="#4-第三方服务依赖故障隔离" class="headerlink" title="4. 第三方服务依赖故障隔离"></a>4. 第三方服务依赖故障隔离</h2><h3 id="4-1-总体策略"><a href="#4-1-总体策略" class="headerlink" title="4.1 总体策略"></a>4.1 总体策略</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;尽管很多第三方服务会提供 <code>SLA</code>，但是 <code>RPC</code>服务本身并不能完全依赖第三方服务自身的可靠性来保障自己的高可靠，第三方服务依赖隔离的总体策略如下：</p>
+<p>1．第三方依赖隔离可以采用线程池 + 响应式编程（例如 <code>RxJava</code>）的方式实现。</p>
+<p>2．对第三方依赖进行分类，每种依赖对应一个独立的线程 / 线程池。</p>
+<p>3．服务不直接调用第三方依赖的 <code>API</code>，而是使用异步封装之后的 <code>API</code>接口。</p>
+<p>4．异步调用第三方依赖 <code>API</code> 之后，获取 <code>Future</code>对象。利用响应式编程框架，</p>
+<p>可以订阅后续的事件，接收响应，针对响应进行编程。</p>
+<h3 id="4-2-异步化"><a href="#4-2-异步化" class="headerlink" title="4.2 异步化"></a>4.2 异步化</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果第三方服务提供的是标准的 <code>HTTP/Restful</code>服务，则利用异步 <code>HTTP</code>客户端，例如 <code>Netty</code>、<code>Vert.x</code>、异步 <code>RestTemplate</code> 等发起异步服务调用，这样无论是服务端自身处理慢还是网络慢，都不会导致调用方被阻塞。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果对方是私有或者定制化的协议，<code>SDK</code> 没有提供异步接口，则需要采用线程池或者利用一些开源框架实现故障隔离。</p>
+<p>异步化示例图如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/8.webp" alt="img"></p>
+<p><em>异步化原理示意图</em></p>
+<p>异步化的几个关键技术点：</p>
+<p>1．<strong>异步具有依赖和传递性，如果想在某个业务流程的某个过程中做异步化，则入口处就需要做异步</strong>。例如如果想把 <code>Redis</code>服务调用改造成异步，则调用 <code>Redis</code>服务之前的流程也需要同时做异步化，否则意义不大（<strong>除非调用方不需要返回值</strong>）。</p>
+<p>2．通常而言，全栈异步对于业务性能和可靠性提升的意义更大，全栈异步会涉及到内部服务调用、第三方服务调用、数据库、缓存等平台中间件服务的调用，异步化改造成本比较高，但是收益也比较明显。</p>
+<p>3．<strong>不同框架、服务的异步编程模型尽量保持一致</strong>，例如统一采取 <code>RxJava</code> 风格的接口、或者 <code>JDK8</code> 的 <code>CompletableFuture</code>。如果不同服务<code>SDK</code>的异步 <code>API</code>接口风格差异过大，会增加业务的开发成本，也不利用线程模型的归并和整合。</p>
+<h3 id="4-3-基于-Hystrix-的第三方依赖故障隔离"><a href="#4-3-基于-Hystrix-的第三方依赖故障隔离" class="headerlink" title="4.3 基于 Hystrix 的第三方依赖故障隔离"></a>4.3 基于 Hystrix 的第三方依赖故障隔离</h3><p>集成 <code>Netflix</code>开源的<code>Hystrix</code>框架，可以非常方便的实现第三方服务依赖故障隔离，它提供的主要功能包括:</p>
+<p>1．依赖隔离</p>
+<p>2．熔断器</p>
+<p>3．优雅降级</p>
+<p>4．<code>Reactive</code>编程</p>
+<p>5．信号量隔离</p>
+<p>建议的集成策略如下：</p>
+<p>1．第三方依赖隔离：使用 <code>HystrixCommand</code>做一层异步封装，实现业务的 <code>RPC</code>服务调用线程和第三方依赖的线程隔离。</p>
+<p>2．依赖分类管理：对第三方依赖进行分类、分组管理，根据依赖的特点设置熔断策略、优雅降级策略、超时策略等，以实现差异化的处理。</p>
+<p><strong>总体集成视图如下所示：</strong></p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/9.webp" alt="img"></p>
+<p><em>基于 Hystrix 的第三方故障隔离框架</em></p>
+<p>基于 <code>Hystrix</code>可以非常方便的实现第三方依赖服务的熔断降级，它的工作原理如下：</p>
+<p>1．熔断判断：服务调用时，对熔断开关状态进行判断，当熔断器开关关闭时, 请求被允许通过熔断器。</p>
+<p>2．熔断执行：当熔断器开关打开时，服务调用请求被禁止通过，执行失败回调接口。</p>
+<p>3．自动恢复：熔断之后，周期 T 之后允许一条消息通过，如果成功，则取消熔断状态，否则继续处于熔断状态。</p>
+<p>流程如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC 框架的可靠性设计/10.webp" alt="img"></p>
+<p><em>基于 Hystrix 的熔断降级</em></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/微服务/" rel="tag"># 微服务</a>
+          
+            <a href="/tags/RPC/" rel="tag"># RPC</a>
+          
+            <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/27/RPC协议之争和选型要点/" rel="next" title="RPC协议之争和选型要点">
+                <i class="fa fa-chevron-left"></i> RPC协议之争和选型要点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/27/可扩展性设计/" rel="prev" title="可扩展性设计">
+                可扩展性设计 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RPC-框架的可靠性设计"><span class="nav-number">1.</span> <span class="nav-text">RPC 框架的可靠性设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-背景"><span class="nav-number">1.1.</span> <span class="nav-text">1. 背景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-分布式调用引入的故障"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 分布式调用引入的故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-第三方服务依赖"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 第三方服务依赖</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-通信层的可靠性设计"><span class="nav-number">1.2.</span> <span class="nav-text">2. 通信层的可靠性设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-链路有效性检测"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1  链路有效性检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-客户端断连重连"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 客户端断连重连</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-缓存重发"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 缓存重发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-客户端超时保护"><span class="nav-number">1.2.4.</span> <span class="nav-text">2.4 客户端超时保护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-针对客户端的并发连接数流控"><span class="nav-number">1.2.5.</span> <span class="nav-text">2.5 针对客户端的并发连接数流控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-内存保护"><span class="nav-number">1.2.6.</span> <span class="nav-text">2.6 内存保护</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-RPC-调用层的可靠性设计"><span class="nav-number">1.3.</span> <span class="nav-text">3. RPC 调用层的可靠性设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-RPC-调用异常场景"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 RPC 调用异常场景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-1-服务路由失败"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">3.1.1 服务路由失败</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-2-服务端超时"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">3.1.2 服务端超时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-3-服务端调用失败"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">3.1.3 服务端调用失败</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-RPC-调用可靠性方案"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 RPC 调用可靠性方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-注册中心与链路检测双保险机制"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">3.2.1 注册中心与链路检测双保险机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-集群容错策略"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">3.2.2 集群容错策略</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#失败自动切换"><span class="nav-number">1.3.2.2.1.</span> <span class="nav-text">失败自动切换</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#失败通知"><span class="nav-number">1.3.2.2.2.</span> <span class="nav-text">失败通知</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#失败缓存"><span class="nav-number">1.3.2.2.3.</span> <span class="nav-text">失败缓存</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#快速失败"><span class="nav-number">1.3.2.2.4.</span> <span class="nav-text">快速失败</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-第三方服务依赖故障隔离"><span class="nav-number">1.4.</span> <span class="nav-text">4. 第三方服务依赖故障隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-总体策略"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 总体策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-异步化"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 异步化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-基于-Hystrix-的第三方依赖故障隔离"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 基于 Hystrix 的第三方依赖故障隔离</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

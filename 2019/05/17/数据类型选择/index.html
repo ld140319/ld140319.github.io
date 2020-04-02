@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,数据库设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="数据类型选择在MySQL中，选择正确的数据类型，对于性能至关重要。一般应该遵循下面两步： （1）确定合适的大类型：数字、字符串、时间、二进制； （2）确定具体的类型：有无符号、取值范围、变长定长等。 在数据类型设置方面，尽量用更小的数据类型，因为它们通常有更好的性能，花费更少的硬件资源。并且，尽量把字段定义为NOT NULL，避免使用NULL。 1 数值类型1.1 说明   类型 大小 范围（有符">
+<meta name="keywords" content="数据库,MySql,数据库设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据类型选择">
+<meta property="og:url" content="http://blog.com/2019/05/17/数据类型选择/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="数据类型选择在MySQL中，选择正确的数据类型，对于性能至关重要。一般应该遵循下面两步： （1）确定合适的大类型：数字、字符串、时间、二进制； （2）确定具体的类型：有无符号、取值范围、变长定长等。 在数据类型设置方面，尽量用更小的数据类型，因为它们通常有更好的性能，花费更少的硬件资源。并且，尽量把字段定义为NOT NULL，避免使用NULL。 1 数值类型1.1 说明   类型 大小 范围（有符">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-17T14:33:26.711Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据类型选择">
+<meta name="twitter:description" content="数据类型选择在MySQL中，选择正确的数据类型，对于性能至关重要。一般应该遵循下面两步： （1）确定合适的大类型：数字、字符串、时间、二进制； （2）确定具体的类型：有无符号、取值范围、变长定长等。 在数据类型设置方面，尽量用更小的数据类型，因为它们通常有更好的性能，花费更少的硬件资源。并且，尽量把字段定义为NOT NULL，避免使用NULL。 1 数值类型1.1 说明   类型 大小 范围（有符">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/17/数据类型选择/">
+
+
+
+
+
+  <title>数据类型选择 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/17/数据类型选择/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据类型选择</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T12:12:57+08:00">
+                2019-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/数据库设计/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="数据类型选择"><a href="#数据类型选择" class="headerlink" title="数据类型选择"></a>数据类型选择</h1><p>在MySQL中，选择正确的数据类型，对于性能至关重要。一般应该遵循下面两步：</p>
+<p>（1）确定合适的大类型：<strong>数字</strong>、<strong>字符串</strong>、<strong>时间</strong>、<strong>二进制</strong>；</p>
+<p>（2）确定具体的类型：<strong>有无符号</strong>、<strong>取值范围</strong>、<strong>变长定长</strong>等。</p>
+<p>在数据类型设置方面，尽量用更小的数据类型，因为它们通常有更好的性能，花费更少的硬件资源。并且，尽量把字段定义为<code>NOT NULL</code>，避免使用<code>NULL</code>。</p>
+<h2 id="1-数值类型"><a href="#1-数值类型" class="headerlink" title="1 数值类型"></a>1 数值类型</h2><h3 id="1-1-说明"><a href="#1-1-说明" class="headerlink" title="1.1 说明"></a>1.1 说明</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>大小</th>
+<th>范围（有符号）</th>
+<th>范围（无符号）</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TINYINT</td>
+<td>1 字节</td>
+<td>(-128, 127)</td>
+<td>(0, 255)</td>
+<td>小整数值</td>
+</tr>
+<tr>
+<td>SMALLINT</td>
+<td>2 字节</td>
+<td>(-32 768, 32 767)</td>
+<td>(0, 65 535)</td>
+<td>大整数值</td>
+</tr>
+<tr>
+<td>MEDIUMINT</td>
+<td>3 字节</td>
+<td>(-8 388 608, 8 388 607)</td>
+<td>(0, 16 777 215)</td>
+<td>大整数值</td>
+</tr>
+<tr>
+<td>INT或INTEGER</td>
+<td>4 字节</td>
+<td>(-2 147 483 648, 2 147 483 647)</td>
+<td>(0, 4 294 967 295)</td>
+<td>大整数值</td>
+</tr>
+<tr>
+<td>BIGINT</td>
+<td>8 字节</td>
+<td>(-9 233 372 036 854 775 808, 9 223 372 036 854 775 807)</td>
+<td>(0, 18 446 744 073 709 551 615)</td>
+<td>极大整数值</td>
+</tr>
+<tr>
+<td>FLOAT</td>
+<td>4 字节</td>
+<td>(-3.402 823 466 E+38, 1.175 494 351 E-38)，0，(1.175 494 351 E-38，3.402 823 466 351 E+38)</td>
+<td>0, (1.175 494 351 E-38, 3.402 823 466 E+38)</td>
+<td>单精度 浮点数值</td>
+</tr>
+<tr>
+<td>DOUBLE</td>
+<td>8 字节</td>
+<td>(1.797 693 134 862 315 7 E+308, 2.225 073 858 507 201 4 E-308), 0, (2.225 073 858 507 201 4 E-308, 1.797 693 134 862 315 7 E+308)</td>
+<td>0, (2.225 073 858 507 201 4 E-308, 1.797 693 134 862 315 7 E+308)</td>
+<td>双精度 浮点数值</td>
+</tr>
+<tr>
+<td>DECIMAL</td>
+<td>对DECIMAL(M,D) ，如果M&gt;D，为M+2否则为D+2</td>
+<td>依赖于M和D的值</td>
+<td>依赖于M和D的值</td>
+<td>小数值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-2-优化建议"><a href="#1-2-优化建议" class="headerlink" title="1.2 优化建议"></a>1.2 优化建议</h3><ol>
+<li><p>如果整形数据没有负数，如ID号，建议指定为<code>UNSIGNED</code>无符号类型，容量可以扩大一倍。</p>
+</li>
+<li><p>建议使用<code>TINYINT</code>代替<code>ENUM</code>、<code>BITENUM</code>、<code>SET</code>。</p>
+<p><code>ENUM</code>因为值固定，增加值需要<code>ALTER TABLE</code>, 表锁</p>
+<p><code>ENUM</code>底层仍然采用<strong>数字存储</strong>，根据<code>定义顺序 从1……n</code>，<strong>排序时根据数字大小来排</strong></p>
+</li>
+<li><p>避免使用整数的显示宽度，也就是说，不要用<code>INT(10)</code>类似的方法指定字段显示宽度，直接用<code>INT</code>。</p>
+</li>
+<li><p>用<code>INT UNSIGNED</code>来存储IPv4地址，用<code>VARBINARY</code>来存储IPv6地址，当然存储之前需要用PHP函数转换。</p>
+</li>
+<li><p><code>DECIMAL</code>最适合保存准确度要求高，而且用于计算的数据，比如价格。但是在使用<code>DECIMAL</code>类型的时候，注意长度设置。</p>
+</li>
+<li><p>建议使用整形类型来运算和存储实数，方法是，实数乘以相应的倍数后再操作。</p>
+</li>
+<li><p>整数通常是最佳的数据类型，因为它速度快，并且能使用<code>AUTO_INCREMENT</code>。</p>
+</li>
+</ol>
+<h2 id="2-日期和时间"><a href="#2-日期和时间" class="headerlink" title="2 日期和时间"></a>2 日期和时间</h2><h3 id="2-1-说明"><a href="#2-1-说明" class="headerlink" title="2.1 说明"></a>2.1 说明</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>大小 (字节)</th>
+<th>范围</th>
+<th>格式</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DATE</td>
+<td>3</td>
+<td>1000-01-01 到 9999-12-31</td>
+<td>YYYY-MM-DD</td>
+<td>日期值</td>
+</tr>
+<tr>
+<td>TIME</td>
+<td>3</td>
+<td>‘-838:59:59’ 到 ‘838:59:59’</td>
+<td>HH:MM:SS</td>
+<td>时间值或持续时间</td>
+</tr>
+<tr>
+<td>YEAR</td>
+<td>1</td>
+<td>1901 到 2155</td>
+<td>YYYY</td>
+<td>年份值</td>
+</tr>
+<tr>
+<td>DATETIME</td>
+<td>8</td>
+<td>1000-01-01 00:00:00 到 9999-12-31 23:59:59</td>
+<td>YYYY-MM-DD HH:MM:SS</td>
+<td>混合日期和时间值</td>
+</tr>
+<tr>
+<td>TIMESTAMP</td>
+<td>4</td>
+<td>1970-01-01 00:00:00 到 2037 年某时</td>
+<td>YYYYMMDDhhmmss</td>
+<td>混合日期和时间值，时间戳</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-2-优化建议"><a href="#2-2-优化建议" class="headerlink" title="2.2 优化建议"></a>2.2 优化建议</h3><ol>
+<li>MySQL能存储的最小时间粒度为<code>秒</code>。</li>
+<li>建议用<code>DATE</code>数据类型来保存日期。MySQL中默认的日期格式是<code>yyyy-mm-dd</code>。</li>
+<li>用MySQL的内建类型<code>DATE</code>、<code>TIME</code>、<code>DATETIME</code>来存储时间，而不是使用字符串。</li>
+<li>当数据格式为<code>TIMESTAMP</code>和<code>DATETIME</code>时，可以用<code>CURRENT_TIMESTAMP</code>作为默认（MySQL5.6以后），MySQL会自动返回记录插入的确切时间。</li>
+<li><code>TIMESTAMP</code>是UTC时间戳，与时区相关。</li>
+<li><code>DATETIME</code>的存储格式是一个<code>YYYYMMDD HH:MM:SS</code>的整数，与时区无关，你存了什么，读出来就是什么。</li>
+<li>除非有特殊需求，否则建议使用<code>TIMESTAMP</code>，它比<code>DATETIME</code>更节约空间。</li>
+<li>有时人们把Unix的时间戳保存为整数值，但是这通常没有任何好处，这种格式处理起来不太方便，我们并不推荐它。<code>在日期运算比较时，非常麻烦，需要函数转换后进行</code></li>
+</ol>
+<h2 id="3-字符串"><a href="#3-字符串" class="headerlink" title="3 字符串"></a>3 字符串</h2><h3 id="3-1-说明"><a href="#3-1-说明" class="headerlink" title="3.1 说明"></a>3.1 说明</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>大小</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CHAR</td>
+<td>0-255字节</td>
+<td>定长字符串</td>
+</tr>
+<tr>
+<td>VARCHAR</td>
+<td>0-65535 字节</td>
+<td>变长字符串</td>
+</tr>
+<tr>
+<td>TINYBLOB</td>
+<td>0-255字节</td>
+<td>不超过 255 个字符的二进制字符串</td>
+</tr>
+<tr>
+<td>TINYTEXT</td>
+<td>0-255字节</td>
+<td>短文本字符串</td>
+</tr>
+<tr>
+<td>BLOB</td>
+<td>0-65 535字节</td>
+<td>二进制形式的长文本数据</td>
+</tr>
+<tr>
+<td>TEXT</td>
+<td>0-65 535字节</td>
+<td>长文本数据</td>
+</tr>
+<tr>
+<td>MEDIUMBLOB</td>
+<td>0-16 777 215字节</td>
+<td>二进制形式的中等长度文本数据</td>
+</tr>
+<tr>
+<td>MEDIUMTEXT</td>
+<td>0-16 777 215字节</td>
+<td>中等长度文本数据</td>
+</tr>
+<tr>
+<td>LONGBLOB</td>
+<td>0-4 294 967 295字节</td>
+<td>二进制形式的极大文本数据</td>
+</tr>
+<tr>
+<td>LONGTEXT</td>
+<td>0-4 294 967 295字节</td>
+<td>极大文本数据</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-2-优化建议"><a href="#3-2-优化建议" class="headerlink" title="3.2 优化建议"></a>3.2 优化建议</h3><ol>
+<li>字符串的长度相差较大用<code>VARCHAR</code>；字符串短，且所有值都接近一个长度用<code>CHAR</code>。</li>
+<li><code>CHAR</code>和<code>VARCHAR</code>适用于包括人名、邮政编码、电话号码和不超过255个字符长度的任意字母数字组合。那些要用来计算的数字不要用<code>VARCHAR</code>类型保存，因为可能会导致一些与计算相关的问题。换句话说，可能影响到计算的准确性和完整性。</li>
+<li><code>BINARY</code>和<code>VARBINARY</code>存储的是二进制字符串，与字符集无关。</li>
+<li><code>BLOB</code>系列存储二进制字符串，与字符集无关。<code>TEXT</code>系列存储非二进制字符串，与字符集相关。一般情况下，你可以认为<code>BLOB</code>是一个更大的<code>VARBINARY</code>；<code>TEXT</code>是一个更大的<code>VARCHAR</code>。</li>
+<li><code>BLOB</code>和<code>TEXT</code>都不能有默认值。</li>
+</ol>
+<h2 id="4-INT显示宽度"><a href="#4-INT显示宽度" class="headerlink" title="4 INT显示宽度"></a>4 INT显示宽度</h2><p>我们经常会使用命令来创建数据表，而且同时会指定一个长度，如下。但是，这里的长度并非是<code>TINYINT</code>类型存储的最大长度，而是显示的最大长度。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `user`(</span><br><span class="line">    `id` TINYINT(2) UNSIGNED</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>这里表示user表的id字段的类型是<code>TINYINT</code>，可以存储的最大数值是<code>255</code>。所以，</p>
+<p>在存储数据时，如果存入值小于等于<code>255</code>，如<code>200</code>，虽然超过2位，但是没有超出<code>TINYINT</code>类型长度，所以可以正常保存；如果存入值大于<code>255</code>，如<code>500</code>，那么MySQL会自动保存为<code>TINYINT</code>类型的最大值<code>255</code>。</p>
+<p>在查询数据时，不管查询结果为何值，都按实际输出。这里<code>TINYINT(2)</code>中<code>2</code>的作用就是，当需要在查询结果前填充<code>0</code>时，命令中加上<code>ZEROFILL</code>就可以实现，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`id` TINYINT(2) UNSIGNED ZEROFILL</span><br></pre></td></tr></table></figure>
+<p>这样，查询结果如果是<code>5</code>，那输出就是<code>05</code>。如果指定<code>TINYINT(5)</code>，那输出就是<code>00005</code>，其实实际存储的值还是<code>5</code>，而且存储的数据不会超过<code>255</code>，只是MySQL输出数据时在前面填充了<code>0</code>。</p>
+<p>换句话说，在MySQL命令中，字段的类型长度<code>TINYINT(2)</code>、<code>INT(11)</code>不会影响数据的插入，只会在使用<code>ZEROFILL</code>时有用，让查询结果前填充<code>0</code>。</p>
+<h2 id="5-MySQL中varchar最大长度是多少？"><a href="#5-MySQL中varchar最大长度是多少？" class="headerlink" title="5 MySQL中varchar最大长度是多少？"></a>5 MySQL中varchar最大长度是多少？</h2><p>这不是一个固定的数字。先简要说明一下限制规则。</p>
+<p><strong>1、限制规则</strong></p>
+<p>字段的限制在字段定义的时候有以下规则：</p>
+<p>a) 存储限制</p>
+<p>varchar 字段是将实际内容单独存储在聚簇索引之外，内容开头用<strong>1到2个字节表示实际长度（长度超过255时需要2个字节）</strong>，因此<strong>最大长度不能超过65535字符</strong>。</p>
+<p>b) 编码长度限制</p>
+<blockquote>
+<p>字符类型若为gbk，每个字符最多占2个字节，最大长度不能超过32766;</p>
+<p>字符类型若为utf8，每个字符最多占3个字节，最大长度不能超过21845。</p>
+<p>若定义的时候超过上述限制，则varchar字段会被强行转为text类型，并产生warning。</p>
+</blockquote>
+<p>c) 行长度限制</p>
+<p>导致实际应用中varchar长度限制的是一个行定义的长度。 MySQL要求<strong>一个行的定义长度不能超过65535 bytes</strong>。若定义的表长度超过这个值，则提示</p>
+<p>ERROR 1118 (42000): Row size too large. The maximum row size for the used table type, not counting BLOBs, is 65535. You have to change some columns to TEXT or BLOBs。</p>
+<blockquote>
+<p>由字符集来确定，字符集分单字节和多字节<br>Latin1    一个字符占一个字节，最多能存放 65532 个字符<br>GBK       一个字符占两个字节， 最多能存 32766 个字符<br>UTF8     一个字符占三个字节， 最多能存 21844 个字符</p>
+</blockquote>
+<p>注意，<strong>char 和 varchar 后面的长度表示的是字符的个数，而不是字节数</strong>。</p>
+<p><strong>2、计算例子</strong></p>
+<p>举两个例说明一下实际长度的计算。</p>
+<p>a) 若一个表只有一个varchar类型，如定义为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create table t4(c varchar(N)) charset=gbk;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>则此处N的最大值为(65535-1-2)/2= 32766 个字符。</p>
+<p>减1的原因是实际行存储从第二个字节开始’;</p>
+<p>减2的原因是varchar头部的2个字节表示长度;</p>
+<p>除2的原因是字符编码是gbk</p>
+</blockquote>
+<p>b) 若一个表定义为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">create table t4(</span><br><span class="line">    c int, </span><br><span class="line">    c2 char(30), </span><br><span class="line">    c3 varchar(N)</span><br><span class="line">) charset=utf8;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>则此处N的最大值为 (65535-1-2-4-30*3)/3=21812</p>
+<p>减1和减2与上例相同;</p>
+<p>减4的原因是int类型的c占4个字节;</p>
+<p>减30*3的原因是char(30)占用90个字节，编码是utf8。</p>
+<p>如果被varchar超过上述的b规则，被强转成text类型，则每个字段占用定义长度为11字节，当然这已经不是“varchar”了。</p>
+<p>则此处N的最大值为 (65535-1-2-4-30*3)/3=21812</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select s,length(s),char_length(s) from test_char;</span><br><span class="line">+----------------------+----------+--------------+</span><br><span class="line">| s                    | length(s) | char_length(s) |</span><br><span class="line">+----------------------+----------+--------------+</span><br><span class="line">| 0123456789           |       10 |           10 |</span><br><span class="line">| 一二三四五六七八九十 |       30 |           10 |</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>length()与char_length()</strong></p>
+<p>length():Return the length of a string in bytes.返回字符串所占的字节数(受编码影响).</p>
+<p>char_length():Return number of characters in argument.返回字符串中的字符数.2</p>
+</blockquote>
+<p><a href="https://segmentfault.com/q/1010000003040054" target="_blank" rel="noopener">mysql 数据库中varchar的长度与字节，字符串的关系</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/数据库设计/" rel="tag"># 数据库设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/Laravel框架中如何使用Service模式/" rel="next" title="Laravel框架中如何使用Service模式">
+                <i class="fa fa-chevron-left"></i> Laravel框架中如何使用Service模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/PHP框架中间件实现/" rel="prev" title="PHP框架中间件实现">
+                PHP框架中间件实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据类型选择"><span class="nav-number">1.</span> <span class="nav-text">数据类型选择</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-数值类型"><span class="nav-number">1.1.</span> <span class="nav-text">1 数值类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-说明"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 说明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-优化建议"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 优化建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-日期和时间"><span class="nav-number">1.2.</span> <span class="nav-text">2 日期和时间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-说明"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 说明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-优化建议"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 优化建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-字符串"><span class="nav-number">1.3.</span> <span class="nav-text">3 字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-说明"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 说明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-优化建议"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 优化建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-INT显示宽度"><span class="nav-number">1.4.</span> <span class="nav-text">4 INT显示宽度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-MySQL中varchar最大长度是多少？"><span class="nav-number">1.5.</span> <span class="nav-text">5 MySQL中varchar最大长度是多少？</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,监控体系搭建,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="京东电商平台监控详解  原文地址：https://mp.weixin.qq.com/s/kYo6lIpgeMnMtZxFMhIEaA   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照《SRE Google运维解密》对监控的划分，监控可以分为“黑盒监控”与“白盒监控”。黑盒监控解决的是“系统哪些功能出问题了”，白盒监控解决的问题是“什么原因导致了上述故障”。通俗来讲，">
+<meta name="keywords" content="架构,监控体系搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="京东电商平台监控详解">
+<meta property="og:url" content="http://blog.com/2019/06/08/京东电商平台监控详解/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="京东电商平台监控详解  原文地址：https://mp.weixin.qq.com/s/kYo6lIpgeMnMtZxFMhIEaA   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照《SRE Google运维解密》对监控的划分，监控可以分为“黑盒监控”与“白盒监控”。黑盒监控解决的是“系统哪些功能出问题了”，白盒监控解决的问题是“什么原因导致了上述故障”。通俗来讲，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/2.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/3.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/4.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/5.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/6.jpg">
+<meta property="og:updated_time" content="2019-06-08T16:17:07.487Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="京东电商平台监控详解">
+<meta name="twitter:description" content="京东电商平台监控详解  原文地址：https://mp.weixin.qq.com/s/kYo6lIpgeMnMtZxFMhIEaA   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照《SRE Google运维解密》对监控的划分，监控可以分为“黑盒监控”与“白盒监控”。黑盒监控解决的是“系统哪些功能出问题了”，白盒监控解决的问题是“什么原因导致了上述故障”。通俗来讲，">
+<meta name="twitter:image" content="http://blog.com/2019/06/08/京东电商平台监控详解/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/08/京东电商平台监控详解/">
+
+
+
+
+
+  <title>京东电商平台监控详解 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/08/京东电商平台监控详解/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">京东电商平台监控详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-08T12:12:57+08:00">
+                2019-06-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/监控体系搭建/" itemprop="url" rel="index">
+                    <span itemprop="name">监控体系搭建</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="京东电商平台监控详解"><a href="#京东电商平台监控详解" class="headerlink" title="京东电商平台监控详解"></a>京东电商平台监控详解</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/kYo6lIpgeMnMtZxFMhIEaA" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/kYo6lIpgeMnMtZxFMhIEaA</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;按照《<code>SRE Google</code>运维解密》对监控的划分，监控可以分为“黑盒监控”与“白盒监控”。<strong>黑盒监控解决的是“系统哪些功能出问题了”，白盒监控解决的问题是“什么原因导致了上述故障”</strong>。通俗来讲，白盒监控可以帮助大家快速定位问题原因，但要知道服务出了什么问题，还需要从黑盒监控入手。</p>
+<h2 id="黑盒监控"><a href="#黑盒监控" class="headerlink" title="黑盒监控"></a>黑盒监控</h2><h3 id="1、监控对象"><a href="#1、监控对象" class="headerlink" title="1、监控对象"></a>1、监控对象</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;电商网站的哪些功能发生故障会使用户认为网站宕机？评价、优惠、库存等功能异常显然无法得到上述的结论，而登录、加入购物车、下单、指定收货地址等功能中任一环节异常都会导致用户无法下单。因此，可以将电商平台的核心流程即订单流程功能点概括如表1所示，并且将核心页面的流量情况做成仪表盘展现出来（见图1）：</p>
+<table>
+<thead>
+<tr>
+<th><strong>核心页面</strong></th>
+<th><strong>功能点</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>首页</td>
+<td>页面元素是否加载正常登录功能是否正常</td>
+</tr>
+<tr>
+<td>搜索页</td>
+<td>页面元素是否加载正常按关键字搜索是否返回正确结果</td>
+</tr>
+<tr>
+<td>商详页</td>
+<td>页面元素是否加载正常获取商品价格是否正常检查商品是否售罄</td>
+</tr>
+<tr>
+<td>购物车页</td>
+<td>页面元素是否加载正常加载购物车信息是否正常查询购物车商品数量是否正常</td>
+</tr>
+<tr>
+<td>结算页</td>
+<td>页面元素是否加载正常收货人、收货地址、联系方式、支付方式等信息是否可以正常添加</td>
+</tr>
+<tr>
+<td>下单页</td>
+<td>页面元素是否加载正常提交订单是否正常</td>
+</tr>
+<tr>
+<td>支付页</td>
+<td>页面元素是否加载正常支付是否正常</td>
+</tr>
+</tbody>
+</table>
+<p><strong>▲表1 订单核心功能点</strong></p>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/1.jpg" alt=""></p>
+<p><strong>▲图1 各核心页面流量PV</strong></p>
+<h3 id="2、监控经验"><a href="#2、监控经验" class="headerlink" title="2、监控经验"></a>2、监控经验</h3><h4 id="1）触发反作弊策略"><a href="#1）触发反作弊策略" class="headerlink" title="1）触发反作弊策略"></a>1）触发反作弊策略</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用于订单监控的账号达到单位时间内允许登录、下单的上限被电商项目内部反作弊系统或下游交易系统判定为异常行为，从而出现弹出验证码、下单被告知已达上限等现象，导致订单监控抛出异常。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;针对此类问题可以在<strong>运营后台添加账号白名单</strong>，如果电商系统不支持此功能，可以通过<strong>多个账号轮换发起订单监控</strong>，最终聚合监控结果来规避此问题。</p>
+<h4 id="2）在售商品库存被耗尽"><a href="#2）在售商品库存被耗尽" class="headerlink" title="2）在售商品库存被耗尽"></a>2）在售商品库存被耗尽</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;订单监控在预发环境进行调试时，频繁下单导致在售商品库存耗尽，影响商品售卖。可以<strong>创建测试商品（无法被用户浏览到）用于订单监控，规避此问题</strong>。</p>
+<h4 id="3）服务变更导致订单监控异常"><a href="#3）服务变更导致订单监控异常" class="headerlink" title="3）服务变更导致订单监控异常"></a>3）服务变更导致订单监控异常</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在产品快速迭代的同时，代码实现逻辑、接口参数等也在不断迭代，如果监控滞后于服务代码的变更，必然会引起订单监控的异常，某电商项目近半年因变更导致订单监控异常的有：</p>
+<ul>
+<li><strong>登录密码加密逻辑变更</strong></li>
+<li><strong>价格获取逻辑变更</strong></li>
+<li><strong>商详页URL变更</strong></li>
+<li><strong>电子发票获取逻辑变更</strong></li>
+</ul>
+<h4 id="4）支付页同样需要监控"><a href="#4）支付页同样需要监控" class="headerlink" title="4）支付页同样需要监控"></a>4）支付页同样需要监控</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;虽然因为电商关联众多支付平台（各大银行网银、移动支付工具），且订单监控会产生真实交易数据，导致无法监控真实支付环境节，但还是需要确认下单流程能否正常跳转支付页。</p>
+<h2 id="白盒监控"><a href="#白盒监控" class="headerlink" title="白盒监控"></a>白盒监控</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>白盒监控依靠的是系统内部暴露的性能指标，对用户请求进行全链路的监控</strong>，包括<code>CDN</code>和高防访问成功率、不同地域不同运营商<code>VIP</code>访问成功率、模块及实例级别监控状态、第三方依赖状态的内容。</p>
+<h3 id="1、监控对象-1"><a href="#1、监控对象-1" class="headerlink" title="1、监控对象"></a>1、监控对象</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从用户的使用角度，架构分为接入层、应用层、数据及依赖层、基础服务及实例，共4部分。</p>
+<h4 id="1）接入层"><a href="#1）接入层" class="headerlink" title="1）接入层"></a>1）接入层</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>CDN</code>、<code>IP</code>高防、云<code>WAF</code>、负载均衡。</p>
+<h4 id="2）应用层"><a href="#2）应用层" class="headerlink" title="2）应用层"></a>2）应用层</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;应用模块，比如对关键<code>URL</code>的服务质量进行语义监控，关键<code>URL</code>包括运维工程师经验得到的关键<code>URL</code>（可枚举的关键页面、关键接口），以及通过全量分析日志找出访问请求量<code>TOP10</code>的<code>URL</code>。</p>
+<h4 id="3）数据及依赖层"><a href="#3）数据及依赖层" class="headerlink" title="3）数据及依赖层"></a>3）数据及依赖层</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;缓存、数据库、<code>ElasticSearch</code>、<code>Kafka</code>、云存储、外部<code>API</code>接口依赖。</p>
+<h4 id="4）基础服务及实例"><a href="#4）基础服务及实例" class="headerlink" title="4）基础服务及实例"></a>4）基础服务及实例</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实例出公网的连通性、内网机器之间的<code>ping</code>延时、性能指标（<code>CPU</code>、内存、网络流量、网络连接、磁盘IO、磁盘使用率等）。</p>
+<h3 id="2、监控经验-1"><a href="#2、监控经验-1" class="headerlink" title="2、监控经验"></a>2、监控经验</h3><ul>
+<li>对于处在公网的接入层组件，使用分布在全国各地的探测节点进行语义监控。</li>
+</ul>
+<ul>
+<li>对于<code>CDN</code>既要监控各边缘节点缓存的静态资源是否可被访问到，同时也要<strong>监控未被缓存的静态资源回源访问是否正常</strong>。</li>
+</ul>
+<ul>
+<li><strong>报警阈值建议以百分比代替绝对值</strong>，可以省去后续因流量、实例等规模变更导致反复调整报警阈值的问题。</li>
+</ul>
+<ul>
+<li><strong>以监控请求延时为例，推荐使用分组计数代替平均值</strong>，即延迟在<code>0~100ms</code>的请求量有多少，<code>100~300ms</code>的请求量有多少。原因是<code>1%</code>的异常请求耗时是平均值的<code>10</code>倍，通过平均值监控无法发现异常。</li>
+</ul>
+<ul>
+<li><strong>添加监控策略后一定要进行回归验证</strong>（比如在业务低峰期进行故障演练），不能等故障发生时再检验报警的有效性。</li>
+</ul>
+<ul>
+<li>报警策略的设置会直接影响报警的准确性（比如<code>3/3</code>和<code>3/5</code>的策略，前者表示连续三个周期有三次不符合阈值规则就报警，后者表示五个周期中有三次不符合阈值规则就报警。<strong><code>3/3</code>要更加严格，可以避免波动的监控报警，比如网络的可用性会受到网络抖动的影响；而<code>3/5</code>要更加敏感，适用于相对比较稳定的监控项，比如磁盘使用率）</strong>。</li>
+</ul>
+<ul>
+<li>误报会降低运维工程师对报警信息的敏感性和警惕性，也会增加工作之外的生活压力，<strong>对于不能明确反映系统故障的报警项应该降级为邮件报警，遵循少即是多的道理</strong>。</li>
+</ul>
+<h3 id="3、仪表盘"><a href="#3、仪表盘" class="headerlink" title="3、仪表盘"></a>3、仪表盘</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上述指标结合<code>Grafana</code>，可以在服务发生故障时，快速精准定位，为实现服务第一时间快速止损提供有力保障。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;订单监控的仪表盘分为如下四个部分，各个指标一目了然：</p>
+<ul>
+<li><code>CDN</code>和高防访问成功率</li>
+</ul>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/2.jpg" alt=""></p>
+<p><strong>▲图2 仪表盘-CDN和高防访问成功率</strong></p>
+<ul>
+<li><code>VIP</code>访问成功率</li>
+</ul>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/3.jpg" alt=""></p>
+<p><strong>▲图3 仪表盘- VIP访问成功率</strong></p>
+<ul>
+<li>模块状态统计</li>
+</ul>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/4.jpg" alt=""></p>
+<p><strong>▲图4 仪表盘- 模块状态统计</strong></p>
+<ul>
+<li>第三方依赖状态</li>
+</ul>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/5.jpg" alt=""></p>
+<p><strong>▲图5 仪表盘-第三方依赖状态</strong></p>
+<h2 id="常见故障及其预案建设"><a href="#常见故障及其预案建设" class="headerlink" title="常见故障及其预案建设"></a>常见故障及其预案建设</h2><h3 id="1、运营商故障"><a href="#1、运营商故障" class="headerlink" title="1、运营商故障"></a>1、运营商故障</h3><p><strong>案例</strong>：电信运营商故障导致接入层<code>IP</code>无法提供服务。</p>
+<p><strong>应对预案</strong>：流量切换。制定流量切换即切换流量入口<code>IP</code>作为应对运营商故障的预案，即为电商系统分地域（华南、华北）、分运营商（移动单线、电信单线、联通单线、<code>BGP</code>多线）申请多个接入<code>IP</code>。在综合考虑网络质量、延迟等因素后，总结流量切换的优先级如下：</p>
+<ul>
+<li>切换到同地域同运营商的流量入口</li>
+<li>切换到跨地域同运营商的流量入口</li>
+<li>切换到同地域跨运营商的流量入口</li>
+<li>切换到跨地域跨运营商的流量入口</li>
+</ul>
+<h3 id="2、接入层故障"><a href="#2、接入层故障" class="headerlink" title="2、接入层故障"></a>2、接入层故障</h3><p><strong>案例</strong>：<code>CDN</code>二级节点部分缓存机器服务故障，导致服务页面异常。</p>
+<p><strong>应对预案</strong>：降级。通过添加一层域名指向，将<code>IP</code>高防、<code>CDN</code>、云<code>WAF</code>等接入层组件接入到系统中来，当这些组件部分节点或全部节点发生故障时，通过调用<code>DNS</code>接口快速完成<code>CNAME</code>变更，从而绕过故障组件。</p>
+<h3 id="3、IDC故障"><a href="#3、IDC故障" class="headerlink" title="3、IDC故障"></a>3、IDC故障</h3><p><strong>案例</strong>： <code>IDC</code>无法访问公网，导致无法生成订单快照进而影响下单核心流程。</p>
+<p><strong>应对预案</strong>：多<code>AZ</code>建设。由下图可知，当<code>N</code>大于1时，<code>N+1</code>值越高，代表冗余度越低，硬件成本越低，但隐含项是<code>IDC</code>建设成本高昂，即图中拆线斜率越小。出于成本及冗余度考量，推荐<code>AZ</code>个数设定为<code>4</code>个，即当<code>N</code>等于3时，可以取得硬件成本与服务稳定性收益的最大平衡：</p>
+<p><img src="//blog.com/2019/06/08/京东电商平台监控详解/6.jpg" alt=""></p>
+<p><strong>▲图6 硬件成本与服务稳定性收益趋势图</strong></p>
+<h3 id="4、应用层故障"><a href="#4、应用层故障" class="headerlink" title="4、应用层故障"></a>4、应用层故障</h3><p><strong>应对预案</strong>：以季度为周期，通过<code>“chaos monkey”</code>搭建故障演练平台，对多个电商项目逐个进行例行故障破坏演练，实现全产品线任意模块均可快速完成回滚、重启、扩容、迁移等预案。既可以提前暴露出架构中的薄弱环节、又可以让一线运维工程师、研发熟悉常见故障处理方法，熟悉应急故障组织管理流程。</p>
+<h3 id="5、第三方依赖故障"><a href="#5、第三方依赖故障" class="headerlink" title="5、第三方依赖故障"></a>5、第三方依赖故障</h3><p><strong>案例</strong>：因云缓存升级认证方式，导致登录页、商详页等页面无法展现，影响用户下单。</p>
+<p><strong>应对预案</strong>：为应对云数据库、云缓存等故障，通过如下方法优先保证核心页面可正常展现：</p>
+<ul>
+<li>构建多级缓存</li>
+<li>访问率较高的首页、商详静态化，并上线<code>CDN</code></li>
+<li>抽取页面公共静态资源，并进行动静资源分离</li>
+<li>部分数据异步请求</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/监控体系搭建/" rel="tag"># 监控体系搭建</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/08/监控数据从哪里来/" rel="next" title="监控数据从哪里来">
+                <i class="fa fa-chevron-left"></i> 监控数据从哪里来
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/08/百亿级日志系统架构设计及优化/" rel="prev" title="百亿级日志系统架构设计及优化">
+                百亿级日志系统架构设计及优化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#京东电商平台监控详解"><span class="nav-number">1.</span> <span class="nav-text">京东电商平台监控详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#黑盒监控"><span class="nav-number">1.1.</span> <span class="nav-text">黑盒监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、监控对象"><span class="nav-number">1.1.1.</span> <span class="nav-text">1、监控对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、监控经验"><span class="nav-number">1.1.2.</span> <span class="nav-text">2、监控经验</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1）触发反作弊策略"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">1）触发反作弊策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2）在售商品库存被耗尽"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">2）在售商品库存被耗尽</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3）服务变更导致订单监控异常"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">3）服务变更导致订单监控异常</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4）支付页同样需要监控"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">4）支付页同样需要监控</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#白盒监控"><span class="nav-number">1.2.</span> <span class="nav-text">白盒监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、监控对象-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">1、监控对象</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1）接入层"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">1）接入层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2）应用层"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">2）应用层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3）数据及依赖层"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">3）数据及依赖层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4）基础服务及实例"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">4）基础服务及实例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、监控经验-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">2、监控经验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、仪表盘"><span class="nav-number">1.2.3.</span> <span class="nav-text">3、仪表盘</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见故障及其预案建设"><span class="nav-number">1.3.</span> <span class="nav-text">常见故障及其预案建设</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、运营商故障"><span class="nav-number">1.3.1.</span> <span class="nav-text">1、运营商故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、接入层故障"><span class="nav-number">1.3.2.</span> <span class="nav-text">2、接入层故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、IDC故障"><span class="nav-number">1.3.3.</span> <span class="nav-text">3、IDC故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4、应用层故障"><span class="nav-number">1.3.4.</span> <span class="nav-text">4、应用层故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5、第三方依赖故障"><span class="nav-number">1.3.5.</span> <span class="nav-text">5、第三方依赖故障</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

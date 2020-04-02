@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="微服务架构下静态数据通用缓存机制 原文地址：https://www.cnblogs.com/bossma/p/9858847.html  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在分布式系统中，特别是最近很火的微服务架构下，有没有或者能不能总结出一个业务静态数据的通用缓存处理机制或方案，这篇文章将结合一些实际的研发经验，尝试理清其中存在的关键问题以及探寻通用的解决之">
+<meta name="keywords" content="架构,消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务架构下静态数据通用缓存机制">
+<meta property="og:url" content="http://blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="微服务架构下静态数据通用缓存机制 原文地址：https://www.cnblogs.com/bossma/p/9858847.html  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在分布式系统中，特别是最近很火的微服务架构下，有没有或者能不能总结出一个业务静态数据的通用缓存处理机制或方案，这篇文章将结合一些实际的研发经验，尝试理清其中存在的关键问题以及探寻通用的解决之">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/73642-20190813175605846-1761040322.png">
+<meta property="og:updated_time" content="2019-08-17T14:42:00.843Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微服务架构下静态数据通用缓存机制">
+<meta name="twitter:description" content="微服务架构下静态数据通用缓存机制 原文地址：https://www.cnblogs.com/bossma/p/9858847.html  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在分布式系统中，特别是最近很火的微服务架构下，有没有或者能不能总结出一个业务静态数据的通用缓存处理机制或方案，这篇文章将结合一些实际的研发经验，尝试理清其中存在的关键问题以及探寻通用的解决之">
+<meta name="twitter:image" content="http://blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/73642-20190813175605846-1761040322.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/">
+
+
+
+
+
+  <title>微服务架构下静态数据通用缓存机制 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">微服务架构下静态数据通用缓存机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-17T12:12:57+08:00">
+                2019-08-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="微服务架构下静态数据通用缓存机制"><a href="#微服务架构下静态数据通用缓存机制" class="headerlink" title="微服务架构下静态数据通用缓存机制"></a>微服务架构下静态数据通用缓存机制</h1><blockquote>
+<p>原文地址：<a href="https://www.cnblogs.com/bossma/p/9858847.html" target="_blank" rel="noopener">https://www.cnblogs.com/bossma/p/9858847.html</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在分布式系统中，特别是最近很火的微服务架构下，有没有或者能不能总结出一个业务静态数据的通用缓存处理机制或方案，这篇文章将结合一些实际的研发经验，尝试理清其中存在的关键问题以及探寻通用的解决之道。</p>
+<h2 id="什么是静态数据"><a href="#什么是静态数据" class="headerlink" title="什么是静态数据"></a>什么是静态数据</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里<strong>静态数据是指不经常发生变化或者变化频率比较低的数据</strong>，比如车型库、用户基本信息、车辆基本信息等，车型库这种可能每个月会更新一次，用户和车辆基本信息的变化来源于用户注册、修改，这个操作的频率相对也是比较低的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外这类数据的另一个特点是要求准确率和实时性都比较高，不能出现丢失、错误，以及过长时间的陈旧读。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;具体是不是应该归类为静态数据要看具体的业务，以及对变化频率高低的划分标准。在这里的业务定义中，上边这几类数据都归为静态数据。</p>
+<h2 id="为什么需要缓存"><a href="#为什么需要缓存" class="headerlink" title="为什么需要缓存"></a>为什么需要缓存</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在面向用户或车联网的业务场景中，车型信息、用户基本信息和车辆基本信息有着广泛而高频的业务需求，很多数据都需要对其进行关联处理。在这里缓存的目的就是为了提高数据查询效率。静态数据通常都保存在关系型数据库中，这类数据库的IO效率普遍不高，应对高并发的查询往往捉襟见肘。使用缓存可以极大的提升读操作的吞吐量，特别是KV类的缓存，没有复杂的关系操作，时间复杂度一般都在O(1)。注意这里说的缓存指内存缓存。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然除了使用缓存，还可以通过其它手段来提高IO吞吐量，比如读写分离，分库分表，但是这类面向关系型数据库的方案更倾向于同时提高读写效率，对于单纯提升读吞吐量的需求，这类方案不够彻底，不能在有限的资源情况下发挥更好的作用。</p>
+<h2 id="通用缓存机制"><a href="#通用缓存机制" class="headerlink" title="通用缓存机制"></a>通用缓存机制</h2><p>下面将直接给出一个我认为的通用处理机制，然后会对其进行分析。</p>
+<p><img src="//blog.com/2019/08/17/微服务架构下静态数据通用缓存机制/73642-20190813175605846-1761040322.png" alt="img"></p>
+<p>对于某个具体的业务，其涉及到六个核心程序：</p>
+<ul>
+<li>业务服务：提供对某种业务数据的操作接口，比如车辆服务，提供对车辆基本信息的增删改查服务。</li>
+<li>关系数据库：使用若干表持久化业务数据，比如<code>SQLServer、MySQL、Oracle</code>等。</li>
+<li><strong>持久化队列</strong>：可独立部署的队列程序，支持数据持久化，比如<code>RabbitMQ、RocketMQ、Kafka</code>等。</li>
+<li><strong>缓存处理程序</strong>：从队列接收数据，然后写入缓存。</li>
+<li><strong>数据一致处理程序</strong>：负责检查缓存数据库和关系型数据库中数据是否一致，如果不一致则使用关系数据库进行更新。</li>
+<li><strong>缓存数据库</strong>（<code>Redis</code>）：支持持久化的缓存数据库，这里直接选了<code>Redis</code>，这个基本是业界标准了。</li>
+</ul>
+<p>以及两个外部定义：</p>
+<ul>
+<li>数据生产者：业务静态数据的来源，可以理解为前端APP、Web系统的某个功能或者模块。</li>
+<li>数据消费者：需要使用这些业务静态数据的服务或者系统，比如报警系统需要获取车辆对应的用户信息以便发送报警。</li>
+</ul>
+<p>下面以问答的形式来说明为什么是这样一种机制。</p>
+<h3 id="为什么需要业务服务？"><a href="#为什么需要业务服务？" class="headerlink" title="为什么需要业务服务？"></a>为什么需要业务服务？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;既然是微服务架构，当然离不开服务了，因为这里探讨的是业务静态数据，所以是业务服务。不过为了更好的理解，这里还是简单说下服务出现的原因。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当<strong>今业务往往需要在多个终端进行使用</strong>，比如PC、手机、平板等，既有网页的形式，又有APP的形式，另<strong>外某个数据可能在多种不同的业务被需要</strong>，如果将数据操作分布在多个程序中很可能产生数据不一致的情况，另外代码不可避免的冗余，读写性能更很难控制，变更也基本上是不敢变的。<strong>通过一个业务服务可以将对业务数据的操作有序的管理起来，并通过接口的形式对外提供操作能力，代码不用冗余了，性能也好优化了，数据不一致也得到了一定的控制，编写上层应用的人也舒服了</strong>。</p>
+<h3 id="为什么不是进程内缓存？"><a href="#为什么不是进程内缓存？" class="headerlink" title="为什么不是进程内缓存？"></a>为什么不是进程内缓存？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多开发语言都提供了进程内缓存的支持，即使没有提供直接操作缓存的包或库，也可以通过静态变量的方式来实现。对数据的查询请求直接在进程内存完成，效率可以说是杠杠滴了。但是进程内缓存存在两个问题：</p>
+<ul>
+<li><p><strong>缓存数据的大小</strong>：进程可以缓存数据的大小受限于系统可用内存，同时如果机器上部署了多个服务，某个服务使用了太多的内存，则可能会影响其它服务的正常访问，因此不适合大量数据的缓存。</p>
+</li>
+<li><p><strong>缓存雪崩</strong>：缓存同时大量过期或者进程重启的情况下，可能产生大量的缓存穿透，过多的请求打到关系数据库上，可能导致关系数据库的崩溃，引发更大的不可用问题。</p>
+</li>
+</ul>
+<h3 id="为什么是Redis？"><a href="#为什么是Redis？" class="headerlink" title="为什么是Redis？"></a>为什么是Redis？</h3><p><code>Redis</code>这类数据库可以解决进程内缓存的两个问题：</p>
+<ul>
+<li><strong>独立部署，不影响其它业务，还可以做集群，内存扩容比较方便</strong>。</li>
+<li><strong>支持数据持久化</strong>，即使<code>Redis</code>重启了，缓存的数据自身就可以很快恢复。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外<code>Redis</code>提供了很好的读写性能，以及方便的水平扩容能力，还支持多种常用数据结构，使用起来比较方便，可以说是通用缓存首选。</p>
+<h3 id="为什么需要队列？"><a href="#为什么需要队列？" class="headerlink" title="为什么需要队列？"></a>为什么需要队列？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>队列在这里的目的是为了解耦</strong>，坦白的说这个方案中可以没有队列，业务服务在关系数据库操作完成后，直接更新到缓存也是可以的。 之所以加上这个队列是由于当前的业务开发有很明显的系统拆分的需求，特别是在微服务架构下，为了降低服务之间的耦合，使用队列是个常用选择，在某些开发模型中也是很推崇的，比如<code>Actor</code>模型。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;举个例子，比如新注册一个用户，需要赠送其300积分，同时还要给其发个注册成功的邮件，如果将注册用户、赠送积分、发成功邮件都写到一起执行，会产生两个问题：一是注册操作耗时增加，二是其中某个处理引发整体不可用的几率增大，三是程序的扩展性不好；通多引入队列，将注册信息分别发到积分队列和通知队列，然后由积分模块和通知模块分别处理，用户、积分、通知三个模块的耦合降低了，相互影响变小了，以后再增加注册后的其它处理也就是增加个队列的事，整体的扩展性得到了增强。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;队列作为一种常用的解耦方案，在缓存这里虽然产生的影响不大，但是除了缓存难免同时还会有其它业务处理，所以为了统一处理机制，这里保留了下来。（既然用了，就把它发扬光大。）</p>
+<h3 id="为什么队列需要持久化？"><a href="#为什么队列需要持久化？" class="headerlink" title="为什么队列需要持久化？"></a>为什么队列需要持久化？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>持久化是为了解决网络抖动或者崩溃导致数据丢失的问题，在数据从业务服务到队列，队列自身处理，再从队列到缓存处理程序，中间都可能丢失数据</strong>。为了解决丢失数据的问题，需要发送时确认、队列自身持久化、接收时确认；但是需要注意确认机制可能会导致重复数据的产生，因为在未收到确认时就需要重新发送或接收，而数据实际上可能被正常处理，只是确认丢失了；确认机制还会降低队列的吞吐量，但是根据我们的定义业务静态数据的变更频率应该不高，如果同时还需要较高的并发分片是个不错的选择。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里持久化队列推荐选择<code>RabbitMQ</code>，虽然吞吐量支持的不是很大，但是各方面综合不错，并发够用就好。</p>
+<h3 id="为什么需要数据一致检查程序？"><a href="#为什么需要数据一致检查程序？" class="headerlink" title="为什么需要数据一致检查程序？"></a>为什么需要数据一致检查程序？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在业务服务操作完关系数据库后，数据发送到队列之前（或者不用队列就是直接写入缓存之前），<strong>业务服务崩溃了，这时候数据就不能更新到缓存了</strong>。还有一种情况是<strong><code>Redis</code>发生了故障转移，<code>master</code>中的更新没有同步到<code>slaver</code></strong>。通过引入这么一个检查程序，定时的检查关系数据库数据和缓存数据的差别，如果缓存数据比较陈旧，则更新之。这样提供了一种极端情况下的挽救措施。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个检查程序的<strong>运行频率需要综合考虑数据库压力和能够承受的数据陈旧时间，不能把数据库查死了，也不能陈旧太久导致大量数据不一致</strong>。可以通过设置上次检查时间点的方式，每次只检查从上次检查时间点（或者最近几次，防止<code>Redis</code>故障转移数据未同步的问题）到本次检查时间点发生变更的数据，这样每次检查只对增量变更，效率更高。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时需要理解在分布式系统中，微服务架构下，数据不一致是经常出现的，必须在一致性和可用性之间做出权衡，尽力去降低影响，比如使用准实时或最终一致性。</p>
+<h3 id="只要数据一致检查程序是不是就够了？"><a href="#只要数据一致检查程序是不是就够了？" class="headerlink" title="只要数据一致检查程序是不是就够了？"></a>只要数据一致检查程序是不是就够了？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设没有缓存处理程序，通过定时同步关系数据库和缓存数据库是不是就够了呢？这还是取决于业务，如果是车型库这种数据，增加一个新的车型，本来之前就没有，时间上并不是很敏感，这个是可以的。但是对于新增了用户或者车辆，数据消费者还是希望能够马上使用最新的数据进行处理，越快越好，这时使用同步或者准同步更新就能更加贴近需求。<strong>数据更新是否及时</strong></p>
+<h3 id="为什么不用缓存过期机制？"><a href="#为什么不用缓存过期机制？" class="headerlink" title="为什么不用缓存过期机制？"></a>为什么不用缓存过期机制？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用缓存过期机制可以不需要缓存处理程序和数据一致检查程序，业务服务首先从<code>Redis</code>查询数据，如果数据存在就直接返回，如果不存在则从关系数据库查询，然后写入<code>Redis</code>，然后再返回，这也是一种常用的缓存处理机制，网上可以查询到很多，很多人用的也很好。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是缓存的过期时间是个问题：缓存多长时间过期，<strong>设置的短可以降低数据的陈旧，但是会增加缓存穿透的概率，即使采用随机的缓存过期时间，在<code>Redis</code>重启或者故障转移的情况下还是会可能导致缓存雪崩，雪崩的情况下采用数据预热机制，也可能会导致服务更长时间的不可用；设置的长可以提升缓存的使用率，但是增加了数据陈旧</strong>，在上边对静态数据的定义中对其准确率和实时性都有较高的要求，业务上能不能接受需要考虑。而且如果操作数据和查询存在波动的峰谷，是不是要引入动态<code>TTL</code>的机制，以达到缓存使用和直接访问数据库的一种平衡，这就需要权衡业务需求和技术方案。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过上边的这些问题问答，再来看看上面提出的微服务架构下静态数据通用缓存处理机制。</p>
+<ul>
+<li><strong>通过业务服务来包装对数据的操作</strong>，不管是操作关系数据库还是缓存数据库，数据消费者其实不需要关心，它只关心业务服务能不能提供高并发实时数据的查询能力。</li>
+<li>利用分布式系统中经常<strong>使用队列进行解耦</strong>的方式，业务服务不干写入缓存的事，增加一个队列订阅数据变更，然后从队列取数据写入缓存数据库。</li>
+<li>对于绝大部分正常的情况，通过队列更新缓存数据和业务服务中更新缓存数据，其实时性是差不多的，同时实现了业务操作和写缓存的解耦。</li>
+<li><strong>在极端崩溃导致数据不一致的情况下，通过数据一致检查程序进行补救，尽快更新缓存数据</strong>。</li>
+<li>现在业务服务可以通过访问<code>Redis</code>缓存来提供对静态数据的高并发准实时查询能力，缓存中不存在的数据就是不存在，没有缓存穿透。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于微服务架构而言，这个机制借助队列这种通用的解耦方式，独立了缓存更新处理，通过准实时更新和定时检查，保证了缓存的实时性和极端情况下较短时间内达到最终一致，通过缓存的持久化机制消除了缓存穿透和雪崩，在缓存的数据较大或读取并发较高时支持水平扩容，可以认为对业务静态数据提供了一种广泛适用的缓存处理机制。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个方案在某些情况下可能是没有必要的，比如你要缓存一个全国限行的城市列表，使用一个进程内缓存就够了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后剩下的就是工作量的问题了，这个会给开发和维护带来复杂性，队列有没有用的顺手的，人手是不是够，业务需求是什么样的，需要考虑清楚。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Redis耦合问题：</strong>图中业务服务直接访问了<code>Redis</code>，如果要实现业务服务对<code>Redis</code>的完全透明，这个还比较复杂，可以考虑采用<code>AOP</code>的方式，对关系数据库和<code>Redis</code>保持相同的类型定义，分别采用<code>ORM</code>和反序列化的方式标准化输出，这是个想法我也没有实现；同时缓存数据是准实时的，如果要求完全一致，还是应该提供从关系数据库查询的版本。另外如果要摆脱对<code>Redis</code>的直接依赖，还可以通过<code>OpenResty</code>来实现对资源的透明访问，这个不是本文的重点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>服务可用性问题：</strong>这篇文章没有关注服务可用性问题，为了保证服务的高可用，每个服务或者程序都应该有多份部署的，无论是负载均衡的方案，或者传统的主备方案，在部分部署不可用时仍能够继续提供服务。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/17/Kafka原理了解/" rel="next" title="Kafka原理了解">
+                <i class="fa fa-chevron-left"></i> Kafka原理了解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/18/缓存技术使用的实践与思考/" rel="prev" title="缓存技术使用的实践与思考">
+                缓存技术使用的实践与思考 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#微服务架构下静态数据通用缓存机制"><span class="nav-number">1.</span> <span class="nav-text">微服务架构下静态数据通用缓存机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是静态数据"><span class="nav-number">1.1.</span> <span class="nav-text">什么是静态数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要缓存"><span class="nav-number">1.2.</span> <span class="nav-text">为什么需要缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通用缓存机制"><span class="nav-number">1.3.</span> <span class="nav-text">通用缓存机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么需要业务服务？"><span class="nav-number">1.3.1.</span> <span class="nav-text">为什么需要业务服务？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么不是进程内缓存？"><span class="nav-number">1.3.2.</span> <span class="nav-text">为什么不是进程内缓存？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么是Redis？"><span class="nav-number">1.3.3.</span> <span class="nav-text">为什么是Redis？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么需要队列？"><span class="nav-number">1.3.4.</span> <span class="nav-text">为什么需要队列？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么队列需要持久化？"><span class="nav-number">1.3.5.</span> <span class="nav-text">为什么队列需要持久化？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么需要数据一致检查程序？"><span class="nav-number">1.3.6.</span> <span class="nav-text">为什么需要数据一致检查程序？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#只要数据一致检查程序是不是就够了？"><span class="nav-number">1.3.7.</span> <span class="nav-text">只要数据一致检查程序是不是就够了？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么不用缓存过期机制？"><span class="nav-number">1.3.8.</span> <span class="nav-text">为什么不用缓存过期机制？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后记"><span class="nav-number">1.5.</span> <span class="nav-text">后记</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

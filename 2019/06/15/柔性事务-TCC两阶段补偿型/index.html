@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,分布式事务,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="柔性事务-TCC两阶段补偿型  原文地址：http://www.tianshouzhi.com/api/tutorials/distributed_transaction/388   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;TCC方案是可能是目前最火的一种柔性事务方案了。关于TCC（Try-Confirm-Cancel）的概念，最早是由Pat Helland于200">
+<meta name="keywords" content="架构,分布式事务">
+<meta property="og:type" content="article">
+<meta property="og:title" content="柔性事务-TCC两阶段补偿型">
+<meta property="og:url" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="柔性事务-TCC两阶段补偿型  原文地址：http://www.tianshouzhi.com/api/tutorials/distributed_transaction/388   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;TCC方案是可能是目前最火的一种柔性事务方案了。关于TCC（Try-Confirm-Cancel）的概念，最早是由Pat Helland于200">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793866569016851.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793897087064173.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793929963047822.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793973852088232.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794010239009939.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794033497049311.png">
+<meta property="og:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794054204017667.png">
+<meta property="og:updated_time" content="2019-06-16T03:58:16.208Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="柔性事务-TCC两阶段补偿型">
+<meta name="twitter:description" content="柔性事务-TCC两阶段补偿型  原文地址：http://www.tianshouzhi.com/api/tutorials/distributed_transaction/388   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;TCC方案是可能是目前最火的一种柔性事务方案了。关于TCC（Try-Confirm-Cancel）的概念，最早是由Pat Helland于200">
+<meta name="twitter:image" content="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793866569016851.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/">
+
+
+
+
+
+  <title>柔性事务-TCC两阶段补偿型 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">柔性事务-TCC两阶段补偿型</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-15T12:12:57+08:00">
+                2019-06-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式事务/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式事务</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="柔性事务-TCC两阶段补偿型"><a href="#柔性事务-TCC两阶段补偿型" class="headerlink" title="柔性事务-TCC两阶段补偿型"></a>柔性事务-TCC两阶段补偿型</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="http://www.tianshouzhi.com/api/tutorials/distributed_transaction/388" target="_blank" rel="noopener">http://www.tianshouzhi.com/api/tutorials/distributed_transaction/388</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TCC</code>方案是可能是目前最火的一种柔性事务方案了。关于<code>TCC（Try-Confirm-Cancel）</code>的概念，最早是由Pat Helland于2007年发表的一篇名为《<code>Life beyond Distributed Transactions:an Apostate’s Opinion</code>》的论文提出。在该论文中，TCC还是以Tentative-Confirmation-Cancellation命名。正式以Try-Confirm-Cancel作为名称的是Atomikos公司，其注册了TCC商标。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;国内最早关于TCC的报道，应该是InfoQ上对阿里程立博士的一篇采访。经过程博士的这一次传道之后，TCC在国内逐渐被大家广为了解并接受。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atomikos公司在商业版本事务管理器<code>ExtremeTransactions</code>中提供了TCC方案的实现，但是由于其是收费的，因此相应的很多的开源实现方案也就涌现出来，如：<code>tcc-transaction、ByteTCC、spring-cloud-rest-tcc</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TCC</code>的作用主要是解决跨服务调用场景下的分布式事务问题，在本文中，笔者将先介绍一个跨服务的场景案例，并分析其中存在的分布式事务问题；然后介绍<code>TCC</code>的基本概念以及其是如何解决这个问题的。</p>
+<h2 id="场景案例"><a href="#场景案例" class="headerlink" title="场景案例"></a>场景案例</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atomikos官网上&lt;<composite transactions="" for="" soa="">&gt;一文中，以航班预定的案例，来介绍<code>TCC</code>要解决的事务场景。在这里笔者虚构一个完全相同的场景，把自己当做航班预定的主人公，来介绍这个案例。事实上，你可以把本案例当做官方文档案例的一个翻译，只不过把地点从<code>Brussels--&gt;Toronto--&gt;Washington</code>，改成从合肥–&gt;昆明–&gt;大理。</composite></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有一次，笔者买彩票中奖了(纯属虚构)，准备从合肥出发，到云南大理去游玩，然后使用美团App(机票代理商)来订机票。发现没有从合肥直达大理的航班，需要到昆明进行中转。如下图： </p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793866569016851.png" alt="B121F546-2D0F-45F5-962D-758B07337692.png"></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从图中我们可以看出来，从合肥到昆明乘坐的是四川航空，从昆明到大理乘坐的是东方航空。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于使用的是美团<code>App</code>预定，当我选择了这种航班预定方案后，美团<code>App</code>要去四川航空和东方航空各帮我购买一张票。如下图： </p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793897087064173.png" alt="B87CD059-6891-4A30-A5C4-B8EC7735EADF.png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;考虑最简单的情况：美团先去川航帮我买票，如果买不到，那么东航也没必要买了。如果川航购买成功，再去东航购买另一张票。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在问题来了：假设美团先从川航成功买到了票，然后去东航买票的时候，因为天气问题，东航航班被取消了。那么此时，美团必须取消川航的票，因为只有一张票是没用的，不取消就是浪费我的钱。那么如果取消会怎样呢？如果读者有取消机票经历的话，非正常退票，肯定要扣手续费的。在这里，川航本来已经购买成功，现在因为东航的原因要退川航的票，川航应该是要扣代理商的钱的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么美团就要保证，如果任一航班购买失败，都不能扣钱，怎么做呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>两个航空公司都为美团提供以下3个接口：机票预留接口、确认接口、取消接口</strong>。美团App分2个阶段进行调用，如下所示： </p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793929963047822.png" alt="F58C00A0-976A-4295-818C-C9F96B191060.png"></p>
+<p><strong>在第1阶段：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;美团分别请求两个航空公司预留机票，两个航空公司分别告诉美图预留成功还是失败。航空公司需要保证，机票预留成功的话，之后一定能购买到。</p>
+<p><strong>在第2阶段：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果两个航空公司都预留成功，则分别向两个公司发送确认购买请求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果两个航空公司任意一个预留失败，则对于预留成功的航空公司也要取消预留。这种情况下，对于之前预留成功机票的航班取消，也不会扣用户的钱，因为购买并没实际发生，之前只是请求预留机票而已。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过这种方案，可以保证两个航空公司购买机票的一致性，要不都成功，要不都失败，即使失败也不会扣用户的钱。如果在两个航班都已经已经确认购买后，再退票，那肯定还是要扣钱的。</p>
+<p>​    当然，实际情况肯定这里提到的肯定要复杂，通常航空公司在第一阶段，对于预留的机票，会要求在指定的时间必须确认购买(支付成功)，如果没有及时确认购买，会自动取消。假设川航要求10分钟内支付成功，东航要求30分钟内支付成功。<strong>以较短的时间算，如果用户在10分钟内支付成功的话，那么美团会向两个航空公司都发送确认购买的请求，如果超过10分钟(以较短的时间为准)，那么就不能进行支付</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;再次强调，这个案例，可以算是&lt;<composite transactions="" for="" soa="">&gt;中航班预定案例的汉化版。而实际美团App是如何实现这种需要中转的航班预定需求，笔者并不知情。</composite></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，注意这只是一个案例场景，实际情况中，你是很难去驱动航空公司进行接口改造的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whatever，这个方案提供给我们一种跨服务条用保证事务一致性的一种解决思路，可以把这种方案当做TCC的雏形。 </p>
+<h2 id="TCC-的基本概念"><a href="#TCC-的基本概念" class="headerlink" title="TCC 的基本概念"></a>TCC 的基本概念</h2><p><code>TCC</code>是<code>Try-Confirm-Cancel</code>的简称:</p>
+<p><strong>Try阶段：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;完成所有业务检查（一致性），预留业务资源(准隔离性)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;回顾上面航班预定案例的阶段1，机票就是业务资源，所有的资源提供者(航空公司)预留都成功，try阶段才算成功</p>
+<p><strong>Confirm阶段：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;确认执行业务操作，不做任何业务检查， 只使用<code>Try</code>阶段预留的业务资源。回顾上面航班预定案例的阶段2，美团APP确认两个航空公司机票都预留成功，因此向两个航空公司分别发送确认购买的请求。</p>
+<p><strong>Cancel阶段：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;取消<code>Try</code>阶段预留的业务资源。回顾上面航班预定案例的阶段2，如果某个业务方的业务资源没有预留成功，则取消所有业务资源预留请求。 </p>
+<p>敏锐的读者立马会想到，<code>TCC</code>与<code>XA</code>两阶段提交有着异曲同工之妙，下图列出了二者之间的对比：</p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517793973852088232.png" alt="D7087D1B-1E4D-4C0E-8BA4-B2A8B36D0132.png"></p>
+<p>  1) 在阶段1：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>XA</code>中，各个<code>RM</code>准备提交各自的事务分支，事实上就是准备提交资源的更新操作(<code>insert、delete、update</code>等)；而在<code>TCC</code>中，是主业务活动请求(<code>try</code>)各个从业务服务预留资源。</p>
+<p>  2) 在阶段2：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>XA</code>根据第一阶段每个<code>RM</code>是否都<code>prepare</code>成功，判断是要提交还是回滚。如果都<code>prepare</code>成功，那么就<code>commit</code>每个事务分支，反之则<code>rollback</code>每个事务分支。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TCC</code>中，如果在第一阶段所有业务资源都预留成功，那么<code>confirm</code>各个从业务服务，否则取消(<code>cancel</code>)所有从业务服务的资源预留请求。</p>
+<p><code>TCC</code>两阶段提交与<code>XA</code>两阶段提交的区别是：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>XA是资源层面的分布式事务，强一致性，在两阶段提交的整个过程中，一直会持有资源的锁。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>XA</code>事务中的两阶段提交内部过程是对开发者屏蔽的</strong>，回顾我们之前讲解<code>JTA</code>规范时，通过<code>UserTransaction</code>的<code>commit</code>方法来提交全局事务，这只是一次方法调用，其内部会委派给<code>TransactionManager</code>进行真正的两阶段提交，因此开发者从代码层面是感知不到这个过程的。而<strong>事务管理器在两阶段提交过程中，从<code>prepare</code>到<code>commit/rollback</code>过程中，资源实际上一直都是被加锁的</strong>。<strong>如果有其他人需要更新这两条记录，那么就必须等待锁释放</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>TCC是业务层面的分布式事务，最终一致性，不会一直持有资源的锁。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>TCC</code>中的两阶段提交并没有对开发者完全屏蔽，也就是说从代码层面，开发者是可以感受到两阶段提交的存在</strong>。如上述航班预定案例：在第一阶段，航空公司需要提供<code>try</code>接口(机票资源预留)。在第二阶段，航空公司提需要提供confirm/cancel接口(确认购买机票/取消预留)。开发者明显的感知到了两阶段提交过程的存在。<code>try、confirm/cancel</code>在执行过程中，一般都会开启各自的本地事务，来保证方法内部业务逻辑的<code>ACID</code>特性。其中：</p>
+<p>​    1、<code>try</code>过程的本地事务，是保证资源预留的业务逻辑的正确性。</p>
+<p>​    2、<code>confirm/cancel</code>执行的本地事务逻辑确认/取消预留资源，以保证最终一致性，也就是所谓的<code>补偿型事务</code>(<code>Compensation-Based Transactions</code>)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>由于是多个独立的本地事务，因此不会对资源一直加锁</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，这里提到<code>confirm/cancel</code>执行的本地事务是补偿性事务，关于什么是补偿性事务，atomikos 官网上有以下描述： </p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794010239009939.png" alt="C6467FCC-0325-4DA9-9B21-D263C19710D2.png"></p>
+<p>​    红色框中的内容，是对补偿性事务的解释。大致含义是，”<strong>补偿是一个独立的支持<code>ACID</code>特性的本地事务，用于在逻辑上取消服务提供者上一个<code>ACID</code>事务造成的影响</strong>，对于一个长事务(<code>long-running transaction</code>)，与其实现一个巨大的分布式<code>ACID</code>事务，不如使用基于补偿性的方案，把每一次服务调用当做一个较短的本地<code>ACID</code>事务来处理，执行完就立即提交”。</p>
+<p>​    在这里，笔者理解为<strong><code>confirm</code>和<code>cancel</code>就是补偿事务，用于取消<code>try</code>阶段本地事务造成的影响</strong>。因为<strong>第一阶段<code>try</code>只是预留资源，之后必须要明确的告诉服务提供者，这个资源你到底要不要，对应第二阶段的<code>confirm/cancel</code></strong>。</p>
+<p>​    提示：读者现在应该明白为什么把<code>TCC</code>叫做两阶段补偿性事务了，提交过程分为2个阶段，第二阶段的<code>confirm/cancel</code>执行的事务属于补偿事务。 </p>
+<h2 id="TCC事务模型-VS-DTP事务模型"><a href="#TCC事务模型-VS-DTP事务模型" class="headerlink" title="TCC事务模型 VS DTP事务模型"></a><strong>TCC事务模型 VS DTP事务模型</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在介绍完<code>TCC</code>的基本概念之后，我们再来比较一下<code>TCC</code>事务模型和<code>DTP</code>事务模型，如下所示： </p>
+<p><img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794033497049311.png" alt="C014B9B7-F334-4C95-BCEA-59A7897DA651.png"></p>
+<p>这两张图看起来差别较大，实际上很多地方是类似的：</p>
+<p><strong>1、TCC模型中的主业务服务 相当于 DTP模型中的AP，TCC模型中的从业务服务 相当于 DTP模型中的RM</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>DTP</code>模型中，应用AP操作多个资源管理器<code>RM</code>上的资源；而在<code>TCC</code>模型中，是主业务服务操作多个从业务服务上的资源。例如航班预定案例中，美团App就是主业务服务，而川航和东航就是从业务服务，主业务服务需要使用从业务服务上的机票资源。<strong>不同的是<code>DTP</code>模型中的资源提供者是类似于<code>Mysql</code>这种关系型数据库，而<code>TCC</code>模型中资源的提供者是其他业务服务</strong>。</p>
+<p><strong>2、TCC模型中，从业务服务提供的try、confirm、cancel接口 相当于 DTP模型中RM提供的prepare、commit、rollback接口</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>XA</code>协议中规定了<code>DTP</code>模型中定RM需要提供<code>prepare、commit、rollback</code>接口给<code>TM</code>调用，以实现两阶段提交。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而在<code>TCC</code>模型中，从业务服务相当于<code>RM</code>，提供了类似的<code>try、confirm、cancel</code>接口。</p>
+<p><strong>3、事务管理器</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>DTP</code>模型和<code>TCC</code>模型中都有一个事务管理器。不同的是：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在<code>DTP</code>模型中，阶段1的(<code>prepare</code>)和阶段2的(<code>commit、rollback</code>)，都是由<code>TM</code>进行调用的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在<code>TCC</code>模型中，阶段1的<code>try</code>接口是主业务服务调用(绿色箭头)，阶段2的(<code>confirm、cancel</code>接口)是事务管理器TM调用(红色箭头)</strong>。这就是 <code>TCC</code> 分布式事务模型的<strong>二阶段异步化功能，从业务服务的第一阶段执行成功，主业务服务就可以提交完成，然后再由事务管理器框架异步的执行各从业务服务的第二阶段</strong>。<strong>这里牺牲了一定的隔离性和一致性的，但是提高了长事务的可用性</strong>。问题来了，既然第二阶段是异步执行的，主业务服务怎么知道异步执行的结果呢？发消息异步通知？返回一个id，后面让业务去查？</p>
+<h2 id="TCC如何保证comfirm-cancel执行成功"><a href="#TCC如何保证comfirm-cancel执行成功" class="headerlink" title="TCC如何保证comfirm/cancel执行成功"></a>TCC如何保证comfirm/cancel执行成功</h2><blockquote>
+<p>问题：假设a给b转账 在confirm b的时候，数据修改在B本地commit了 然后 发生了network脑裂，事务协调节点没有收到这个confirm feedback，timeout了，事务节点会发出cancel命令，节点a cancel了。网络恢复后b起来后会再和协调节点通信吗？</p>
+<p><strong>b commit失败之后，事务协调器是不会给a、b发cancel的，事务协调器会一直重试给b 发commit，直到b commit成功为止 ，这个是2PC的协议这么规定的</strong></p>
+</blockquote>
+<blockquote>
+<p>TCC和XA一样，一阶段成功成功或者失败，决定二阶段commit还是rollback。如果成功了，就只能commit，commit失败可以重试，不能回滚。这里其实有一个隐含的条件，某个事务分支一阶段成功，就需要保证之后一定可以commit成功</p>
+</blockquote>
+<p><strong>怎么确保一定commit成功？XA二阶段如果commit失败  怎么搞呢 ？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一阶段资源锁定，如果锁定成功，才会告诉你可以<code>commit</code>，这是前提条件。如果锁定成功，但是不能<code>commit</code>成功，说明<strong>逻辑问题</strong>。（一些基础设施出现问题的情况除外）</p>
+<p><strong>多次重试 +  人工干预</strong>，重试是事务管理器<code>TM</code>做的</p>
+<blockquote>
+<p>XA逻辑一样，prepare成功，就要保证commit可以成功，这是资源管理器RM来保证</p>
+</blockquote>
+<h2 id="TCC事务的优缺点"><a href="#TCC事务的优缺点" class="headerlink" title="TCC事务的优缺点"></a>TCC事务的优缺点</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>优点：</strong><code>XA</code>两阶段提交资源层面的，而<code>TCC</code>实际上把资源层面二阶段提交上提到了业务层面来实现。<strong>有效了的避免了<code>XA</code>两阶段提交占用资源锁时间过长导致的性能地下问题</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>缺点：</strong>主业务服务和从业务服务都需要进行<strong>改造</strong>，从业务方改造成本更高。还是航班预定案例，原来只需要提供一个购买接口，现在需要改造成<code>try、confirm、canel</code>3个接口，开发成本高。</p>
+<p>提示：国内有一些关于<code>TCC</code>方案介绍的文章中，把<code>TCC</code>分成三种类型：</p>
+<ul>
+<li>通用型<code>TCC</code>，如果我们上面介绍的<code>TCC</code>模型实例，从业务服务需要提供<code>try、confirm、cancel</code></li>
+<li>补偿性<code>TCC</code>，从业务服务只需要提供 <code>Do</code>和 <code>Compensate</code> 两个接口</li>
+<li>异步确保型 <code>TCC</code>，主业务服务的直接从业务服务是可靠消息服务，而真正的从业务服务则通过消息服务解耦，作为消息服务的消费端，异步地执行。</li>
+</ul>
+<p>关于这种划分，笔者并不赞同，基于两点：</p>
+<p>​    1、笔者在<code>Atomikos</code>官网上参考了多份资料，并没有看到这种划分，猜测应该是这些公司在内部实践中，自行提出的概念。</p>
+<p>​    2、对于上面所谓的”补偿性TCC”、”异步确保型 TCC”，从业务服务不需要提供<code>try、confirm、cancel</code>三个接口，在这种情况下，好像称之为<code>TCC</code>也不太合适。 </p>
+<h2 id="TCC-For-REST案例"><a href="#TCC-For-REST案例" class="headerlink" title="TCC For REST案例"></a><strong>TCC For REST案例</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过前面的介绍，我们基本已经掌握了<code>TCC</code>的工作原理。在本节中，笔者借用Atomikos官网提供的&lt;<tcc for="" rest="">&gt;进行<code>TCC</code>案例讲解。</tcc></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要注意的是，这个案例的主要目的是说明，<strong>在使用基于<code>HTTP</code>的<code>REST</code>服务中，<code>TCC</code>模型中各个参与方的API接口应该如何设计</strong>。通常一个<code>TCC</code>方案是不会依赖于底层通信框架的，例如我们也可以使用业界比较火的<code>spring cloud、dubbo</code>等。这个时候，提供实现类似接口的功能就可以了。</p>
+<p>首先我们总结一下<code>TCC</code>模型各个参与方需要提供的<code>API</code>：</p>
+<p>​    <strong>Participant API：</strong>从业务服务需要提供的<code>API</code>，其需要<strong>提供<code>try</code>接口供主业务服务调用，需要提供<code>confirm、cancel</code>接口供事务管理器调用</strong>。这里将从业务服务称之为<code>Participant</code>。</p>
+<p>​    <strong>Transaction Coordinator API：</strong>事务管理/协调器需要提供的<code>API</code>，其需要提供事务日志上报接口，<strong>让主业务活动上报<code>try</code>阶段各个从业务活动资源是否预留成功的信息</strong></p>
+<p>​    <strong>Application：</strong>主业务服务，其不需要提供任何接口，只需要操作上述 <code>Participant、 Transaction Coordinator</code>提供的接口即可。</p>
+<p>​    熟悉的配方，熟悉的味道，&lt;<tcc for="" rest="">&gt;采用的依然航班预定案例，如下图所示：</tcc></p>
+<p>   <img src="//blog.com/2019/06/15/柔性事务-TCC两阶段补偿型/1517794054204017667.png" alt="72591582-FCFB-4109-A75C-D7269B157249.png"> </p>
+<p>其中：</p>
+<p><code>Booking Proccess</code>是主业务活动，处理机票预定业务</p>
+<p><code>Swiss和easyjet</code>是从业务服务，可以理解为两个不同航空公司的机票预定系统</p>
+<p><code>Transaction Coordinator</code>是事务协调器，或者称之为事务管理器。</p>
+<p>上图中描述的整体流程如下所示：</p>
+<p>1 <code>Booking Proccess</code>接受到一个需要中转的航班预定请求(<code>bookTrip</code>)</p>
+<p>​    -1.1：<code>Booking Proccess</code>向<code>swiss</code>发起机票预定请求 <code>R1</code>，其中<code>/booking/A</code>表示<code>swis</code>提供的预留机票资源的<code>try</code>接口</p>
+<p>​    -1.2：<code>Booking Proccess</code>向<code>easyjet</code>发起机票预定请求<code>R2</code>，其中<code>/booking/B</code>表示<code>easyjet</code>提供的预留机票资源的<code>try</code>接口</p>
+<p>​    -1.3：<code>Booking Proccess</code>将请求1.1、1.2步骤中<code>try</code>的结果合并上报给<code>Transaction Coordinator</code>。</p>
+<p>​          -1.3.1 <code>Transaction Coordinator</code> 向<code>swiss</code>发送确认执行业务操作的请求</p>
+<p>​          -1.3.2 <code>Transaction Coordinator</code> 向<code>easyjet</code>发送确认执行业务操作的请求</p>
+<h3 id="Participant-API"><a href="#Participant-API" class="headerlink" title="Participant API"></a>Participant API</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从业务服务需要提供<code>try、confirm和cancel</code>三个接口，其中<code>try</code>接口是给主业务服务调用的，<code>confirm和cancel</code>是给事务协调器调用的。</p>
+<h4 id="try接口"><a href="#try接口" class="headerlink" title="try接口"></a>try接口</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在1.1和1.2步骤中，<code>Booking Proccess</code>向<code>swiss</code>和<code>easyjet</code>提供的<code>try</code>接口分别发起机票预留请求，<code>swiss和easyjet</code>作为参与者，返回的响应格式如下所示 </p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"participantLink"</span>:</span><br><span class="line">    &#123;</span><br><span class="line">     <span class="attr">"uri"</span>:<span class="string">"http://www.example.com/part/123"</span>,</span><br><span class="line">     <span class="attr">"expires"</span>:<span class="string">"2014-01-11T10:15:54Z"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里返回的是一个<code>JSON</code>格式，事实上返回的格式什么是无所谓的，不过<code>Atomikos</code>官方建议使用<code>JSON</code>格式。其中：</p>
+<p>​    <code>uri</code> ：表示的是稍后在<code>Confirm</code>确认执行业务操作时，需要调用的<code>url</code></p>
+<p>​    <code>expires</code>：表示截止时间，也就是说，如果超过这个时间依然没有确认购买，那么<code>swiss</code>和<code>easyjet</code>将会自动取消这个机票的预留</p>
+<h4 id="confirm接口"><a href="#confirm接口" class="headerlink" title="confirm接口"></a>confirm接口</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Transaction Coordinator</code>判断资源都预留成功，解析出<code>json</code>格式中的<code>uri</code>部分，向<code>swiss</code>和<code>easyjet</code>发送确认执行请求(<code>Confirm</code>)，请求格式如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PUT /part/<span class="number">123</span> HTTP/<span class="number">1.1</span></span><br><span class="line">Host: www.example.com</span><br><span class="line">Accept: application/tcc</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意请求头中<code>Accept</code>接受的<code>MIME</code>类型, 暗示了客户端的语义期望。 这个并不是强制的。   </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果<code>swiss</code>和<code>easyjet</code>都确认执行成功，应该返回<code>204</code>，表示执行成功</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 204 No Content</span><br></pre></td></tr></table></figure>
+<p>​    需要注意的是，<strong>如果在截止时间(<code>expires</code>)后发送确认执行的请求，<code>swiss</code>和<code>easyjet</code>应该返回404</strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 404 Not Found</span><br></pre></td></tr></table></figure>
+<p>​    而<strong><code>Transaction Coordinator</code>自身也应该有这种超时判断，以为较小的<code>expires</code>为准，当超过这个时间时，就不应该发送<code>confirm</code>确认执行的请求</strong>。</p>
+<p>​    而<strong>在<code>expires</code>之前如果确认执行失败，<code>Transaction Coordinator</code>应该进行重试</strong>。</p>
+<h4 id="cancel接口-可选实现"><a href="#cancel接口-可选实现" class="headerlink" title="cancel接口(可选实现)"></a>cancel接口(可选实现)</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;参与者可以选择是否显式的提供<code>cancel</code>接口，如果提供了。<code>Transaction Coordinator</code>应该发送<code>DELETE</code>请求，告诉参与者取消资源预留，格式如下</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DELETE /part/123 HTTP/1.1</span><br><span class="line">Host: www.example.com</span><br><span class="line">Accept: application/tcc</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果取消成功，则返回</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 204 No Content</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果取消失败，也不会影响结果。前面提到过，资源预留都有一个<code>expires</code>截止时间，超过这个截止时间，参与者就可以主动取消这个预留的资源。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如果是因为超时，参与者自行取消资源预留的情况下，应该返回</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 404 Not Found</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 另外，由于参与具备超时自动取消预留的功能，因此<code>DELETE</code>接口是可选的。如果参与者不提供DELETE接口来支持显式<code>cancel</code>，可以返回</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 405 Method Not Allowed</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不过笔者还是建议显式的提供<code>cancel</code>接口，例如，如果<code>swiss</code>预留成功，<code>easyjet</code>预留失败。对于预留失败的情况，其实我们已经没有必要进行<code>cancel</code>了。但是swiss预留成功了，<strong>如果等待超时自动取消，可能会比较耗时，通过显式提供<code>cancel</code>接口，来更快的取消预留的资源</strong>，将机票卖给其他客户。</p>
+<h3 id="Transaction-Coordinator-API"><a href="#Transaction-Coordinator-API" class="headerlink" title="Transaction Coordinator API"></a>Transaction Coordinator API</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TCC</code>模型中，<strong>主业务服务需要将事务日志上报给事务管理器/协调器，然后由协调器来调用从业务服务的<code>confirm</code>或者<code>cancel</code>接口</strong>。因此事务管理器/协调器必须提供一个事务日志上报的接口。而本节就是介绍这个接口接受的参数类型和响应类型。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主业务服务在第一阶段，调用各个从业务服务的<code>try</code>接口，并且将响应合并起来上传报给<code>Transaction Coordinator</code>。考虑一下，这里应该分为2种情况：</p>
+<p>1、所有的<code>try</code>接口都调用成功了，因此主业务服务希望<code>Transaction Coordinator</code>向各个从业务服务进行<code>confirm</code></p>
+<p>2、<code>try</code>接口部分成功，部分失败。因此主业务服务希望<code>Transaction Coordinator</code>对已经<code>try</code>成功的从业务服务都进行<code>cancel</code></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此对<code>Transaction Coordinator</code>来说，需要提供2个事务日志上报接口：<code>confirm</code>接口、<code>cancel</code>接口。</p>
+<h4 id="confirm接口-1"><a href="#confirm接口-1" class="headerlink" title="confirm接口"></a>confirm接口</h4><p>请求格式如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">PUT /coordinator/confirm HTTP/1.1</span><br><span class="line">Host: www.taas.com</span><br><span class="line">Content-Type: application/tcc+json</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"participantLinks"</span>: [</span><br><span class="line">     &#123;</span><br><span class="line">     <span class="attr">"uri"</span>: <span class="string">"http://www.example.com/part1"</span>,</span><br><span class="line">     <span class="attr">"expires"</span>: <span class="string">"2014-01-11T10:15:54Z"</span></span><br><span class="line">     &#125;,</span><br><span class="line">     &#123;</span><br><span class="line">     <span class="attr">"uri"</span>: <span class="string">"http://www.example.com/part2"</span>,</span><br><span class="line">     <span class="attr">"expires"</span>: <span class="string">"2014-01-11T10:15:54+01:00"</span></span><br><span class="line">     &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后协调器会对参与者逐个发起<code>Confirm</code>请求, 如果一切顺利那么将会返回如下结果</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 204 No Content</span><br></pre></td></tr></table></figure>
+<p><strong>如果发起<code>Confirm</code>请求的时间太晚, 那么意味着所有被动方都已经进行了超时补偿</strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 404 Not Found</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最糟糕的情况就是<strong>有些参与者确认了, 但是有些就没有. 这种情况就应该要返回409, 这种情况在Atomikos中定义为启发式异常</strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 409 Conflict</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然, 这种情况应该尽量地避免发生, <strong>要求Confirm与Cancel实现幂等性, 出现差错时协调器可多次对参与者重试以尽量降低启发性异常发生的几率</strong>. 万一409真的发生了, 则应该由请求方主动进行检查或者由协调器返回给请求方详细的执行信息, 例如对每个参与者发起故障诊断的GET请求, 记录故障信息并进行<strong>人工干预</strong>.</p>
+<h4 id="cancel接口"><a href="#cancel接口" class="headerlink" title="cancel接口"></a>cancel接口</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个<code>cancel</code>请求跟<code>confirm</code>请求类似, 都是使用<code>PUT</code>请求, 唯一的区别是<code>URI</code>的不同</p>
+<p>唯一可预见的响应就是</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 204 No Content</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为<strong>当预留资源没有被确认时最后都会被释放, 所以参与者返回其他错误也不会影响最终一致性</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/分布式事务/" rel="tag"># 分布式事务</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/15/分布式事务概述/" rel="next" title="分布式事务概述">
+                <i class="fa fa-chevron-left"></i> 分布式事务概述
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/16/分布式事务解决方案汇总/" rel="prev" title="分布式事务解决方案汇总">
+                分布式事务解决方案汇总 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#柔性事务-TCC两阶段补偿型"><span class="nav-number">1.</span> <span class="nav-text">柔性事务-TCC两阶段补偿型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#场景案例"><span class="nav-number">1.1.</span> <span class="nav-text">场景案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC-的基本概念"><span class="nav-number">1.2.</span> <span class="nav-text">TCC 的基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC事务模型-VS-DTP事务模型"><span class="nav-number">1.3.</span> <span class="nav-text">TCC事务模型 VS DTP事务模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC如何保证comfirm-cancel执行成功"><span class="nav-number">1.4.</span> <span class="nav-text">TCC如何保证comfirm/cancel执行成功</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC事务的优缺点"><span class="nav-number">1.5.</span> <span class="nav-text">TCC事务的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC-For-REST案例"><span class="nav-number">1.6.</span> <span class="nav-text">TCC For REST案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Participant-API"><span class="nav-number">1.6.1.</span> <span class="nav-text">Participant API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#try接口"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">try接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#confirm接口"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">confirm接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cancel接口-可选实现"><span class="nav-number">1.6.1.3.</span> <span class="nav-text">cancel接口(可选实现)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Transaction-Coordinator-API"><span class="nav-number">1.6.2.</span> <span class="nav-text">Transaction Coordinator API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#confirm接口-1"><span class="nav-number">1.6.2.1.</span> <span class="nav-text">confirm接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cancel接口"><span class="nav-number">1.6.2.2.</span> <span class="nav-text">cancel接口</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

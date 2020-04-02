@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="PHP,Laravel,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="宏扩展-Macroable源码分析用于在不改变一个类源码的情况下，增加功能 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858">
+<meta name="keywords" content="PHP,Laravel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="宏扩展-Macroable">
+<meta property="og:url" content="http://blog.com/2019/05/17/宏扩展-Macroable/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="宏扩展-Macroable源码分析用于在不改变一个类源码的情况下，增加功能 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-17T15:50:00.094Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="宏扩展-Macroable">
+<meta name="twitter:description" content="宏扩展-Macroable源码分析用于在不改变一个类源码的情况下，增加功能 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/17/宏扩展-Macroable/">
+
+
+
+
+
+  <title>宏扩展-Macroable | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/17/宏扩展-Macroable/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">宏扩展-Macroable</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T12:12:57+08:00">
+                2019-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/" itemprop="url" rel="index">
+                    <span itemprop="name">PHP</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/Laravel/" itemprop="url" rel="index">
+                    <span itemprop="name">Laravel</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="宏扩展-Macroable"><a href="#宏扩展-Macroable" class="headerlink" title="宏扩展-Macroable"></a>宏扩展-Macroable</h1><h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><p><strong>用于在不改变一个类源码的情况下，增加功能</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Traits</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Closure</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">ReflectionClass</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">ReflectionMethod</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">BadMethodCallException</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">trait</span> Macroable</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The registered string macros.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> array</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">static</span> $macros = [];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Register a custom macro.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string $name</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  object|callable  $macro</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">macro</span><span class="params">($name, $macro)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">static</span>::$macros[$name] = $macro;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Mix another object into the class.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  object  $mixin</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> \ReflectionException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">   <span class="comment">// Macroable::mixin方法，这个方法是把一个对象的方法的返回结果注入到原对象中</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">mixin</span><span class="params">($mixin)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">         <span class="comment">// 通过反射获取该对象中所有公开和受保护的方法</span></span><br><span class="line">        $methods = (<span class="keyword">new</span> ReflectionClass($mixin))-&gt;getMethods(</span><br><span class="line">            ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> ($methods <span class="keyword">as</span> $method) &#123;</span><br><span class="line">            <span class="comment">// 设置方法可访问，因为受保护的不能在外部调用</span></span><br><span class="line">            $method-&gt;setAccessible(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 调用 macro 方法批量创建宏指令</span></span><br><span class="line">            <span class="keyword">static</span>::macro($method-&gt;name, $method-&gt;invoke($mixin));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Checks if macro is registered.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $name</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> bool</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">hasMacro</span><span class="params">($name)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">isset</span>(<span class="keyword">static</span>::$macros[$name]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Dynamically handle calls to the class.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $method</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  array   $parameters</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> \BadMethodCallException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">__callStatic</span><span class="params">($method, $parameters)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (! <span class="keyword">static</span>::hasMacro($method)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> BadMethodCallException(sprintf(</span><br><span class="line">                <span class="string">'Method %s::%s does not exist.'</span>, <span class="keyword">static</span>::class, $method</span><br><span class="line">            ));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">static</span>::$macros[$method] <span class="keyword">instanceof</span> Closure) &#123;</span><br><span class="line">            <span class="keyword">return</span> call_user_func_array(Closure::bind(<span class="keyword">static</span>::$macros[$method], <span class="keyword">null</span>, <span class="keyword">static</span>::class), $parameters);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> call_user_func_array(<span class="keyword">static</span>::$macros[$method], $parameters);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Dynamically handle calls to the class.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $method</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  array   $parameters</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> \BadMethodCallException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__call</span><span class="params">($method, $parameters)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">            <span class="comment">// 如果不存在这个宏指令，直接抛出异常</span></span><br><span class="line">            <span class="keyword">if</span> (! <span class="keyword">static</span>::hasMacro($method)) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> BadMethodCallException(<span class="string">"Method &#123;$method&#125; does not exist."</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 得到存储的宏指令</span></span><br><span class="line">            $macro = <span class="keyword">static</span>::$macros[$method];</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 闭包做一点点特殊的处理</span></span><br><span class="line">            <span class="keyword">if</span> ($macro <span class="keyword">instanceof</span> Closure) &#123;</span><br><span class="line">                <span class="keyword">return</span> call_user_func_array($macro-&gt;bindTo(<span class="keyword">$this</span>, <span class="keyword">static</span>::class), $parameters);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 不是闭包，比如对象的时候，直接通过这种方法运行，但是要确保对象有`__invoke`方法</span></span><br><span class="line">            <span class="keyword">return</span> call_user_func_array($macro, $parameters);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Laravel-响应宏原理"><a href="#Laravel-响应宏原理" class="headerlink" title="Laravel 响应宏原理"></a>Laravel 响应宏原理</h2><h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>我们在使用<code>laravel</code>来写<code>API</code>时，经常需要返回一个<code>json</code>字符串或<code>JsonResponse</code>，通常我们的做法可能有两种。</p>
+<p>1、在<code>BaseController</code>中定义一个返回<code>Json</code>响应de方法，然后继承该<code>BaseController</code>。如：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//BaseController.php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">json</span><span class="params">($data = null, $status = <span class="number">200</span>, $headers = [], $options = <span class="number">0</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> JsonResponse($data, $status, $headers, $options);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//YourController.php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">YourController</span> <span class="keyword">extends</span> <span class="title">BaseController</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">users</span><span class="params">(UserRepository $userRepository)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;json($userRepository-&gt;allUser());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然而这写法确实挺方便，然而当你在其他地方需要使用到<code>Json</code>响应时（如中间件验证失败时你想要返回一个<code>Json</code>响应）。你无法使用到<code>$this-&gt;json(...)</code>。</p>
+<p>2、直接在需要用到<code>Json</code>响应得地方使用<code>return new JsonResponse</code>或者使用<code>Response Facade</code>。</p>
+<p>但这种做法当需要修改<code>Response</code>响应时得全部改动，不可取。</p>
+<h3 id="Response-宏"><a href="#Response-宏" class="headerlink" title="Response 宏"></a>Response 宏</h3><p><code>Laravel</code>提供了一个非常方便的<code>响应宏</code>来处理这一情况</p>
+<p>首先，我们需要先注册一个响应宏，在任意一个<code>ServiceProvider</code>的<code>boot</code>方法里（<code>ResponseMacroServiceProvider</code>），使用<code>Response Facade</code>注册</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Response::macro(<span class="string">'success'</span>, <span class="function"><span class="keyword">function</span> <span class="params">($data = [], $message = <span class="string">'success'</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> JsonResponse([</span><br><span class="line">        <span class="string">'code'</span> =&gt; <span class="number">0</span>,</span><br><span class="line">        <span class="string">'data'</span> =&gt; $data,</span><br><span class="line">        <span class="string">'message'</span> =&gt; $message</span><br><span class="line">    ], <span class="number">200</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>接下来， 你可以再任何地方使用它<code>response()</code>。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//UserController.php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">users</span><span class="params">(UserRepository $userRepository)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> response()-&gt;success($userRepository-&gt;all(), <span class="string">'success'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，你只能通过<code>response()</code>这个全局方法或是<code>app(&#39;Illuminate\Routing\ResponseFactory&#39;)</code>来使用它</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">response()-&gt;success();<span class="comment">//OK</span></span><br><span class="line">app(<span class="string">'Illuminate\Routing\ResponseFactory'</span>)-&gt;success();<span class="comment">//OK</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//Response Facade</span></span><br><span class="line">Response::success();<span class="comment">//ok</span></span><br><span class="line"></span><br><span class="line">(<span class="keyword">new</span> \Illuminate\Http\Response)-&gt;success();<span class="comment">//Error</span></span><br></pre></td></tr></table></figure>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>我们在<code>ServiceProvider</code>里使用<code>Response Facade</code>来注册的<code>success</code>宏，我们先看看<code>Response</code>这个<code>Facade</code>的正真类是什么。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Illuminate\Support\Facades.php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">getFacadeAccessor</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'Illuminate\Contracts\Routing\ResponseFactory'</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该<code>Facade</code>返回了一个<code>ResponseFactory</code>接口，那该接口的具体实列对象时什么呢。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Illuminate\Routing\RoutingServiceProvider.php</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Register the response factory implementation.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">registerResponseFactory</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">$this</span>-&gt;app-&gt;singleton(<span class="string">'Illuminate\Contracts\Routing\ResponseFactory'</span>, <span class="function"><span class="keyword">function</span> <span class="params">($app)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ResponseFactory($app[<span class="string">'Illuminate\Contracts\View\Factory'</span>], $app[<span class="string">'redirect'</span>]);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，该<code>RoutingServiceProvider</code>注册了一个<code>Illuminate\Routing\ResponseFactory</code>的实列给<code>Response Facade</code>。</p>
+<p>我们在<code>Illuminate\Routing\ResponseFactory</code>的源码中可以看到，它引用了一个<code>Illuminate\Support\Traits\Macroable trait</code>。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Routing</span>\<span class="title">ResponseFactory</span> <span class="title">as</span> <span class="title">FactoryContract</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ResponseFactory</span> <span class="keyword">implements</span> <span class="title">FactoryContract</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">use</span> <span class="title">Macroable</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="利用宏设置快捷路由跳转"><a href="#利用宏设置快捷路由跳转" class="headerlink" title="利用宏设置快捷路由跳转"></a>利用宏设置快捷路由跳转</h2><p>在Laravel 5.5 版本中已经存在重定向路由的功能，如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Route::redirect(<span class="string">'/here'</span>, <span class="string">'/there'</span>, <span class="number">301</span>);</span><br></pre></td></tr></table></figure>
+<p>但是还是觉得用起来不是很顺手，例如我们想要重定向到定义好的路由上去，这时候就有点尴尬了，必须知道路由的地址才可以进行跳转。看了下Router的类，发现这个类有使用了Illuminate\Support\Traits\Macroable这个Trait，那就方便很多了。<br>在App\Libs\Route下建个类，如下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Libs</span>\<span class="title">Route</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Facades</span>\<span class="title">Route</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RouteMacroHandler</span> </span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">macro</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Route::macro(<span class="string">'route_redirect'</span>, [<span class="keyword">static</span>::class, <span class="string">'route_redirect'</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">route_redirect</span><span class="params">($uri, $destination, $parameters = [], $status = <span class="number">301</span>)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> ( is_integer($parameters) ) &#123;</span><br><span class="line">            $status = $parameters;</span><br><span class="line">            $parameters = [];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Route::any($uri, <span class="string">'\App\Libs\Route\RedirectController'</span>)</span><br><span class="line">                    -&gt;defaults(<span class="string">'destination'</span>, $destination)</span><br><span class="line">                    -&gt;defaults(<span class="string">'parameters'</span>, $parameters)</span><br><span class="line">                    -&gt;defaults(<span class="string">'status'</span>, $status);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后在App\Libs\Route新建个跳转的控制器，如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Libs</span>\<span class="title">Route</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Http</span>\<span class="title">RedirectResponse</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Routing</span>\<span class="title">Controller</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Routing</span>\<span class="title">Router</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RedirectController</span> <span class="keyword">extends</span> <span class="title">Controller</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> $router;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(Router $router)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;router = $router;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__invoke</span><span class="params">($destination, $parameters = [] , $status = <span class="number">301</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> ( <span class="keyword">$this</span>-&gt;router-&gt;has($destination) ) &#123;</span><br><span class="line">            $destination = route($destination, $parameters);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> RedirectResponse($destination, $status);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后一步，在App\Providers\AppServiceProvider注册的时候添加下我们定义好的宏，如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">register</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 注册路由宏</span></span><br><span class="line">    \App\Libs\Route\RouteMacroHandler::macro();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在到见证奇迹发生的时候了，具体使用方法如下，在routes/web.php下面添加几个路由进行测试：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Route::route_redirect(<span class="string">'/here'</span>, <span class="string">'there_name'</span>, [<span class="string">'type'</span>=&gt; <span class="number">1</span>, <span class="string">'xx'</span>=&gt; <span class="number">2</span>], <span class="number">301</span>)-&gt;name(<span class="string">'here_name'</span>);</span><br><span class="line">Route::route_redirect(<span class="string">'/here_302'</span>, <span class="string">'there_name'</span>, <span class="number">302</span>)-&gt;name(<span class="string">'here_302_name'</span>);</span><br><span class="line">Route::get(<span class="string">'/there'</span>, <span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123; <span class="keyword">return</span> <span class="string">'there'</span> &#125;)-&gt;name(<span class="string">'there_name'</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="如何利用-macro-方法来扩展-Laravel-的基础类的功能"><a href="#如何利用-macro-方法来扩展-Laravel-的基础类的功能" class="headerlink" title="如何利用 macro 方法来扩展 Laravel 的基础类的功能"></a>如何利用 macro 方法来扩展 Laravel 的基础类的功能</h2><p>在一般编程中，我们要扩展一个基础类，我们需要进行继承才能扩充。然而Laravel利用PHP的特性，编写了一套叫做Macroable的Traits，这样，凡是使用Macroable的类，都是可以使用这个方法扩充的。</p>
+<h3 id="基本使用方法"><a href="#基本使用方法" class="headerlink" title="基本使用方法"></a>基本使用方法</h3><p>我下面用Collection类来做示范。</p>
+<p>要给Collection加一个扩充方法可以这样写：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">Collection::macro(<span class="string">"macro_name"</span>, <span class="function"><span class="keyword">function</span> <span class="params">($parameters)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Your macro</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>这样就很容易的就扩充了Collection的方法，而不需要进行复杂的继承。</p>
+<p>我们再举个具体的例子，把所有Collection的字符数组全部变成大写。那么我们就这样写：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">Collection::macro(<span class="string">'uppercase'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> collect(<span class="keyword">$this</span>-&gt;items)-&gt;map(<span class="function"><span class="keyword">function</span> <span class="params">($item)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> strtoupper($item);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">collect([<span class="string">"hello"</span>, <span class="string">"world"</span>])-&gt;uppercase();</span><br></pre></td></tr></table></figure>
+<p>这个结果是: <code>[&quot;HELLO&quot;, &quot;WORLD&quot;]</code></p>
+<h3 id="关于macro内部的-this"><a href="#关于macro内部的-this" class="headerlink" title="关于macro内部的$this"></a>关于macro内部的$this</h3><p>Collection $this 在macro的作用域必须注意，$this不是指向你文件类的对象，而是指向你marco扩充的类。比如例子中的$this是指向Collection的。</p>
+<p>这是因为在Marcoable的源代码中，是可以看到<code>static::$macros[$method]-&gt;bindTo($this, static::class)</code>这段代码。而<code>bindTo</code>是改变$this上下文指向的方法。</p>
+<h3 id="marco的代码应该放在哪里"><a href="#marco的代码应该放在哪里" class="headerlink" title="marco的代码应该放在哪里?"></a>marco的代码应该放在哪里?</h3><p>marco的代码应该放在哪里才能让整个项目都能使用， 这个问题其实困扰了我很久， 所以一直没有写这个教程。不过现在研究明白了。</p>
+<p>要让marco扩充的类，保证整个项目都能使用， 需要创建一个ServiceProvider，并把扩充的方法，放入<code>boot()</code>的方法中</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>\<span class="title">Providers</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Collection</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">ServiceProvider</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CollectionMacroServiceProvider</span> <span class="keyword">extends</span> <span class="title">ServiceProvider</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">boot</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">       Collection::macro(<span class="string">'uppercase'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> collect(<span class="keyword">$this</span>-&gt;items)-&gt;map(<span class="function"><span class="keyword">function</span> <span class="params">($item)</span> </span>&#123;</span><br><span class="line">              <span class="keyword">return</span> strtoupper($item);</span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后我们就可以在<code>config/app.php</code>中的<code>providers</code>中下面加<code>App\ProvidersCollectionMacroServiceProvider::class</code>即可</p>
+<h3 id="哪些类可以使用marco"><a href="#哪些类可以使用marco" class="headerlink" title="哪些类可以使用marco"></a>哪些类可以使用marco</h3><ul>
+<li>Response</li>
+<li>Request</li>
+<li>Collection</li>
+<li>HTML</li>
+<li>Form</li>
+<li>Filesystem</li>
+<li>Cache</li>
+<li>Str</li>
+<li>Arr</li>
+<li>Translator</li>
+</ul>
+<p>等等,使用了Marcoable的Traits，如果是自己编写的类，使用了Marcoable，也可以这样扩充使用（写Laravel开源库的时候）</p>
+<h2 id="使用宏（Macro）来扩展-Laravel-的数据库请求构建器"><a href="#使用宏（Macro）来扩展-Laravel-的数据库请求构建器" class="headerlink" title="使用宏（Macro）来扩展 Laravel 的数据库请求构建器"></a>使用宏（Macro）来扩展 Laravel 的数据库请求构建器</h2><p>习惯了编写 SQL 语句的开发人员可能对 Laravel 的 ORM / Query Builder 并不是很了解。 当我们在需要用到查询构造器没有实现的方法时，通常会使用 <em>select(DB::raw(…))</em> 来组装 SQL 表达式。</p>
+<p>现在我们可以使用 Laravel 的 “Macros” 以更加灵活的方式来编写这些语句。 我将要执行的操作命名为 “insertOrUpdateMany” ，它将使用单个方法来构建和执行自定义 SQL 语句。</p>
+<h4 id="定义宏"><a href="#定义宏" class="headerlink" title="定义宏"></a>定义宏</h4><p>为了保证代码的清晰可读性，我将绑定到宏的查询生成器实例和回调的参数 “$rows” 传递到一个新的宏实例。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Query</span>\<span class="title">Builder</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">App</span>\<span class="title">Macros</span>\<span class="title">InsertOrUpdateMany</span>;</span><br><span class="line">Builder::macro(<span class="string">'insertOrUpdateMany'</span>, <span class="function"><span class="keyword">function</span><span class="params">(array $rows)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> with(<span class="keyword">new</span> InsertOrUpdateMany(<span class="keyword">$this</span>, $rows))-&gt;execute();</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>我们可以将这些定义放在 Laravel 的服务提供者里。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (! function_exists(<span class="string">'with'</span>)) &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Return the given object. Useful for chaining.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  mixed  $object</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">with</span><span class="params">($object)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> $object;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="使用-Macro"><a href="#使用-Macro" class="headerlink" title="使用 Macro"></a>使用 Macro</h4><p>我们的 Macro 功能类似于 Laravel 自带的 <code>insert()</code> 函数，返回结果是数据库影响的行数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$affectedRowCount = DB::table(<span class="string">'users'</span>)-&gt;insertOrUpdateMany(<span class="keyword">array</span>(</span><br><span class="line">    <span class="keyword">array</span>(</span><br><span class="line">        <span class="string">'id'</span> =&gt; <span class="number">1</span>,</span><br><span class="line">        <span class="string">'name'</span> =&gt; <span class="string">'Test 1'</span>,</span><br><span class="line">        <span class="string">'email'</span> =&gt; <span class="string">'test1@test.local'</span>,</span><br><span class="line">        <span class="string">'password'</span> =&gt; <span class="string">'XXX'</span></span><br><span class="line">    ),</span><br><span class="line">    <span class="keyword">array</span>(<span class="string">'id'</span> =&gt; <span class="number">2</span>,</span><br><span class="line">        <span class="string">'name'</span> =&gt; <span class="string">'Test 2'</span>,</span><br><span class="line">        <span class="string">'email'</span> =&gt; <span class="string">'test2@test.local'</span>,</span><br><span class="line">        <span class="string">'password'</span> =&gt; <span class="string">'XXX'</span></span><br><span class="line">    ),</span><br><span class="line">    <span class="keyword">array</span>(</span><br><span class="line">        <span class="string">'id'</span> =&gt; <span class="number">3</span>,</span><br><span class="line">        <span class="string">'name'</span> =&gt; <span class="string">'Test 3'</span>,</span><br><span class="line">        <span class="string">'email'</span> =&gt; <span class="string">'test3@test.local'</span>,</span><br><span class="line">        <span class="string">'password'</span> =&gt; <span class="string">'XXX'</span></span><br><span class="line">    ),</span><br><span class="line">));</span><br><span class="line">dd($affectedRowCount);</span><br></pre></td></tr></table></figure>
+<h4 id="数据库查询类"><a href="#数据库查询类" class="headerlink" title="数据库查询类"></a>数据库查询类</h4><p>数据库查询类 <em>InsertOrUpdateMany</em> 里将处理各种的 SQL 拼接和查询处理。类的构建函数里我们将获取到 Builder 和 PDO 连接，剩下的一切就变得很容易了，PDO 的 <code>affectingStatement</code> 直接就可返回数据库影响的行数。很容易吧，下面是完整的类代码：</p>
+<p><em>InsertOrUpdateMany.php</em></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">namespace</span> <span class="title">BayAreaWebPro</span>\<span class="title">SimpleCsv</span>\<span class="title">Macros</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Query</span>\<span class="title">Builder</span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">InsertOrUpdateMany</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> \Illuminate\Database\Query\Builder $builder</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> \PDO $pdo</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> array $entries</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> array $columnsArray</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> string $columnsString</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> string $valuesString</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> string $updateString</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@var</span> string $sql</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">protected</span> $builder, $pdo, $entries;</span><br><span class="line">    <span class="keyword">private</span> $columnsArray, $columnsString, $valuesString, $updateString, $sql;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * InsertOrUpdateMany constructor.</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> \Illuminate\Database\Query\Builder $builder</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> array $entries</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">(Builder $builder, array $entries)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;builder = $builder;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;entries = $entries;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;pdo = <span class="keyword">$this</span>-&gt;builder-&gt;getConnection()-&gt;getPdo();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;prepareValues();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;assembleStatement();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Prepare the values.</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">prepareValues</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">//获取 Columns Array</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;columnsArray = <span class="keyword">$this</span>-&gt;getColumnsArray();</span><br><span class="line">        <span class="comment">//构建 Columns 字串</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;columnsString = <span class="keyword">$this</span>-&gt;collapse(<span class="keyword">$this</span>-&gt;columnsArray);</span><br><span class="line">        <span class="comment">//构建数据</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;valuesString = <span class="keyword">$this</span>-&gt;collapse(array_map(<span class="function"><span class="keyword">function</span> <span class="params">($row)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;encase(<span class="keyword">$this</span>-&gt;collapse(<span class="keyword">$this</span>-&gt;escape($row)));</span><br><span class="line">        &#125;, <span class="keyword">$this</span>-&gt;entries));</span><br><span class="line">        <span class="comment">//构建更新的字串</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;updateString = <span class="keyword">$this</span>-&gt;collapse(array_map(<span class="function"><span class="keyword">function</span> <span class="params">($value)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"$value = VALUES($value)"</span>;</span><br><span class="line">        &#125;, <span class="keyword">$this</span>-&gt;columnsArray));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 组合 SQL 语句</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">assembleStatement</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;sql = <span class="string">"INSERT INTO &#123;$this-&gt;builder-&gt;from&#125; (&#123;$this-&gt;columnsString&#125;) VALUES &#123;$this-&gt;valuesString&#125; ON DUPLICATE KEY UPDATE &#123;$this-&gt;updateString&#125;"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取表结构数组</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> array</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">getColumnsArray</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> array_keys(reset(<span class="keyword">$this</span>-&gt;entries));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 处理数组</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> array $values</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> array</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">escape</span><span class="params">(array $values)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> array_map(<span class="function"><span class="keyword">function</span> <span class="params">($value)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> $value ? <span class="keyword">$this</span>-&gt;pdo-&gt;quote($value) : <span class="string">'NULL'</span>;</span><br><span class="line">        &#125;, $values);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 合并数组</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> array $values</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">collapse</span><span class="params">(array $values)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> implode(<span class="string">','</span>, $values);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 封装字串</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string $value</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">encase</span><span class="params">(string $value)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">'('</span> . $value . <span class="string">')'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行语句</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">execute</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;builder-&gt;getConnection()-&gt;affectingStatement(<span class="keyword">$this</span>-&gt;sql);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Laravel-Model-利用-Macroable-为数据模型添加宏能力"><a href="#Laravel-Model-利用-Macroable-为数据模型添加宏能力" class="headerlink" title="Laravel Model 利用 Macroable 为数据模型添加宏能力"></a>Laravel Model 利用 Macroable 为数据模型添加宏能力</h2><p>简单的说一下宏能力，这个类是 <code>Illuminate\Support\Traits\Macroable</code> 其中利用重载实现了可以定义宏的功能，通俗一点江，就是通过 macro 静态方法添加回调，并定义一个名字，利用 <code>__call</code> 当当前类没有这个函数的时候执行这个函数名注册的回调。</p>
+<h4 id="产生需求"><a href="#产生需求" class="headerlink" title="产生需求"></a>产生需求</h4><p>在使用 Laravel 开发 ThinkSNS Plus 的时候，因为很多功能块都没有写在一个库里面，利用 拓展包 的形式添加实际功能，里面很多地方也用到了 “多态多对多” 的关系，问题来了，我开发一个问答程序，想要给用户模型增加发布的问题或者回答的关系，起初是继承一份 <code>User</code> 模型，添加了关系，之后就发现问题了，因为用户的 tag 是使用多态多对多的关系，我通过继承的用户模型是无法拿到这种关系数据的因为 <code>***able_type</code> 是 user 数据模型类名称或者别名。而我继承之后类也就发生改变了。</p>
+<h4 id="完成需求"><a href="#完成需求" class="headerlink" title="完成需求"></a>完成需求</h4><p>随之想到，在 Laravel 中有一个 Trait 叫做 <code>Macroable</code> 然后发现 <code>Builder</code> 都有这种能力，而 Model 没有，随之也将这个 Trait 添加到要使用的model上，后来发现，如果其他模型也要用是不是也要再添加一次？随之写了一份 Trait ：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">trait</span> Macroable</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">use</span> \<span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Traits</span>\<span class="title">Macroable</span> &#123;</span><br><span class="line">        <span class="title">__call</span> <span class="title">as</span> <span class="title">macroCall</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get a relationship value from a method.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@author</span> Seven Du &lt;shiweidu<span class="doctag">@outlook</span>.com&gt;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getRelationValue</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $relation = <span class="keyword">parent</span>::getRelationValue($key);</span><br><span class="line">        <span class="keyword">if</span> (! $relation &amp;&amp; <span class="keyword">static</span>::hasMacro($key)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;getRelationshipFromMethod($key);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $relation;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Handle dynamic method calls into the model.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string $method</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> array $parameters</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@author</span> Seven Du &lt;shiweidu<span class="doctag">@outlook</span>.com&gt;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__call</span><span class="params">($method, $parameters)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">static</span>::hasMacro($method)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;macroCall($method, $parameters);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">parent</span>::__call($method, $parameters);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Handle dynamic static method calls into the method.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  string  $method</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  array  $parameters</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> mixed</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">__callStatic</span><span class="params">($method, $parameters)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">parent</span>::__callStatic($method, $parameters);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>只要在要使用的 model 中 use 即可。</p>
+<h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><p>有了这个 Trait 那么我们添加到 <code>User</code> 模型中，就可以使用宏能力为其动态添加函数了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">User::macro(<span class="string">'questions'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;hasMany(Question::class, <span class="string">'user_id'</span>, <span class="string">'id'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>这样，我们可以直接 :</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$questions = $user-&gt;questions;</span><br></pre></td></tr></table></figure>
+<p>拿到用户发布的所有问题了。</p>
+<h2 id="批量扩展宏指令"><a href="#批量扩展宏指令" class="headerlink" title="批量扩展宏指令"></a>批量扩展宏指令</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">say</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">//将返回的闭包绑定到say</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">'say'</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">show</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">         <span class="comment">//将返回的闭包绑定到show</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">'show'</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">function</span> <span class="title">eat</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">         <span class="comment">//将返回的闭包绑定到eat</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">'eat'</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Child</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">use</span> \<span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Traits</span>\<span class="title">Macroable</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 批量绑定宏指令</span></span><br><span class="line">Child::mixin(<span class="keyword">new</span> Father);</span><br><span class="line"></span><br><span class="line">$child = <span class="keyword">new</span> Child;</span><br><span class="line"><span class="comment">// 输出:say</span></span><br><span class="line">$child-&gt;say();</span><br><span class="line"><span class="comment">// 输出:show</span></span><br><span class="line">$child-&gt;show();</span><br><span class="line"><span class="comment">// 输出:eat</span></span><br><span class="line">$child-&gt;eat();</span><br></pre></td></tr></table></figure>
+<h2 id="魔术一个魔术方法，不可行"><a href="#魔术一个魔术方法，不可行" class="headerlink" title="魔术一个魔术方法，不可行"></a>魔术一个魔术方法，不可行</h2><p>我们现在知道了 <code>Macroable</code> 的神奇，但是其实<code>Macroable</code> 也有失灵的时候。举个例子：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">JoeDoe</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">use</span> \<span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Traits</span>\<span class="title">Macroable</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">JoeDoe::macro(<span class="string">'__toString'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'123'</span>;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="keyword">new</span> JoeDoe();</span><br></pre></td></tr></table></figure>
+<p>而运行时，其还是报了这个错：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PHP Recoverable fatal error:  Object of <span class="class"><span class="keyword">class</span> <span class="title">JoeDoe</span> <span class="title">could</span> <span class="title">not</span> <span class="title">be</span> <span class="title">converted</span> <span class="title">to</span> <span class="title">string</span></span></span><br></pre></td></tr></table></figure>
+<p>但是如果我们在 <code>JoeDoe</code> 这个类中手工硬编码 <code>__toString</code> 这个方法却是可以运行的的；<br>为什么？</p>
+<p>其实道理很简单，因为 echo <code>JoeDoe</code> 对象时候，php 内核检查其中有没有 <code>__toString</code> 这个方法时，就已经报错了，根本还来不及走到 <code>__call</code> 这个魔术方法。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
+          
+            <a href="/tags/Laravel/" rel="tag"># Laravel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/选择Innodb的原因/" rel="next" title="选择Innodb的原因">
+                <i class="fa fa-chevron-left"></i> 选择Innodb的原因
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/laravel启动分析/" rel="prev" title="laravel启动分析">
+                laravel启动分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#宏扩展-Macroable"><span class="nav-number">1.</span> <span class="nav-text">宏扩展-Macroable</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">1.1.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Laravel-响应宏原理"><span class="nav-number">1.2.</span> <span class="nav-text">Laravel 响应宏原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">1.2.1.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Response-宏"><span class="nav-number">1.2.2.</span> <span class="nav-text">Response 宏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#原理"><span class="nav-number">1.2.3.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用宏设置快捷路由跳转"><span class="nav-number">1.3.</span> <span class="nav-text">利用宏设置快捷路由跳转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何利用-macro-方法来扩展-Laravel-的基础类的功能"><span class="nav-number">1.4.</span> <span class="nav-text">如何利用 macro 方法来扩展 Laravel 的基础类的功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本使用方法"><span class="nav-number">1.4.1.</span> <span class="nav-text">基本使用方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于macro内部的-this"><span class="nav-number">1.4.2.</span> <span class="nav-text">关于macro内部的$this</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#marco的代码应该放在哪里"><span class="nav-number">1.4.3.</span> <span class="nav-text">marco的代码应该放在哪里?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#哪些类可以使用marco"><span class="nav-number">1.4.4.</span> <span class="nav-text">哪些类可以使用marco</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用宏（Macro）来扩展-Laravel-的数据库请求构建器"><span class="nav-number">1.5.</span> <span class="nav-text">使用宏（Macro）来扩展 Laravel 的数据库请求构建器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#定义宏"><span class="nav-number">1.5.0.1.</span> <span class="nav-text">定义宏</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用-Macro"><span class="nav-number">1.5.0.2.</span> <span class="nav-text">使用 Macro</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据库查询类"><span class="nav-number">1.5.0.3.</span> <span class="nav-text">数据库查询类</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Laravel-Model-利用-Macroable-为数据模型添加宏能力"><span class="nav-number">1.6.</span> <span class="nav-text">Laravel Model 利用 Macroable 为数据模型添加宏能力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#产生需求"><span class="nav-number">1.6.0.1.</span> <span class="nav-text">产生需求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#完成需求"><span class="nav-number">1.6.0.2.</span> <span class="nav-text">完成需求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用"><span class="nav-number">1.6.0.3.</span> <span class="nav-text">使用</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#批量扩展宏指令"><span class="nav-number">1.7.</span> <span class="nav-text">批量扩展宏指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#魔术一个魔术方法，不可行"><span class="nav-number">1.8.</span> <span class="nav-text">魔术一个魔术方法，不可行</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="PHP并发IO编程之路  原文地址：http://rango.swoole.com/archives/508   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;并发IO 问题一直是服务器端编程中的技术难题，从最早的同步阻塞直接 Fork 进程，到 Worker进程池/线程池，到现在的异步IO、协程。PHP程序员因为有强大的 LAMP框架，对这类底层方面的知识知之甚少，本文">
+<meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP并发IO编程之路">
+<meta property="og:url" content="http://blog.com/2019/06/23/PHP并发IO编程之路/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="PHP并发IO编程之路  原文地址：http://rango.swoole.com/archives/508   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;并发IO 问题一直是服务器端编程中的技术难题，从最早的同步阻塞直接 Fork 进程，到 Worker进程池/线程池，到现在的异步IO、协程。PHP程序员因为有强大的 LAMP框架，对这类底层方面的知识知之甚少，本文">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/4.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/1.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/2.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/5.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/6.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/3.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/7.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/8.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/9.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/10.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/11.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/12.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/13.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/14.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/15.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/16.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/23.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/24.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/17.png">
+<meta property="og:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/19.png">
+<meta property="og:updated_time" content="2019-06-23T10:39:39.521Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PHP并发IO编程之路">
+<meta name="twitter:description" content="PHP并发IO编程之路  原文地址：http://rango.swoole.com/archives/508   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;并发IO 问题一直是服务器端编程中的技术难题，从最早的同步阻塞直接 Fork 进程，到 Worker进程池/线程池，到现在的异步IO、协程。PHP程序员因为有强大的 LAMP框架，对这类底层方面的知识知之甚少，本文">
+<meta name="twitter:image" content="http://blog.com/2019/06/23/PHP并发IO编程之路/4.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/23/PHP并发IO编程之路/">
+
+
+
+
+
+  <title>PHP并发IO编程之路 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/23/PHP并发IO编程之路/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PHP并发IO编程之路</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-23T12:12:57+08:00">
+                2019-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/" itemprop="url" rel="index">
+                    <span itemprop="name">异步与同步</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/" itemprop="url" rel="index">
+                    <span itemprop="name">IO</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/" itemprop="url" rel="index">
+                    <span itemprop="name">Reactor</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/" itemprop="url" rel="index">
+                    <span itemprop="name">事件模型</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/网络编程/" itemprop="url" rel="index">
+                    <span itemprop="name">网络编程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="PHP并发IO编程之路"><a href="#PHP并发IO编程之路" class="headerlink" title="PHP并发IO编程之路"></a>PHP并发IO编程之路</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="http://rango.swoole.com/archives/508" target="_blank" rel="noopener">http://rango.swoole.com/archives/508</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;并发<code>IO</code> 问题一直是服务器端编程中的技术难题，从最早的同步阻塞直接 <code>Fork</code> 进程，到 <code>Worker</code>进程池/线程池，到现在的异步<code>IO</code>、协程。<code>PHP</code>程序员因为有强大的 <code>LAMP</code>框架，对这类底层方面的知识知之甚少，本文目的就是详细介绍<code>PHP</code>进行并发 <code>IO</code> 编程的各种尝试，最后再介绍 <code>Swoole</code> 的使用，深入浅出全面解析并发<code>IO</code> 问题。</p>
+<h2 id="多进程-多线程同步阻塞"><a href="#多进程-多线程同步阻塞" class="headerlink" title="多进程/多线程同步阻塞"></a>多进程/多线程同步阻塞</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最早的服务器端程序都是通过多进程、多线程来解决并发<code>IO</code>的问题。进程模型出现的最早，从 <code>Unix</code> 系统诞生就开始有了进程的概念。最早的服务器端程序一般都是 <code>Accept</code> 一个客户端连接就创建一个进程，然后子进程进入循环同步阻塞地与客户端连接进行交互，收发处理数据。</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/4.png" alt="4"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;多线程模式出现要晚一些，<strong>线程与进程相比更轻量，而且线程之间是共享内存堆栈的，所以不同的线程之间交互非常容易实现</strong>。比如聊天室这样的程序，客户端连接之间可以交互，比聊天室中的玩家可以任意的其他人发消息。用多线程模式实现非常简单，线程中可以直接向某一个客户端连接发送数据。而<strong>多进程模式就要用到管道、消息队列、共享内存，统称进程间通信（IPC）复杂的技术才能实现</strong>。</p>
+<p>代码实例：</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/1.png" alt="实例1"></p>
+<p>多进程/线程模型的流程是</p>
+<ol>
+<li>创建一个 <code>socket</code>，绑定服务器端口（<code>bind</code>），监听端口（<code>listen</code>），在<code>PHP</code>中用<code>stream_socket_server</code>一个函数就能完成上面3个步骤，当然也可以使用更底层的<code>sockets</code>扩展分别实现。</li>
+<li>进入<code>while</code>循环，阻塞在<code>accept</code>操作上，等待客户端连接进入。此时程序会进入睡眠状态，直到有新的客户端发起<code>connect</code>到服务器，操作系统会唤醒此进程。<code>accept</code>函数返回客户端连接的<code>socket</code></li>
+<li>主进程在多进程模型下通过<code>fork（php: pcntl_fork）</code>创建子进程，多线程模型下使用<code>pthread_create（php: new Thread）</code>创建子线程。下文如无特殊声明将使用进程同时表示进程/线程。</li>
+<li>子进程创建成功后进入<code>while</code>循环，<strong>阻塞在<code>recv（php: fread）</code>调用上，等待客户端向服务器发送数据</strong>。收到数据后服务器程序进行处理然后使用<code>send（php: fwrite）</code>向客户端发送响应。长连接的服务会持续与客户端交互，而短连接服务一般收到响应就会close。</li>
+<li>当客户端连接关闭时，子进程退出并销毁所有资源。主进程会回收掉此子进程。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种模式最大的问题是，<strong>进程/线程创建和销毁的开销很大</strong>。所以上面的模式没办法应用于非常繁忙的服务器程序。对应的改进版解决了此问题，这就是经典的 <strong>Leader-Follower</strong> 模型。</p>
+<p>代码实例：</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/2.png" alt="2"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;它的特点是<strong>程序启动后就会创建N个进程</strong>。每个子进程进入 <code>Accept</code>，等待新的连接进入。当客户端连接到服务器时，其中一个子进程会被唤醒，开始处理客户端请求，并且不再接受新的<code>TCP</code>连接。当此连接关闭时，子进程会释放，重新进入 <code>Accept</code>，参与处理新的连接。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个模型的优势是<strong>完全可以复用进程，没有额外消耗，性能非常好</strong>。很多常见的服务器程序都是基于此模型的，比如 <code>Apache</code> 、<code>PHP-FPM</code>。</p>
+<p>多进程模型也有一些缺点：</p>
+<ol>
+<li><p><strong>这种模型严重依赖进程的数量解决并发问题</strong>，一个客户端连接就需要占用一个进程，工作进程的数量有多少，并发处理能力就有多少。操作系统可以创建的进程数量是有限的。</p>
+</li>
+<li><p><strong>启动大量进程会带来额外的进程调度消耗</strong>。数百个进程时可能进程上下文切换调度消耗占CPU不到1%可以忽略不计，如果启动数千甚至数万个进程，消耗就会直线上升。调度消耗可能占到 CPU 的百分之几十甚至 100%。</p>
+</li>
+<li><p><strong>有一些场景多进程模型无法解决</strong></p>
+<ol>
+<li><p>比如即时聊天程序（IM），一台服务器要同时维持上万甚至几十万上百万的连接（经典的<code>C10K</code>问题），多进程模型就力不从心了。</p>
+</li>
+<li><p>通常Web服务器启动100个进程，如果一个请求消耗100ms，100个进程可以提供1000qps，这样的处理能力还是不错的。但是如果请求内要调用外网Http接口，像QQ、微博登录，耗时会很长，一个请求需要10s。那一个进程1秒只能处理0.1个请求，100个进程只能达到10qps，这样的处理能力就太差了。</p>
+</li>
+</ol>
+</li>
+</ol>
+<p>有没有一种技术可以在一个进程内处理所有并发<code>IO</code>呢？答案是有，这就是<strong>IO复用技术</strong>。</p>
+<h2 id="IO复用-事件循环-异步非阻塞"><a href="#IO复用-事件循环-异步非阻塞" class="headerlink" title="IO复用/事件循环/异步非阻塞"></a>IO复用/事件循环/异步非阻塞</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实<code>IO</code>复用的历史和多进程一样长，<code>Linux</code>很早就提供了 <code>select</code>系统调用，可以在一个进程内维持1024个连接。后来又加入了<code>poll</code>系统调用，<code>poll</code>做了一些改进，解决了 1024 限制的问题，可以维持任意数量的连接。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但<code>select/poll</code>还有一个问题就是，它<strong>需要循环检测连接是否有事件</strong>。这样问题就来了，如果服务器有100万个连接，在某一时间只有一个连接向服务器发送了数据，<code>select/poll</code>需要做循环100万次，其中只有1次是命中的，剩下的99万9999次都是无效的，白白<strong>浪费了CPU资源</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;直到<code>Linux 2.6</code>内核提供了新的<code>epoll</code>系统调用，可以维持无限数量的连接，而且无需轮询，这才真正解决了 <code>C10K</code>问题。现在各种高并发异步<code>IO</code>的服务器程序都是基于epoll实现的，比如<code>Nginx</code>、<code>Node.js</code>、<code>Erlang</code>、<code>Golang</code>。像<code>Node.js</code> 这样单进程单线程的程序，都可以维持超过1百万<code>TCP</code>连接，全部归功于<code>epoll</code>技术。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>IO</code>复用异步非阻塞程序使用经典的<strong>Reactor</strong>模型，<code>Reactor</code>顾名思义就是反应堆的意思，它<strong>本身不处理任何数据收发</strong>。<strong>只是可以监视一个<code>socket</code>句柄的事件变化</strong>。</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/5.png" alt="5"></p>
+<p><code>Reactor</code>有4个核心的操作：</p>
+<ol>
+<li><code>add</code>添加<code>socket</code>监听到<code>reactor</code>，可以是<code>listen socket</code>也可以使客户端<code>socket</code>，也可以是管道、<code>eventfd</code>、信号等</li>
+</ol>
+<ol start="2">
+<li><p><code>set</code>修改事件监听，可以设置监听的类型，如可读、可写。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可读很好理解，对于<code>listen socket</code>就是有新客户端连接到来了需要<code>accept</code>。对于客户端连接就是收到数据，需要<code>recv</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可写事件比较难理解一些。一个<code>SOCKET</code>是有缓存区的，如果要向客户端连接发送2M的数据，一次性是发不出去的，操作系统默认<code>TCP</code>缓存区只有256K。一次性只能发256K，缓存区满了之后<code>send</code>就会返回<code>EAGAIN</code>错误。这时候就要监听可写事件，在纯异步的编程中，必须去监听可写才能保证<code>send</code>操作是完全非阻塞的。</p>
+</li>
+</ol>
+<ol start="3">
+<li><code>del</code>从<code>reactor</code>中移除，不再监听事件</li>
+</ol>
+<ol start="4">
+<li><code>callback</code>就是事件发生后对应的处理逻辑，一般在<code>add/set</code>时制定。<code>C</code>语言用函数指针实现，<code>JS</code>可以用匿名函数，<code>PHP</code>可以用匿名函数、对象方法数组、字符串函数名。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Reactor</code>只是一个事件发生器，实际对<code>socket</code>句柄的操作，如<code>connect/accept</code>、<code>send/recv</code>、<code>close</code>是在<code>callback</code>中完成的</strong>。具体编码可参考下面的伪代码：</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/6.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Reactor</code>模型还可以与多进程、多线程结合起来用，既实现异步非阻塞<code>IO</code>，又利用到多核。目前流行的异步服务器程序都是这样的方式：如</p>
+<ul>
+<li><code>Nginx</code>：多进程<code>Reactor</code></li>
+<li><code>Nginx+Lua</code>：多进程<code>Reactor</code>+协程</li>
+<li><code>Golang</code>：单线程<code>Reactor</code>+多线程协程</li>
+<li><code>Swoole</code>：多线程<code>Reactor</code>+多进程<code>Worker</code></li>
+</ul>
+<h2 id="协程是什么"><a href="#协程是什么" class="headerlink" title="协程是什么"></a>协程是什么</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;协程从底层技术角度看实际上还是异步<code>IO Reactor</code>模型，应用层自行实现了任务调度，借助<code>Reactor</code>切换各个当前执行的用户态线程，但用户代码中完全感知不到<code>Reactor</code>的存在。</p>
+<h2 id="PHP并发IO编程实践"><a href="#PHP并发IO编程实践" class="headerlink" title="PHP并发IO编程实践"></a>PHP并发IO编程实践</h2><h3 id="PHP相关扩展"><a href="#PHP相关扩展" class="headerlink" title="PHP相关扩展"></a>PHP相关扩展</h3><ul>
+<li><code>Stream</code>：<code>PHP</code>内核提供的<code>socket</code>封装</li>
+<li><code>Sockets</code>：对底层<code>Socket API</code>的封装</li>
+<li><code>Libevent</code>：对<code>libevent</code>库的封装</li>
+<li><code>Event</code>：基于<code>Libevent</code>更高级的封装，提供了面向对象接口、定时器、信号处理的支持</li>
+<li><code>Pcntl/Posix</code>：多进程、信号、进程管理的支持</li>
+<li><code>Pthread</code>：多线程、线程管理、锁的支持</li>
+<li><code>PHP</code>还有共享内存、信号量、消息队列的相关扩展</li>
+<li><code>PECL</code>：<code>PHP</code>的扩展库，包括系统底层、数据分析、算法、驱动、科学计算、图形等都有。如果<code>PHP</code>标准库中没有找到，可以在<code>PECL</code>寻找想要的功能。</li>
+</ul>
+<h3 id="PHP语言的优劣势"><a href="#PHP语言的优劣势" class="headerlink" title="PHP语言的优劣势"></a>PHP语言的优劣势</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/3.png" alt="3"></p>
+<p><strong>PHP的优点：</strong></p>
+<ol>
+<li>第一个是简单，<code>PHP</code>比其他任何的语言都要简单</li>
+<li><code>PHP</code>的功能非常强大，因为<code>PHP</code>官方的标准库和扩展库里提供了做服务器编程能用到的99%的东西。<code>PHP</code>的<code>PECL</code>扩展库里你想要的任何的功能。</li>
+<li>另外<code>PHP</code>有超过20年的历史，生态圈是非常大的，在<code>Github</code>可以找到很多代码。</li>
+</ol>
+<p><strong>PHP的缺点：</strong></p>
+<ol>
+<li><strong>性能比较差</strong>，因为毕竟是动态脚本，<strong>不适合做密集运算</strong>，如果同样的 PHP 程序使用 C/C++ 来写，PHP 版本要比它差一百倍。</li>
+<li><strong>函数命名规范差</strong>，这一点大家都是了解的，PHP更讲究实用性，没有一些规范。一些函数的命名是很混乱的，所以每次你必须去翻PHP的手册。</li>
+<li><strong>提供的数据结构和函数的接口粒度比较粗</strong>。PHP只有一个Array数据结构，底层基于HashTable。PHP的Array集合了Map，Set，Vector，Queue，Stack，Heap等数据结构的功能。另外PHP有一个SPL提供了其他数据结构的类封装。</li>
+</ol>
+<p>所以PHP</p>
+<ol>
+<li>PHP更<strong>适合偏实际应用层面的程序，业务开发、快速实现的利器</strong></li>
+<li>PHP<strong>不适合开发底层软件</strong></li>
+<li>使用C/C++、JAVA、Golang等静态编译语言作为PHP的补充，动静结合</li>
+<li>借助IDE工具实现自动补全、语法提示  </li>
+</ol>
+<h2 id="PHP的Swoole扩展"><a href="#PHP的Swoole扩展" class="headerlink" title="PHP的Swoole扩展"></a>PHP的Swoole扩展</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于上面的扩展使用纯<code>PHP</code>就可以完全实现异步网络服务器和客户端程序。但是想实现一个类似于多<code>IO</code>线程，还是有很多繁琐的编程工作要做，包括如何来管理连接，如何来保证数据的收发原子性，网络协议的处理。另外<code>PHP</code>代码在协议处理部分性能是比较差的，所以我启动了一个新的开源项目<code>Swoole</code>，使用<code>C</code>语言和<code>PHP</code>结合来完成了这项工作。灵活多变的业务模块使用<code>PHP</code>开发效率高，基础的底层和协议处理部分用<code>C</code>语言实现，保证了高性能。它以扩展的方式加载到了<code>PHP</code>中，提供了一个完整的网络通信的框架，然后<code>PHP</code>的代码去写一些业务。它的模型是基于<strong>多线程<code>Reactor</code>+多进程<code>Worker</code></strong>，既支持全异步，也支持半异步半同步。</p>
+<h3 id="Swoole的一些特点："><a href="#Swoole的一些特点：" class="headerlink" title="Swoole的一些特点："></a>Swoole的一些特点：</h3><ul>
+<li><code>Accept</code>线程，解决<code>Accept</code>性能瓶颈和惊群问题</li>
+<li>多<code>IO</code>线程，可以更好地利用多核</li>
+<li>提供了全异步和半同步半异步2种模式</li>
+<li>处理高并发<code>IO</code>的部分用异步模式</li>
+<li>复杂的业务逻辑部分用同步模式</li>
+<li>底层支持了遍历所有连接、互发数据、自动合并拆分数据包、数据发送原子性。</li>
+</ul>
+<h3 id="Swoole的进程-线程模型："><a href="#Swoole的进程-线程模型：" class="headerlink" title="Swoole的进程/线程模型："></a>Swoole的进程/线程模型：</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/7.png" alt="img"></p>
+<h3 id="Swoole程序的执行流程："><a href="#Swoole程序的执行流程：" class="headerlink" title="Swoole程序的执行流程："></a>Swoole程序的执行流程：</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/8.png" alt="img"></p>
+<h2 id="使用PHP-Swoole扩展实现异步通信编程"><a href="#使用PHP-Swoole扩展实现异步通信编程" class="headerlink" title="使用PHP+Swoole扩展实现异步通信编程"></a>使用PHP+Swoole扩展实现异步通信编程</h2><p>实例代码在<a href="https://github.com/swoole/swoole-src" target="_blank" rel="noopener">https://github.com/swoole/swoole-src</a> 主页查看。</p>
+<h3 id="TCP服务器与客户端"><a href="#TCP服务器与客户端" class="headerlink" title="TCP服务器与客户端"></a>TCP服务器与客户端</h3><p><strong>异步TCP服务器：</strong></p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/9.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这里<code>new swoole_server</code>对象，然后参数传入监听的<code>HOST</code>和<code>PORT</code>，然后设置了3个回调函数，分别是<code>onConnect</code>有新的连接进入、<code>onReceive</code>收到了某一个客户端的数据、<code>onClose</code>某个客户端关闭了连接。最后调用<code>start</code>启动服务器程序。<code>swoole</code>底层会根据当前机器有多少<code>CPU</code>核数，启动对应数量的<code>Reactor</code>线程和<code>Worker</code>进程。</p>
+<p><strong>异步客户端：</strong></p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/10.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端的使用方法和服务器类似只是回调事件有4个，<code>onConnect</code>成功连接到服务器，这时可以去发送数据到服务器。<code>onError</code>连接服务器失败。<code>onReceive</code>服务器向客户端连接发送了数据。<code>onClose</code>连接关闭。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;设置完事件回调后，发起<code>connect</code>到服务器，参数是服务器的<code>IP</code>,<code>PORT</code>和超时时间。</p>
+<p><strong>同步客户端：</strong></p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/11.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同步客户端不需要设置任何事件回调，它没有<code>Reactor</code>监听，是阻塞串行的。等待<code>IO</code>完成才会进入下一步。</p>
+<p><strong>异步任务：</strong></p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/12.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步任务功能用于在一个纯异步的<code>Server</code>程序中去执行一个耗时的或者阻塞的函数。底层实现使用进程池，任务完成后会触发<code>onFinish</code>，程序中可以得到任务处理的结果。比如一个IM需要广播，如果直接在异步代码中广播可能会影响其他事件的处理。另外文件读写也可以使用异步任务实现，因为文件句柄没办法像<code>socket</code>一样使用<code>Reactor</code>监听。因为文件句柄总是可读的，直接读取文件可能会使服务器程序阻塞，使用异步任务是非常好的选择。</p>
+<p><strong>异步毫秒定时器</strong></p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/13.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这2个接口实现了类似<code>JS</code>的<code>setInterval</code>、<code>setTimeout</code>函数功能，可以设置在n毫秒间隔实现一个函数或 n毫秒后执行一个函数。</p>
+<h3 id="异步MySQL客户端"><a href="#异步MySQL客户端" class="headerlink" title="异步MySQL客户端"></a>异步MySQL客户端</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/14.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>swoole</code>还提供一个内置连接池的<code>MySQL</code>异步客户端，可以设定最大使用<code>MySQL</code>连接数。并发<code>SQL</code>请求可以复用这些连接，而不是重复创建，这样可以保护<code>MySQL</code>避免连接资源被耗尽。</p>
+<h3 id="异步Redis客户端"><a href="#异步Redis客户端" class="headerlink" title="异步Redis客户端"></a>异步Redis客户端</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/15.png" alt="img"></p>
+<h3 id="异步的Web程序"><a href="#异步的Web程序" class="headerlink" title="异步的Web程序"></a>异步的Web程序</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/16.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;程序的逻辑是从<code>Redis</code>中读取一个数据，然后显示<code>HTML</code>页面。使用<code>ab</code>压测性能如下：</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/23.png" alt="img"></p>
+<p>同样的逻辑在<code>php-fpm</code>下的性能测试结果如下：</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/24.png" alt="img"></p>
+<h3 id="WebSocket程序"><a href="#WebSocket程序" class="headerlink" title="WebSocket程序"></a>WebSocket程序</h3><p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/17.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>swoole</code>内置了<code>websocket</code>服务器，可以基于此实现<code>Web</code>页面主动推送的功能，比如<code>WebIM</code>。有一个开源项目可以作为参考。<a href="https://github.com/matyhtf/php-webim" target="_blank" rel="noopener">https://github.com/matyhtf/php-webim</a></p>
+<h3 id="PHP-Swoole协程"><a href="#PHP-Swoole协程" class="headerlink" title="PHP+Swoole协程"></a>PHP+Swoole协程</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步编程一般使用回调方式，如果遇到非常复杂的逻辑，可能会层层嵌套回调函数。协程就可以解决此问题，可以顺序编写代码，但运行时是异步非阻塞的。腾讯的工程师基于<code>Swoole</code>扩展和<code>PHP5.5</code>的<code>Yield/Generator</code>语法实现类似于<code>Golang</code>的协程，项目名称为<code>TSF（Tencent Server Framework）</code>，开源项目地址：<a href="https://github.com/tencent-php/tsf。目前在腾讯公司的企业QQ、QQ公众号项目以及车轮忽略的查违章项目有大规模应用" target="_blank" rel="noopener">https://github.com/tencent-php/tsf。目前在腾讯公司的企业QQ、QQ公众号项目以及车轮忽略的查违章项目有大规模应用</a> 。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TSF</code>使用也非常简单，下面调用了3个<code>IO</code>操作，完全是串行的写法。但实际上是异步非阻塞执行的。TSF底层调度器接管了程序的执行，在对应的<code>IO</code>完成后才会向下继续执行。</p>
+<p><img src="//blog.com/2019/06/23/PHP并发IO编程之路/19.png" alt="img"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/异步与同步/" rel="tag"># 异步与同步</a>
+          
+            <a href="/tags/IO/" rel="tag"># IO</a>
+          
+            <a href="/tags/Reactor/" rel="tag"># Reactor</a>
+          
+            <a href="/tags/事件模型/" rel="tag"># 事件模型</a>
+          
+            <a href="/tags/网络编程/" rel="tag"># 网络编程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/23/epoll使用详解（精髓）/" rel="next" title="epoll使用详解（精髓）">
+                <i class="fa fa-chevron-left"></i> epoll使用详解（精髓）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/23/IO网络模型的应用-基于线程实现&基于事件驱动实现/" rel="prev" title="IO网络模型的应用-基于线程实现&基于事件驱动实现">
+                IO网络模型的应用-基于线程实现&基于事件驱动实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#PHP并发IO编程之路"><span class="nav-number">1.</span> <span class="nav-text">PHP并发IO编程之路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#多进程-多线程同步阻塞"><span class="nav-number">1.1.</span> <span class="nav-text">多进程/多线程同步阻塞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO复用-事件循环-异步非阻塞"><span class="nav-number">1.2.</span> <span class="nav-text">IO复用/事件循环/异步非阻塞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程是什么"><span class="nav-number">1.3.</span> <span class="nav-text">协程是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PHP并发IO编程实践"><span class="nav-number">1.4.</span> <span class="nav-text">PHP并发IO编程实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PHP相关扩展"><span class="nav-number">1.4.1.</span> <span class="nav-text">PHP相关扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PHP语言的优劣势"><span class="nav-number">1.4.2.</span> <span class="nav-text">PHP语言的优劣势</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PHP的Swoole扩展"><span class="nav-number">1.5.</span> <span class="nav-text">PHP的Swoole扩展</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Swoole的一些特点："><span class="nav-number">1.5.1.</span> <span class="nav-text">Swoole的一些特点：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Swoole的进程-线程模型："><span class="nav-number">1.5.2.</span> <span class="nav-text">Swoole的进程/线程模型：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Swoole程序的执行流程："><span class="nav-number">1.5.3.</span> <span class="nav-text">Swoole程序的执行流程：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用PHP-Swoole扩展实现异步通信编程"><span class="nav-number">1.6.</span> <span class="nav-text">使用PHP+Swoole扩展实现异步通信编程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP服务器与客户端"><span class="nav-number">1.6.1.</span> <span class="nav-text">TCP服务器与客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步MySQL客户端"><span class="nav-number">1.6.2.</span> <span class="nav-text">异步MySQL客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步Redis客户端"><span class="nav-number">1.6.3.</span> <span class="nav-text">异步Redis客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步的Web程序"><span class="nav-number">1.6.4.</span> <span class="nav-text">异步的Web程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WebSocket程序"><span class="nav-number">1.6.5.</span> <span class="nav-text">WebSocket程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PHP-Swoole协程"><span class="nav-number">1.6.6.</span> <span class="nav-text">PHP+Swoole协程</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

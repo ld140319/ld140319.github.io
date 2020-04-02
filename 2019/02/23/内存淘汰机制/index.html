@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="PHP,缓存,内存淘汰机制,缓存过期策略,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="内存淘汰机制LRU（Least recently used）:最近最少使用LRU（Least recently used）:最近最少使用，淘汰最近不使用的页面  （Least recently used，最近最少使用）算法根据数据的历史访问记录来进行淘汰数据，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”。最常见的实现是使用一个链表保存缓存数据，详细算法实现如下：  新数据插入到">
+<meta name="keywords" content="PHP,缓存,内存淘汰机制,缓存过期策略">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存淘汰机制">
+<meta property="og:url" content="http://blog.com/2019/02/23/内存淘汰机制/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="内存淘汰机制LRU（Least recently used）:最近最少使用LRU（Least recently used）:最近最少使用，淘汰最近不使用的页面  （Least recently used，最近最少使用）算法根据数据的历史访问记录来进行淘汰数据，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”。最常见的实现是使用一个链表保存缓存数据，详细算法实现如下：  新数据插入到">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-02-23T17:08:21.906Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内存淘汰机制">
+<meta name="twitter:description" content="内存淘汰机制LRU（Least recently used）:最近最少使用LRU（Least recently used）:最近最少使用，淘汰最近不使用的页面  （Least recently used，最近最少使用）算法根据数据的历史访问记录来进行淘汰数据，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”。最常见的实现是使用一个链表保存缓存数据，详细算法实现如下：  新数据插入到">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/02/23/内存淘汰机制/">
+
+
+
+
+
+  <title>内存淘汰机制 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/02/23/内存淘汰机制/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">内存淘汰机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-23T12:12:57+08:00">
+                2019-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/" itemprop="url" rel="index">
+                    <span itemprop="name">PHP</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/内存淘汰机制/" itemprop="url" rel="index">
+                    <span itemprop="name">内存淘汰机制</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/内存淘汰机制/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/内存淘汰机制/缓存/缓存过期策略/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存过期策略</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="内存淘汰机制"><a href="#内存淘汰机制" class="headerlink" title="内存淘汰机制"></a>内存淘汰机制</h1><h2 id="LRU（Least-recently-used）-最近最少使用"><a href="#LRU（Least-recently-used）-最近最少使用" class="headerlink" title="LRU（Least recently used）:最近最少使用"></a>LRU（Least recently used）:最近最少使用</h2><p><strong>LRU（Least recently used）:最近最少使用，淘汰最近不使用的页面</strong></p>
+<blockquote>
+<p>（Least recently used，最近最少使用）算法根据数据的历史访问记录来进行淘汰数据，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”。<br>最常见的实现是使用一个链表保存缓存数据，详细算法实现如下：</p>
+<ol>
+<li>新数据插入到链表头部；</li>
+<li>每当缓存命中（即缓存数据被访问），则将数据移到链表头部；</li>
+<li>当链表满的时候，将链表尾部的数据丢弃；</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>获取数据 get(key)<br>如果密钥 (key) 存在于缓存中，则获取密钥的值（总是正数），否则返回 -1。<br>写入数据 put(key, value)<br>如果密钥不存在，则写入其数据值。当缓存容量达到上限时，它应该在写入新数据之前删除最近最少使用的数据值，从而为新的数据值留出空间。</p>
+</blockquote>
+<p><strong>O(1) 时间复杂度</strong></p>
+<blockquote>
+<p>LRUCache cache = new LRUCache( 2 /<em> 缓存容量 </em>/ );<br>cache.put(1, 1);<br>cache.put(2, 2);<br>cache.get(1);       // 返回  1<br>cache.put(3, 3);    // 该操作会使得密钥 2 作废<br>cache.get(2);       // 返回 -1 (未找到)<br>cache.put(4, 4);    // 该操作会使得密钥 1 作废<br>cache.get(1);       // 返回 -1 (未找到)<br>cache.get(3);       // 返回  3<br>cache.get(4);       // 返回  4</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">/**</span><br><span class="line"> *  LRU (最近最少使用) 缓存机制</span><br><span class="line"> *</span><br><span class="line"> * Class that implements the concept of an LRU Cache</span><br><span class="line"> * using an associative array as a naive hashmap, and a doubly linked list</span><br><span class="line"> * to control the access and insertion order.</span><br><span class="line"> *</span><br><span class="line"> * @author ZeMing 2550705721@qq.com</span><br><span class="line"> */</span><br><span class="line">class LRUCache</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 最新访问的元素</span><br><span class="line">     * object Node representing the head of the list</span><br><span class="line">     * @var Node|null</span><br><span class="line">     */</span><br><span class="line">    private $head;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 最早访问的元素</span><br><span class="line">     * object Node representing the tail of the list</span><br><span class="line">     * @var Node|null</span><br><span class="line">     */</span><br><span class="line">    private $tail;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 容量</span><br><span class="line">     * int the max number of elements the cache supports</span><br><span class="line">     * @var int</span><br><span class="line">     */</span><br><span class="line">    private $capacity;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 存储容器</span><br><span class="line">     * Array representing a naive hashmap (TODO needs to pass the key through a hash function)</span><br><span class="line">     * @var array</span><br><span class="line">     */</span><br><span class="line">    private $hashmap;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * @param int $capacity the max number of elements the cache allows</span><br><span class="line">     */</span><br><span class="line">    public function __construct($capacity)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;capacity = $capacity;</span><br><span class="line">        $this-&gt;hashmap = array();</span><br><span class="line">        $this-&gt;head = null;</span><br><span class="line">        $this-&gt;tail = null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Get an element with the given key</span><br><span class="line">     * @param string $key the key of the element to be retrieved</span><br><span class="line">     * @return mixed the content of the element to be retrieved</span><br><span class="line">     */</span><br><span class="line">    public function get($key)</span><br><span class="line">    &#123;</span><br><span class="line">        /**</span><br><span class="line">         * 元素不存在 直接返回-1</span><br><span class="line">         */</span><br><span class="line">        if (! isset($this-&gt;hashmap[$key])) &#123;</span><br><span class="line">            return -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $node = $this-&gt;hashmap[$key];</span><br><span class="line"></span><br><span class="line">        // 只有一个元素时 不做修改</span><br><span class="line">        if (count($this-&gt;hashmap) == 1) &#123;</span><br><span class="line">            return $node-&gt;getData();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 多个元素时，最新访问的元素作为头节点</span><br><span class="line"></span><br><span class="line">        // 删除节点</span><br><span class="line">        $this-&gt;detach($node);</span><br><span class="line">        // 设置为头结点</span><br><span class="line">        $this-&gt;attach($node);</span><br><span class="line"></span><br><span class="line">        return $node-&gt;getData();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Inserts a new element into the cache</span><br><span class="line">     * @param string $key the key of the new element</span><br><span class="line">     * @param string $data the content of the new element</span><br><span class="line">     * @return boolean true on success, false if cache has zero capacity</span><br><span class="line">     */</span><br><span class="line">    public function put($key, $data)</span><br><span class="line">    &#123;</span><br><span class="line">        if ($this-&gt;capacity &lt;= 0) &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 链表为空</span><br><span class="line">        // 头节点head、尾节点tail均指向最新插入的节点</span><br><span class="line">        if ($this-&gt;head == null) &#123;</span><br><span class="line">            $node = new Node($key, $data);</span><br><span class="line">            $this-&gt;head = $node;</span><br><span class="line">            $this-&gt;tail = $node;</span><br><span class="line"></span><br><span class="line">            $this-&gt;head-&gt;setNext($this-&gt;tail);</span><br><span class="line">            $this-&gt;head-&gt;setPrevious(null);</span><br><span class="line"></span><br><span class="line">            $this-&gt;tail-&gt;setPrevious($this-&gt;head);</span><br><span class="line">            $this-&gt;tail-&gt;setNext(null);</span><br><span class="line"></span><br><span class="line">            $this-&gt;hashmap[$key] = $node;</span><br><span class="line"></span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 元素存在</span><br><span class="line">        if (isset($this-&gt;hashmap[$key])) &#123;</span><br><span class="line">            $node = $this-&gt;hashmap[$key];</span><br><span class="line">            // 更新元素值</span><br><span class="line">            $node-&gt;setData($data);</span><br><span class="line"></span><br><span class="line">            $this-&gt;hashmap[$key] = $node;</span><br><span class="line"></span><br><span class="line">            // 更新元素时，将被更新元素设为头节点</span><br><span class="line"></span><br><span class="line">            // 移除该元素</span><br><span class="line">            $this-&gt;detach($node);</span><br><span class="line">            // 将该元素设置为头结点</span><br><span class="line">            $this-&gt;attach($node);</span><br><span class="line"></span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 元素不存在</span><br><span class="line"></span><br><span class="line">        //超出容量限制，删除最早访问的节点（尾节点）</span><br><span class="line">        if (count($this-&gt;hashmap) &gt;= $this-&gt;capacity) &#123;</span><br><span class="line">            // 移除尾节点</span><br><span class="line">            $nodeToRemove = $this-&gt;tail;</span><br><span class="line">            $this-&gt;remove($nodeToRemove-&gt;getKey());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 保存新元素</span><br><span class="line">        $node = new Node($key, $data);</span><br><span class="line">        $this-&gt;hashmap[$key] = $node;</span><br><span class="line"></span><br><span class="line">        // 设置为头节点</span><br><span class="line">        $this-&gt;attach($node);</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 从缓存中移除元素</span><br><span class="line">     * Removes a key from the cache</span><br><span class="line">     * @param string $key key to remove</span><br><span class="line">     * @return bool true if removed, false if not found</span><br><span class="line">     */</span><br><span class="line">    public function remove($key)</span><br><span class="line">    &#123;</span><br><span class="line">        if (! isset($this-&gt;hashmap[$key])) &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $nodeToRemove = $this-&gt;hashmap[$key];</span><br><span class="line"></span><br><span class="line">        $this-&gt;detach($nodeToRemove);</span><br><span class="line"></span><br><span class="line">        unset($this-&gt;hashmap[$nodeToRemove-&gt;getKey()]);</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 头插法插入元素</span><br><span class="line">     * Adds a node to the head of the list</span><br><span class="line">     * @param Node $head the node object that represents the head of the list</span><br><span class="line">     * @param Node $node the node to move to the head of the list</span><br><span class="line">     */</span><br><span class="line">    private function attach($node)</span><br><span class="line">    &#123;</span><br><span class="line">        // 头结点不为空（采用头插法插入节点）</span><br><span class="line">        if ($this-&gt;head != null) &#123;</span><br><span class="line">            // 旧头节点</span><br><span class="line">            $head = $this-&gt;head;</span><br><span class="line">            // 旧头节点的previous指向新节点</span><br><span class="line">            $head-&gt;setPrevious($node);</span><br><span class="line">            // 新节点的next指向旧头节点</span><br><span class="line">            $node-&gt;setNext($head);</span><br><span class="line">            // 新节点的previous指向null</span><br><span class="line">            $node-&gt;setPrevious(null);</span><br><span class="line">            // 头节点指向插入的节点</span><br><span class="line">            $this-&gt;head = $node;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // 整个链表均为空 插入节点同时指向头节点head、尾节点tail</span><br><span class="line">            $this-&gt;head = $node;</span><br><span class="line">            $this-&gt;tail = $node;</span><br><span class="line"></span><br><span class="line">            $this-&gt;head-&gt;setNext($this-&gt;tail);</span><br><span class="line">            $this-&gt;head-&gt;setPrevious(null);</span><br><span class="line"></span><br><span class="line">            $this-&gt;tail-&gt;setPrevious($this-&gt;head);</span><br><span class="line">            $this-&gt;tail-&gt;setNext(null);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 从链表中移除某个元素</span><br><span class="line">     * Removes a node from the list</span><br><span class="line">     * @param mixed $node Node $node the node to remove from the list</span><br><span class="line">     */</span><br><span class="line">    private function detach($node)</span><br><span class="line">    &#123;</span><br><span class="line">        // 删除头节点</span><br><span class="line">        if ($node == $this-&gt;head) &#123;</span><br><span class="line">            // 将头节点指向head的next节点  因为node的属性包含key名称，所以节点不会重复</span><br><span class="line">            if ($this-&gt;head-&gt;getNext() &amp;&amp; $this-&gt;head-&gt;getNext() != $this-&gt;head) &#123;</span><br><span class="line">                $this-&gt;head-&gt;getNext()-&gt;setPrevious(null);</span><br><span class="line">                $this-&gt;head = $this-&gt;head-&gt;getNext();</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // 仅有一个元素 删除后，头节点指向null</span><br><span class="line">                $this-&gt;head = null;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 删除尾节点</span><br><span class="line">        if ($node == $this-&gt;tail) &#123;</span><br><span class="line">            // 将头节点指向tail的previous节点  因为node的属性包含key名称，所以节点不会重复</span><br><span class="line">            if ($this-&gt;tail-&gt;getPrevious() &amp;&amp; $this-&gt;tail-&gt;getPrevious() != $this-&gt;tail) &#123;</span><br><span class="line">                $this-&gt;tail-&gt;getPrevious()-&gt;setNext(null);</span><br><span class="line">                $this-&gt;tail = $this-&gt;tail-&gt;getPrevious();</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // 仅有一个元素 删除后，尾节点指向null</span><br><span class="line">                $this-&gt;tail = null;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 删除中间节点</span><br><span class="line">        // 前一个节点的next =》删除节点的next</span><br><span class="line">        $node-&gt;getPrevious()-&gt;setNext($node-&gt;getNext());</span><br><span class="line">        // 后一个节点的previous =》删除节点的previous</span><br><span class="line">        $node-&gt;getNext()-&gt;setPrevious($node-&gt;getPrevious());</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">/**</span><br><span class="line"> * Class that represents a node in a doubly linked list</span><br><span class="line"> */</span><br><span class="line">class Node &#123;</span><br><span class="line">    /**</span><br><span class="line">     * the key of the node, this might seem reduntant,</span><br><span class="line">     * but without this duplication, we don&apos;t have a fast way</span><br><span class="line">     * to retrieve the key of a node when we wan&apos;t to remove it</span><br><span class="line">     * from the hashmap.</span><br><span class="line">     */</span><br><span class="line">    private $key;</span><br><span class="line"></span><br><span class="line">    // the content of the node</span><br><span class="line">    private $data;</span><br><span class="line"></span><br><span class="line">    // the next node</span><br><span class="line">    private $next;</span><br><span class="line"></span><br><span class="line">    // the previous node</span><br><span class="line">    private $previous;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * @param string $key the key of the node</span><br><span class="line">     * @param string $data the content of the node</span><br><span class="line">     */</span><br><span class="line">    public function __construct($key, $data)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;key = $key;</span><br><span class="line">        $this-&gt;data = $data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Sets a new value for the node data</span><br><span class="line">     * @param string the new content of the node</span><br><span class="line">     */</span><br><span class="line">    public function setData($data)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;data = $data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Sets a node as the next node</span><br><span class="line">     * @param Node $next the next node</span><br><span class="line">     */</span><br><span class="line">    public function setNext($next)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;next = $next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Sets a node as the previous node</span><br><span class="line">     * @param Node $previous the previous node</span><br><span class="line">     */</span><br><span class="line">    public function setPrevious($previous)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;previous = $previous;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Returns the node key</span><br><span class="line">     * @return string the key of the node</span><br><span class="line">     */</span><br><span class="line">    public function getKey()</span><br><span class="line">    &#123;</span><br><span class="line">        return $this-&gt;key;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Returns the node data</span><br><span class="line">     * @return mixed the content of the node</span><br><span class="line">     */</span><br><span class="line">    public function getData()</span><br><span class="line">    &#123;</span><br><span class="line">        return $this-&gt;data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Returns the next node</span><br><span class="line">     * @return Node the next node of the node</span><br><span class="line">     */</span><br><span class="line">    public function getNext()</span><br><span class="line">    &#123;</span><br><span class="line">        return $this-&gt;next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Returns the previous node</span><br><span class="line">     * @return Node the previous node of the node</span><br><span class="line">     */</span><br><span class="line">    public function getPrevious()</span><br><span class="line">    &#123;</span><br><span class="line">        return $this-&gt;previous;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">$cache = new LRUCache( 1);</span><br><span class="line"></span><br><span class="line">$cache-&gt;put(2, 1);</span><br><span class="line"></span><br><span class="line">echo $cache-&gt;get(2);       // 返回  1</span><br><span class="line"></span><br><span class="line">$cache-&gt;put(3, 2);</span><br><span class="line"></span><br><span class="line">echo $cache-&gt;get(2);       // 返回  -1</span><br><span class="line"></span><br><span class="line">echo $cache-&gt;get(3);       // 返回  2</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="FIFO（First-In-First-out）：先见先出"><a href="#FIFO（First-In-First-out）：先见先出" class="headerlink" title="FIFO（First In First out）：先见先出"></a>FIFO（First In First out）：先见先出</h2><p><strong>FIFO（First In First out）：先见先出，淘汰最先近来的页面，新进来的页面最迟被淘汰，完全符合队列</strong>。</p>
+<blockquote>
+<p>按照“先进先出（First In，First Out）”的原理淘汰数据，正好符合队列的特性，数据结构上使用队列Queue来实现。</p>
+<ol>
+<li>新访问的数据插入FIFO队列尾部，数据在FIFO队列中顺序移动；</li>
+<li>淘汰FIFO队列头部的数据；</li>
+</ol>
+</blockquote>
+<h2 id="LFU（Least-frequently-used）-最近使用次数最少"><a href="#LFU（Least-frequently-used）-最近使用次数最少" class="headerlink" title="LFU（Least frequently used）: 最近使用次数最少"></a>LFU（Least frequently used）: 最近使用次数最少</h2><p><strong>LFU（Least frequently used）: 最近使用次数最少， 淘汰使用次数最少的页面</strong></p>
+<blockquote>
+<p>LFU（Least Frequently Used）算法根据数据的历史访问频率来淘汰数据，其核心思想是“如果数据过去被访问多次，那么将来被访问的频率也更高”。<br>LFU的每个数据块都有一个引用计数，所有数据块按照引用计数排序，具有相同引用计数的数据块则按照时间排序。<br>具体实现如下：</p>
+<ol>
+<li>新加入数据插入到队列尾部（因为引用计数为1）；</li>
+<li>队列中的数据被访问后，引用计数增加，队列重新排序；</li>
+<li>当需要淘汰数据时，将已经排序的列表最后的数据块删除。</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>LFU(Least Frequently Used)淘汰一定时期内被访问次数最少的元素。如果元素的一定时间内的访问次数相同时，则比较他们的最新一次的访问时间。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line">public class LFU&lt;k, v&gt; &#123;</span><br><span class="line">  private final int capcity;</span><br><span class="line"></span><br><span class="line">  private Map&lt;k, v&gt; cache = new HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  private Map&lt;k, HitRate&gt; count = new HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  public LFU(int capcity) &#123;</span><br><span class="line">    this.capcity = capcity;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  public void put(k key, v value) &#123;</span><br><span class="line">    v v = cache.get(key);</span><br><span class="line">    if (v == null) &#123;</span><br><span class="line">      if (cache.size() == capcity) &#123;</span><br><span class="line">        removeElement();</span><br><span class="line">      &#125;</span><br><span class="line">      count.put(key, new HitRate(key, 1, System.nanoTime()));</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      addHitCount(key);</span><br><span class="line">    &#125;</span><br><span class="line">    cache.put(key, value);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  public v get(k key) &#123;</span><br><span class="line">    v value = cache.get(key);</span><br><span class="line">    if (value != null) &#123;</span><br><span class="line">      addHitCount(key);</span><br><span class="line">      return value;</span><br><span class="line">    &#125;</span><br><span class="line">    return null;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //移除元素</span><br><span class="line">  private void removeElement() &#123;</span><br><span class="line">    HitRate hr = Collections.min(count.values());</span><br><span class="line">    cache.remove(hr.key);</span><br><span class="line">    count.remove(hr.key);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //更新访问元素状态</span><br><span class="line">  private void addHitCount(k key) &#123;</span><br><span class="line">    HitRate hitRate = count.get(key);</span><br><span class="line">    hitRate.hitCount = hitRate.hitCount + 1;</span><br><span class="line">    hitRate.lastTime = System.nanoTime();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //内部类</span><br><span class="line">  class HitRate implements Comparable&lt;HitRate&gt; &#123;</span><br><span class="line">    private k key;</span><br><span class="line">    private int hitCount;</span><br><span class="line">    private long lastTime;</span><br><span class="line"></span><br><span class="line">    private HitRate(k key, int hitCount, long lastTime) &#123;</span><br><span class="line">      this.key = key;</span><br><span class="line">      this.hitCount = hitCount;</span><br><span class="line">      this.lastTime = lastTime;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int compareTo(HitRate o) &#123;</span><br><span class="line">      int compare = Integer.compare(this.hitCount, o.hitCount);</span><br><span class="line">      return compare == 0 ? Long.compare(this.lastTime, o.lastTime) : compare;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  public static void main(String[] args) &#123;</span><br><span class="line">    LFU&lt;Integer, Integer&gt; cache = new LFU&lt;&gt;(3);</span><br><span class="line">    cache.put(2, 2);</span><br><span class="line">    cache.put(1, 1);</span><br><span class="line"></span><br><span class="line">    System.out.println(cache.get(2));</span><br><span class="line">    System.out.println(cache.get(1));</span><br><span class="line">    System.out.println(cache.get(2));</span><br><span class="line"></span><br><span class="line">    cache.put(3, 3);</span><br><span class="line">    cache.put(4, 4);</span><br><span class="line"></span><br><span class="line">    //1、2元素都有访问次数，放入3后缓存满，加入4时淘汰3</span><br><span class="line">    System.out.println(cache.get(3));</span><br><span class="line">    System.out.println(cache.get(2));</span><br><span class="line">    //System.out.println(cache.get(1));</span><br><span class="line">    System.out.println(cache.get(4));</span><br><span class="line"></span><br><span class="line">    cache.put(5, 5);</span><br><span class="line">    //目前2访问2次，1访问一次，4访问一次，由于4的时间比较新，放入5的时候移除1元素。</span><br><span class="line">    System.out.println(&quot;-=-=-=-&quot;);</span><br><span class="line">    cache.cache.entrySet().forEach(entry -&gt; &#123;</span><br><span class="line">      System.out.println(entry.getValue());</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">/**</span><br><span class="line"> *  LFU (最近最少使用) 缓存机制</span><br><span class="line"> *</span><br><span class="line"> * @author ZeMing 2550705721@qq.com</span><br><span class="line"> */</span><br><span class="line">class LFUCache</span><br><span class="line">&#123;</span><br><span class="line">    /**</span><br><span class="line">     * 缓存容量</span><br><span class="line">     * @var int</span><br><span class="line">     */</span><br><span class="line">    private $capcity;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 缓存k-v映射存储</span><br><span class="line">     * @var array</span><br><span class="line">     */</span><br><span class="line">    private $cache = array();</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 缓存k访问次数、访问时间映射</span><br><span class="line">     * @var array</span><br><span class="line">     */</span><br><span class="line">    private $hit_counter = array();</span><br><span class="line"></span><br><span class="line">    public function __construct($capcity)</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;capcity = $capcity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public function get($key)</span><br><span class="line">    &#123;</span><br><span class="line">        if(! isset($this-&gt;cache[$key])) &#123;</span><br><span class="line">            return -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $this-&gt;addVisitRecord($key);</span><br><span class="line"></span><br><span class="line">        return $this-&gt;cache[$key];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public function put($key, $value)</span><br><span class="line">    &#123;</span><br><span class="line">        if (isset($this-&gt;cache[$key])) &#123;</span><br><span class="line">            $this-&gt;addVisitRecord($key);</span><br><span class="line">            $this-&gt;cache[$key] = $value;</span><br><span class="line"></span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (count($this-&gt;cache) &gt;= $this-&gt;capcity) &#123;</span><br><span class="line">            $this-&gt;removeElement();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $this-&gt;addVisitRecord($key);</span><br><span class="line"></span><br><span class="line">        $this-&gt;cache[$key] = $value;</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 移除元素</span><br><span class="line">     * @return bool</span><br><span class="line">     */</span><br><span class="line">    public function removeElement()</span><br><span class="line">    &#123;</span><br><span class="line">        $this-&gt;compareTo();</span><br><span class="line">        $remove_key = current(array_keys($this-&gt;hit_counter));</span><br><span class="line">        unset($this-&gt;hit_counter[$remove_key]);</span><br><span class="line">        unset($this-&gt;cache[$remove_key]);</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 更新访问次数、访问时间</span><br><span class="line">     * @param $key</span><br><span class="line">     * @return bool</span><br><span class="line">     */</span><br><span class="line">    public function addVisitRecord($key)</span><br><span class="line">    &#123;</span><br><span class="line">        if(! isset($this-&gt;hit_counter[$key])) &#123;</span><br><span class="line">            $this-&gt;hit_counter[$key] = array(</span><br><span class="line">                &apos;visit_number&apos; =&gt; 1,</span><br><span class="line">                &apos;last_visit_time&apos; =&gt; time()</span><br><span class="line">            );</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            $this-&gt;hit_counter[$key][&apos;visit_number&apos;] += 1;</span><br><span class="line">            $this-&gt;hit_counter[$key][&apos;last_visit_time&apos;] = time();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 按访问次数、访问次数排序</span><br><span class="line">     * @return bool</span><br><span class="line">     */</span><br><span class="line">    public function compareTo()</span><br><span class="line">    &#123;</span><br><span class="line">        // 访问次数</span><br><span class="line">        $visit_number_arr = array_column($this-&gt;hit_counter, &apos;visit_number&apos;);</span><br><span class="line"></span><br><span class="line">        // 访问时间</span><br><span class="line">        $last_visit_time_arr = array_column($this-&gt;hit_counter, &apos;last_visit_time&apos;);</span><br><span class="line"></span><br><span class="line">        // 访问次数、访问时间升序</span><br><span class="line">        // array_multisort 全部是数值键 有问题  会重排索引  所以对key也排序了</span><br><span class="line"></span><br><span class="line">        $keys = array_keys($this-&gt;hit_counter);</span><br><span class="line"></span><br><span class="line">        array_multisort($visit_number_arr, SORT_ASC, $last_visit_time_arr, SORT_ASC, $keys, $this-&gt;hit_counter);</span><br><span class="line"></span><br><span class="line">        $this-&gt;hit_counter = array_combine($keys, array_values($this-&gt;hit_counter));</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">$cache = new LFUCache(2);</span><br><span class="line">/*</span><br><span class="line">$cache-&gt;put(&quot;aa&quot;, 2);</span><br><span class="line">$cache-&gt;put(&quot;aa&quot;, 2);</span><br><span class="line">$cache-&gt;put(&quot;cc&quot;, 2);</span><br><span class="line">sleep(5);</span><br><span class="line">$cache-&gt;put(&quot;bb&quot;, 1);</span><br><span class="line">$cache-&gt;put(&quot;dd&quot;, 1);</span><br><span class="line">$cache-&gt;put(&quot;dd&quot;, 1);</span><br><span class="line">$cache-&gt;put(&quot;dd&quot;, 1);</span><br><span class="line">$cache-&gt;put(&quot;dd&quot;, 2);</span><br><span class="line">$cache-&gt;put(&quot;ff&quot;, &quot;f&quot;);</span><br><span class="line">*/</span><br><span class="line">$cache-&gt;put(1, 1);</span><br><span class="line">$cache-&gt;put(1, 1);</span><br><span class="line">$cache-&gt;put(2, 2);</span><br><span class="line">$cache-&gt;put(3, 3);</span><br><span class="line">$cache-&gt;put(1, 1);</span><br><span class="line">$cache-&gt;put(1, 1);</span><br><span class="line">$cache-&gt;put(2, 2);</span><br><span class="line">$cache-&gt;put(3, 3);</span><br><span class="line">var_dump($cache);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+            <a href="/tags/内存淘汰机制/" rel="tag"># 内存淘汰机制</a>
+          
+            <a href="/tags/缓存过期策略/" rel="tag"># 缓存过期策略</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/23/你的系统如何支撑高并发？/" rel="next" title="你的系统如何支撑高并发？">
+                <i class="fa fa-chevron-left"></i> 你的系统如何支撑高并发？
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/06/高效Linux bash快捷键及alias总结/" rel="prev" title="高效Linux bash快捷键及alias总结">
+                高效Linux bash快捷键及alias总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#内存淘汰机制"><span class="nav-number">1.</span> <span class="nav-text">内存淘汰机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#LRU（Least-recently-used）-最近最少使用"><span class="nav-number">1.1.</span> <span class="nav-text">LRU（Least recently used）:最近最少使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FIFO（First-In-First-out）：先见先出"><span class="nav-number">1.2.</span> <span class="nav-text">FIFO（First In First out）：先见先出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFU（Least-frequently-used）-最近使用次数最少"><span class="nav-number">1.3.</span> <span class="nav-text">LFU（Least frequently used）: 最近使用次数最少</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

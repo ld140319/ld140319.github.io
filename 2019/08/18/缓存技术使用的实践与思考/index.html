@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据库,数据一致性问题,数据库与缓存,缓存,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="缓存技术使用的实践与思考 原文地址：https://yq.aliyun.com/articles/714402  导读&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照现在流行的互联网分层架构模型，最简单的架构当属Web响应层+DB存储层的架构。从最开始的单机混合部署Web和DB，到后来将二者拆分到不同物理机以避免共享机器硬件带来的性能瓶颈，再随着流量的增长，Web应用变">
+<meta name="keywords" content="架构,数据库,数据一致性问题,数据库与缓存,缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存技术使用的实践与思考">
+<meta property="og:url" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="缓存技术使用的实践与思考 原文地址：https://yq.aliyun.com/articles/714402  导读&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照现在流行的互联网分层架构模型，最简单的架构当属Web响应层+DB存储层的架构。从最开始的单机混合部署Web和DB，到后来将二者拆分到不同物理机以避免共享机器硬件带来的性能瓶颈，再随着流量的增长，Web应用变">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/7ff18bb329a8638d5720b2a2f021c934e04717d7.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/0e55fd94108118cac6cd69f046ae1d42a2ae9206.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/f95a0e1a895802e2c505ac7e741c3cb7e585c767.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/8b9db1a7b6ccc2c60fcc6b8c78606fd19b84e74a.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/5ccafc6cb1235f7815ab7cc82224100db183ee61.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/6c14b33949dfdb21882fbacab19c7fc63447122f.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/6d12e43733faaf240f786cf4ed2021f2f870e7ef.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/acfe4d481dcebfd96d87a6eaca1f62606dc65eea.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/889ec2d6891675e3eedfb0b9242db25eae27fcce.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/1edea49588bd21a699f5ef29e683e637e03ba5e0.png">
+<meta property="og:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/accaaa2a5cec2cc954c759cdf98098966cfbf348.png">
+<meta property="og:updated_time" content="2019-08-18T15:13:23.765Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="缓存技术使用的实践与思考">
+<meta name="twitter:description" content="缓存技术使用的实践与思考 原文地址：https://yq.aliyun.com/articles/714402  导读&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;按照现在流行的互联网分层架构模型，最简单的架构当属Web响应层+DB存储层的架构。从最开始的单机混合部署Web和DB，到后来将二者拆分到不同物理机以避免共享机器硬件带来的性能瓶颈，再随着流量的增长，Web应用变">
+<meta name="twitter:image" content="http://blog.com/2019/08/18/缓存技术使用的实践与思考/7ff18bb329a8638d5720b2a2f021c934e04717d7.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/18/缓存技术使用的实践与思考/">
+
+
+
+
+
+  <title>缓存技术使用的实践与思考 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/18/缓存技术使用的实践与思考/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">缓存技术使用的实践与思考</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-18T12:12:57+08:00">
+                2019-08-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/" itemprop="url" rel="index">
+                    <span itemprop="name">数据一致性问题</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库与缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/缓存/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="缓存技术使用的实践与思考"><a href="#缓存技术使用的实践与思考" class="headerlink" title="缓存技术使用的实践与思考"></a>缓存技术使用的实践与思考</h1><blockquote>
+<p>原文地址：<a href="https://yq.aliyun.com/articles/714402" target="_blank" rel="noopener">https://yq.aliyun.com/articles/714402</a></p>
+</blockquote>
+<h2 id="导读"><a href="#导读" class="headerlink" title="导读"></a>导读</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;按照现在流行的互联网分层架构模型，最简单的架构当属Web响应层+DB存储层的架构。从最开始的单机混合部署Web和DB，到后来将二者拆分到不同物理机以避免共享机器硬件带来的性能瓶颈，再随着流量的增长，Web应用变为集群部署模式，而DB则衍生出主从机来保证高可用，同时便于实现读写分离。这一连串系统架构的升级，本质上是为了追求更高的性能，达到更低的延时。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;高德作为一款国民级别的导航软件，导航路线的数据质量是由数据中心统一管理的。为了保证数据的鲜度，数据中心需要对不断变化的现实道路数据进行收集，将这些变化的信息保存到数据库中，从而保证导航数据的鲜度；另一方面数据中心内部多部门协调生产数据的时候，会产生海量请求查询最新生产的数据，这就要求数据的管理者要控制数据库连接数，降低请求的响应耗时，同时也需要保证返回数据的实时性。在平衡数据鲜度和性能之间，高德数据中心针对不同的业务场景使用了不同的策略，达到了数据变更和缓存同步低延迟的目标，同时保障了系统的稳定性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文将提及的缓存技术则是提升性能的另一把利刃。然而任何技术都是有可为有可不为，没有最好的技术只有最适合的技术，因此在使用缓存之前，我们也需要了解下引入缓存模块所带来的好处和坏处。</p>
+<h2 id="缘起：为何使用缓存"><a href="#缘起：为何使用缓存" class="headerlink" title="缘起：为何使用缓存"></a>缘起：为何使用缓存</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在应用对外提供服务时，其稳定性受到诸多因素影响，其中比较重要的有CPU、内存、IO(磁盘IO、网络IO)等，这些硬件资源十分宝贵，因此对于那些<strong>需要经过复杂计算才能得到结果的</strong>，或者<strong>需要频繁读取磁盘数据</strong>的，最好将结果缓存起来，避免资源的重复消耗。</p>
+<h3 id="CPU瓶颈"><a href="#CPU瓶颈" class="headerlink" title="CPU瓶颈"></a>CPU瓶颈</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果项目中有很多正则表达式计算，或者某个计算结果是多次中间结果合并后才得出的，且CPU的使用率一直居高不下，那么就可以考虑是否应该将这些结果缓存起来，<strong>根据特定Key直接获取Value结果，减少中间链路的传递过程，减少CPU的使用率</strong>。</p>
+<h3 id="IO瓶颈"><a href="#IO瓶颈" class="headerlink" title="IO瓶颈"></a>IO瓶颈</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;众所周知，从磁盘获取数据受到磁盘转速、寻道速度、磁盘缓冲区大小等诸多因素影响，这些因素决定了磁盘的<code>IOPS</code>，同时我们也知道对于数据的读写来说，<strong>CPU的缓存读写速度&gt; 内存的读写速度 &gt;磁盘的读写速度</strong>。虽然磁盘内部也配备了缓存以匹配内存的读写速度，但其容量毕竟是有限的，那么当磁盘的<code>IOPS</code>无法进一步提升的时候，便会想到将数据缓存到内存中，从而降低磁盘的访问压力。<strong>这一策略常被应用于缓解DB数据库的数据访问压力</strong>。</p>
+<h2 id="选择本地缓存和分布式缓存的考量点"><a href="#选择本地缓存和分布式缓存的考量点" class="headerlink" title="选择本地缓存和分布式缓存的考量点"></a>选择本地缓存和分布式缓存的考量点</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;既然可以使用缓存来提升系统吞吐能力，那么紧接着遇到的问题就是选择本地缓存，还是分布式缓存？什么时候需要使用多级缓存呢？接下来，让我们聊一聊在使用缓存优化项目的过程中，本地缓存和分布式缓存的应用场景和优缺点。</p>
+<h3 id="本地缓存的优缺点和应用场景"><a href="#本地缓存的优缺点和应用场景" class="headerlink" title="本地缓存的优缺点和应用场景"></a>本地缓存的优缺点和应用场景</h3><h4 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h4><p>统一进程带来了以下优势：</p>
+<ul>
+<li>由于本地缓存和应用在同一个进程中，因而其<strong>稳定性很高，达到了和应用同生共死的境界</strong>；</li>
+<li>由于在同一进程中，<strong>避免了网络数据传输带来的消耗</strong>，所有缓存数据直接从进程所在的内存区域获取即可。</li>
+</ul>
+<h4 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h4><p>强耦合性也会导致以下这些劣势：</p>
+<ul>
+<li>本地缓存和应用共享一片JVM内存，<strong>争抢内存资源，无法水平扩展，且可能造成频繁的GC，影响线上应用的稳定性</strong>。</li>
+<li>由于<strong>没有持久化机制，在项目重启后缓存内数据就会丢失，对于高频访问数据，需要对数据进行预热操作</strong>。</li>
+<li><strong>多份进程内缓存存储着同样的数据内容，造成内存使用浪费</strong>。</li>
+<li><strong>同样的数据存储在不同的本地机器，数据变化后，很难保证数据的一致性</strong>。</li>
+</ul>
+<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结合以上优缺点，我们就会想到，如果有一种<strong>数据需要频繁访问，但一旦创建后就轻易不会改变，而且初始创建时就能预估占用的内存空间</strong>，那么这种类型的数据无疑是最适合用本地缓存存储了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;既然有了上述的应用场景，我们反观技术开发中的诉求，发现其实很多优秀的框架已经在这样使用了，比如缓存类<code>class</code>的反射信息，包括<code>field</code>、<code>method</code>等。因为<code>class</code>的数量是有限的，且内容不会轻易改变，在使用时无需再使用反射机制，而只需要从本地缓存读取数据即可。</p>
+<h3 id="分布式缓存的优缺点和应用场景"><a href="#分布式缓存的优缺点和应用场景" class="headerlink" title="分布式缓存的优缺点和应用场景"></a>分布式缓存的优缺点和应用场景</h3><h4 id="优势-1"><a href="#优势-1" class="headerlink" title="优势"></a>优势</h4><ul>
+<li>数据集中存储，<strong>消除冗余数据，解决整体内存的占用率，易于维护集群建缓存数据的一致性</strong>。</li>
+<li><strong>缓存中间件可以对缓存进行统一管理，便于水平扩容</strong>。</li>
+</ul>
+<h4 id="劣势-1"><a href="#劣势-1" class="headerlink" title="劣势"></a>劣势</h4><ul>
+<li><strong>依赖分布式缓存中间件稳定性，一旦挂了，容易造成缓存雪崩</strong>；</li>
+<li>由于是跨机器获取缓存数据，因此会造成<strong>数据传输的网络消耗，以及一些序列化/反序列化的时间开销</strong>。</li>
+</ul>
+<h4 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于上述缺点中，网络耗时等开销是难免的，而且这些操作耗费的时间在可接受范围内，而对于中间件的稳定性则可以通过<strong>服务降级、限流或者多级缓存</strong>思路来保证。我们主要看中的是它的优点，既然分布式缓存天然能保证缓存一致性，那么我们倾向于将<strong>需要频繁访问却又经常变化的数据</strong>存放于此。</p>
+<h3 id="选择缓存框架的衡量标准"><a href="#选择缓存框架的衡量标准" class="headerlink" title="选择缓存框架的衡量标准"></a>选择缓存框架的衡量标准</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在了解了何时使用缓存以及缓存的优缺点后，我们就准备大刀阔斧开始升级系统了，可紧接着的问题也随之出现，对于本地缓存和分布式缓存，到底应该使用什么框架才是最适用的呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在的技术百花齐放，不同的技术解决的问题侧重点也不同，对于本地缓存来说，如果无资源竞争的代码逻辑，可以使用<code>HashMap</code>，而对于有资源竞争的多线程程序来说，则可以使用<code>ConcurrentHashMap</code>。但以上二者有个通病就是缓存占用只增不减，没有缓存过期机制、也没有缓存淘汰机制。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么本地缓存是否有更高性能的框架呢？而对于分布式缓存，领域内常用的<code>Redis</code>和<code>Memcache</code>又应该怎样取舍呢？本小节期望通过横向对比的方式，分别给出一个比较通用的缓存框架方案，当然如果有个性化需求的，也可以根据不同缓存框架的特性来取舍。</p>
+<p>不同本地缓存框架的横向对比，如下表所示：</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/7ff18bb329a8638d5720b2a2f021c934e04717d7.png" alt="1"></p>
+<p>总结：如果不需要淘汰算法则选择<code>ConcurrentHashMap</code>，如果需要淘汰算法和一些丰富的<code>API</code>，推荐选择<code>Caffeine</code>。</p>
+<p>不同分布式缓存框架的横向对比，如下表所示：</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/0e55fd94108118cac6cd69f046ae1d42a2ae9206.png" alt="2"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于存储容量而言，<strong><code>Memcache</code>采用预先分配不同固定大小存储单元的方式，内存空间使用并不紧凑</strong>。如果存储<code>Value</code>对象大小最大为<code>1MB</code>，那么当一个对象有<code>1000KB</code>，那么会存储到大小最匹配<code>1MB</code>的单元中，因此会浪费<code>24KB</code>的内存；而<strong><code>Redis</code>是使用之前才去申请空间，内存使用紧凑，但频繁对内存的扩容和收缩，可能造成内存碎片</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总结：由于<code>Redis</code>具有丰富的数据结构能满足不同的业务场景需求，同时<code>Redis</code>支持持久化，能有效地解决缓存中间件重启后的数据预加载问题，因此<strong>大多数应用场景中还是推荐使用<code>Redis</code></strong>。</p>
+<h2 id="缓存框架使用过程的知识点"><a href="#缓存框架使用过程的知识点" class="headerlink" title="缓存框架使用过程的知识点"></a>缓存框架使用过程的知识点</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不论是本地缓存还是分布式缓存，在使用缓存提升性能的时候，必然会考虑缓存命中率的高低，考虑缓存数据的更新和删除策略，考虑数据一致性如何维护，本小节主要针对以上的问题来分析不同实现方案的优缺点。</p>
+<h3 id="缓存命中率"><a href="#缓存命中率" class="headerlink" title="缓存命中率"></a>缓存命中率</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;缓存命中率不仅是系统性能的一个侧面指标，也是优化缓存使用方案的一个重要依据。缓存命中率=请求命中数/请求总数。接下来的若干缓存使用策略所围绕的核心考量点就是在保证系统稳定性的同时，旨在提升缓存命中率。</p>
+<h3 id="缓存更新策略"><a href="#缓存更新策略" class="headerlink" title="缓存更新策略"></a>缓存更新策略</h3><h4 id="主动请求DB数据，更新缓存"><a href="#主动请求DB数据，更新缓存" class="headerlink" title="主动请求DB数据，更新缓存"></a>主动请求DB数据，更新缓存</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过在集群中的每台机器都部署一套<strong>定时任务</strong>，每隔一段时间就主动向数据库<code>DB</code>请求最新数据，然后更新缓存。这样做的好处是可以<strong>避免缓存击穿的风险，在缓存失效前就主动请求加载<code>DB</code>数据，完成缓存数据更新的无缝连接</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但这样做也<strong>增加了机器的<code>CPU</code>和内存的占用率，因为即使有若干<code>Key</code>的缓存始终不被访问，可还是会被主动加载加载到内存中</strong>。也就是说，<strong>提高了业务抗风险能力，但对<code>CPU</code>和内存资源并不友好</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;详情可参见下图，分布式缓存中存储着<code>DB</code>中的数据，每隔<code>4.9s</code>就会有定时任务执行去更新缓存，而缓存数据失效时间为<code>5s</code>，从而保证缓存中的数据永远存在，避免缓存击穿的风险。但对于<code>Web</code>请求来说，只会访问<code>k1</code>的缓存数据，也即对于<code>k2</code>和<code>k3</code>数据来说，是<strong>无效缓存</strong>。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/f95a0e1a895802e2c505ac7e741c3cb7e585c767.png" alt="3"></p>
+<blockquote>
+<p>定时任务刷新的另外一个问题就是数据量太大，<strong>缓存数据刷新不及时</strong>，因为是单进程更新所有数据，效率不高</p>
+</blockquote>
+<h4 id="被动请求DB数据，更新缓存"><a href="#被动请求DB数据，更新缓存" class="headerlink" title="被动请求DB数据，更新缓存"></a>被动请求DB数据，更新缓存</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当有请求到达且发现缓存没数据时，就向<code>DB</code>请求最新数据并更新缓存。这种方案完全可以看做是方案一的互斥方案，它<strong>解决的是机器<code>CPU</code>和内存浪费的问题，内存中存储的数据始终是有用的，但却无法避免缓存失效的瞬间又突然流量峰值带来的缓存击穿问题，在业务上会有一定的风险</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;详情见下图，缓存不会主动加载数据，而是根据<code>Web</code>请求懒加载数据。对于请求<code>k1</code>数据来说，发现缓存没有对应数据，到<code>DB</code>查询，然后放入<code>Cache</code>，这是常规流程；但如果有突发流量，大量请求同时访问<code>k2</code>数据，但<code>Cache</code>中没有数据时，请求就会同时落到<code>DB</code>上，<strong>可能压垮数据库</strong>。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/8b9db1a7b6ccc2c60fcc6b8c78606fd19b84e74a.png" alt="4"></p>
+<h3 id="缓存过期策略"><a href="#缓存过期策略" class="headerlink" title="缓存过期策略"></a>缓存过期策略</h3><h4 id="依赖时间的过期策略"><a href="#依赖时间的过期策略" class="headerlink" title="依赖时间的过期策略"></a>依赖时间的过期策略</h4><h5 id="定时删除"><a href="#定时删除" class="headerlink" title="定时删除"></a>定时删除</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于需要删除的<strong>每个<code>Key</code>都配备一个定时器，元素超时时间一到就删除元素，释放元素占用的内存，同时释放定时器自身资源</strong>。其优点是元素的删除很及时，但缺点也很明显，比如为每个<code>Key</code>配备定时器肯定会消耗<code>CPU</code>和内存资源，严重影响性能。这种策略只适合在小数据量且对过期时间又严格要求的场景能使用，一般生产环境都不会使用。</p>
+<h5 id="惰性删除"><a href="#惰性删除" class="headerlink" title="惰性删除"></a>惰性删除</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;元素过期后并不会立马删除，而是<strong>等到该元素的下一次操作（如：访问、更新等）才会判断是否过期，执行过期删除操作</strong>。这样的好处是节约<code>CPU</code>资源，因为只有当元素真的过期了，才会将其删除，而不用单独管理元素的生命周期。但其对内存不友好，因为如果若干已经过期的元素一直不被访问的话，那就会一直占用内存，造成内存泄漏。</p>
+<h5 id="定期删除"><a href="#定期删除" class="headerlink" title="定期删除"></a>定期删除</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上两种元素删除策略各有优缺点，无非是对<code>CPU</code>友好，还是对内存友好。为了结合两者的优点，一方面减少了元素定时器的配备，<strong>只使用一个定时器来统一扫描过期元素</strong>；另一方面加速了判断元素过期的时间间隔，不是被动等待检测过期，而是<strong>间隔一段时间就主动执行元素过期检测任务</strong>。正是由于以上的改进点，此方案是元素过期检测的惯常手段。</p>
+<h5 id="业务资源过期后及时释放的几种方案"><a href="#业务资源过期后及时释放的几种方案" class="headerlink" title="业务资源过期后及时释放的几种方案"></a>业务资源过期后及时释放的几种方案</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们假设一个场景，为了保护用户隐私，通常在用户电话和商家电话之间，会使用一个虚拟电话作为沟通的桥梁。业务使用中，往往同一个虚拟号码在一定时间内是可以对相同的用户和商家建立连接的，而当超出这个时间后，这个虚拟号码就不再维护映射关系了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;虚拟电话号码的资源是有限的，自然会想到创建一个虚拟号码资源池，管理虚拟号码的创建和释放。比如规定一个虚拟号码维持的关系每次能使用15分钟，那么<strong>过期后要释放虚拟号码</strong>，我们有什么方案呢？</p>
+<h6 id="全量数据扫描，依次遍历判断过期时间"><a href="#全量数据扫描，依次遍历判断过期时间" class="headerlink" title="全量数据扫描，依次遍历判断过期时间"></a>全量数据扫描，依次遍历判断过期时间</h6><p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/5ccafc6cb1235f7815ab7cc82224100db183ee61.png" alt="_1"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于<code>DB</code>中存储的以上内容，每天记录都存储着虚拟号码的创建时间，以及经过<code>expire_seconds</code>就会删除此记录。那么需要<strong>配备一个定时任务扫描表中的所有记录，再判断<code>current_time - create_time &gt;expire_seconds</code>，才会删除记录</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果数据量很大的情况，就会导致数据删除延迟时间很长</strong>，这并不是可取的方案。那是否有方案能直接获取到需要过期的<code>vr_phone</code>，然后批量过期来解决上述痛点呢？来看看方案二吧。</p>
+<h6 id="存储绝对过期时间-BTree索引，批量获取过期的vr-phone列表"><a href="#存储绝对过期时间-BTree索引，批量获取过期的vr-phone列表" class="headerlink" title="存储绝对过期时间+BTree索引，批量获取过期的vr_phone列表"></a>存储绝对过期时间+BTree索引，批量获取过期的vr_phone列表</h6><p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/6c14b33949dfdb21882fbacab19c7fc63447122f.png" alt="_2"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将相对过期时间<code>expire_seconds</code>改为记录过期的时间戳<code>expire_timestamp</code>，同时将其添加<code>BTree</code>索引提高检索效率。仍然使用一个定时器，在获取待删除<code>vr_phone</code>列表时只需要<code>select vr_phone from table where now()&gt;=expire_timestamp</code>即可。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于空间复杂度增加了一个<code>BTree</code>数据结构，而基于<code>BTree</code>来考虑时间复杂度的话，对于元素的新增、修改、删除、查询的平均时间复杂度都是<code>O(logN)</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此方案已经能满足业务使用需求了，那是否还有性能更好的方案呢？</p>
+<h6 id="单层定时轮算法"><a href="#单层定时轮算法" class="headerlink" title="单层定时轮算法"></a>单层定时轮算法</h6><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们继续讨论上面的案例，寻找更优的解题思路。下表是<code>DB</code>存储元素：</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/6d12e43733faaf240f786cf4ed2021f2f870e7ef.png" alt="_3"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时<code>DB</code>中不再存储和过期时间相关的数据，而专注于业务数据本身。对于过期的功能我们交给单层定时轮来解决。<strong>其本质是一个环形数组，数组每一格代表1秒，每次新加入的元素放在游标的上一格，而游标所指向的位置就是需要过期的<code>vr_phone</code>列表</strong>。</p>
+<p>执行过程：</p>
+<p>1、初始化：启动一个<code>timer</code>，每隔1s，在上述环形队列中移动一格，<code>1-&gt;2-&gt;3...-&gt;29-&gt;750-&gt;1...</code>有一个指针来标识有待过期的<code>slot</code>数据</p>
+<p>2、新增数据：<strong>当有一个新的<code>vr_phone</code>创建时，存储到指针的上一个<code>slot</code>中</strong>。对于有<code>slot</code>冲突的场景，可以利用链表解决冲突，也可以利用数组解决冲突。链表和数组的考量标准还是依赖于单个<code>slot</code>的数据长度，如果数据过长，那么存储的数组会很长，则需要很大的内存空间才能满足，无法利用内存碎片的空间。</p>
+<p>3、过期数据：指针每隔1秒移动一个<code>slot</code>，那么指针指向的<code>slot</code>就是需要过期的数据，因为新增的数据在环形<code>slot</code>转完一圈后，才会被指向到。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/acfe4d481dcebfd96d87a6eaca1f62606dc65eea.png" alt="5"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这样一种算法结构，将时间和空间巧妙地结合在了一起。新增元素的时间复杂度为<code>O(1)</code>，直接插入待批量过期的<code>slot</code>的上一个位置即可；获取待删除元素列表时间复杂度也是<code>O(1)</code>，就是待批量过期的<code>slot</code>位置。流行框架<code>Netty、Kafka</code>都有定时轮的影子。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，<strong>单层定时轮只适用于固定时间过期的场景，如果需要管理不同过期时间的元素，那么可以参考”多层定时轮算法”，其实就是模拟现实世界的时针、分针、秒针的概念，建立多个单层定时轮，采用进位和退位的思想来管理元素的过期时间</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上各种元素过期策略各有优缺点，可以根据业务的诉求来取舍。比如<code>Memcache</code>只是用了惰性删除，而<code>Redis</code>则同时使用了惰性删除和定期删除以结合二者的优点。</p>
+<h4 id="依赖空间的过期策略"><a href="#依赖空间的过期策略" class="headerlink" title="依赖空间的过期策略"></a>依赖空间的过期策略</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此处只探讨最经典的三种策略<code>FIFO</code>、<code>LRU</code>、<code>LFU</code>的原理及实现方案，对于其它改进算法，感兴趣的同学可以自行查找。</p>
+<h5 id="FIFO"><a href="#FIFO" class="headerlink" title="FIFO"></a>FIFO</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>先进先出，当空间不足时，先进入的元素将会被移除</strong>。此方案并<strong>没有考虑元素的使用特性，可能最近频繁访问的一个元素会被移除，从而降低了缓存命中率</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现：基于<code>LinkedHashMap</code>的钩子函数实现<code>FIFO Map</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 链表头部是最近最少被访问的元素，需要被删除</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FIFOMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">LinkedHashMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maxSize;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//LinkedHashMap每次插入数据，默认都是链表tail；当accessOrder=false，元素被访问不会移动位置</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FIFOMap</span><span class="params">(<span class="keyword">int</span> maxSize)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(maxSize, <span class="number">0.75f</span>, <span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">this</span>.maxSize = maxSize;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//每次put和putAll新增元素的时候都会触发判断;当下面函数=true时，就删除链表head元素</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, V&gt; eldest)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> size() &gt; maxSize;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="LRU"><a href="#LRU" class="headerlink" title="LRU"></a>LRU</h5><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最近最少使用算法，<strong>当下多次被访问的数据在以后被访问的概率会很大，因此保留最近访问的元素，提高命中率</strong>。可以应对流量突发峰值，因为存储的池子大小是固定的，因此内存占用不可能过多。但也有缺点：<strong>如果一个元素访问存在间歇规律，1分钟前访问1万次，后面30秒无访问，然后再访问一万次，这样就会导致被删除，降低了命中率</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现：基于<code>LinkedHashMap</code>的钩子函数实现<code>LRUHashMap</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 链表头部是最近最少被访问的元素，需要被删除</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LRUMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">LinkedHashMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maxSize;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//LinkedHashMap每次插入数据，默认都是链表tail；当accessOrder=true时，被访问的元素也会放到链表tail</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LRUMap</span><span class="params">(<span class="keyword">int</span> maxSize)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(maxSize, <span class="number">0.75f</span>, <span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">this</span>.maxSize = maxSize;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//每次put和putAll新增元素的时候都会触发判断;当下面函数=true时，就删除链表head元素</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, V&gt; eldest)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> size() &gt;= maxSize;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="LFU"><a href="#LFU" class="headerlink" title="LFU"></a>LFU</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最近最少频率使用，根据数据的历史访问频率来淘汰数据，其核心思想是”如果数据过去被访问多次，那么将来被访问的频率也更高”。这种算法针对<code>LRU</code>的缺点进行了优化，记录了元素访问的总次数，选出访问次数最小的元素进行删除。原本的<code>LFU</code>算法要求记录所有元素的访问次数，但考虑到内存成本，改进后的<code>LFU</code>是在有限队列中进行淘汰。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现：<code>Redis</code>的优先级队列<code>Zset</code>实现，<strong><code>Zset</code>存储元素的数量固定，<code>Value</code>是访问次数，超过<code>size</code>就删除访问次数最小的即可</strong>。但这种删除策略对于有时效性的数据却并不合适，对于排行榜类的数据，如果某个历史剧点击量特别高，那么就始终不会被淘汰，新剧就没有展示的机会。改进方案，可以<strong>将<code>Value</code>存储为入库时间戳+访问次数的值，这样随着时间流逝，历史老剧就可能被淘汰</strong>。</p>
+<h2 id="其他影响命中率的因素"><a href="#其他影响命中率的因素" class="headerlink" title="其他影响命中率的因素"></a>其他影响命中率的因素</h2><h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于数据库中本就不存在的值，缓存中肯定也不会存在，此类数据的查询一定会落到<code>DB</code>上</strong>。为了减少<code>DB</code>访问压力，我们期望将这些数据都可以在缓存中<code>cover</code>住，以下是两种解法。</p>
+<h4 id="缓存null值"><a href="#缓存null值" class="headerlink" title="缓存null值"></a>缓存null值</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该方法对于元素是否存在于<code>DB</code>有精准的判断，可如果存在海量<code>null</code>值的数据，则会对内存过度占用。</p>
+<h4 id="布隆过滤"><a href="#布隆过滤" class="headerlink" title="布隆过滤"></a>布隆过滤</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用场景是<strong>海量数据，且不要求精准判断和过滤数据</strong>。其思路是借助<code>Hash</code>和<code>bit</code>位思想，将<code>Key</code>值映射成若干<code>Hash</code>值存储到<code>bit</code>数组中。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/889ec2d6891675e3eedfb0b9242db25eae27fcce.png" alt="6"></p>
+<p>B. 新增元素时，将元素的<code>Key</code>根据预设的若干<code>Hash</code>函数解析成若干整数，然后定位到<code>bit</code>位数组中，将对应的<code>bit</code>位都改为1。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/1edea49588bd21a699f5ef29e683e637e03ba5e0.png" alt="7"></p>
+<p>C. 判断元素是否存在，也是将元素的<code>Key</code>根据<code>Hash</code>函数解析成整数，查询若干<code>bit</code>位的值。只要有一个<code>bit</code>位是0，那么这个<code>Key</code>肯定是新元素，不存在；<strong>如果所有<code>bit</code>位全都是1，那么这个<code>Key</code>很大概率是已经存在的元素，但也有极小的概率是<code>Key3</code>经过若干<code>Hash</code>函数定位到<code>bit</code>数组后都是<code>Hash</code>冲突的，可能造成误判</strong>。</p>
+<p><img src="//blog.com/2019/08/18/缓存技术使用的实践与思考/accaaa2a5cec2cc954c759cdf98098966cfbf348.png" alt="8"></p>
+<h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;缓存中原本一批数据有值，但<strong>恰好都同时过期了，此时有大量请求过来就都会落到<code>DB</code>上</strong>。避免这种风险也有两种解法。</p>
+<h4 id="随机缓存失效时间"><a href="#随机缓存失效时间" class="headerlink" title="随机缓存失效时间"></a>随机缓存失效时间</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对缓存中不同的<code>Key</code>设置不同的缓存失效时间，避免缓存同时失效带来大量请求都落到<code>DB</code>上的情况。</p>
+<h4 id="主动加载更新缓存策略，替代缓存过期删除策略"><a href="#主动加载更新缓存策略，替代缓存过期删除策略" class="headerlink" title="主动加载更新缓存策略，替代缓存过期删除策略"></a>主动加载更新缓存策略，替代缓存过期删除策略</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在缓存失效之前就主动到<code>DB</code>中加载最新的数据放到缓存中，从而避免大量请求落到<code>DB</code>的情况。</p>
+<h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>大量缓存同时过期，或者缓存中间件不可用</strong>，导致大量请求落到<code>DB</code>，系统停止响应。解法是对缓存设置随机失效时间，同时增加<strong>缓存中间件健康度监测</strong>。</p>
+<h2 id="保证业务数据一致性的策略"><a href="#保证业务数据一致性的策略" class="headerlink" title="保证业务数据一致性的策略"></a>保证业务数据一致性的策略</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在分析了影响缓存命中率的若干策略和方案后，我们结合实际开发诉求，来分析下缓存是如何降低<code>DB</code>的访问压力，以及<code>DB</code>和缓存中业务数据的一致性如何保证？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;维护数据一致性常用的方案有两种：先操作<code>DB</code>，再操作<code>Cache</code>；先操作<code>Cache</code>，再操作<code>DB</code>。而以上两步操作都期望是全部成功，才能保证操作是原子性的。如果不依赖事务，那么对数据怎样操作才能保证即使流程异常中断，对业务影响也是最小呢？</p>
+<h3 id="对于读取操作"><a href="#对于读取操作" class="headerlink" title="对于读取操作"></a>对于读取操作</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为只是读取，不涉及数据修改，因此先读缓存，<code>Cache miss</code>后，读<code>DB</code>数据，然后<code>set cache</code>就足够通用。</p>
+<h3 id="对于写入操作"><a href="#对于写入操作" class="headerlink" title="对于写入操作"></a>对于写入操作</h3><h4 id="先操作DB，再操作-delete-update-缓存"><a href="#先操作DB，再操作-delete-update-缓存" class="headerlink" title="先操作DB，再操作(delete/update)缓存"></a>先操作DB，再操作(delete/update)缓存</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当<code>DB</code>数据操作成功，但缓存数据（不论是<code>delete</code>还是<code>update</code>）操作失败，就会导致在未来一段时间内，<strong>缓存中的数据都是历史旧数据</strong>，并没有保证操作的原子性，无法接受。</p>
+<h4 id="先操作-delete-update-缓存，再操作DB"><a href="#先操作-delete-update-缓存，再操作DB" class="headerlink" title="先操作(delete/update)缓存，再操作DB"></a>先操作(delete/update)缓存，再操作DB</h4><ul>
+<li>第一种方案：当<code>update</code>缓存成功，但操作<code>DB</code>失败，虽然缓存中的数据是最新的了，但这个最新的数据最终并没有更新到<code>DB</code>中，当缓存失效后，还是会从<code>DB</code>中读取到旧的数据，这样就会导致<strong>上下游依赖的数据出现错误，无法接受</strong>。</li>
+</ul>
+<ul>
+<li>第二种方案：先<code>delete</code>缓存，再操作<code>DB</code>数据，我们详细讨论下这种方案：</li>
+</ul>
+<ol>
+<li><p>如果<code>delete</code>就失败了，整体操作失败，相当于事务回滚；</p>
+<ol>
+<li>如果<code>delete</code>成功，但<code>DB</code>操作失败，此时会引起一次<code>cache miss</code>，紧接着还是会从<code>DB</code>加载旧数据，相当于整体无操作，事务回滚，代价只是一次<code>cache miss</code>；</li>
+</ol>
+</li>
+<li><p>如果<code>delete</code>成功，且<code>DB</code>操作成功，那么整体成功。</p>
+<blockquote>
+<p>这里缓存可能会有脏数据，delete cache以后，其它某个请求查询，读取DB数据（此时DB操作还未完成），导致缓存里面存储的是脏数据</p>
+</blockquote>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结论：先<code>delete</code>缓存，再操作<code>DB</code>，能尽可能达到两步处理的原子性效果，即使流程中断对业务影响也是最小的。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于缓存的使用没有绝对的黄金标准，都是根据业务的使用场景来决定什么缓存框架或者缓存策略是最适合的。但对于通用的业务场景来说，以下的缓存框架选择方法应该可以满足大部分场景。</p>
+<ul>
+<li>对于本地缓存，如果缓存的数量是可估计的，且不会变化的，那么可使用<code>JDK</code>自带的<code>HashMap</code>或<code>ConcurrentHashMap</code>来存储。</li>
+<li>对于有按时间过期、自动刷新需求的本地缓存可以使用<code>Caffeine</code>。</li>
+<li>对于分布式缓存且要求有丰富数据结构的，推荐使用<code>Redis</code>。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/数据一致性问题/" rel="tag"># 数据一致性问题</a>
+          
+            <a href="/tags/数据库与缓存/" rel="tag"># 数据库与缓存</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/17/微服务架构下静态数据通用缓存机制/" rel="next" title="微服务架构下静态数据通用缓存机制">
+                <i class="fa fa-chevron-left"></i> 微服务架构下静态数据通用缓存机制
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/18/数据库与缓存一致性/" rel="prev" title="数据库与缓存一致性">
+                数据库与缓存一致性 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#缓存技术使用的实践与思考"><span class="nav-number">1.</span> <span class="nav-text">缓存技术使用的实践与思考</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#导读"><span class="nav-number">1.1.</span> <span class="nav-text">导读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缘起：为何使用缓存"><span class="nav-number">1.2.</span> <span class="nav-text">缘起：为何使用缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU瓶颈"><span class="nav-number">1.2.1.</span> <span class="nav-text">CPU瓶颈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IO瓶颈"><span class="nav-number">1.2.2.</span> <span class="nav-text">IO瓶颈</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#选择本地缓存和分布式缓存的考量点"><span class="nav-number">1.3.</span> <span class="nav-text">选择本地缓存和分布式缓存的考量点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#本地缓存的优缺点和应用场景"><span class="nav-number">1.3.1.</span> <span class="nav-text">本地缓存的优缺点和应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优势"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#劣势"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">劣势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#应用场景"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">应用场景</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式缓存的优缺点和应用场景"><span class="nav-number">1.3.2.</span> <span class="nav-text">分布式缓存的优缺点和应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优势-1"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#劣势-1"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">劣势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#适用场景"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">适用场景</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选择缓存框架的衡量标准"><span class="nav-number">1.3.3.</span> <span class="nav-text">选择缓存框架的衡量标准</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缓存框架使用过程的知识点"><span class="nav-number">1.4.</span> <span class="nav-text">缓存框架使用过程的知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存命中率"><span class="nav-number">1.4.1.</span> <span class="nav-text">缓存命中率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存更新策略"><span class="nav-number">1.4.2.</span> <span class="nav-text">缓存更新策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#主动请求DB数据，更新缓存"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">主动请求DB数据，更新缓存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#被动请求DB数据，更新缓存"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">被动请求DB数据，更新缓存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存过期策略"><span class="nav-number">1.4.3.</span> <span class="nav-text">缓存过期策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖时间的过期策略"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">依赖时间的过期策略</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#定时删除"><span class="nav-number">1.4.3.1.1.</span> <span class="nav-text">定时删除</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#惰性删除"><span class="nav-number">1.4.3.1.2.</span> <span class="nav-text">惰性删除</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#定期删除"><span class="nav-number">1.4.3.1.3.</span> <span class="nav-text">定期删除</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#业务资源过期后及时释放的几种方案"><span class="nav-number">1.4.3.1.4.</span> <span class="nav-text">业务资源过期后及时释放的几种方案</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#全量数据扫描，依次遍历判断过期时间"><span class="nav-number">1.4.3.1.4.1.</span> <span class="nav-text">全量数据扫描，依次遍历判断过期时间</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#存储绝对过期时间-BTree索引，批量获取过期的vr-phone列表"><span class="nav-number">1.4.3.1.4.2.</span> <span class="nav-text">存储绝对过期时间+BTree索引，批量获取过期的vr_phone列表</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#单层定时轮算法"><span class="nav-number">1.4.3.1.4.3.</span> <span class="nav-text">单层定时轮算法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖空间的过期策略"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">依赖空间的过期策略</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#FIFO"><span class="nav-number">1.4.3.2.1.</span> <span class="nav-text">FIFO</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#LRU"><span class="nav-number">1.4.3.2.2.</span> <span class="nav-text">LRU</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#LFU"><span class="nav-number">1.4.3.2.3.</span> <span class="nav-text">LFU</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他影响命中率的因素"><span class="nav-number">1.5.</span> <span class="nav-text">其他影响命中率的因素</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存穿透"><span class="nav-number">1.5.1.</span> <span class="nav-text">缓存穿透</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#缓存null值"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">缓存null值</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#布隆过滤"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">布隆过滤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存击穿"><span class="nav-number">1.5.2.</span> <span class="nav-text">缓存击穿</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#随机缓存失效时间"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">随机缓存失效时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#主动加载更新缓存策略，替代缓存过期删除策略"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">主动加载更新缓存策略，替代缓存过期删除策略</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存雪崩"><span class="nav-number">1.5.3.</span> <span class="nav-text">缓存雪崩</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#保证业务数据一致性的策略"><span class="nav-number">1.6.</span> <span class="nav-text">保证业务数据一致性的策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#对于读取操作"><span class="nav-number">1.6.1.</span> <span class="nav-text">对于读取操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对于写入操作"><span class="nav-number">1.6.2.</span> <span class="nav-text">对于写入操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#先操作DB，再操作-delete-update-缓存"><span class="nav-number">1.6.2.1.</span> <span class="nav-text">先操作DB，再操作(delete/update)缓存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#先操作-delete-update-缓存，再操作DB"><span class="nav-number">1.6.2.2.</span> <span class="nav-text">先操作(delete/update)缓存，再操作DB</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">1.7.</span> <span class="nav-text">小结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

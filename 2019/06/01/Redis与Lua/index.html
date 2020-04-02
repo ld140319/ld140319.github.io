@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Redis,Lua,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Redis与LuaEVAL script numkeys key [key …] arg [arg …]起始版本：2.6.0 时间复杂度：取决于脚本本身的执行的时间复杂度。 EVAL简介EVAL 和 EVALSHA 命令是从 Redis 2.6.0 版本开始的，使用内置的 Lua 解释器，可以对 Lua 脚本进行求值。 EVAL的第一个参数是一段 Lua 5.1 脚本程序。 这段Lua脚本不需要（">
+<meta name="keywords" content="Redis,Lua">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis与Lua">
+<meta property="og:url" content="http://blog.com/2019/06/01/Redis与Lua/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Redis与LuaEVAL script numkeys key [key …] arg [arg …]起始版本：2.6.0 时间复杂度：取决于脚本本身的执行的时间复杂度。 EVAL简介EVAL 和 EVALSHA 命令是从 Redis 2.6.0 版本开始的，使用内置的 Lua 解释器，可以对 Lua 脚本进行求值。 EVAL的第一个参数是一段 Lua 5.1 脚本程序。 这段Lua脚本不需要（">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-01T13:24:26.196Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis与Lua">
+<meta name="twitter:description" content="Redis与LuaEVAL script numkeys key [key …] arg [arg …]起始版本：2.6.0 时间复杂度：取决于脚本本身的执行的时间复杂度。 EVAL简介EVAL 和 EVALSHA 命令是从 Redis 2.6.0 版本开始的，使用内置的 Lua 解释器，可以对 Lua 脚本进行求值。 EVAL的第一个参数是一段 Lua 5.1 脚本程序。 这段Lua脚本不需要（">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/01/Redis与Lua/">
+
+
+
+
+
+  <title>Redis与Lua | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/01/Redis与Lua/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis与Lua</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-01T12:12:57+08:00">
+                2019-06-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/Lua/" itemprop="url" rel="index">
+                    <span itemprop="name">Lua</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Redis与Lua"><a href="#Redis与Lua" class="headerlink" title="Redis与Lua"></a>Redis与Lua</h1><h2 id="EVAL-script-numkeys-key-key-…-arg-arg-…"><a href="#EVAL-script-numkeys-key-key-…-arg-arg-…" class="headerlink" title="EVAL script numkeys key [key …] arg [arg …]"></a>EVAL script numkeys key [key …] arg [arg …]</h2><p><strong>起始版本：2.6.0</strong></p>
+<p><strong>时间复杂度：</strong>取决于脚本本身的执行的时间复杂度。</p>
+<h2 id="EVAL简介"><a href="#EVAL简介" class="headerlink" title="EVAL简介"></a>EVAL简介</h2><p>EVAL 和 EVALSHA 命令是从 Redis 2.6.0 版本开始的，使用内置的 Lua 解释器，可以对 Lua 脚本进行求值。</p>
+<p>EVAL的第一个参数是一段 Lua 5.1 脚本程序。 这段Lua脚本不需要（也不应该）定义函数。它运行在 Redis 服务器中。</p>
+<p>EVAL的第二个参数是参数的个数，后面的参数（从第三个参数），表示在脚本中所用到的那些 Redis 键(key)，这些键名参数可以在 Lua 中通过全局变量 KEYS 数组，用 1 为基址的形式访问( KEYS[1] ， KEYS[2] ，以此类推)。</p>
+<p>在命令的最后，那些不是键名参数的附加参数 arg [arg …] ，可以在 Lua 中通过全局变量 ARGV 数组访问，访问的形式和 KEYS 变量类似( ARGV[1] 、 ARGV[2] ，诸如此类)。</p>
+<p>举例说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; eval &quot;return &#123;KEYS[1],KEYS[2],ARGV[1],ARGV[2]&#125;&quot; 2 key1 key2 first second</span><br><span class="line">1) &quot;key1&quot;</span><br><span class="line">2) &quot;key2&quot;</span><br><span class="line">3) &quot;first&quot;</span><br><span class="line">4) &quot;second&quot;</span><br></pre></td></tr></table></figure>
+<p>注：返回结果是Redis multi bulk replies的Lua数组，这是一个Redis的返回类型，您的客户端库可能会将他们转换成数组类型。</p>
+<p>这是从一个Lua脚本中使用两个不同的Lua函数来调用Redis的命令的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis.call()</span><br><span class="line">redis.pcall()</span><br></pre></td></tr></table></figure>
+<p>redis.call() 与 redis.pcall()很类似, 他们唯一的区别是当redis命令执行结果返回错误时， redis.call()将返回给调用者一个错误，而redis.pcall()会将捕获的错误以Lua表的形式返回</p>
+<p>redis.call() 和 redis.pcall() 两个函数的参数可以是任意的 Redis 命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; eval &quot;return redis.call(&apos;set&apos;,&apos;foo&apos;,&apos;bar&apos;)&quot; 0</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，上面这段脚本的确实现了将键 foo 的值设为 bar 的目的，但是，它违反了 EVAL 命令的语义，因为<strong>脚本里使用的所有键都应该由 KEYS 数组来传递</strong>，就像这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; eval &quot;return redis.call(&apos;set&apos;,KEYS[1],&apos;bar&apos;)&quot; 1 foo</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+<p><strong>要求使用正确的形式来传递键(key)是有原因的，因为不仅仅是 EVAL 这个命令，所有的 Redis 命令，在执行之前都会被分析，籍此来确定命令会对哪些键进行操作</strong>。</p>
+<p>因此，对于 EVAL 命令来说，必须使用正确的形式来传递键，才能确保分析工作正确地执行。 除此之外，使用正确的形式来传递键还有很多其他好处，它的一个特别重要的用途就是<strong>确保 Redis 集群可以将你的请求发送到正确的集群节点</strong>。 (对 Redis 集群的工作还在进行当中，但是脚本功能被设计成可以与集群功能保持兼容。)不过，这条规矩并不是强制性的， 从而使得用户有机会滥用(abuse) Redis 单实例配置(single instance configuration)，代价是这样写出的脚本不能被 Redis 集群所兼容。</p>
+<p><strong>Lua 脚本能返回一个值，这个值能按照一组转换规则从Lua转换成redis的返回类型</strong>。</p>
+<h2 id="Lua-数据类型和-Redis-数据类型之间转换"><a href="#Lua-数据类型和-Redis-数据类型之间转换" class="headerlink" title="Lua 数据类型和 Redis 数据类型之间转换"></a>Lua 数据类型和 Redis 数据类型之间转换</h2><p>当 Lua 通过 call() 或 pcall() 函数执行 Redis 命令的时候，命令的返回值会被转换成 Lua 数据结构。 同样地，当 Lua 脚本在 Redis 内置的解释器里运行时，Lua 脚本的返回值也会被转换成 Redis 协议(protocol)，然后由 EVAL 将值返回给客户端。</p>
+<p>数据类型之间的转换遵循这样一个设计原则：如果将一个 Redis 值转换成 Lua 值，之后再将转换所得的 Lua 值转换回 Redis 值，那么这个转换所得的 Redis 值应该和最初时的 Redis 值一样。</p>
+<p>换句话说， Lua 类型和 Redis 类型之间存在着一一对应的转换关系。</p>
+<p>Redis 到 Lua 的转换表。</p>
+<ul>
+<li>Redis integer reply -&gt; Lua number / Redis 整数转换成 Lua 数字</li>
+<li>Redis bulk reply -&gt; Lua string / Redis bulk 回复转换成 Lua 字符串</li>
+<li>Redis multi bulk reply -&gt; Lua table (may have other Redis data types nested) / Redis 多条 bulk 回复转换成 Lua 表，表内可能有其他别的 Redis 数据类型</li>
+<li>Redis status reply -&gt; Lua table with a single ok field containing the status / Redis 状态回复转换成 Lua 表，表内的 ok 域包含了状态信息</li>
+<li>Redis error reply -&gt; Lua table with a single err field containing the error / Redis 错误回复转换成 Lua 表，表内的 err 域包含了错误信息</li>
+<li>Redis Nil bulk reply and Nil multi bulk reply -&gt; Lua false boolean type / Redis 的 Nil 回复和 Nil 多条回复转换成 Lua 的布尔值 false</li>
+</ul>
+<p>Lua 到 Redis 的转换表。</p>
+<ul>
+<li>Lua number -&gt; Redis integer reply (the number is converted into an integer) / Lua 数字转换成 Redis 整数</li>
+<li>Lua string -&gt; Redis bulk reply / Lua 字符串转换成 Redis bulk 回复</li>
+<li>Lua table (array) -&gt; Redis multi bulk reply (truncated to the first nil inside the Lua array if any) / Lua 表(数组)转换成 Redis 多条 bulk 回复</li>
+<li>Lua table with a single ok field -&gt; Redis status reply / 一个带单个 ok 域的 Lua 表，转换成 Redis 状态回复</li>
+<li>Lua table with a single err field -&gt; Redis error reply / 一个带单个 err 域的 Lua 表，转换成 Redis 错误回复</li>
+<li>Lua boolean false -&gt; Redis Nil bulk reply. / Lua 的布尔值 false 转换成 Redis 的 Nil bulk 回复</li>
+</ul>
+<p>从 Lua 转换到 Redis 有一条额外的规则，这条规则没有和它对应的从 Redis 转换到 Lua 的规则：</p>
+<ul>
+<li>Lua boolean true -&gt; Redis integer reply with value of 1. / Lua 布尔值 true 转换成 Redis 整数回复中的 1</li>
+</ul>
+<p>还有下面两点需要重点注意：</p>
+<ul>
+<li>lua中整数和浮点数之间没有什么区别。因此，我们始终Lua的数字转换成整数的回复，这样将舍去小数部分。如果你想从Lua返回一个浮点数，你应该将它作为一个字符串（见比如ZSCORE命令）。</li>
+<li>There is no simple way to have nils inside Lua arrays, this is a result of Lua table semantics, so when Redis converts a Lua array into Redis protocol the conversion is stopped if a nil is encountered.</li>
+</ul>
+<p>以下是几个类型转换的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&gt; eval &quot;return 10&quot; 0</span><br><span class="line">(integer) 10</span><br><span class="line"></span><br><span class="line">&gt; eval &quot;return &#123;1,2,&#123;3,&apos;Hello World!&apos;&#125;&#125;&quot; 0</span><br><span class="line">1) (integer) 1</span><br><span class="line">2) (integer) 2</span><br><span class="line">3) 1) (integer) 3</span><br><span class="line">   2) &quot;Hello World!&quot;</span><br><span class="line"></span><br><span class="line">&gt; eval &quot;return redis.call(&apos;get&apos;,&apos;foo&apos;)&quot; 0</span><br><span class="line">&quot;bar&quot;</span><br></pre></td></tr></table></figure>
+<p>最后一个例子展示如果是Lua直接命令调用它是如何可以从redis.call()或redis.pcall()接收到准确的返回值。</p>
+<p>下面的例子我们可以看到浮点数和nil将怎么样处理：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; eval &quot;return &#123;1,2,3.3333,&apos;foo&apos;,nil,&apos;bar&apos;&#125;&quot; 0</span><br><span class="line">1) (integer) 1</span><br><span class="line">2) (integer) 2</span><br><span class="line">3) (integer) 3</span><br><span class="line">4) &quot;foo&quot;</span><br></pre></td></tr></table></figure>
+<p>正如你看到的 3.333 被转换成了3，并且 nil后面的字符串bar没有被返回回来。</p>
+<ul>
+<li>返回redis类型的辅助函数</li>
+</ul>
+<p>有两个辅助函数从Lua返回Redis的类型。</p>
+<ul>
+<li>redis.error_reply(error_string) returns an error reply. This function simply returns the single field table with the err field set to the specified string for you.</li>
+<li>redis.status_reply(status_string) returns a status reply. This function simply returns the single field table with the ok field set to the specified string for you.</li>
+</ul>
+<p>There is no difference between using the helper functions or directly returning the table with the specified format, so the following two forms are equivalent:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">return &#123;err=&quot;My Error&quot;&#125;</span><br><span class="line">return redis.error_reply(&quot;My Error&quot;)</span><br></pre></td></tr></table></figure>
+<h2 id="脚本的原子性"><a href="#脚本的原子性" class="headerlink" title="脚本的原子性"></a>脚本的原子性</h2><p>Redis 使用单个 Lua 解释器去运行所有脚本，并且， Redis 也保证脚本会以原子性(atomic)的方式执行： <strong>当某个脚本正在运行的时候，不会有其他脚本或 Redis 命令被执行</strong>。 这和使用 <a href="http://www.redis.cn/commands/multi.html" target="_blank" rel="noopener">MULTI</a> / <a href="http://www.redis.cn/commands/exec.html" target="_blank" rel="noopener">EXEC</a> 包围的事务很类似。 在其他别的客户端看来，脚本的效果(effect)要么是不可见的(not visible)，要么就是已完成的(already completed)。 另一方面，这也意味着，执行一个运行缓慢的脚本并不是一个好主意。写一个跑得很快很顺溜的脚本并不难， 因为脚本的运行开销(overhead)非常少，但是当你不得不使用一些跑得比较慢的脚本时，请小心， 因为当这些蜗牛脚本在慢吞吞地运行的时候，其他客户端会因为服务器正忙而无法执行命令。</p>
+<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><p>前面的命令介绍部分说过， redis.call() 和 redis.pcall() 的唯一区别在于它们对错误处理的不同。</p>
+<p>当 redis.call() 在执行命令的过程中发生错误时，脚本会停止执行，并返回一个脚本错误，错误的输出信息会说明错误造成的原因：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; del foo</span><br><span class="line">(integer) 1</span><br><span class="line">&gt; lpush foo a</span><br><span class="line">(integer) 1</span><br><span class="line">&gt; eval &quot;return redis.call(&apos;get&apos;,&apos;foo&apos;)&quot; 0</span><br><span class="line">(error) ERR Error running script (call to f_6b1bf486c81ceb7edf3c093f4c48582e38c0e791): ERR Operation against a key holding the wrong kind of value</span><br></pre></td></tr></table></figure>
+<p>和 redis.call() 不同， redis.pcall() 出错时并不引发(raise)错误，而是返回一个带 err 域的 Lua 表(table)，用于表示错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis 127.0.0.1:6379&gt; EVAL &quot;return redis.pcall(&apos;get&apos;, &apos;foo&apos;)&quot; 0</span><br><span class="line">(error) ERR Operation against a key holding the wrong kind of value</span><br></pre></td></tr></table></figure>
+<h2 id="带宽和-EVALSHA"><a href="#带宽和-EVALSHA" class="headerlink" title="带宽和 EVALSHA"></a>带宽和 EVALSHA</h2><p><code>EVAL</code> 命令要求你在每次执行脚本的时候都发送一次脚本主体(script body)。Redis 有一个内部的缓存机制，因此它不会每次都重新编译脚本，不过在很多场合，付出无谓的带宽来传送脚本主体并不是最佳选择。</p>
+<p>为了减少带宽的消耗， Redis 实现了 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 命令，它的作用和 <code>EVAL</code> 一样，都用于对脚本求值，但它<strong>接受的第一个参数不是脚本，而是脚本的 SHA1 校验和(sum)</strong>。</p>
+<p>EVALSHA 命令的表现如下：</p>
+<p>如果服务器还记得给定的 SHA1 校验和所指定的脚本，那么执行这个脚本 如果服务器不记得给定的 SHA1 校验和所指定的脚本，那么它返回一个特殊的错误，提醒用户使用 EVAL 代替 EVALSHA 以下是示例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&gt; set foo bar</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">&gt; eval &quot;return redis.call(&apos;get&apos;,&apos;foo&apos;)&quot; 0</span><br><span class="line">&quot;bar&quot;</span><br><span class="line"></span><br><span class="line">&gt; evalsha 6b1bf486c81ceb7edf3c093f4c48582e38c0e791 0</span><br><span class="line">&quot;bar&quot;</span><br><span class="line"></span><br><span class="line">&gt; evalsha ffffffffffffffffffffffffffffffffffffffff 0</span><br><span class="line">(error) `NOSCRIPT` No matching script. Please use [EVAL](/commands/eval).</span><br></pre></td></tr></table></figure>
+<p>客户端库的底层实现可以一直乐观地使用 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 来代替 <code>EVAL</code> ，并期望着要使用的脚本已经保存在服务器上了，只有当 NOSCRIPT 错误发生时，才使用 <code>EVAL</code>命令重新发送脚本，这样就可以最大限度地节省带宽。</p>
+<p>这也说明了执行 <code>EVAL</code> 命令时，使用正确的格式来传递键名参数和附加参数的重要性：因为如果将参数硬写在脚本中，那么每次当参数改变的时候，都要重新发送脚本，即使脚本的主体并没有改变，相反，通过使用正确的格式来传递键名参数和附加参数，就可以在脚本主体不变的情况下，直接使用 EVALSHA 命令对脚本进行复用，免去了无谓的带宽消耗。</p>
+<h2 id="脚本缓存"><a href="#脚本缓存" class="headerlink" title="脚本缓存"></a>脚本缓存</h2><p>Redis 保证所有被运行过的脚本都会被永久保存在脚本缓存当中，这意味着，当 <code>EVAL</code> 命令在一个 Redis 实例上成功执行某个脚本之后，随后针对这个脚本的所有 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 命令都会成功执行。</p>
+<p>刷新脚本缓存的唯一办法是显式地调用 <a href="http://www.redis.cn/commands/script-flush.html" target="_blank" rel="noopener">SCRIPT FLUSH</a> 命令，这个命令会清空运行过的所有脚本的缓存。通常只有在云计算环境中，Redis 实例被改作其他客户或者别的应用程序的实例时，才会执行这个命令。</p>
+<p>缓存可以长时间储存而不产生内存问题的原因是，它们的体积非常小，而且数量也非常少，即使脚本在概念上类似于实现一个新命令，即使在一个大规模的程序里有成百上千的脚本，即使这些脚本会经常修改，即便如此，储存这些脚本的内存仍然是微不足道的。</p>
+<p>事实上，用户会发现 Redis 不移除缓存中的脚本实际上是一个好主意。比如说，对于一个和 Redis 保持持久化链接(persistent connection)的程序来说，它可以确信，执行过一次的脚本会一直保留在内存当中，因此它可以在流水线中使用 EVALSHA 命令而不必担心因为找不到所需的脚本而产生错误(稍候我们会看到在流水线中执行脚本的相关问题)。</p>
+<h2 id="SCRIPT-命令"><a href="#SCRIPT-命令" class="headerlink" title="SCRIPT 命令"></a>SCRIPT 命令</h2><p>Redis 提供了以下几个 SCRIPT 命令，用于对脚本子系统(scripting subsystem)进行控制：</p>
+<p><a href="http://www.redis.cn/commands/script-flush.html" target="_blank" rel="noopener">SCRIPT FLUSH</a> ：清除所有脚本缓存 <a href="http://www.redis.cn/commands/script-exists.html" target="_blank" rel="noopener">SCRIPT EXISTS</a> ：根据给定的脚本校验和，检查指定的脚本是否存在于脚本缓存 <a href="http://www.redis.cn/commands/script-load.html" target="_blank" rel="noopener">SCRIPT LOAD</a> ：将一个脚本装入脚本缓存，但并不立即运行它 <a href="http://www.redis.cn/commands/script-kill.html" target="_blank" rel="noopener">SCRIPT KILL</a> ：杀死当前正在运行的脚本</p>
+<h2 id="纯函数脚本"><a href="#纯函数脚本" class="headerlink" title="纯函数脚本"></a>纯函数脚本</h2><p>在编写脚本方面，一个重要的要求就是，脚本应该被写成纯函数(pure function)。</p>
+<p>也就是说，脚本应该具有以下属性：</p>
+<ul>
+<li><strong>对于同样的数据集输入，给定相同的参数，脚本执行的 Redis 写命令总是相同的。脚本执行的操作不能依赖于任何隐藏(非显式)数据，不能依赖于脚本在执行过程中、或脚本在不同执行时期之间可能变更的状态，并且它也不能依赖于任何来自 I/O 设备的外部输入</strong>。</li>
+</ul>
+<p>使用系统时间(system time)，调用像 RANDOMKEY 那样的随机命令，或者使用 Lua 的随机数生成器，类似以上的这些操作，都会造成脚本的求值无法每次都得出同样的结果。</p>
+<p>为了确保脚本符合上面所说的属性， Redis 做了以下工作：</p>
+<ul>
+<li>Lua 没有访问系统时间或者其他内部状态的命令</li>
+<li>Redis 会返回一个错误，阻止这样的脚本运行： 这些脚本在执行随机命令之后(比如 <a href="http://www.redis.cn/commands/randomkey.html" target="_blank" rel="noopener">RANDOMKEY</a> 、 <a href="http://www.redis.cn/commands/srandmember.html" target="_blank" rel="noopener">SRANDMEMBER</a> 或 <a href="http://www.redis.cn/commands/time.html" target="_blank" rel="noopener">TIME</a> 等)，还会执行可以修改数据集的 Redis 命令。如果脚本只是执行只读操作，那么就没有这一限制。注意，随机命令并不一定就指那些带 <code>RAND</code> 字眼的命令，任何带有非确定性的命令都会被认为是随机命令，比如 <a href="http://www.redis.cn/commands/time.html" target="_blank" rel="noopener">TIME</a> 命令就是这方面的一个很好的例子。</li>
+<li>每当从 Lua 脚本中调用那些返回无序元素的命令时，执行命令所得的数据在返回给 Lua 之前会先执行一个静默(slient)的字典序排序(lexicographical sorting)。举个例子，因为 Redis 的 Set 保存的是无序的元素，所以在 Redis 命令行客户端中直接执行 <a href="http://www.redis.cn/commands/smembers.html" target="_blank" rel="noopener">SMEMBERS</a> ，返回的元素是无序的，但是，假如在脚本中执行 redis.call(“smembers”, KEYS[1]) ，那么返回的总是排过序的元素。</li>
+<li>对 Lua 的伪随机数生成函数 math.random 和 math.randomseed 进行修改，使得每次在运行新脚本的时候，总是拥有同样的 seed 值。这意味着，每次运行脚本时，只要不使用 math.randomseed ，那么 math.random 产生的随机数序列总是相同的。</li>
+</ul>
+<p>尽管有那么多的限制，但用户还是可以用一个简单的技巧写出带随机行为的脚本(如果他们需要的话)。</p>
+<p>假设现在我们要编写一个 Redis 脚本，这个脚本从列表中弹出 N 个随机数。一个 Ruby 写的例子如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">require &apos;rubygems&apos;</span><br><span class="line">require &apos;redis&apos;</span><br><span class="line"></span><br><span class="line">r = Redis.new</span><br><span class="line"></span><br><span class="line">RandomPushScript = &lt;&lt;EOF</span><br><span class="line">    local i = tonumber(ARGV[1])</span><br><span class="line">    local res</span><br><span class="line">    while (i &gt; 0) do</span><br><span class="line">        res = redis.call(&apos;lpush&apos;,KEYS[1],math.random())</span><br><span class="line">        i = i-1</span><br><span class="line">    end</span><br><span class="line">    return res</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">r.del(:mylist)</span><br><span class="line">puts r.eval(RandomPushScript,[:mylist],[10,rand(2**32)])</span><br></pre></td></tr></table></figure>
+<p>这个程序每次运行都会生成带有以下元素的列表：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;0.74509509873814&quot;</span><br><span class="line">2) &quot;0.87390407681181&quot;</span><br><span class="line">3) &quot;0.36876626981831&quot;</span><br><span class="line">4) &quot;0.6921941534114&quot;</span><br><span class="line">5) &quot;0.7857992587545&quot;</span><br><span class="line">6) &quot;0.57730350670279&quot;</span><br><span class="line">7) &quot;0.87046522734243&quot;</span><br><span class="line">8) &quot;0.09637165539729&quot;</span><br><span class="line">9) &quot;0.74990198051087&quot;</span><br><span class="line">10) &quot;0.17082803611217&quot;</span><br></pre></td></tr></table></figure>
+<p>上面的 Ruby 程序每次都只生成同样的列表，用途并不是太大。那么，该怎样修改这个脚本，使得它仍然是一个纯函数(符合 Redis 的要求)，但是每次调用都可以产生不同的随机元素呢？</p>
+<p>一个简单的办法是，为脚本添加一个额外的参数，让这个参数作为 Lua 的随机数生成器的 seed 值，这样的话，只要给脚本传入不同的 seed ，脚本就会生成不同的列表元素。</p>
+<p>以下是修改后的脚本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">RandomPushScript = &lt;&lt;EOF</span><br><span class="line">    local i = tonumber(ARGV[1])</span><br><span class="line">    local res</span><br><span class="line">    math.randomseed(tonumber(ARGV[2]))</span><br><span class="line">    while (i &gt; 0) do</span><br><span class="line">        res = redis.call(&apos;lpush&apos;,KEYS[1],math.random())</span><br><span class="line">        i = i-1</span><br><span class="line">    end</span><br><span class="line">    return res</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">r.del(:mylist)</span><br><span class="line">puts r.eval(RandomPushScript,1,:mylist,10,rand(2**32))</span><br></pre></td></tr></table></figure>
+<p>尽管对于同样的 seed ，上面的脚本产生的列表元素是一样的(因为它是一个纯函数)，但是只要每次在执行脚本的时候传入不同的 seed ，我们就可以得到带有不同随机元素的列表。</p>
+<p>Seed 会在复制(replication link)和写 AOF 文件时作为一个参数来传播，保证在载入 AOF 文件或附属节点(slave)处理脚本时， seed 仍然可以及时得到更新。</p>
+<p>注意，Redis 实现保证 math.random 和 math.randomseed 的输出和运行 Redis 的系统架构无关，无论是 32 位还是 64 位系统，无论是小端(little endian)还是大端(big endian)系统，这两个函数的输出总是相同的。</p>
+<h2 id="全局变量保护"><a href="#全局变量保护" class="headerlink" title="全局变量保护"></a>全局变量保护</h2><p>为了防止不必要的数据泄漏进 Lua 环境，<strong> Redis 脚本不允许创建全局变量</strong>。如果一个脚本需要在多次执行之间维持某种状态，它应该<strong>使用 Redis key 来进行状态保存</strong>。</p>
+<p>企图在脚本中访问一个全局变量(不论这个变量是否存在)将引起脚本停止， <code>EVAL</code>命令会返回一个错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis 127.0.0.1:6379&gt; eval &apos;a=10&apos; 0</span><br><span class="line">(error) ERR Error running script (call to f_933044db579a2f8fd45d8065f04a8d0249383e57): user_script:1: Script attempted to create global variable &apos;a&apos;</span><br></pre></td></tr></table></figure>
+<p>Lua 的 debug 工具，或者其他设施，比如打印（alter）用于实现全局保护的 meta table ，都可以用于实现全局变量保护。</p>
+<p>实现全局变量保护并不难，不过有时候还是会不小心而为之。一旦用户在脚本中混入了 Lua 全局状态，那么 AOF 持久化和复制（replication）都会无法保证，所以，请不要使用全局变量。</p>
+<p>避免引入全局变量的一个诀窍是：<strong>将脚本中用到的所有变量都使用 local 关键字定义为局部变量</strong>。</p>
+<h2 id="使用选择内部脚本"><a href="#使用选择内部脚本" class="headerlink" title="使用选择内部脚本"></a>使用选择内部脚本</h2><p>在正常的客户端连接里面可以调用<code>SELECT</code>选择内部的Lua脚本，但是Redis 2.8.11和Redis 2.8.12在行为上有一个微妙的变化。在2.8.12之前，会将脚本传送到调用脚本的当前数据库。从2.8.12开始Lua脚本只影响脚本本身的执行，但不修改当前客户端调用脚本时选定的数据库。</p>
+<p>从补丁级发布的语义变化是必要的，因为旧的行为与Redis复制层固有的不相容是错误的原因。</p>
+<h2 id="可用库"><a href="#可用库" class="headerlink" title="可用库"></a>可用库</h2><p>Redis Lua解释器可用加载以下Lua库：</p>
+<ul>
+<li><code>base</code> lib.</li>
+<li><code>table</code> lib.</li>
+<li><code>string</code> lib.</li>
+<li><code>math</code> lib.</li>
+<li><code>debug</code> lib.</li>
+<li><code>struct</code> lib.</li>
+<li><code>cjson</code> lib.</li>
+<li><code>cmsgpack</code> lib.</li>
+<li><code>bitop</code> lib.</li>
+<li><code>redis.sha1hex</code> function.</li>
+</ul>
+<p>每一个Redis实例都拥有以上的所有类库，以确保您使用脚本的环境都是一样的。</p>
+<p>struct, CJSON 和 cmsgpack 都是外部库, 所有其他库都是标准。 Lua库。</p>
+<h3 id="struct-库"><a href="#struct-库" class="headerlink" title="struct 库"></a>struct 库</h3><p>struct 是一个Lua装箱/拆箱的库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Valid formats:</span><br><span class="line">&gt; - big endian</span><br><span class="line">&lt; - little endian</span><br><span class="line">![num] - alignment</span><br><span class="line">x - pading</span><br><span class="line">b/B - signed/unsigned byte</span><br><span class="line">h/H - signed/unsigned short</span><br><span class="line">l/L - signed/unsigned long</span><br><span class="line">T   - size_t</span><br><span class="line">i/In - signed/unsigned integer with size `n&apos; (default is size of int)</span><br><span class="line">cn - sequence of `n&apos; chars (from/to a string); when packing, n==0 means</span><br><span class="line">     the whole string; when unpacking, n==0 means use the previous</span><br><span class="line">     read number as the string length</span><br><span class="line">s - zero-terminated string</span><br><span class="line">f - float</span><br><span class="line">d - double</span><br><span class="line">&apos; &apos; - ignored</span><br></pre></td></tr></table></figure>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; eval &apos;return struct.pack(&quot;HH&quot;, 1, 2)&apos; 0</span><br><span class="line">&quot;\x01\x00\x02\x00&quot;</span><br><span class="line">127.0.0.1:6379&gt; eval &apos;return &#123;struct.unpack(&quot;HH&quot;, ARGV[1])&#125;&apos; 0 &quot;\x01\x00\x02\x00&quot;</span><br><span class="line">1) (integer) 1</span><br><span class="line">2) (integer) 2</span><br><span class="line">3) (integer) 5</span><br><span class="line">127.0.0.1:6379&gt; eval &apos;return struct.size(&quot;HH&quot;)&apos; 0</span><br><span class="line">(integer) 4</span><br></pre></td></tr></table></figure>
+<h3 id="CJSON-库"><a href="#CJSON-库" class="headerlink" title="CJSON 库"></a>CJSON 库</h3><p>CJSON 库为Lua提供极快的JSON处理</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis 127.0.0.1:6379&gt; eval &apos;return cjson.encode(&#123;[&quot;foo&quot;]= &quot;bar&quot;&#125;)&apos; 0</span><br><span class="line">&quot;&#123;\&quot;foo\&quot;:\&quot;bar\&quot;&#125;&quot;</span><br><span class="line">redis 127.0.0.1:6379&gt; eval &apos;return cjson.decode(ARGV[1])[&quot;foo&quot;]&apos; 0 &quot;&#123;\&quot;foo\&quot;:\&quot;bar\&quot;&#125;&quot;</span><br><span class="line">&quot;bar&quot;</span><br></pre></td></tr></table></figure>
+<h3 id="cmsgpack-库"><a href="#cmsgpack-库" class="headerlink" title="cmsgpack 库"></a>cmsgpack 库</h3><p>cmsgpack 库为Lua提供了简单、快速的MessagePack操纵</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; eval &apos;return cmsgpack.pack(&#123;&quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;&#125;)&apos; 0</span><br><span class="line">&quot;\x93\xa3foo\xa3bar\xa3baz&quot;</span><br><span class="line">127.0.0.1:6379&gt; eval &apos;return cmsgpack.unpack(ARGV[1])&apos; 0 &quot;\x93\xa3foo\xa3bar\xa3baz&quot;</span><br><span class="line">1) &quot;foo&quot;</span><br><span class="line">2) &quot;bar&quot;</span><br><span class="line">3) &quot;baz&quot;</span><br></pre></td></tr></table></figure>
+<h3 id="bitop-库"><a href="#bitop-库" class="headerlink" title="bitop 库"></a>bitop 库</h3><p>bitop库为Lua的位运算模块增加了按位操作数。 它是Redis 2.8.18开始加入的。</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; eval &apos;return bit.tobit(1)&apos; 0</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; eval &apos;return bit.bor(1,2,4,8,16,32,64,128)&apos; 0</span><br><span class="line">(integer) 255</span><br><span class="line">127.0.0.1:6379&gt; eval &apos;return bit.tohex(422342)&apos; 0</span><br><span class="line">&quot;000671c6&quot;</span><br></pre></td></tr></table></figure>
+<p>它支持几个其他功能： <code>bit.tobit</code>, <code>bit.tohex</code>, <code>bit.bnot</code>, <code>bit.band</code>, <code>bit.bor</code>, <code>bit.bxor</code>, <code>bit.lshift</code>, <code>bit.rshift</code>, <code>bit.arshift</code>, <code>bit.rol</code>, <code>bit.ror</code>, <code>bit.bswap</code>. 所有可用的功能请参考<a href="http://bitop.luajit.org/api.html" target="_blank" rel="noopener">Lua BitOp documentation</a></p>
+<h3 id="redis-sha1hex"><a href="#redis-sha1hex" class="headerlink" title="redis.sha1hex"></a><code>redis.sha1hex</code></h3><p>对字符串执行SHA1算法</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; eval &apos;return redis.sha1hex(ARGV[1])&apos; 0 &quot;foo&quot;</span><br><span class="line">&quot;0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33&quot;</span><br></pre></td></tr></table></figure>
+<h2 id="使用脚本散发-Redis-日志"><a href="#使用脚本散发-Redis-日志" class="headerlink" title="使用脚本散发 Redis 日志"></a>使用脚本散发 Redis 日志</h2><p>在 Lua 脚本中，可以通过调用 <code>redis.log</code> 函数来写 Redis 日志(log)：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis.log(loglevel,message)</span><br></pre></td></tr></table></figure>
+<p>其中， message 参数是一个字符串，而 loglevel 参数可以是以下任意一个值：</p>
+<ul>
+<li><code>redis.LOG_DEBUG</code></li>
+<li><code>redis.LOG_VERBOSE</code></li>
+<li><code>redis.LOG_NOTICE</code></li>
+<li><code>redis.LOG_WARNING</code></li>
+</ul>
+<p>上面的这些等级(level)和标准 Redis 日志的等级相对应。</p>
+<p>对于脚本散发(emit)的日志，只有那些和当前 Redis 实例所设置的日志等级相同或更高级的日志才会被散发。</p>
+<p>以下是一个日志示例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis.log(redis.LOG_WARNING, &quot;Something is wrong with this script.&quot;)</span><br></pre></td></tr></table></figure>
+<p>执行上面的函数会产生这样的信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[32343] 22 Mar 15:21:39 # Something is wrong with this script.</span><br></pre></td></tr></table></figure>
+<h2 id="沙箱-sandbox-和最大执行时间"><a href="#沙箱-sandbox-和最大执行时间" class="headerlink" title="沙箱(sandbox)和最大执行时间"></a>沙箱(sandbox)和最大执行时间</h2><p>脚本应该仅仅用于传递参数和对 Redis 数据进行处理，它不应该尝试去访问外部系统(比如文件系统)，或者执行任何系统调用。</p>
+<p>除此之外，脚本还有一个最大执行时间限制，它的默认值是 5 秒钟，一般正常运作的脚本通常可以在几分之几毫秒之内完成，花不了那么多时间，这个限制主要是为了防止因编程错误而造成的无限循环而设置的。</p>
+<p>最大执行时间的长短由 lua-time-limit 选项来控制(以毫秒为单位)，可以通过编辑 redis.conf 文件或者使用 <a href="http://www.redis.cn/commands/config-get.html" target="_blank" rel="noopener">CONFIG GET</a> 和 <a href="http://www.redis.cn/commands/config-set.html" target="_blank" rel="noopener">CONFIG SET</a> 命令来修改它。</p>
+<p>当一个脚本达到最大执行时间的时候，它并不会自动被 Redis 结束，因为 Redis 必须保证脚本执行的原子性，而中途停止脚本的运行意味着可能会留下未处理完的数据在数据集(data set)里面。</p>
+<p>因此，当脚本运行的时间超过最大执行时间后，以下动作会被执行：</p>
+<ul>
+<li>Redis 记录一个脚本正在超时运行</li>
+<li>Redis 开始重新接受其他客户端的命令请求，但是只有 <a href="http://www.redis.cn/commands/script-kill.html" target="_blank" rel="noopener">SCRIPT KILL</a> 和 <code>SHUTDOWN NOSAVE</code> 两个命令会被处理，对于其他命令请求， Redis 服务器只是简单地返回 BUSY 错误。</li>
+<li>可以使用 <a href="http://www.redis.cn/commands/script-kill.html" target="_blank" rel="noopener">SCRIPT KILL</a> 命令将一个仅执行只读命令的脚本杀死，因为只读命令并不修改数据，因此杀死这个脚本并不破坏数据的完整性</li>
+<li>如果脚本已经执行过写命令，那么唯一允许执行的操作就是 <code>SHUTDOWN NOSAVE</code>，它通过停止服务器来阻止当前数据集写入磁盘</li>
+</ul>
+<h2 id="流水线-pipeline-上下文-context-中的-EVALSHA"><a href="#流水线-pipeline-上下文-context-中的-EVALSHA" class="headerlink" title="流水线(pipeline)上下文(context)中的 EVALSHA"></a>流水线(pipeline)上下文(context)中的 EVALSHA</h2><p>在流水线请求的上下文中使用 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 命令时，要特别小心，因为在流水线中，必须保证命令的执行顺序。</p>
+<p>一旦在流水线中因为 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 命令而发生 <code>NOSCRIPT</code> 错误，那么这个流水线就再也没有办法重新执行了，否则的话，命令的执行顺序就会被打乱。</p>
+<p>为了防止出现以上所说的问题，客户端库实现应该实施以下的其中一项措施：</p>
+<ul>
+<li>总是在流水线中使用 <code>EVAL</code> 命令</li>
+<li>检查流水线中要用到的所有命令，找到其中的 <code>EVAL</code> 命令，并使用 <a href="http://www.redis.cn/commands/script-exists.html" target="_blank" rel="noopener">SCRIPT EXISTS</a> 命令检查要用到的脚本是不是全都已经保存在缓存里面了。如果所需的全部脚本都可以在缓存里找到，那么就可以放心地将所有 <code>EVAL</code> 命令改成 <a href="http://www.redis.cn/commands/evalsha.html" target="_blank" rel="noopener">EVALSHA</a> 命令，否则的话，就要在流水线的顶端(top)将缺少的脚本用 <a href="http://www.redis.cn/commands/script-load.html" target="_blank" rel="noopener">SCRIPT LOAD</a> 命令加上去。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Lua/" rel="tag"># Lua</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/01/9个提升逼格的redis命令/" rel="next" title="9个提升逼格的redis命令">
+                <i class="fa fa-chevron-left"></i> 9个提升逼格的redis命令
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/01/Redis阻塞锁/" rel="prev" title="Redis阻塞锁">
+                Redis阻塞锁 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis与Lua"><span class="nav-number">1.</span> <span class="nav-text">Redis与Lua</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EVAL-script-numkeys-key-key-…-arg-arg-…"><span class="nav-number">1.1.</span> <span class="nav-text">EVAL script numkeys key [key …] arg [arg …]</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EVAL简介"><span class="nav-number">1.2.</span> <span class="nav-text">EVAL简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lua-数据类型和-Redis-数据类型之间转换"><span class="nav-number">1.3.</span> <span class="nav-text">Lua 数据类型和 Redis 数据类型之间转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#脚本的原子性"><span class="nav-number">1.4.</span> <span class="nav-text">脚本的原子性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#错误处理"><span class="nav-number">1.5.</span> <span class="nav-text">错误处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#带宽和-EVALSHA"><span class="nav-number">1.6.</span> <span class="nav-text">带宽和 EVALSHA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#脚本缓存"><span class="nav-number">1.7.</span> <span class="nav-text">脚本缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SCRIPT-命令"><span class="nav-number">1.8.</span> <span class="nav-text">SCRIPT 命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#纯函数脚本"><span class="nav-number">1.9.</span> <span class="nav-text">纯函数脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#全局变量保护"><span class="nav-number">1.10.</span> <span class="nav-text">全局变量保护</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用选择内部脚本"><span class="nav-number">1.11.</span> <span class="nav-text">使用选择内部脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可用库"><span class="nav-number">1.12.</span> <span class="nav-text">可用库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#struct-库"><span class="nav-number">1.12.1.</span> <span class="nav-text">struct 库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CJSON-库"><span class="nav-number">1.12.2.</span> <span class="nav-text">CJSON 库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cmsgpack-库"><span class="nav-number">1.12.3.</span> <span class="nav-text">cmsgpack 库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bitop-库"><span class="nav-number">1.12.4.</span> <span class="nav-text">bitop 库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-sha1hex"><span class="nav-number">1.12.5.</span> <span class="nav-text">redis.sha1hex</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用脚本散发-Redis-日志"><span class="nav-number">1.13.</span> <span class="nav-text">使用脚本散发 Redis 日志</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#沙箱-sandbox-和最大执行时间"><span class="nav-number">1.14.</span> <span class="nav-text">沙箱(sandbox)和最大执行时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流水线-pipeline-上下文-context-中的-EVALSHA"><span class="nav-number">1.15.</span> <span class="nav-text">流水线(pipeline)上下文(context)中的 EVALSHA</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

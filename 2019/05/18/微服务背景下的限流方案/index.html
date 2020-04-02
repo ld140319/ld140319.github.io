@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,微服务,服务限流,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="微服务背景下的限流方案背景  微服务架构中没有接口限流，可能会遇到哪些问题？ 针对微服务接口限流，如何选择合适的限流算法？ 如何根据场景和性能要求权衡选择单机还是分布式限流？ 如何根据业务需求灵活的选择不同的限流熔断机制？ 如何对接口选择合适的限流时间粒度和最大限流值？ 如何验证微服务接口限流功能的有效性和正确性？ 如何打造高度容错、高 TPS、低延迟的限流框架？   微服务接口限流的背景 在应对">
+<meta name="keywords" content="架构,微服务,服务限流">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务背景下的限流方案">
+<meta property="og:url" content="http://blog.com/2019/05/18/微服务背景下的限流方案/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="微服务背景下的限流方案背景  微服务架构中没有接口限流，可能会遇到哪些问题？ 针对微服务接口限流，如何选择合适的限流算法？ 如何根据场景和性能要求权衡选择单机还是分布式限流？ 如何根据业务需求灵活的选择不同的限流熔断机制？ 如何对接口选择合适的限流时间粒度和最大限流值？ 如何验证微服务接口限流功能的有效性和正确性？ 如何打造高度容错、高 TPS、低延迟的限流框架？   微服务接口限流的背景 在应对">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/640.webp">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/641.jpg">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/642.webp">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/643.png">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/645.webp">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/644.png">
+<meta property="og:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/646.webp">
+<meta property="og:updated_time" content="2019-05-18T10:55:54.621Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微服务背景下的限流方案">
+<meta name="twitter:description" content="微服务背景下的限流方案背景  微服务架构中没有接口限流，可能会遇到哪些问题？ 针对微服务接口限流，如何选择合适的限流算法？ 如何根据场景和性能要求权衡选择单机还是分布式限流？ 如何根据业务需求灵活的选择不同的限流熔断机制？ 如何对接口选择合适的限流时间粒度和最大限流值？ 如何验证微服务接口限流功能的有效性和正确性？ 如何打造高度容错、高 TPS、低延迟的限流框架？   微服务接口限流的背景 在应对">
+<meta name="twitter:image" content="http://blog.com/2019/05/18/微服务背景下的限流方案/640.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/18/微服务背景下的限流方案/">
+
+
+
+
+
+  <title>微服务背景下的限流方案 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/18/微服务背景下的限流方案/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">微服务背景下的限流方案</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-18T12:12:57+08:00">
+                2019-05-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/微服务/服务限流/" itemprop="url" rel="index">
+                    <span itemprop="name">服务限流</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/微服务/服务限流/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="微服务背景下的限流方案"><a href="#微服务背景下的限流方案" class="headerlink" title="微服务背景下的限流方案"></a>微服务背景下的限流方案</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><blockquote>
+<ol>
+<li>微服务架构中没有接口限流，可能会遇到哪些问题？</li>
+<li>针对微服务接口限流，如何选择合适的限流算法？</li>
+<li>如何根据场景和性能要求权衡选择单机还是分布式限流？</li>
+<li>如何根据业务需求灵活的选择不同的限流熔断机制？</li>
+<li>如何对接口选择合适的限流时间粒度和最大限流值？</li>
+<li>如何验证微服务接口限流功能的有效性和正确性？</li>
+<li>如何打造高度容错、高 TPS、低延迟的限流框架？</li>
+</ol>
+</blockquote>
+<p><strong>微服务接口限流的背景</strong></p>
+<p>在应对秒杀、大促、双 11、618 等高性能压力的场景时，限流已经成为了标配技术解决方案，为保证系统的平稳运行起到了关键性的作用。不管应用场景是哪种，限流无非就是针对超过预期的流量，通过预先设定的限流规则选择性的对某些请求进行限流“熔断”。限于篇幅和作者的经验能力，本文主要讲微服务架构下，服务接口的限流。</p>
+<p>对于微服务来说，特别是一些中台微服务，其接口请求可能来自很多系统，例如用户服务的接口会被很多内部系统调用，比如 CRM, 促销系统等。对于服务于众多调用系统和应对海量接口请求的微服务来说，接口限流除了应对上面提到的一些大促秒杀场景之外，在下面一些场景中也发挥着很大的作用。</p>
+<p>作为提供接口服务的微服务系统，我们是无法限制调用方如何来使用我们的接口的，我们曾经就遇到过有一些调用方多线程并发跑 job 来请求我们的接口，也遇到到一些因为调用方的代码 bug 或者业务上面的突发流量，导致来自这个调用方的接口请求数量突增，过度争用服务线程资源，而来自其他调用方的接口请求因此来不及响应而排队等待，微服务整体的请求响应时间变长甚至超时。所以为了防止接口被过度调用，需要对每个调用方进行细粒度的访问限流。</p>
+<p>除了对调用者的访问频率进行限制外，我们有的时候还需要对某些接口的访问频率做限制。比如一些慢接口，可能因为逻辑复杂，处理时间会比较长，如果对慢接口的访问频率不加限制，过多的慢接口请求会一直占用服务的线程资源不释放，导致无法响应其他接口请求，影响微服务系统整体的吞吐量和接口响应时间，甚至引起大量的接口超时。除了慢接口，有些核心接口，因为一旦异常访问对业务的影响比较大，除了做调用鉴权之外，还需要做非预期异常流量的限流。</p>
+<p>综上所述，我们不仅仅需要针对大促秒杀场景的粗粒度的微服务接口限流功能：比如限制微服务集群单台机器每秒请求次数，我们还需要针对不同调用方甚至不同接口进行更加细粒度限流：比如限制 A 调用方对某个服务的某个的接口的每秒最大请求次数。</p>
+<p><strong>关于接口限流中“流”的定义</strong></p>
+<p>限流中的“流”字该如何解读呢？要限制的指标到底是什么？不同的场景对“流”的定义也是不同的，可以是网络流量，带宽，每秒处理的事务数 (TPS)，每秒请求数 (hits per second)，并发请求数，甚至还可能是业务上的某个指标，比如用户在某段时间内允许的最多请求短信验证码次数。</p>
+<p>从保证系统稳定可用的角度考量，对于微服务系统来说，最好的一个限流指标是：并发请求数。通过限制并发处理的请求数目，可以限制任何时刻都不会有过多的请求在消耗资源，比如：我们通过配置 web 容器中 servlet worker 线程数目为 200，则任何时刻最多都只有 200 个请求在处理，超过的请求都会被阻塞排队。</p>
+<p>上一节讲到，我们为了解决调用方对服务资源的过度争用问题，还需要针对不同调用方甚至不同接口做细粒度限流，所以，我们除了需要对系统整体的并发请求数做限制之外，还需要对每个调用方甚至不同接口的并发请求数做限制。但是，要想合理的设置某个调用方的最大允许并发数是比较困难的，这个值很难通过监控统计来获取，太小容易误杀，太大又起不了作用。所以我们还需要其他限流指标。</p>
+<p>对比 TPS 和 hits per second 的两个指标，我们选择使用 hits per second 作为限流指标。因为，对 TPS 的限流实际上是无法做的，TPS 表示每秒处理事务数，事务的开始是接收到接口请求，事务的结束是处理完成返回，所以有一定的时间跨度，如果事务开始限流计数器加一，事务结束限流计数器减一，则就等同于并发限流。而如果把事务请求接收作为计数时间点，则就退化为按照 hits per second 来做限流，而如果把事务结束作为计数时间点，则计数器的数值并不能代表系统当下以及接下来的系统访问压力。</p>
+<p>对 hits per second 的限流是否是一个有效的限流指标呢？答案是肯定的，这个值是可观察可统计的，所以方便配置限流规则，而且这个值在一定程度上反应系统当前和接下来的性能压力，对于这一指标的限流确实也可以达到限制对系统资源的使用。</p>
+<h2 id="限流算法"><a href="#限流算法" class="headerlink" title="限流算法"></a>限流算法</h2><h3 id="固定时间窗口限流"><a href="#固定时间窗口限流" class="headerlink" title="固定时间窗口限流"></a>固定时间窗口限流</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于固定时间窗口的限流算法是非常简单的。首先需要选定一个时间起点，之后每次接口请求到来都累加计数器，如果在当前时间窗口内，根据限流规则（比如每秒钟最大允许 100 次接口请求），累加访问次数超过限流值，则限流熔断拒绝接口请求。当进入下一个时间窗口之后，计数器清零重新计数。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种基于固定时间窗口的限流算法的缺点在于：限流策略过于粗略，<strong>无法应对两个时间窗口临界时间内的突发流量</strong>。我们举一个例子：假设我们限流规则为每秒钟不超过 100 次接口请求，第一个 1s 时间窗口内，100 次接口请求都集中在最后的 10ms 内，在第二个 1s 的时间窗口内，100 次接口请求都集中在最开始的 10ms 内，虽然两个时间窗口内流量都符合限流要求 (&lt;=100 个请求)，但<strong>在两个时间窗口临界的 20ms 内会集中有 200 次接口请求，如果不做限流，集中在这 20ms 内的 200 次请求就有可能压垮系统</strong>，如图 -1：</p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/640.webp" alt=""></p>
+<h3 id="滑动时间窗口限流"><a href="#滑动时间窗口限流" class="headerlink" title="滑动时间窗口限流"></a>滑动时间窗口限流</h3><p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/641.jpg" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在上图中，整个红色的矩形框表示一个时间窗口，在我们的例子中，一个时间窗口就是一分钟。然后我们将时间窗口进行划分，比如图中，我们就将滑动窗口 划成了6格，所以每格代表的是10秒钟。每过10秒钟，我们的时间窗口就会往右滑动一格。每一个格子都有自己独立的计数器counter，比如当一个请求 在0:35秒的时候到达，那么0:30~0:39对应的counter就会加1。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么滑动窗口怎么解决刚才的临界问题的呢？我们可以看上图，0:59到达的100个请求会落在灰色的格子中，而1:00到达的请求会落在橘黄色的格 子中。当时间到达1:00时，我们的窗口会往右移动一格，那么此时时间窗口内的总请求数量一共是200个，超过了限定的100个，所以此时能够检测出来触 发了限流。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我再来回顾一下刚才的计数器算法，我们可以发现，固定时间窗口算法其实就是滑动窗口算法。只是它没有对时间窗口做进一步地划分，所以只有1格。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由此可见，<strong>当滑动窗口的格子划分的越多，那么滑动窗口的滚动就越平滑，限流的统计就会越精确</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;滑动时间窗口算法是对固定时间窗口算法的一种改进，流量经过滑动时间窗口算法整形之后，可以保证任意时间窗口内，都不会超过最大允许的限流值，从流量曲线上来看会更加平滑，可以部分解决上面提到的临界突发流量问题。对比固定时间窗口限流算法，滑动时间窗口限流算法的时间窗口是持续滑动的，并且除了需要一个计数器来记录时间窗口内接口请求次数之外，还需要记录在时间窗口内每个接口请求到达的时间点，对内存的占用会比较多。滑动时间窗口的算法模型如下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;滑动窗口记录的时间点 list = (t_1, t_2, …t_k)，时间窗口大小为 1 秒，起点是 list 中最小的时间点。当 t_m 时刻新的请求到来时，我们通过以下步骤来更新滑动时间窗口并判断是否限流熔断：</p>
+<p>STEP 1: 检查接口请求的时间 t_m 是否在当前的时间窗口 [t_start, t_start+1 秒) 内。如果是，则跳转到 STEP 3，否则跳转到 STEP 2.</p>
+<p>STEP 2: 向后滑动时间窗口，将时间窗口的起点 t_start 更新为 list 中的第二小时间点，并将最小的时间点从 list 中删除。然后，跳转到 STEP 1。</p>
+<p>STEP 3: 判断当前时间窗口内的接口请求数是否小于最大允许的接口请求限流值，即判断: list.size &lt; max_hits_limit，如果小于，则说明没有超过限流值，允许接口请求，并将此接口请求的访问时间放入到时间窗口内，否则直接执行限流熔断。</p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/642.webp" alt="img"></p>
+<p>滑动时间窗口限流算法可以部分解决固定时间窗口的临界问题，上面的例子通过滑动时间窗口算法整形之后，第一个 1 秒的时间窗口的 100 次请求都会通过，第二个时间窗口最开始 10ms 内的 100 个请求会被限流熔断。</p>
+<p>即便滑动时间窗口限流算法可以保证任意时间窗口内接口请求次数都不会超过最大限流值，但是仍然不能防止在细时间粒度上面访问过于集中的问题，比如上面举的例子，第一个 1s 的时间窗口内 100 次请求都集中在最后 10ms 中。也就是说，基于时间窗口的限流算法，不管是固定时间窗口还是滑动时间窗口，只能在选定的时间粒度上限流，对选定时间粒度内的更加细粒度的访问频率不做限制。</p>
+<p><strong>避免了固定窗口算法的请求量突增的问题</strong></p>
+<h3 id="多层次限流"><a href="#多层次限流" class="headerlink" title="多层次限流"></a>多层次限流</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;多层次限流，我们可以<strong>对同一个接口设置多条限流规则</strong>，除了 1 秒不超过 100 次之外，我们还可以设置 100ms 不超过 20 次 (这里需要设置的比 10 次大一些)，两条规则同时限制，流量会更加平滑。</p>
+<h3 id="令牌桶"><a href="#令牌桶" class="headerlink" title="令牌桶"></a>令牌桶</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;令牌桶算法的原理是系统会以一个恒定的速度往桶里放入令牌，而如果请求需要被处理，则需要先从桶里获取一个令牌，当桶里没有令牌可取时，则拒绝服务。</p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/643.png" alt="img"></p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/645.webp" alt=""></p>
+<h3 id="漏桶"><a href="#漏桶" class="headerlink" title="漏桶"></a>漏桶</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;漏桶算法思路很简单，水（请求）先进入到漏桶里，漏桶以一定的速度出水，当水流入速度过大会直接溢出，可以看出漏桶算法能强行限制数据的传输速率。</p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/644.png" alt="img"></p>
+<p><img src="//blog.com/2019/05/18/微服务背景下的限流方案/646.webp" alt=""></p>
+<h3 id="令牌桶与漏桶的区别"><a href="#令牌桶与漏桶的区别" class="headerlink" title="令牌桶与漏桶的区别"></a>令牌桶与漏桶的区别</h3><p>漏桶算法稍微不同与令牌桶算法的一点是：对于取令牌的频率也有限制，要按照 t/n 固定的速度来取令牌，所以可以看出漏桶算法对流量的整形效果更加好，流量更加平滑，任何突发流量都会被限流。因为令牌桶大小为 b，所以是可以<strong>应对突发流量</strong>的。</p>
+<blockquote>
+<p>令牌桶和漏桶对比：</p>
+<p>令牌桶是按照固定速率往桶中添加令牌，请求是否被处理需要看桶中令牌是否足够，当令牌数减为零时则拒绝新的请求；</p>
+<p>漏桶则是按照常量固定速率流出请求，流入请求速率任意，当流入的请求数累积到漏桶容量时，则新流入的请求被拒绝；</p>
+<p>令牌桶限制的是平均流入速率（允许突发请求，只要有令牌就可以处理，支持一次拿3个令牌，4个令牌），并允许一定程度突发流量；</p>
+<p>漏桶限制的是常量流出速率（即流出速率是一个固定常量值，比如都是1的速率流出，而不能一次是1，下次又是2），从而平滑突发流入速率；</p>
+<p>令牌桶允许一定程度的突发，而漏桶主要目的是平滑流入速率；</p>
+<p>两个算法实现可以一样，但是方向是相反的，对于相同的参数得到的限流效果是一样的。</p>
+</blockquote>
+<blockquote>
+<h2 id="漏桶算法和令牌桶算法的选择"><a href="#漏桶算法和令牌桶算法的选择" class="headerlink" title="漏桶算法和令牌桶算法的选择"></a>漏桶算法和令牌桶算法的选择</h2><p>漏桶算法与令牌桶算法在表面看起来类似，很容易将两者混淆。但事实上，这两者具有截然不同的特性，且为不同的目的而使用。</p>
+<p>漏桶算法与令牌桶算法的区别在于，漏桶算法能够强行限制数据的传输速率，令牌桶算法能够在限制数据的平均传输速率的同时还允许某种程度的突发传输。</p>
+<p>需要注意的是，在某些情况下，漏桶算法不能够有效地使用网络资源，因为漏桶的漏出速率是固定的，所以即使网络中没有发生拥塞，漏桶算法也不能使某一个单独的数据流达到端口速率。因此，漏桶算法对于存在突发特性的流量来说缺乏效率。而令牌桶算法则能够满足这些具有突发特性的流量。通常，漏桶算法与令牌桶算法结合起来为网络流量提供更高效的控制。</p>
+</blockquote>
+<p><strong>“漏桶算法”能够强行限制数据的传输速率，而“令牌桶算法”在能够限制数据的平均传输速率外，还允许某种程度的突发传输</strong></p>
+<h2 id="如何选择"><a href="#如何选择" class="headerlink" title="如何选择?"></a>如何选择?</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>令牌桶和漏桶算法比较适合阻塞式限流</strong>，比如一些后台 job 类的限流，超过了最大访问频率之后，请求并不会被拒绝，而是会被阻塞到有令牌后再继续执行。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于像微服务接口这种对响应时间比较敏感的限流场景，会比较适合选择<strong>基于时间窗口的否决式限流算法</strong>，其中滑动时间窗口限流算法空间复杂度较高，内存占用会比较多，所以对比来看，尽管固定时间窗口算法处理临界突发流量的能力较差，但实现简单，而简单带来了好的性能和不容易出错，所以固定时间窗口算法也不失是一个好的微服务接口限流算法。</p>
+<blockquote>
+<p>所谓否决式限流就是超过最大允许访问频率之后就拒绝请求，比如返回 HTTP status code 429 等，</p>
+<p>所谓阻塞式限流就是超过最大允许访问频率之后就排队请求。</p>
+</blockquote>
+<h2 id="限流算法实现"><a href="#限流算法实现" class="headerlink" title="限流算法实现"></a>限流算法实现</h2><h3 id="固定时间窗口限流-1"><a href="#固定时间窗口限流-1" class="headerlink" title="固定时间窗口限流"></a>固定时间窗口限流</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FixedWindowRateLimiter</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $redisUtil;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期内的最大访问次数, 默认100次</span></span><br><span class="line">    <span class="keyword">const</span> DEFAULT_ALLOWED_VISIT_PER_PERIOD = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期大小，默认60秒</span></span><br><span class="line">    <span class="keyword">const</span> DEFAULT_PERIOD = <span class="number">60</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//单例访问</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> $instance=<span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil = <span class="keyword">new</span> \Redis();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;connect($host, $port);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;select($db);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span>  <span class="function"><span class="keyword">function</span> <span class="title">getInstance</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_null(<span class="keyword">self</span>::$instance)) &#123;</span><br><span class="line">            <span class="keyword">self</span>::$instance = <span class="keyword">new</span> FixedWindowRateLimiter($host, $port, $db);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">self</span>::$instance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">visit</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;isOverLimit($key)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        $scriptContent=<span class="string">&lt;&lt;&lt;lua</span></span><br><span class="line"><span class="string">local key = KEYS[1]</span></span><br><span class="line"><span class="string">local limit = tonumber(ARGV[1])</span></span><br><span class="line"><span class="string">local expire_time = tonumber(ARGV[2])</span></span><br><span class="line"><span class="string">local times = redis.call("INCR", key)</span></span><br><span class="line"><span class="string">if times == 1 then</span></span><br><span class="line"><span class="string">    redis.call("EXPIRE", key, expire_time)</span></span><br><span class="line"><span class="string">end</span></span><br><span class="line"><span class="keyword">if</span> times &gt; limit then</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">end</span><br><span class="line"><span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">lua;</span><br><span class="line">        $incr_res = <span class="keyword">$this</span>-&gt;redisUtil-&gt;eval($scriptContent, [$key, <span class="keyword">self</span>::DEFAULT_ALLOWED_VISIT_PER_PERIOD, <span class="keyword">self</span>::DEFAULT_PERIOD], <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> (! $incr_res) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 当前访问次数</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> int</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">currentVisitTimes</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (int)<span class="keyword">$this</span>-&gt;redisUtil-&gt;get($key);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 是否已经达到最大次数</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> bool</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">isOverLimit</span><span class="params">($key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;currentVisitTimes($key) &gt;= <span class="keyword">self</span>::DEFAULT_ALLOWED_VISIT_PER_PERIOD;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 是否第一次访问</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> $key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> bool</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">hasVisitHistory</span><span class="params">($key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;redisUtil-&gt;exists($key);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="滑动时间窗口限流-1"><a href="#滑动时间窗口限流-1" class="headerlink" title="滑动时间窗口限流"></a>滑动时间窗口限流</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SlidingWindowRateLimiter</span> <span class="keyword">implements</span> <span class="title">IRateLimiter</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $redisUtil;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期内的最大访问次数, 默认100次</span></span><br><span class="line">    <span class="keyword">const</span> DEFAULT_ALLOWED_VISIT_PER_PERIOD = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期大小，默认60秒</span></span><br><span class="line">    <span class="keyword">const</span> DEFAULT_PERIOD = <span class="number">60</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//滑动窗口块数</span></span><br><span class="line">    <span class="keyword">const</span> DEFAULT_BLOCK = <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> CACHE_KEY_PREFIX = <span class="string">"all_counter:"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//单例访问</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> $instance=<span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil = <span class="keyword">new</span> \Redis();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;connect($host, $port);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;select($db);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span>  <span class="function"><span class="keyword">function</span> <span class="title">getInstance</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_null(<span class="keyword">self</span>::$instance)) &#123;</span><br><span class="line">            <span class="keyword">self</span>::$instance = <span class="keyword">new</span> SlidingWindowRateLimiter($host, $port, $db);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">self</span>::$instance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string $suffix 用户关键信息 uid或者ip</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> bool</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">visit</span><span class="params">($suffix=<span class="string">""</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">// hash key名称</span></span><br><span class="line">        $cacheKey = <span class="keyword">self</span>::CACHE_KEY_PREFIX.$suffix;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 当前时间戳</span></span><br><span class="line">        $nowTimestamp = time();</span><br><span class="line">        <span class="comment">// 当前对应分钟</span></span><br><span class="line">        $nowMinute = date(<span class="string">'Y-m-d H:i:00'</span>, $nowTimestamp);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 秒数</span></span><br><span class="line">        $sec = (int)date(<span class="string">'s'</span>, $nowTimestamp);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 当前所属区间对应缓存计数器 field</span></span><br><span class="line">        $currentCounterField = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">        $all_counter_init = <span class="keyword">array</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">//每个子区间秒数</span></span><br><span class="line">        $unit = <span class="keyword">self</span>::DEFAULT_PERIOD/<span class="keyword">self</span>::DEFAULT_BLOCK;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> ($i=<span class="number">1</span>; $i&lt;=<span class="keyword">self</span>::DEFAULT_BLOCK; $i++) &#123;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">             *  1) "2018-12-26_00:03:09"</span></span><br><span class="line"><span class="comment">                2) "0"</span></span><br><span class="line"><span class="comment">                3) "2018-12-26_00:03:19"</span></span><br><span class="line"><span class="comment">                4) "0"</span></span><br><span class="line"><span class="comment">                5) "2018-12-26_00:03:29"</span></span><br><span class="line"><span class="comment">                6) "4"</span></span><br><span class="line"><span class="comment">                7) "2018-12-26_00:03:39"</span></span><br><span class="line"><span class="comment">                8) "96"</span></span><br><span class="line"><span class="comment">                9) "2018-12-26_00:03:49"</span></span><br><span class="line"><span class="comment">                10) "0"</span></span><br><span class="line"><span class="comment">                11) "2018-12-26_00:03:59"</span></span><br><span class="line"><span class="comment">                12) "0"</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            $key = date(<span class="string">'Y-m-d_H:i:s'</span>,strtotime($nowMinute) +  ($i * $unit)<span class="number">-1</span>);</span><br><span class="line">            <span class="comment">// 初始化每个子区间计数器为0</span></span><br><span class="line">            $all_counter_init[$key] = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">if</span> (($sec &gt;= ($i<span class="number">-1</span>) * $unit) &amp;&amp; ($sec &lt;= ($i*$unit)<span class="number">-1</span>)) &#123;</span><br><span class="line">                $currentCounterField = $key;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (! <span class="keyword">$this</span>-&gt;redisUtil-&gt;exists($cacheKey)) &#123;</span><br><span class="line">            <span class="comment">// 当前请求对应子区间计数器置为1</span></span><br><span class="line">            $all_counter_init[$currentCounterField] = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">$this</span>-&gt;redisUtil-&gt;hMset($cacheKey, $all_counter_init);</span><br><span class="line">            <span class="comment">// 过期时间设置为1个大区间的周期</span></span><br><span class="line">            <span class="keyword">$this</span>-&gt;redisUtil-&gt;expire($cacheKey, <span class="keyword">self</span>::DEFAULT_PERIOD);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取所有子区间计数器信息</span></span><br><span class="line">        $info = <span class="keyword">$this</span>-&gt;redisUtil-&gt;hGetAll($cacheKey);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 所属子时间段超出限制</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">isset</span>($info[$currentCounterField]) &amp;&amp; $info[$currentCounterField] &gt;= <span class="keyword">self</span>::DEFAULT_ALLOWED_VISIT_PER_PERIOD) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">isset</span>($info[$currentCounterField])) &#123;</span><br><span class="line">            <span class="comment">// 对应子时间段访问次数加1</span></span><br><span class="line">            $info[$currentCounterField] += <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 整体右移一个区块</span></span><br><span class="line">            $fields = array_keys($info);</span><br><span class="line">            $delField = array_shift($fields);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//下一个大区间访问时 删除上一大区间的某个子区间  即计数器中是两个相邻大区间的数据</span></span><br><span class="line">            $isNextMinute = strtotime(str_replace(<span class="string">'_'</span>,<span class="string">' '</span>, $currentCounterField)) &gt;= strtotime(str_replace(<span class="string">'_'</span>,<span class="string">' '</span>, $delField)) + <span class="keyword">self</span>::DEFAULT_PERIOD;</span><br><span class="line">            <span class="keyword">if</span> ($isNextMinute) &#123;</span><br><span class="line">                <span class="keyword">$this</span>-&gt;redisUtil-&gt;hDel($cacheKey, $delField);</span><br><span class="line">                <span class="keyword">unset</span>($info[$delField]);</span><br><span class="line">                $info[$currentCounterField] = <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//同一个大区间的总的访问次数</span></span><br><span class="line">        $total_visit_number = array_sum($info);</span><br><span class="line">        <span class="comment">//同一个大区间的总的访问次数超出限制</span></span><br><span class="line">        <span class="keyword">if</span> ($total_visit_number &gt; <span class="keyword">self</span>::DEFAULT_ALLOWED_VISIT_PER_PERIOD) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 更新缓存计数器信息</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;hMset($cacheKey, $info);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 更新缓存有效期</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;expire($cacheKey, <span class="keyword">self</span>::DEFAULT_PERIOD);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$uid = <span class="number">5876</span>;</span><br><span class="line">SlidingWindowRateLimiter::getInstance()-&gt;visit($uid);</span><br></pre></td></tr></table></figure>
+<p><strong>优化思路：采用lua脚本来实现，保证原子性</strong></p>
+<h3 id="漏桶限流"><a href="#漏桶限流" class="headerlink" title="漏桶限流"></a>漏桶限流</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FunnelRateLimiter</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $redisUtil;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期内的最大访问次数, 默认100次即容量</span></span><br><span class="line">    <span class="keyword">const</span> capacity_key  = <span class="string">"capacity"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//漏嘴流水速率</span></span><br><span class="line">    <span class="keyword">const</span> leaking_rate_key = <span class="string">"leaking_rate"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//漏斗剩余空间</span></span><br><span class="line">    <span class="keyword">const</span> left_quota_key = <span class="string">"left_quota"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//上一次漏水时间</span></span><br><span class="line">    <span class="keyword">const</span> leaking_ts_key = <span class="string">"last_leaking_ts"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//单例访问</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> $instance = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil = <span class="keyword">new</span> \Redis();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;connect($host, $port);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;select($db);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span>  <span class="function"><span class="keyword">function</span> <span class="title">getInstance</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_null(<span class="keyword">self</span>::$instance)) &#123;</span><br><span class="line">            <span class="keyword">self</span>::$instance = <span class="keyword">new</span> FunnelRateLimiter($host, $port, $db);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">self</span>::$instance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">visit</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">//保证原子性</span></span><br><span class="line">        $scriptContent=<span class="string">&lt;&lt;&lt;lua</span></span><br><span class="line"><span class="string">local capacity_key = KEYS[1];</span></span><br><span class="line"><span class="string">local leaking_rate_key = KEYS[2];</span></span><br><span class="line"><span class="string">local left_quota_key = KEYS[3];</span></span><br><span class="line"><span class="string">local leaking_ts_key = KEYS[4];</span></span><br><span class="line"><span class="string">local quota = tonumber(ARGV[1]);</span></span><br><span class="line"><span class="string">local now_ts = tonumber(ARGV[2]);</span></span><br><span class="line"><span class="string">local capacity = tonumber(redis.call("GET", capacity_key)); --漏斗容量大小</span></span><br><span class="line"><span class="string">local leaking_rate = tonumber(redis.call("GET", leaking_rate_key)); --漏嘴流出速率</span></span><br><span class="line"><span class="string">local left_quota = tonumber(redis.call("GET", left_quota_key));--漏斗可用空间大小</span></span><br><span class="line"><span class="string">local last_leaking_ts = tonumber(redis.call("GET", leaking_ts_key));--上一次漏水时间</span></span><br><span class="line"><span class="string">local delta_ts = now_ts - last_leaking_ts; --距离上一次漏水过去了多久</span></span><br><span class="line"><span class="string">local delta_quota = delta_ts * leaking_rate; --又可以腾出不少空间了</span></span><br><span class="line"><span class="string">left_quota = left_quota + delta_quota; --增加剩余空间</span></span><br><span class="line"><span class="string">if (left_quota &gt;capacity) then</span></span><br><span class="line"><span class="string">    left_quota = capacity; --剩余空间不得高于容量</span></span><br><span class="line"><span class="string">end        </span></span><br><span class="line"><span class="string">--调整可用空间、漏水时间        </span></span><br><span class="line"><span class="string">if (left_quota &gt;= quota) then </span></span><br><span class="line"><span class="string">    left_quota = left_quota - quota;</span></span><br><span class="line"><span class="string">    redis.call("SET", left_quota_key, left_quota);</span></span><br><span class="line"><span class="string">    redis.call("SET", leaking_ts_key, now_ts);</span></span><br><span class="line"><span class="string">    return 1;</span></span><br><span class="line"><span class="string">else </span></span><br><span class="line"><span class="string">    return 0;</span></span><br><span class="line"><span class="string">end</span></span><br><span class="line">lua;</span><br><span class="line">        $keys = [</span><br><span class="line">            <span class="keyword">self</span>::capacity_key,</span><br><span class="line">            <span class="keyword">self</span>::leaking_rate_key,</span><br><span class="line">            <span class="keyword">self</span>::left_quota_key,</span><br><span class="line">            <span class="keyword">self</span>::leaking_ts_key</span><br><span class="line">        ];</span><br><span class="line">        $arg = [</span><br><span class="line">            <span class="number">1</span>,</span><br><span class="line">            time()</span><br><span class="line">        ];</span><br><span class="line">        $res = <span class="keyword">$this</span>-&gt;redisUtil-&gt;eval($scriptContent, array_merge($keys, $arg), count($keys));</span><br><span class="line">        <span class="keyword">if</span> (! $res) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">FunnelRateLimiter::getInstance()-&gt;visit();</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LeakyDemo</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span>  $timeStamp;</span><br><span class="line">    <span class="keyword">public</span>  $capacity;<span class="comment">// 桶的容量</span></span><br><span class="line">    <span class="keyword">public</span>  $rate; <span class="comment">// 水漏出的速度</span></span><br><span class="line">    <span class="keyword">public</span>  $water;<span class="comment">// 当前水量(当前累积请求数)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;timeStamp = time();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">grant</span><span class="params">()</span></span>&#123;</span><br><span class="line">        $now = time();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;water = max(<span class="number">0</span>,<span class="keyword">$this</span>-&gt;water - ($now-<span class="keyword">$this</span>-&gt;timeStamp)*<span class="keyword">$this</span>-&gt;rate);<span class="comment">// 先执行漏水，计算剩余水量</span></span><br><span class="line">        <span class="keyword">$this</span>-&gt;timeStamp = $now;</span><br><span class="line">        <span class="keyword">if</span>((<span class="keyword">$this</span>-&gt;water+<span class="number">1</span>) &lt; <span class="keyword">$this</span>-&gt;capacity)&#123;</span><br><span class="line">            <span class="comment">// 尝试加水,并且水还未满</span></span><br><span class="line">            <span class="keyword">$this</span>-&gt;water+=<span class="number">1</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="comment">// 水满，拒绝加水</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="令牌桶限流"><a href="#令牌桶限流" class="headerlink" title="令牌桶限流"></a>令牌桶限流</h3><p><strong>允许一定的突发流量，因为令牌是一直在增加的</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TokenRateLimiter</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $redisUtil;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//周期内的最大访问次数,即令牌桶容量</span></span><br><span class="line">    <span class="keyword">const</span> capacity_key  = <span class="string">"capacity"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建令牌速率</span></span><br><span class="line">    <span class="keyword">const</span> create_token_rate_key = <span class="string">"create_token_rate"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//可用令牌数量</span></span><br><span class="line">    <span class="keyword">const</span> useful_token_counter_key = <span class="string">"useful_token_counter"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//上一次放入令牌时间</span></span><br><span class="line">    <span class="keyword">const</span> last_putting_ts_key = <span class="string">"last_putting_ts"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//单例访问</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> $instance=<span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil = <span class="keyword">new</span> \Redis();</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;connect($host, $port);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;redisUtil-&gt;select($db);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span>  <span class="function"><span class="keyword">function</span> <span class="title">getInstance</span><span class="params">($host=<span class="string">"localhost"</span>, $port=<span class="string">"6379"</span>, $db=<span class="number">1</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_null(<span class="keyword">self</span>::$instance)) &#123;</span><br><span class="line">            <span class="keyword">self</span>::$instance = <span class="keyword">new</span> TokenRateLimiter($host, $port, $db);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">self</span>::$instance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">visit</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $scriptContent=<span class="string">&lt;&lt;&lt;lua</span></span><br><span class="line"><span class="string">local capacity_key = KEYS[1];</span></span><br><span class="line"><span class="string">local create_token_rate_key = KEYS[2];</span></span><br><span class="line"><span class="string">local useful_token_counter_key = KEYS[3];</span></span><br><span class="line"><span class="string">local last_putting_ts_key = KEYS[4];</span></span><br><span class="line"><span class="string">local apply_ken = tonumber(ARGV[1]);</span></span><br><span class="line"><span class="string">local now_ts = tonumber(ARGV[2]);</span></span><br><span class="line"><span class="string">local capacity = tonumber(redis.call("GET", capacity_key)); --桶容量大小</span></span><br><span class="line"><span class="string">local create_token_rate = tonumber(redis.call("GET", create_token_rate_key)); --放入令牌速率</span></span><br><span class="line"><span class="string">local useful_token_counter = tonumber(redis.call("GET", useful_token_counter_key));--可用令牌数量</span></span><br><span class="line"><span class="string">local last_putting_ts = tonumber(redis.call("GET", last_putting_ts_key));--上一次放入令牌时间</span></span><br><span class="line"><span class="string">local delta_ts = now_ts - last_putting_ts; --距离上一次放入令牌过去了多久</span></span><br><span class="line"><span class="string">local add_token_number = delta_ts * create_token_rate; --增加的令牌数量</span></span><br><span class="line"><span class="string">useful_token_counter = useful_token_counter + add_token_number; --增加令牌</span></span><br><span class="line"><span class="string">if (useful_token_counter &gt; capacity) then</span></span><br><span class="line"><span class="string">    useful_token_counter = capacity; --可用令牌数量不得高于容量</span></span><br><span class="line"><span class="string">end            </span></span><br><span class="line"><span class="string">if (useful_token_counter &gt;= apply_ken) then </span></span><br><span class="line"><span class="string">    useful_token_counter = useful_token_counter - apply_ken;</span></span><br><span class="line"><span class="string">    redis.call("SET", useful_token_counter_key, useful_token_counter);</span></span><br><span class="line"><span class="string">    redis.call("SET", last_putting_ts_key, now_ts);</span></span><br><span class="line"><span class="string">    return 1;</span></span><br><span class="line"><span class="string">else </span></span><br><span class="line"><span class="string">    return 0;</span></span><br><span class="line"><span class="string">end</span></span><br><span class="line">lua;</span><br><span class="line">        $keys = [</span><br><span class="line">            <span class="keyword">self</span>::capacity_key,</span><br><span class="line">            <span class="keyword">self</span>::create_token_rate_key,</span><br><span class="line">            <span class="keyword">self</span>::useful_token_counter_key,</span><br><span class="line">            <span class="keyword">self</span>::last_putting_ts_key</span><br><span class="line">        ];</span><br><span class="line">        $apply_token = <span class="number">1</span>; <span class="comment">//申请的令牌数量</span></span><br><span class="line">        $arg = [</span><br><span class="line">            $apply_token,</span><br><span class="line">            time() <span class="comment">//当前时间</span></span><br><span class="line">        ];</span><br><span class="line">        $res = <span class="keyword">$this</span>-&gt;redisUtil-&gt;eval($scriptContent, array_merge($keys, $arg), count($keys));</span><br><span class="line">        <span class="keyword">if</span> (! $res) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">TokenRateLimiter::getInstance()-&gt;visit();</span><br></pre></td></tr></table></figure>
+<h2 id="如何配置合理的限流规则"><a href="#如何配置合理的限流规则" class="headerlink" title="如何配置合理的限流规则"></a>如何配置合理的限流规则</h2><p>限流规则包含三个部分：时间粒度，接口粒度，最大限流值。限流规则设置是否合理直接影响到限流是否合理有效。</p>
+<p>对于限流时间粒度的选择，我们既可以选择 1 秒钟不超过 1000 次，也可以选择 10 毫秒不超过 10 次，还可以选择 1 分钟不超过 6 万次，虽然看起这几种限流规则都是等价的，但过大的时间粒度会达不到限流的效果，比如限制 1 分钟不超过 6 万次，就有可能 6 万次请求都集中在某一秒内；相反，过小的时间粒度会削足适履导致误杀很多本不应该限流的请求，因为接口访问在细时间粒度上随机性很大。所以，<strong>尽管越细的时间粒度限流整形效果越好，流量曲线越平滑，但也并不是越细越合适</strong>。</p>
+<p>对于访问量巨大的接口限流，比如秒杀，双十一，这些场景下流量可能都<strong>集中在几秒内，TPS 会非常大，几万甚至几十万，需要选择相对小的限流时间粒度</strong>。相反，<strong>如果接口 TPS 很小，建议使用大一点的时间粒度</strong>，比如限制 1 分钟内接口的调用次数不超过 1000 次，如果换算成：一秒钟不超过 16 次，这样的限制就有点不合理，即便一秒内超过 16 次，也并没有理由就拒绝接口请求，因为对于我们系统的处理能力来说，16 次 / 秒的请求频率太微不足道了。即便 1000 次请求都集中在 1 分钟内的某一秒内，也并不会影响到系统的稳定性，所以 1 秒钟 16 次的限制意义不大。</p>
+<p>除了时间粒度之外，还需要根据不同的限流需求选择不同接口粒度，比如：</p>
+<p>1）限制微服务每个实例接口调用频率</p>
+<p>2）限制微服务集群整体的访问频率</p>
+<p>2）限制某个调用方对某个服务的调用频率</p>
+<p>3）限制某个调用方对某个服务的某个接口的访问频率</p>
+<p>4）限制某服务的某个接口的访问频率</p>
+<p>5）限制某服务的某类接口的访问频率</p>
+<p>对于最大允许访问频率的设置，需要结合性能压测数据、业务预期流量、线上监控数据来综合设置，<strong>最大允许访问频率不大于压测 TPS，不小于业务预期流量</strong>，并且参考线上监控数据。</p>
+<h2 id="常见的部署架构"><a href="#常见的部署架构" class="headerlink" title="常见的部署架构"></a>常见的部署架构</h2><p>分布式限流与微服务之间常见的部署架构有以下几种：</p>
+<p><strong>1. 在接入层（api-gateway）集成限流功能</strong></p>
+<p>这种集成方式是在微服务架构下，有 api-gateway 的前提下，最合理的架构模式。如果 api-gateway 是单实例部署，使用单机限流算法即可。如果 api-gateway 是多实例部署，为了做到服务级别的限流就必须使用分布式限流算法。</p>
+<p><strong>2. 限流功能封装为 RPC 服务</strong></p>
+<p>当微服务接收到接口请求之后，会<strong>先通过限流服务暴露的 RPC 接口来查询接口请求是否超过限流阈值</strong>。这种架构模式，需要部署一个限流服务，增加了运维成本。这种部署架构，性能瓶颈会出现在微服务与限流服务之间的 RPC 通信上，即便单机限流算法可以做到 200 万 TPS，但经过 RPC 框架之后，做到 10 万 TPS 的请求限流就已经不错了。</p>
+<p><strong>也可以通过restful api</strong></p>
+<p><strong>3. 限流功能集成在微服务系统内</strong></p>
+<p>这种架构模式不需要再独立部署服务，减少了运维成本，但限流代码会跟业务代码有一些耦合，不过，可以将限流功能集成在切面层，<strong>尽量跟业务代码解耦</strong>。如果做服务级的分布式限流，必须使用分布式限流算法，如果是针对每台微服务实例进行单机限流，使用单机限流算法就可以。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://mp.weixin.qq.com/s/Qw2phKPE0duwjCi2XhxHTQ" target="_blank" rel="noopener">微服务接口限流的设计与思考（附GitHub框架源码）</a></p>
+<p><a href="https://www.cnblogs.com/linjiqin/p/9707713.html" target="_blank" rel="noopener">三种常见的限流算法</a></p>
+<p><a href="http://www.cnblogs.com/LBSer/p/4083131.html" target="_blank" rel="noopener">接口限流实战</a></p>
+<p><a href="https://mp.weixin.qq.com/s/XTGohlv47jI1uID1dvEUhw" target="_blank" rel="noopener">从构建分布式秒杀系统聊聊限流特技</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1359889" target="_blank" rel="noopener">固定窗口和滑动窗口算法了解一下</a></p>
+<p><a href="https://blog.csdn.net/g_hongjin/article/details/51649246" target="_blank" rel="noopener">高并发系统之限流特技</a></p>
+<p><a href="https://www.iphpt.com/detail/106/" target="_blank" rel="noopener">计数器、滑动窗口、漏桶、令牌算法比较和伪代码实现</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/微服务/" rel="tag"># 微服务</a>
+          
+            <a href="/tags/服务限流/" rel="tag"># 服务限流</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/18/如何做好Code Review？/" rel="next" title="如何做好Code Review？">
+                <i class="fa fa-chevron-left"></i> 如何做好Code Review？
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/18/位运算装逼指南/" rel="prev" title="位运算装逼指南">
+                位运算装逼指南 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#微服务背景下的限流方案"><span class="nav-number">1.</span> <span class="nav-text">微服务背景下的限流方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#限流算法"><span class="nav-number">1.2.</span> <span class="nav-text">限流算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#固定时间窗口限流"><span class="nav-number">1.2.1.</span> <span class="nav-text">固定时间窗口限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#滑动时间窗口限流"><span class="nav-number">1.2.2.</span> <span class="nav-text">滑动时间窗口限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多层次限流"><span class="nav-number">1.2.3.</span> <span class="nav-text">多层次限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#令牌桶"><span class="nav-number">1.2.4.</span> <span class="nav-text">令牌桶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#漏桶"><span class="nav-number">1.2.5.</span> <span class="nav-text">漏桶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#令牌桶与漏桶的区别"><span class="nav-number">1.2.6.</span> <span class="nav-text">令牌桶与漏桶的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#漏桶算法和令牌桶算法的选择"><span class="nav-number">1.3.</span> <span class="nav-text">漏桶算法和令牌桶算法的选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何选择"><span class="nav-number">1.4.</span> <span class="nav-text">如何选择?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#限流算法实现"><span class="nav-number">1.5.</span> <span class="nav-text">限流算法实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#固定时间窗口限流-1"><span class="nav-number">1.5.1.</span> <span class="nav-text">固定时间窗口限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#滑动时间窗口限流-1"><span class="nav-number">1.5.2.</span> <span class="nav-text">滑动时间窗口限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#漏桶限流"><span class="nav-number">1.5.3.</span> <span class="nav-text">漏桶限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#令牌桶限流"><span class="nav-number">1.5.4.</span> <span class="nav-text">令牌桶限流</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何配置合理的限流规则"><span class="nav-number">1.6.</span> <span class="nav-text">如何配置合理的限流规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见的部署架构"><span class="nav-number">1.7.</span> <span class="nav-text">常见的部署架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">1.8.</span> <span class="nav-text">参考链接</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

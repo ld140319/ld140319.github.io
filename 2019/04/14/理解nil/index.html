@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Go,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="理解nil 原文地址：https://www.jianshu.com/p/d24dfbb33781 YouTube视频地址：https://www.youtube.com/watch?v=ynoY2xz-F8s  nil是什么&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;相信写过Golang的程序员对下面一段代码是非常非常熟悉的了： 123if err != nil &amp;#123;    // d">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解nil">
+<meta property="og:url" content="http://blog.com/2019/04/14/理解nil/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="理解nil 原文地址：https://www.jianshu.com/p/d24dfbb33781 YouTube视频地址：https://www.youtube.com/watch?v=ynoY2xz-F8s  nil是什么&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;相信写过Golang的程序员对下面一段代码是非常非常熟悉的了： 123if err != nil &amp;#123;    // d">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/14/理解nil/4084325-734684188ef57e66.webp">
+<meta property="og:image" content="http://blog.com/2019/04/14/理解nil/4084325-553d3382f419f5ce.webp">
+<meta property="og:updated_time" content="2019-04-14T02:42:00.057Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解nil">
+<meta name="twitter:description" content="理解nil 原文地址：https://www.jianshu.com/p/d24dfbb33781 YouTube视频地址：https://www.youtube.com/watch?v=ynoY2xz-F8s  nil是什么&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;相信写过Golang的程序员对下面一段代码是非常非常熟悉的了： 123if err != nil &amp;#123;    // d">
+<meta name="twitter:image" content="http://blog.com/2019/04/14/理解nil/4084325-734684188ef57e66.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/14/理解nil/">
+
+
+
+
+
+  <title>理解nil | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/14/理解nil/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">理解nil</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-14T12:12:57+08:00">
+                2019-04-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index">
+                    <span itemprop="name">Go</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="理解nil"><a href="#理解nil" class="headerlink" title="理解nil"></a>理解nil</h1><blockquote>
+<p>原文地址：<a href="https://www.jianshu.com/p/d24dfbb33781" target="_blank" rel="noopener">https://www.jianshu.com/p/d24dfbb33781</a></p>
+<p>YouTube视频地址：<a href="https://www.youtube.com/watch?v=ynoY2xz-F8s" target="_blank" rel="noopener">https://www.youtube.com/watch?v=ynoY2xz-F8s</a></p>
+</blockquote>
+<h2 id="nil是什么"><a href="#nil是什么" class="headerlink" title="nil是什么"></a>nil是什么</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;相信写过Golang的程序员对下面一段代码是非常非常熟悉的了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="comment">// do something....</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当出现不等于<code>nil</code>的时候，说明出现某些错误了，需要我们对这个错误进行一些处理，而如果等于<code>nil</code>说明运行正常。那什么是<code>nil</code>呢？查一下词典可以知道，<code>nil</code>的意思是无，或者是零值。零值，zero value，是不是有点熟悉？<strong>在Go语言中，如果你声明了一个变量但是没有对它进行赋值操作，那么这个变量就会有一个类型的默认零值</strong>。这是每种类型对应的零值：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span>      -&gt; <span class="literal">false</span>                              </span><br><span class="line">numbers -&gt; <span class="number">0</span>                                 </span><br><span class="line"><span class="keyword">string</span>    -&gt; <span class="string">""</span>      </span><br><span class="line"></span><br><span class="line">pointers -&gt; <span class="literal">nil</span></span><br><span class="line">slices -&gt; <span class="literal">nil</span></span><br><span class="line">maps -&gt; <span class="literal">nil</span></span><br><span class="line">channels -&gt; <span class="literal">nil</span></span><br><span class="line">functions -&gt; <span class="literal">nil</span></span><br><span class="line">interfaces -&gt; <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>举个例子，当你定义了一个struct：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">  AgeYears <span class="keyword">int</span></span><br><span class="line">  Name <span class="keyword">string</span></span><br><span class="line">  Friends []Person</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> p Person <span class="comment">// Person&#123;0, "", nil&#125;</span></span><br></pre></td></tr></table></figure>
+<p>变量<code>p</code>只声明但没有赋值，所以p的所有字段都有对应的零值。那么，这个<code>nil</code>到底是什么呢？<strong>Go的文档中说到，<em>nil是预定义的标识符，代表指针、通道、函数、接口、映射或切片的零值</em>，也就是预定义好的一个变量</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Type <span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> <span class="literal">nil</span> Type</span><br></pre></td></tr></table></figure>
+<p>是不是有点惊讶？<code>nil</code>并不是Go的关键字之一，你甚至可以自己去改变<code>nil</code>的值：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="literal">nil</span> = errors.New(<span class="string">"hi"</span>)</span><br></pre></td></tr></table></figure>
+<p>这样是完全可以编译得过的，但是最好不要这样子去做。</p>
+<h2 id="nil有什么用"><a href="#nil有什么用" class="headerlink" title="nil有什么用"></a>nil有什么用</h2><p>在了解了什么是<code>nil</code>之后，再来说说<code>nil</code>有什么用。</p>
+<h3 id="pointers"><a href="#pointers" class="headerlink" title="pointers"></a>pointers</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p *<span class="keyword">int</span></span><br><span class="line">p == <span class="literal">nil</span>    <span class="comment">// true</span></span><br><span class="line">*p          <span class="comment">// panic: invalid memory address or nil pointer dereference</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>指针表示指向内存的地址，如果对为nil的指针进行解引用的话就会导致panic</strong>。那么为<code>nil</code>的指针有什么用呢？先来看一个计算二叉树和的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> tree <span class="keyword">struct</span> &#123;</span><br><span class="line">  v <span class="keyword">int</span></span><br><span class="line">  l *tree</span><br><span class="line">  r *tree</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// first solution</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tree)</span> <span class="title">Sum</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">  sum := t.v</span><br><span class="line">  <span class="keyword">if</span> t.l != <span class="literal">nil</span> &#123;</span><br><span class="line">    sum += t.l.Sum()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> t.r != <span class="literal">nil</span> &#123;</span><br><span class="line">    sum += t.r.Sum()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上面的代码有两个问题，一个是<strong>代码重复</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> v != <span class="literal">nil</span> &#123;</span><br><span class="line">  v.m()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;另一个是当<code>t</code>是<code>nil</code>的时候会panic：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> t *tree</span><br><span class="line">sum := t.Sum()   <span class="comment">// panic: invalid memory address or nil pointer dereference</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;怎么解决上面的问题？我们先来看看一个指针接收器的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> person <span class="keyword">struct</span> &#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sayHi</span><span class="params">(p *person)</span></span> &#123; fmt.Println(<span class="string">"hi"</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *person)</span> <span class="title">sayHi</span><span class="params">()</span></span> &#123; fmt.Println(<span class="string">"hi"</span>) &#125;</span><br><span class="line"><span class="keyword">var</span> p *person</span><br><span class="line">p.sayHi() <span class="comment">// hi</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于指针对象的方法来说，就算指针的值为<code>nil</code>也是可以调用的，基于此，我们可以对刚刚计算二叉树和的例子进行一下改造：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span><span class="params">(t *tree)</span> <span class="title">Sum</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> t == <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> t.v + t.l.Sum() + t.r.Sum()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;跟刚才的代码一对比是不是简洁了很多？对于<code>nil</code>指针，只需要在方法前面判断一下就ok了，无需重复判断。换成打印二叉树的值或者查找二叉树的某个值都是一样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span><span class="params">(t *tree)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> t == <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">""</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> fmt.Sprint(t.l, t.v, t.r)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// nil receivers are useful: Find</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *tree)</span> <span class="title">Find</span><span class="params">(v <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> t == <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> t.v == v || t.l.Find(v) || t.r.Find(v)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;所以<strong>如果不是很需要的话，不要用NewX()去初始化值，而是使用它们的默认值</strong>。</p>
+<h3 id="slices"><a href="#slices" class="headerlink" title="slices"></a>slices</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nil slices</span></span><br><span class="line"><span class="keyword">var</span> s []slice</span><br><span class="line"><span class="built_in">len</span>(s)  <span class="comment">// 0</span></span><br><span class="line"><span class="built_in">cap</span>(s)  <span class="comment">// 0</span></span><br><span class="line"><span class="keyword">for</span> <span class="keyword">range</span> s  <span class="comment">// iterates zero times</span></span><br><span class="line">s[i]  <span class="comment">// panic: index out of range</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;一个为<code>nil</code>的slice，除了<strong>不能索引外，其他的操作都是可以的</strong>，当你<strong>需要填充值的时候可以使用<code>append</code>函数，slice会自动进行扩充</strong>。那么为<code>nil</code>的slice的底层结构是怎样的呢？根据官方的文档，slice有三个元素，分别是长度、容量、指向数组的指针：</p>
+<p><img src="//blog.com/2019/04/14/理解nil/4084325-734684188ef57e66.webp" alt="img"></p>
+<p>当有元素的时候：</p>
+<p><img src="//blog.com/2019/04/14/理解nil/4084325-553d3382f419f5ce.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;所以我们并不需要担心slice的大小，使用append的话slice会自动扩容。（视频中说slice自动扩容速度很快，不必担心性能问题，这个值得商榷，在确定slice大小的情况只进行一次内存分配总是好的）</p>
+<h3 id="map"><a href="#map" class="headerlink" title="map"></a>map</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;对于Go来说，map，function，channel都是特殊的指针，指向各自特定的实现，这个我们暂时可以不用管。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nil maps</span></span><br><span class="line"><span class="keyword">var</span> m <span class="keyword">map</span>[t]u</span><br><span class="line"><span class="built_in">len</span>(m)  <span class="comment">// 0</span></span><br><span class="line"><span class="keyword">for</span> <span class="keyword">range</span> m <span class="comment">// iterates zero times</span></span><br><span class="line">v, ok := m[i] <span class="comment">// zero(u), false</span></span><br><span class="line">m[i] = x <span class="comment">// panic: assignment to entry in nil map</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于<code>nil</code>的map，我们可以简单把它看成是一个只读的map，不能进行写操作，否则就会panic</strong>。那么<code>nil</code>的map有什么用呢？看一下这个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">func NewGet(url string, headers map[string]string) (*http.Request, error) &#123;</span><br><span class="line">  req, err := http.NewRequest(http.MethodGet, url, nil)</span><br><span class="line">  if err != nil &#123;</span><br><span class="line">    return nil, err</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  for k, v := range headers &#123;</span><br><span class="line">    req.Header.Set(k, v)</span><br><span class="line">  &#125;</span><br><span class="line">  return req, nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于<code>NewGet</code>来说，我们需要传入一个类型为map的参数，并且这个函数只是对这个参数进行读取，我们可以传入一个非空的值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NewGet(&quot;http://google.com&quot;, map[string]string&#123;</span><br><span class="line">  &quot;USER_AGENT&quot;: &quot;golang/gopher&quot;,</span><br><span class="line">&#125;,)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;或者这样传：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NewGet(&quot;http://google.com&quot;, map[string]string&#123;&#125;)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但是前面也说了，<strong>map的零值是<code>nil</code></strong>，所以当<code>header</code>为空的时候，我们也可以直接传入一个<code>nil</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NewGet(&quot;http://google.com&quot;, nil)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;是不是简洁很多？所以，把<code>nil</code> map作为一个只读的空的map进行读取吧。</p>
+<h3 id="channel"><a href="#channel" class="headerlink" title="channel"></a>channel</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nil channels</span></span><br><span class="line"><span class="keyword">var</span> c <span class="keyword">chan</span> t</span><br><span class="line">&lt;- c      <span class="comment">// blocks forever</span></span><br><span class="line">c &lt;- x    <span class="comment">// blocks forever</span></span><br><span class="line"><span class="built_in">close</span>(c)  <span class="comment">// panic: close of nil channel</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>关闭一个<code>nil</code>的channel会导致程序<code>panic</code></strong>（如何关闭channel可以看这篇文章：<a href="https://www.jianshu.com/p/d24dfbb33781" target="_blank" rel="noopener">如何优雅地关闭Go channel</a>）举个例子，假如现在有两个channel负责输入，一个channel负责汇总，简单的实现代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">merge</span><span class="params">(out <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>, a, b &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">  <span class="keyword">for</span> &#123;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> v := &lt;-a:</span><br><span class="line">        out &lt;- v</span><br><span class="line">      <span class="keyword">case</span> v := &lt;- b:</span><br><span class="line">        out &lt;- v</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如果在外部调用中关闭了a或者b，那么就会不断地从a或者b中读出0，这和我们想要的不一样，我们想关闭a和b后就停止汇总了，修改一下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">merge</span><span class="params">(out <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>, a, b &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">  <span class="keyword">for</span> a != <span class="literal">nil</span> || b != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> v, ok := &lt;-a:</span><br><span class="line">          <span class="keyword">if</span> !ok &#123;</span><br><span class="line">            a = <span class="literal">nil</span></span><br><span class="line">            fmt.Println(<span class="string">"a is nil"</span>)</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">          &#125;</span><br><span class="line">          out &lt;- v</span><br><span class="line">      <span class="keyword">case</span> v, ok := &lt;-b:</span><br><span class="line">          <span class="keyword">if</span> !ok &#123;</span><br><span class="line">            b = <span class="literal">nil</span></span><br><span class="line">            fmt.Println(<span class="string">"b is nil"</span>)</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">          &#125;</span><br><span class="line">          out &lt;- v</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  fmt.Println(<span class="string">"close out"</span>)</span><br><span class="line">  <span class="built_in">close</span>(out)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>在知道channel关闭后，将channel的值设为nil，这样子就相当于将这个select case子句停用了，因为<code>nil</code>的channel是永远阻塞的</strong>。</p>
+<h3 id="interface"><a href="#interface" class="headerlink" title="interface"></a>interface</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>interface并不是一个指针，它的底层实现由两部分组成，一个是类型，一个值，也就是类似于：(Type, Value)。只有当类型和值都是<code>nil</code>的时候，才等于<code>nil</code></strong>。看看下面的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">do</span><span class="params">()</span> <span class="title">error</span></span> &#123;   <span class="comment">// error(*doError, nil)</span></span><br><span class="line">  <span class="keyword">var</span> err *doError</span><br><span class="line">  <span class="keyword">return</span> err  <span class="comment">// nil of type *doError</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  err := do()</span><br><span class="line">  fmt.Println(err == <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;输出结果是<code>false</code>。<code>do</code>函数声明了一个<code>*doErro</code>的变量<code>err</code>，然后返回，返回值是<code>error</code>接口，但是这个时候的Type已经变成了：（*doError，nil），所以和<code>nil</code>肯定是不会相等的。所以我们<strong>在写函数的时候，不要声明具体的error变量，而是应该直接返回<code>nil</code></strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">do</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再来看看这个例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">do</span><span class="params">()</span> *<span class="title">doError</span></span> &#123;  <span class="comment">// nil of type *doError</span></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">wrapDo</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="comment">// error (*doError, nil)</span></span><br><span class="line">  <span class="keyword">return</span> do()       <span class="comment">// nil of type *doError</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  err := wrapDo()   <span class="comment">// error  (*doError, nil)</span></span><br><span class="line">  fmt.Println(err == <span class="literal">nil</span>) <span class="comment">// false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这里最终的输出结果也是<code>false</code>。为什么呢？尽管<code>wrapDo</code>函数返回的是<code>error</code>类型，但是<code>do</code>返回的却是<code>*doError</code>类型，也就是变成了（*doError，nil），自然也就和<code>nil</code>不相等了。因此，<strong>不要返回具体的错误类型</strong>。遵从这两条建议，才可以放心地使用<code>if x != nil</code>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag"># Go</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/14/Defer的“坑”/" rel="next" title="Defer的“坑”">
+                <i class="fa fa-chevron-left"></i> Defer的“坑”
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/14/Go语言map的多键索引——多个数值条件可以同时查询/" rel="prev" title="Go语言map的多键索引——多个数值条件可以同时查询">
+                Go语言map的多键索引——多个数值条件可以同时查询 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#理解nil"><span class="nav-number">1.</span> <span class="nav-text">理解nil</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#nil是什么"><span class="nav-number">1.1.</span> <span class="nav-text">nil是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nil有什么用"><span class="nav-number">1.2.</span> <span class="nav-text">nil有什么用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#pointers"><span class="nav-number">1.2.1.</span> <span class="nav-text">pointers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#slices"><span class="nav-number">1.2.2.</span> <span class="nav-text">slices</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#map"><span class="nav-number">1.2.3.</span> <span class="nav-text">map</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#channel"><span class="nav-number">1.2.4.</span> <span class="nav-text">channel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#interface"><span class="nav-number">1.2.5.</span> <span class="nav-text">interface</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

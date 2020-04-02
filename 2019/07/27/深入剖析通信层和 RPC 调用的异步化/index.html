@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,微服务,RPC,分布式系统,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="深入剖析通信层和 RPC 调用的异步化 原文地址：https://www.infoq.cn/article/q3iPeYQv-uF5YsISq62c  1. 异步的一些常见误区1.1. 常见的理解误区&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在将近 10 年的平台中间件研发历程中，我们的平台和业务经历了从 C++ 到Java，从同步的BIO到非阻塞的 NIO，以及纯异">
+<meta name="keywords" content="架构,微服务,RPC,分布式系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入剖析通信层和 RPC 调用的异步化">
+<meta property="og:url" content="http://blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="深入剖析通信层和 RPC 调用的异步化 原文地址：https://www.infoq.cn/article/q3iPeYQv-uF5YsISq62c  1. 异步的一些常见误区1.1. 常见的理解误区&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在将近 10 年的平台中间件研发历程中，我们的平台和业务经历了从 C++ 到Java，从同步的BIO到非阻塞的 NIO，以及纯异">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/5f26869e4853a31488aa7fb1da9dfb53.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/3a4e9cba12532f413f6fd27cf48eac59.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/b29a9693beb7f2bd3b1b2f3b80276bd2.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/b64ce2ee1e7a6a39e3820a33bf91e721.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/26dfc69b3b55b9b6c2404219cb82dbb4.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/7d6845ca87ed511de0c7bf778e490631.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/d7aad590d68c5eaf4b7a79bac68cf74f.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/434e420b8d2b3cdbcc817585ef48bbc8.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/a5d922561c8e6520d6931e45e915deb0.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6cb9f6a55cd99e4ab964ea7f83ae92c1.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/01cd3bc5f04e09e515c646bef8c4a020.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/95849ff159aa4e5fab446b56767a5a6a.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/b0a3dc45e7998cb52c0dd2ecc4876364.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/f34b635ed43044a4263a4ae692091f0e.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/ec362863844fc2af99392a1f268dc174.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/729b0bfcb66d1349b6e53017c9ebd769.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/a2bdcac2de3d0c927356e67bac75f640.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6d47236b4adffeb9683680f125f35ed6.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/76fdc10dade77f4e9015090c4bb978b7.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/f296a43d4981071c53f8e35bbce28f90.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/80c2e301535a3d81922ecae76856be0a.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/e64c6dd0a374a8e23f17c60650354c8a.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/c865a24d7496f09f93681d0fd37398fa.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/b24c1b854726e12f3d42884a4a3d1880.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6c2f4793e2c851eeb22b26a1de30b374.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/cd437e10d1647116046349a25770936a.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/bf6b77e30f672c245159cf914fe70e17.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/cb6cc56b85ccf4cc1e3a9a28f94512f1.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/9900c9e3f07e3e1238ac3b68a9762746.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6a0642ea70bc9db39180527529247553.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/715a0b31f985528326fe58461e8163ec.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/b694ad13d4e3422cdb0a25cc70d48ef4.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/0c4b08aa24c4e3a09d2228973dedb1e3.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/2f6a62e6364710f7b3523a144121eb3b.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/ad447c073351677aec338df85672908d.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/0c3e00d9e843fcc8f44b5bc9ae0a4106.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/f5c65e298e54a2e509e33f97bfcf6c6e.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/7fdb5d12ab83b23a02233ff074fbac0c.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6481ceac00add9c3ac856b6449229d53.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/6bd15f0ddb8fe301f9b91cb1c41005fc.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/d28809c57d6cbc7716fe47ec33b340db.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/84ac756179e0be71e28d75d0134d7a65.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/2a9870e1f8ae0f10f090655303dcc8a8.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/a43acabba14b20385467dfe1c0327d69.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/504aa872a5921e2ef1be6d9aab28c58e.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/5eb1704acefff6f8ff8e4cee99463988.jpg">
+<meta property="og:updated_time" content="2019-07-28T14:42:02.290Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入剖析通信层和 RPC 调用的异步化">
+<meta name="twitter:description" content="深入剖析通信层和 RPC 调用的异步化 原文地址：https://www.infoq.cn/article/q3iPeYQv-uF5YsISq62c  1. 异步的一些常见误区1.1. 常见的理解误区&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在将近 10 年的平台中间件研发历程中，我们的平台和业务经历了从 C++ 到Java，从同步的BIO到非阻塞的 NIO，以及纯异">
+<meta name="twitter:image" content="http://blog.com/2019/07/27/深入剖析通信层和%20RPC%20调用的异步化/5f26869e4853a31488aa7fb1da9dfb53.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/">
+
+
+
+
+
+  <title>深入剖析通信层和 RPC 调用的异步化 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入剖析通信层和 RPC 调用的异步化</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-27T12:12:57+08:00">
+                2019-07-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式系统</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/RPC/" itemprop="url" rel="index">
+                    <span itemprop="name">RPC</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="深入剖析通信层和-RPC-调用的异步化"><a href="#深入剖析通信层和-RPC-调用的异步化" class="headerlink" title="深入剖析通信层和 RPC 调用的异步化"></a>深入剖析通信层和 RPC 调用的异步化</h1><blockquote>
+<p>原文地址：<a href="https://www.infoq.cn/article/q3iPeYQv-uF5YsISq62c" target="_blank" rel="noopener">https://www.infoq.cn/article/q3iPeYQv-uF5YsISq62c</a></p>
+</blockquote>
+<h2 id="1-异步的一些常见误区"><a href="#1-异步的一些常见误区" class="headerlink" title="1. 异步的一些常见误区"></a>1. 异步的一些常见误区</h2><h3 id="1-1-常见的理解误区"><a href="#1-1-常见的理解误区" class="headerlink" title="1.1. 常见的理解误区"></a>1.1. 常见的理解误区</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在将近 10 年的平台中间件研发历程中，我们的平台和业务经历了从 <code>C++</code> 到<code>Java</code>，从同步的<code>BIO</code>到非阻塞的 <code>NIO</code>，以及纯异步的事件驱动 <code>I/O(AIO)</code>。服务器也从 <code>Web</code>容器逐步迁移到了内部更轻量、更高性能的微容器。服务之间的<code>RPC</code>调用从最初的同步阻塞式调用逐步升级到了全栈异步非阻塞调用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每次的技术演进都会涉及到大量底层平台技术以及上层编程模型的切换，在实际工作中，我发现很多同学对通信框架的异步和 <code>RPC</code>调用的异步理解有误，比较<strong>典型的错误理解</strong>包括：</p>
+<p>1．我使用的是 <code>Tomcat8</code>，因为 <code>Tomcat8</code> 支持 <code>NIO</code>，所以我基于 <code>Tomcat</code> 开发的 <code>HTTP</code> 调用都是异步的。</p>
+<p>2．因为我们的<code>RPC</code> 框架底层使用的是<code>Netty</code>、<code>Vert.X</code> 等异步框架，所以我们的 <code>RPC</code> 调用天生就是异步的。</p>
+<p>3．因为我们底层的通信框架不支持异步，所以 <code>RPC</code>调用也无法异步化。</p>
+<h3 id="1-2-混淆-Tomcat-NIO-与-HTTP-服务的异步化"><a href="#1-2-混淆-Tomcat-NIO-与-HTTP-服务的异步化" class="headerlink" title="1.2. 混淆 Tomcat NIO 与 HTTP 服务的异步化"></a>1.2. 混淆 Tomcat NIO 与 HTTP 服务的异步化</h3><h4 id="1-2-1-Tomcat-的-BIO-和-NIO"><a href="#1-2-1-Tomcat-的-BIO-和-NIO" class="headerlink" title="1.2.1. Tomcat 的 BIO 和 NIO"></a>1.2.1. Tomcat 的 BIO 和 NIO</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在 <code>Tomcat6.X</code>版本对 <code>NIO</code>提供比较完善的支持之前，作为 <code>Web</code> 服务器，<code>Tomcat</code>以 <code>BIO</code> 的方式接收并处理客户端的 <code>HTTP</code>请求，当并发访问量比较大时，就容易发生拥塞等性能问题，它的工作原理示意如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/5f26869e4853a31488aa7fb1da9dfb53.jpg" alt="img"></p>
+<p><em>采用 BIO 做 HTTP 服务器的 Web 容器</em></p>
+<p>传统同步阻塞通信（<code>BIO</code>）面临的主要问题如下：</p>
+<p>1．<strong>性能问题：一连接一线程模型导致服务端的并发接入数和系统吞吐量受到极大限制</strong>。</p>
+<p>2．<strong>可靠性问题：由于<code>I/O</code> 操作采用同步阻塞模式，当网络拥塞或者通信对端处理缓慢会导致<code>I/O</code> 线程被挂住，阻塞时间无法预测</strong>。</p>
+<p>3．<strong>可维护性问题：<code>I/O</code> 线程数无法有效控制、资源无法有效共享（多线程并发问题），系统可维护性差</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图我们可以看出，每当有一个新的客户端接入，服务端就需要创建一个新的线程（或者重用线程池中的可用线程），每个客户端链路对应一个线程。当客户端处理缓慢或者网络有拥塞时，服务端的链路线程就会被同步阻塞，也就是说所有的<code>I/</code>O 操作都可能被挂住，这会导致线程利用率非常低，同时随着客户端接入数的不断增加，服务端的<code>I/O</code> 线程不断膨胀，直到无法创建新的线程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>同步阻塞<code>I/O</code>导致的问题无法在业务层规避，必须改变<code>I/O</code>模型，才能从根本上解决这个问题</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Tomcat 6.X</code>提供了对<code>NIO</code> 的支持，通过指定<code>Connector protocol=“org.apache.coyote.http11.Http11NioProtocol”</code>，就可以开启 <code>NIO</code>模式，采用 <code>NIO</code>之后，利用 <code>Selector</code>的轮询以及 <code>I/O</code>操作的非阻塞特性，可以实现使用更少的<code>I/O</code>线程处理更多的客户端连接，提升吞吐量和主机的资源利用率。<code>Tomcat 8.X</code>之后提供了对 <code>NIO2.0</code> 的支持，默认也开启了 <code>NIO</code> 通信模式。</p>
+<h4 id="1-2-2-Tomcat-NIO-与-Servlet-异步"><a href="#1-2-2-Tomcat-NIO-与-Servlet-异步" class="headerlink" title="1.2.2. Tomcat NIO 与 Servlet 异步"></a>1.2.2. Tomcat NIO 与 Servlet 异步</h4><p>事实上，<code>Tomcat</code> 支持 <code>NIO</code>，与 <code>Tomcat</code> 的 <code>HTTP</code>服务是否是异步的，没有必然关系，这个可以从两个层面理解：</p>
+<p>1．<code>HTTP</code>消息的读写：<strong>即便采用了<code>NIO</code>，<code>HTTP</code>请求和响应的消息处理仍然可能是同步阻塞的，这与协议栈的具体策略有关系</strong>。从 <code>Tomcat</code> 官方文档可以看到，<code>Tomcat 6.X</code>版本即便采用 <code>Http11NioProtocol</code>，<code>HTTP</code> 请求消息和响应消息的读写仍然是<code>Blocking</code> 的。</p>
+<p>2．<code>HTTP</code> 请求和响应的生命周期管理：<strong>本质上就是<code>Servlet</code>是否支持异步</strong>，如果 <code>Servlet</code> 是 <code>3.X</code> 之前的版本，则 <code>HTTP</code> 协议的处理仍然是同步的，这就意味着 <code>Tomcat</code>的 <code>Connector</code>线程需要同时处理<code>HTTP</code> 请求消息、执行 <code>Servlet Filter</code>、以及业务逻辑，然后将业务构造的<code>HTTP</code> 响应消息发送给客户端，整个 <code>HTTP</code>消息的生命周期都采用了同步处理方式。</p>
+<p><code>Tomcat</code>与 <code>Servlet</code>的版本配套关系如下所示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Servlet\</strong>** 规范版本**</th>
+<th style="text-align:left"><strong>Tomcat\</strong>** 版本**</th>
+<th style="text-align:left"><strong>JDK\</strong>** 版本**</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">4.0</td>
+<td style="text-align:left">9.0.X</td>
+<td style="text-align:left">8+</td>
+</tr>
+<tr>
+<td style="text-align:left">3.1</td>
+<td style="text-align:left">8.0.X</td>
+<td style="text-align:left">7+</td>
+</tr>
+<tr>
+<td style="text-align:left">3.0</td>
+<td style="text-align:left">7.0.X</td>
+<td style="text-align:left">6+</td>
+</tr>
+<tr>
+<td style="text-align:left">2.5</td>
+<td style="text-align:left">6.0.X</td>
+<td style="text-align:left">5+</td>
+</tr>
+<tr>
+<td style="text-align:left">2.4</td>
+<td style="text-align:left">5.5.X</td>
+<td style="text-align:left">1.4+</td>
+</tr>
+<tr>
+<td style="text-align:left">2.3</td>
+<td style="text-align:left">4.1.X</td>
+<td style="text-align:left">1.3+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Tomcat 与 Servlet 的版本配套关系</em></p>
+<h4 id="1-2-3-Tomcat-NIO-与-HTTP-服务调用"><a href="#1-2-3-Tomcat-NIO-与-HTTP-服务调用" class="headerlink" title="1.2.3. Tomcat NIO 与 HTTP 服务调用"></a>1.2.3. Tomcat NIO 与 HTTP 服务调用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以 <code>Tomcat 6.X</code>版本为例，<code>Tomcat HTTP</code> 协议消息和后续的业务逻辑处理如下所示（<code>Tomcat HTTP</code> 协议处理非常复杂，为了便于理解，图示做了简化）：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/3a4e9cba12532f413f6fd27cf48eac59.jpg" alt="img"></p>
+<p><em>Tomcat 6.X 的 HTTP 消息接入和处理原理</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图可以看出，<code>HTTP</code> 请求消息的读取、<code>Servlet Filter</code>的执行、业务 <code>Servlet</code>的逻辑处理，以及 <code>HTTP</code> 响应都是由 <code>Tomcat</code> 的 <code>NIO</code>线程（<code>Processor</code>，实际更复杂些，这里做了简化处理）做处理，即<strong><code>HTTP</code> 消息的处理周期中都是串行同步执行的</strong>，尽管<code>Tomcat</code> 使用 <code>NIO</code>做接入，<code>HTTP</code>服务端的处理仍然是同步的。它的弊端很明显，<strong>如果 <code>Servlet</code>中的业务逻辑处理比较复杂，则会导致 <code>Tomcat</code> 的 <code>NIO</code> 线程被阻塞，无法读取其它 <code>HTTP</code> 客户端发送的<code>HTTP</code> 请求消息，导致客户端读响应超时</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有读者会有疑问，为什么不能创建一个业务线程池，由业务线程池异步处理业务逻辑，处理完成之后再填充 <code>HttpServletResponse</code>，发送响应。实际上在<code>Servlet</code>支持异步之前是无法实现的，原因是每个响应对象只有在 <code>Servlet</code>的<code>service</code>方法或 <code>Filter</code> 的 <code>doFilter</code>方法范围内有效，该方法一旦调用完成，<code>Tomcat</code> 就认为本次<code>HTTP</code>消息处理完成，它会回收 <code>HttpServletRequest</code> 和<code>HttpServletResponse</code> 对象再利用，<strong>如果业务异步化之后再处理 <code>HttpServletResponse</code>，拿到的实际就不是之前请求消息对应的响应，会发生各种非预期问题，因此，业务逻辑必须在 <code>service</code>方法结束前执行，无法做异步化处理</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果使用的是支持<code>Servlet3.0+</code> 版本的<code>Tomcat</code>，通过开启异步处理模式，就能解决同步调用面临的各种问题。</p>
+<h4 id="1-2-4-总结"><a href="#1-2-4-总结" class="headerlink" title="1.2.4. 总结"></a>1.2.4. 总结</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过以上分析我们可以看出，除了将 <code>Tomcat</code> 的 <code>Connector</code> 配置成 <code>NIO</code> 模式之外，还需要 <code>Tomcat</code> 配套的 <code>Servlet</code>版本支持异步化（<code>3.0+</code>），同时还需要在业务<code>Servlet</code>的代码中开启异步模式，<code>HTTP</code> 服务端才能够实现真正的异步化：<code>I/O</code> 异步以及业务逻辑处理的异步化。</p>
+<h3 id="1-3-混淆-RPC-异步与-I-O-异步"><a href="#1-3-混淆-RPC-异步与-I-O-异步" class="headerlink" title="1.3. 混淆 RPC 异步与 I/O 异步"></a>1.3. 混淆 RPC 异步与 I/O 异步</h3><h4 id="1-3-1-Java-的各种-I-O-模型"><a href="#1-3-1-Java-的各种-I-O-模型" class="headerlink" title="1.3.1. Java 的各种 I/O 模型"></a>1.3.1. Java 的各种 I/O 模型</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多人喜欢将<code>JDK 1.4</code>提供的 <code>NIO</code>框架称为异步非阻塞 <code>I/O</code>，但是，如果严格按照 <code>UNIX</code>网络编程模型和 <code>JDK</code>的实现进行区分，实际上它只能被称为非阻塞 <code>I/O</code>，不能叫异步非阻塞 <code>I/O</code>。在早期的<code>JDK 1.4</code>和 <code>1.5 update10</code>版本之前，<code>JDK</code> 的 <code>Selector</code>基于<code>select/poll</code> 模型实现，它是基于<code>I/O</code>复用技术的非阻塞<code>I/O</code>，不是异步 <code>I/O</code>。在 <code>JDK 1.5 update10</code> 和<code>Linux core2.6</code>以上版本，<code>Sun</code>优化了 <code>Selctor</code>的实现，它在底层使用 <code>epoll</code>替换了 <code>select/poll</code>，上层的<code>API</code>并没有变化，可以认为是<code>JDK NIO</code> 的一次性能优化，但是它仍旧没有改变 <code>I/O</code> 的模型。相关优化的官方说明如下图所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/b29a9693beb7f2bd3b1b2f3b80276bd2.jpg" alt="img"></p>
+<p><em>JDK1.5_update10 支持 epoll</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由<code>JDK1.7</code> 提供的 <code>NIO 2.0</code> 新增了异步的套接字通道，它是真正的异步 <code>I/O</code>，<strong>在异步<code>I/O</code> 操作的时候可以传递信号变量，当操作完成之后会回调相关的方法，异步<code>I/O</code>也被称为 <code>AIO</code></strong>。<code>NIO</code>类库支持非阻塞读和写操作，相比于之前的同步阻塞读和写，它是异步的，因此很多人仍然习惯于称<code>NIO</code> 为异步非阻塞<code>I/O</code>，在此不需要太咬文嚼字。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的 <code>I/O</code> 模型由于线程模型、<code>API</code>等差别很大，所以用法的差异也非常大。各种<code>I/O</code>模型的优缺点对比如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"></th>
+<th style="text-align:left"><strong>同步阻塞 I/O（BIO）</strong></th>
+<th style="text-align:left"><strong>非阻塞 I/O（NIO）</strong></th>
+<th style="text-align:left"><strong>异步 I/O（AIO）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">客户端个数：I/O 线程</td>
+<td style="text-align:left">1：1</td>
+<td style="text-align:left"><em>M</em>：1（1 个 I/O 线程处理多个客户端连接）</td>
+<td style="text-align:left"><em>M</em>：0（不需要用户启动额外的 I/O 线程，被动回调）</td>
+</tr>
+<tr>
+<td style="text-align:left">I/O 类型（阻塞）</td>
+<td style="text-align:left">阻塞 I/O</td>
+<td style="text-align:left">非阻塞 I/O</td>
+<td style="text-align:left">非阻塞 I/O</td>
+</tr>
+<tr>
+<td style="text-align:left">I/O 类型（同步）</td>
+<td style="text-align:left">同步 I/O</td>
+<td style="text-align:left">同步 I/O（I/O 多路复用）</td>
+<td style="text-align:left">异步 I/O</td>
+</tr>
+<tr>
+<td style="text-align:left">API 使用难度</td>
+<td style="text-align:left">简单</td>
+<td style="text-align:left">非常复杂</td>
+<td style="text-align:left">复杂</td>
+</tr>
+<tr>
+<td style="text-align:left">调试难度</td>
+<td style="text-align:left">简单</td>
+<td style="text-align:left">复杂</td>
+<td style="text-align:left">复杂</td>
+</tr>
+<tr>
+<td style="text-align:left">可靠性</td>
+<td style="text-align:left">非常差</td>
+<td style="text-align:left">高</td>
+<td style="text-align:left">高</td>
+</tr>
+<tr>
+<td style="text-align:left">吞吐量</td>
+<td style="text-align:left">低</td>
+<td style="text-align:left">高</td>
+<td style="text-align:left">高</td>
+</tr>
+</tbody>
+</table>
+<p><em>Java 各种 I/O 模型优缺点对比</em></p>
+<h4 id="1-3-2-RPC-工作原理"><a href="#1-3-2-RPC-工作原理" class="headerlink" title="1.3.2. RPC 工作原理"></a>1.3.2. RPC 工作原理</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code> 的全称是 <code>Remote Procedure Call</code>，它是一种进程间通信方式。允许像调用本地服务一样调用远程服务，它的具体实现方式可以不同，例如 <code>Spring</code> 的 <code>HTTP Invoker</code>，<code>Facebook</code> 的 <code>Thrift</code> 二进制私有协议通信。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code> 框架的目标就是让远程过程（服务）调用更加简单、透明，<code>RPC</code> 框架负责屏蔽底层的传输方式（<code>TCP</code> 或者 <code>UDP</code>）、序列化方式（<code>XML</code>/<code>Json</code>/ 二进制）和通信细节。框架使用者只需要了解谁在什么位置提供了什么样的远程服务接口即可，开发者不需要关心底层通信细节和调用过程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code> 框架的调用原理图如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/b64ce2ee1e7a6a39e3820a33bf91e721.jpg" alt="img"></p>
+<p><em>RPC 框架原理图</em></p>
+<p><code>RPC</code> 框架实现的几个核心技术点总结如下：</p>
+<p>1．<strong>远程服务提供者需要以某种形式提供服务调用相关的信息，包括但不限于服务接口定义、数据结构，或者中间态的服务定义文件</strong>，例如 <code>Thrift</code>的<code>IDL</code> 文件，<code>WS-RPC</code> 的 <code>WSDL</code> 文件定义，甚至也可以是服务端的接口说明文档；服务调用者需要通过一定的途径获取远程服务调用相关信息，例如服务端接口定义 <code>Jar</code> 包导入，获取服务端 <code>IDL</code>文件等。</p>
+<p>2．<strong>远程代理对象</strong>：服务调用者调用的服务实际是远程服务的本地代理，对于 <code>Java</code>语言，它的实现就是<code>JDK</code> 的动态代理，通过动态代理的拦截机制，将本地调用封装成远程服务调用。</p>
+<p>3．<strong>通信</strong>：<code>RPC</code> 框架与具体的协议无关，例如 <code>Spring</code>的远程调用支持<code>HTTP Invoke</code>、<code>RMI Invoke</code>，<code>MessagePack</code> 使用的是私有的二进制压缩协议。</p>
+<p>4．<strong>序列化</strong>：远程通信，需要将对象转换成二进制码流进行网络传输，不同的序列化框架，支持的数据类型、数据包大小、异常类型以及性能等都不同。不同的 <code>RPC</code> 框架应用场景不同，因此技术选择也会存在很大差异。一些做的比较好的 <code>RPC</code> 框架，可以支持多种序列化方式，有的甚至支持用户自定义序列化框架（<code>Hadoop Avro</code>）。</p>
+<h4 id="1-3-3-RPC-异步与-I-O-的异步"><a href="#1-3-3-RPC-异步与-I-O-的异步" class="headerlink" title="1.3.3. RPC 异步与 I/O 的异步"></a>1.3.3. RPC 异步与 I/O 的异步</h4><p><code>RPC</code> 异步与<code>I/O</code>的异步没有必然关系，当然，在大多数场景下，<code>RPC</code>框架底层会使用异步<code>I/O</code>，实现全栈异步。</p>
+<p><code>RPC</code> 框架异步调度模型如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/26dfc69b3b55b9b6c2404219cb82dbb4.jpg" alt="img"></p>
+<p><em>异步 RPC 调用原理</em></p>
+<p>异步<code>RPC</code>调用的关键点有 2 个：</p>
+<p>1．<strong>不能阻塞调用方线程</strong>：接口调用通常会返回 <code>Future</code> 或者 <code>Promise</code>对象，代表异步操作的一个回调对象，当异步操作完成之后，由 <code>I/O</code>线程回调业务注册的<code>Listener</code>，继续执行业务逻辑。</p>
+<p>2．<strong>请求和响应的上下文关联</strong>：除了 <code>HTTP/1.X</code> 协议，大部分二进制协议的 <code>TCP</code> 链路都是多路复用的，请求和响应消息的发送和接收顺序是无序的。所以，<strong>异步<code>RPC</code> 调用需要缓存请求和响应的上下文关联关系，以及响应需要使用到的消息上下文</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;正如上图所示，当 <code>RPC</code>调用请求消息发送到<code>I/O</code>线程的消息队列之后，业务线程就可以返回，至于<code>I/O</code>线程采用同步还是异步的方式读写消息，与 <code>RPC</code>调用的同步和异步没必然的关联关系，当然，采用异步<code>I/O,</code> 整体性能和可靠性会更好一些，所以现在大部分的 <code>RPC</code>框架底层采用的都是异步 / 非阻塞<code>I/O</code>。以<code>Netty</code>为例，无论 <code>RPC</code> 调用是同步还是异步，只要调用消息发送接口，<code>Netty</code> 都会将发送请求封装成 Task，加入到 <code>I/O</code>线程的消息队列中统一处理，相关代码如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/7d6845ca87ed511de0c7bf778e490631.jpg" alt="img"></p>
+<p>异步回调的一些实现策略：</p>
+<p>1．<code>Future/Promise</code>：比较常用的有 <code>JDK8</code> 之前的 <code>Future</code>，通过添加 <code>Listener</code> 来做异步回调，<code>JDK8</code>之后通常使用 <code>CompletableFuture</code>，它支持各种复杂的异步处理策略，例如自定义线程池、多个异步操作的编排、有返回值和无返回值异步、多个异步操作的级联操作等。</p>
+<p>2．<code>线程池 +RxJava</code>: 最经典的实现就是 <code>Netflix</code> 开源的 <code>Hystrix</code> 框架，使用 <code>HystrixCommand</code>（创建线程池）做一层异步封装，将同步调用封装成异步调用，利用 <code>RxJava API</code>，通过订阅的方式对结果做异步处理，它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/d7aad590d68c5eaf4b7a79bac68cf74f.jpg" alt="img"></p>
+<p><em>利用 Hystix 做异步化封装</em></p>
+<h4 id="1-3-4-总结"><a href="#1-3-4-总结" class="headerlink" title="1.3.4. 总结"></a>1.3.4. 总结</h4><p>通过以上分析可以得出如下结论：</p>
+<p>1．<strong><code>RPC</code>异步指的是业务线程发起 <code>RPC</code> 调用之后，不用同步等待服务端返回应答，而是立即返回，当接收到响应之后，回调执行业务的后续逻辑</strong>。</p>
+<p>2．<strong><code>I/O</code>的异步是通信层的具体实现策略，使用异步<code>I/O</code> 会带来性能和可靠性提升，但是与 <code>RPC</code> 调用是同步还是异步没必然关系</strong>。</p>
+<h2 id="2-RPC-同步与异步调用"><a href="#2-RPC-同步与异步调用" class="headerlink" title="2. RPC 同步与异步调用"></a>2. RPC 同步与异步调用</h2><p>很多 <code>RPC</code> 框架同时支持同步和异步调用，下面对同步和异步 <code>RPC</code>调用的工作原理以及优缺点进行分析。</p>
+<h3 id="2-1-同步-RPC-调用"><a href="#2-1-同步-RPC-调用" class="headerlink" title="2.1. 同步 RPC 调用"></a>2.1. 同步 RPC 调用</h3><h4 id="2-1-1-同步-RPC-调用流行的原因"><a href="#2-1-1-同步-RPC-调用流行的原因" class="headerlink" title="2.1.1. 同步 RPC 调用流行的原因"></a>2.1.1. 同步 RPC 调用流行的原因</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在传统的单体架构中，以<code>Spring + Struts + MyBatis + Tomcat</code>为例，业务逻辑通常由各种 <code>Controller（Spring Bean）</code>来实现，它的逻辑架构如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/434e420b8d2b3cdbcc817585ef48bbc8.jpg" alt="img"></p>
+<p><em>基于 MVC 的传统单体架构</em></p>
+<p>在单体架构中，本地方法调用都是同步方式，而且定义形式往往都是如下形式（请求参数 + 方法返回值）：</p>
+<p><code>String sayHello(String hello);</code></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;切换到 <code>RPC</code> 框架之后，很多都支持通过 <code>XML</code>引用或者代码注解的方式引用远端的<code>RPC</code>服务，可以像使用本地接口一样调用远程的服务，这种<strong>开发模式与传统单体应用开发模式相似，编程简单，学习和切换成本低，调试也比较方便，因此，同步 <code>RPC</code>调用成为大部分项目的首选</strong>。</p>
+<p>以 <code>XML</code> 方式导入远端服务提供者的 <code>API</code>接口示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;xxx:reference id=&quot;echoService&quot; interface=&quot;edu.neu.EchoService&quot; /&gt;</span><br><span class="line"> </span><br><span class="line">&lt;bean class=&quot;edu.neu.xxxAction&quot; init-method=&quot;start&quot;&gt;</span><br><span class="line"> </span><br><span class="line">      &lt;property name=&quot;echoService&quot; ref=&quot;echoService&quot; /&gt;</span><br><span class="line"> </span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+<p>导入之后业务就可以直接在代码中调用 <code>echoService</code> 接口，与传统单体应用调用本地 <code>Spring Bean</code>一样，无需感知远端服务接口的具体部署位置信息。</p>
+<h4 id="2-1-2-同步-RPC-调用工作原理"><a href="#2-1-2-同步-RPC-调用工作原理" class="headerlink" title="2.1.2. 同步 RPC 调用工作原理"></a>2.1.2. 同步 RPC 调用工作原理</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同步 <code>RPC</code>调用是最常用的一种服务调用方式，它的工作原理如下：客户端发起远程 <code>RPC</code>调用请求，用户线程完成消息序列化之后，将消息投递到通信框架，然后同步阻塞，等待通信线程发送请求并接收到应答之后，唤醒同步等待的用户线程，用户线程获取到应答之后返回。它的工作原理图如下所示：</p>
+<p>它的工作原理图如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/a5d922561c8e6520d6931e45e915deb0.jpg" alt="img"></p>
+<p><em>同步 RPC 调用</em></p>
+<p>主要流程如下：</p>
+<p>1．消费者调用服务端发布的接口，接口调用由 <code>RPC</code> 框架包装成动态代理，发起远程<code>RPC</code> 调用。</p>
+<p>2．消费者线程调用通信框架的消息发送接口之后，直接或者间接调用 <code>wait()</code>方法，同步阻塞等待应答。</p>
+<p>3．通信框架的 <code>I/O</code>线程通过网络将请求消息发送给服务端。</p>
+<p>4．服务端返回应答消息给消费者，由通信框架负责应答消息的反序列化。</p>
+<p>5．<code>I/O</code>线程获取到应答消息之后，根据消息上下文找到之前同步阻塞的业务线程，notify() 阻塞的业务线程，返回应答给消费者，完成 <code>RPC</code> 调用。</p>
+<h4 id="2-1-3-同步-RPC-调用面临的挑战"><a href="#2-1-3-同步-RPC-调用面临的挑战" class="headerlink" title="2.1.3. 同步 RPC 调用面临的挑战"></a>2.1.3. 同步 RPC 调用面临的挑战</h4><p>同步 <code>RPC</code>调用的主要缺点如下：</p>
+<p>1．<strong>线程利用率低</strong>：线程资源是系统中非常重要的资源，在一个进程中线程总数是有限制的，提升线程使用率就能够有效提升系统的吞吐量，在同步 <code>RPC</code>调用中，如果服务端没有返回响应，客户端业务线程就会一直阻塞，无法处理其它业务消息。</p>
+<p>2．<strong>纠结的超时时间</strong>：<code>RPC</code>调用的超时时间配置是个比较棘手的问题。如果配置的过大，一旦服务端返回响应慢，就容易把客户端挂死。如果配置的过小，则超时失败率会增加。即便参考测试环境的平均和最大时延来设置，由于生产环境数据、硬件等与测试环境的差异，也很难一次设置的比较合理。另外，考虑到客户端流量的变化、服务端依赖的数据库、缓存、第三方系统等的性能波动，这都会导致服务调用时延发生变化，因此，依靠超时时间来保障系统的可靠性，难度很大。</p>
+<p>3．<strong>雪崩效应</strong>：在一个同步调用链中，只要下游某个服务返回响应慢，会导致故障沿着调用链向上游蔓延，最终把整个系统都拖垮，引起雪崩，示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6cb9f6a55cd99e4ab964ea7f83ae92c1.jpg" alt="img"></p>
+<p><em>同步 RPC 调用级联故障</em></p>
+<h3 id="2-2-异步-RPC-调用"><a href="#2-2-异步-RPC-调用" class="headerlink" title="2.2. 异步 RPC 调用"></a>2.2. 异步 RPC 调用</h3><h4 id="2-2-1-异步-RPC-调用工作原理"><a href="#2-2-1-异步-RPC-调用工作原理" class="headerlink" title="2.2.1. 异步 RPC 调用工作原理"></a>2.2.1. 异步 RPC 调用工作原理</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>JDK</code> 原生的 <code>Future</code> 主要用于异步操作，它代表了异步操作的执行结果，用户可以通过调用它的 <code>get</code> 方法获取结果。如果当前操作没有执行完，<code>get</code>操作将阻塞调用线程。在实际项目中，往往会扩展<code>JDK</code>的 <code>Future</code>，提供 <code>Future-Listener</code> 机制，它支持主动获取和被动异步回调通知两种模式，适用于不同的业务场景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于 <code>JDK</code> 的<code>Future-Listener</code>机制，可以实现异步 <code>RPC</code>调用，它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/01cd3bc5f04e09e515c646bef8c4a020.jpg" alt="img"></p>
+<p><em>异步 RPC 调用原理图</em></p>
+<p>异步 <code>RPC</code> 调用的工作流程如下：</p>
+<p>1．消费者调用 <code>RPC</code> 服务端发布的接口，接口调用由 <code>RPC</code> 框架包装成动态代理，发起远程 <code>RPC</code> 调用。</p>
+<p>2．通信框架异步发送请求消息，如果没有发生<code>I/O</code> 异常，返回。</p>
+<p>3．请求消息发送成功后，<code>I/O</code>线程构造 <code>Future</code>对象，设置到 <code>RPC</code> 上下文中。</p>
+<p>4．用户线程通过 <code>RPC</code> 上下文获取<code>Future</code>对象。</p>
+<p>5．构造 <code>Listener</code>对象，将其添加到 <code>Future</code> 中，用于服务端应答异步回调通知。</p>
+<p>6．用户线程返回，不阻塞等待应答。</p>
+<p>7．服务端返回应答消息，通信框架负责反序列化等。</p>
+<p>8．<code>I/O</code> 线程将应答设置到 <code>Future</code> 对象的操作结果中。</p>
+<p>9．<code>Future</code> 对象扫描注册的监听器列表，循环调用监听器的<code>operationComplete</code>方法，将结果通知给监听器，监听器获取到结果之后，继续后续业务逻辑的执行，异步 <code>RPC</code> 调用结束。</p>
+<h4 id="2-2-2-异步-RPC-调用编程模型的优化"><a href="#2-2-2-异步-RPC-调用编程模型的优化" class="headerlink" title="2.2.2. 异步 RPC 调用编程模型的优化"></a>2.2.2. 异步 RPC 调用编程模型的优化</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Java8</code>的<code>CompletableFuture</code>提供了非常丰富的异步功能，它可以帮助用户简化异步编程的复杂性，通过 <code>Lambda</code> 表达式可以方便的编写异步回调逻辑，除了普通的异步回调接口，它还提供了多个异步操作结果转换以及与或等条件表达式的编排能力，方便对多个异步操作结果进行逻辑编排。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>CompletableFuture</code> 提供了大约 20 类比较实用的异步 <code>API</code>，接口定义示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/95849ff159aa4e5fab446b56767a5a6a.jpg" alt="img"></p>
+<p><em>CompletableFuture 异步 API 定义</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用 <code>JDK</code> 的 <code>CompletableFuture</code> 与 <code>Netty</code>的<code>NIO</code>，可以非常方便的实现异步<code>RPC</code>调用，设计思路如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/b0a3dc45e7998cb52c0dd2ecc4876364.jpg" alt="img"></p>
+<p><em>异步 RPC 调用设计原理</em></p>
+<p>异步<code>RPC</code> 调用的工作流程如下：</p>
+<p>1．消费者通过 <code>RPC</code> 框架调用服务端。</p>
+<p>2．<code>Netty</code> 异步发送 <code>HTTP</code> 请求消息，如果没有发生 <code>I/O</code> 异常就正常返回。</p>
+<p>3．<code>HTTP</code> 请求消息发送成功后，<code>I/O</code>线程构造<code>CompletableFuture</code>对象，设置到<code>RPC</code> 上下文中。</p>
+<p>4．用户线程通过 <code>RPC</code>上下文获取 <code>CompletableFuture</code> 对象。</p>
+<p>5．不阻塞用户线程，立即返回 <code>CompletableFuture</code> 对象。</p>
+<p>6．通过 <code>CompletableFuture</code> 编写 <code>Function</code> 函数，在<code>Lambda</code> 表达式中实现异步回调逻辑。</p>
+<p>7．服务端返回 <code>HTTP</code> 响应，<code>Netty</code>负责反序列化工作。</p>
+<p>8．<code>Netty I/O</code> 线程通过调用 <code>CompletableFuture</code>的 <code>complete</code> 方法将应答设置到 <code>CompletableFuture</code>对象的操作结果中。</p>
+<p>9．<code>CompletableFuture</code> 通过 <code>whenCompleteAsync</code>等接口异步执行业务回调逻辑，实现 <code>RPC</code>调用的异步化。</p>
+<h4 id="2-2-3-异步-RPC-调用的优势"><a href="#2-2-3-异步-RPC-调用的优势" class="headerlink" title="2.2.3. 异步 RPC 调用的优势"></a>2.2.3. 异步 RPC 调用的优势</h4><p>异步 <code>RPC</code>调用相比于同步调用有两个优点：</p>
+<p>1．<strong>化串行为并行，提升 <code>RPC</code> 调用效率，减少业务线程阻塞时间</strong>。</p>
+<p>2．<strong>化同步为异步，避免业务线程阻塞</strong>。</p>
+<p>假如一次阅读首页访问需要调用多个服务接口，采用同步调用方式，它的调用流程如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/f34b635ed43044a4263a4ae692091f0e.jpg" alt="img"></p>
+<p><em>同步调用多个服务场景</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于每次 <code>RPC</code> 调用都是同步阻塞，三次调用总耗时为<code>T = T1 + T2 + T3</code>。下面看下采用异步 <code>RPC</code> 调用之后的优化效果：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/ec362863844fc2af99392a1f268dc174.jpg" alt="img"></p>
+<p><em>异步多服务调用场景</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;采用异步 <code>RPC</code>调用模式，最后调用三个异步操作结果 <code>Future</code>的 <code>get</code>方法同步等待应答，它的总执行时间 <code>T = Max(T1, T2,T3)</code>，相比于同步 <code>RPC</code>调用，性能提升效果非常明显。</p>
+<h3 id="2-3-总结"><a href="#2-3-总结" class="headerlink" title="2.3. 总结"></a>2.3. 总结</h3><h4 id="2-3-1-异步-RPC-调用性能未必会更高"><a href="#2-3-1-异步-RPC-调用性能未必会更高" class="headerlink" title="2.3.1. 异步 RPC 调用性能未必会更高"></a>2.3.1. 异步 RPC 调用性能未必会更高</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常在实验室环境中测试，由于网络时延小、模拟业务又通常比较简单，所以异步 <code>RPC</code>调用并不一定性能更高，但在生产环境中，异步 <code>RPC</code> 调用往往性能更高、可靠性也更好。主要原因是网络环境相对恶劣、真实的 <code>RPC</code>调用耗时更多等，这种恶劣的运行环境正好可以发挥异步<code>RPC</code> 调用的优势。</p>
+<h4 id="2-3-2-最佳实践"><a href="#2-3-2-最佳实践" class="headerlink" title="2.3.2. 最佳实践"></a>2.3.2. 最佳实践</h4><p>服务框架支持多种 <code>RPC</code> 调用方式，在实际项目中如何选择呢？建议从以下几个角度进行考虑：</p>
+<p>1．降低业务<code>E2E</code> 时延：业务调用链是否太长、某些服务是否不太可靠，需要对服务调用流程进行梳理，看是否可以通过异步并行 <code>RPC</code>调用来提升调用效率，降低 <code>RPC</code> 调用时延。</p>
+<p>2．可靠性角度：某些业务调用链上的关键服务不太可靠，一旦出故障会导致大量线程资源被挂住，可以考虑使用异步<code>RPC</code> 调用防止故障扩散。</p>
+<p>3．传统的 <code>RPC</code> 调用：服务调用比较简单，对时延要求不高的场景，则可以考虑同步<code>RPC</code>调用，降低编程复杂度，以及调试难度，提升开发效率。</p>
+<h2 id="3-异步-RPC-调用的应用场景"><a href="#3-异步-RPC-调用的应用场景" class="headerlink" title="3. 异步 RPC 调用的应用场景"></a>3. 异步 RPC 调用的应用场景</h2><h3 id="3-1-缩短长流程的调用时延"><a href="#3-1-缩短长流程的调用时延" class="headerlink" title="3.1 缩短长流程的调用时延"></a>3.1 缩短长流程的调用时延</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着业务分布式架构的发展，系统间的系统调用日趋复杂，以电商的商品购买为例，前台界面的购买操作涉及到底层上百次服务调用，形成复杂的调用链，示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/729b0bfcb66d1349b6e53017c9ebd769.jpg" alt="img"></p>
+<p><em>分布式消息调用链</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于一些逻辑上不存在互相依赖关系的服务，可以通过异步 <code>RPC</code> 调用，实现服务的并行调用，通过并行调用来降低服务调用总耗时</strong>，以手游购买道具流程为例，消费次数限制鉴权、账户余额鉴权和下载记录鉴权三个服务可以通过异步的方式并行调用，来降低游戏道具购买的耗时：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/a2bdcac2de3d0c927356e67bac75f640.jpg" alt="img"></p>
+<p><em>购买道具异步 RPC 调用流程</em></p>
+<h3 id="3-2-服务调用耗时波动较大场景"><a href="#3-2-服务调用耗时波动较大场景" class="headerlink" title="3.2 服务调用耗时波动较大场景"></a>3.2 服务调用耗时波动较大场景</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于一些业务场景，服务调用耗时与消息本身、调用的资源对象有关系，例如上传和下载接口，如果下载的资源较多则耗时就会相应的增加。对于这类场景，接口的调用超时时间比较难配置，如果配置过大，服务端自身响应慢之后会拖垮调用方，如果配置过小，万一遇到一个需要较长耗时的 <code>RPC</code> 调用就会超时。通过异步<code>RPC</code> 调用，就不用再担心调用方业务线程被阻塞，超时时间可以相应配置大一些，减少超时导致的失败。</p>
+<h3 id="3-3-第三方接口调用"><a href="#3-3-第三方接口调用" class="headerlink" title="3.3 第三方接口调用"></a>3.3 第三方接口调用</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于大部分的第三方服务调用，都需要采用防御性编程，防止因为第三方故障导致自身不能正常工作。如果采用同步 <code>RPC</code> 方式调用第三方服务，一旦第三方服务的处理耗时增加，就会导致客户端调用线程被阻塞，当超时时间配置不合理时，系统很容易被阻塞。通过异步化的 <code>RPC</code> 调用，可以防止被第三方服务端阻塞，<code>Hystrix</code>的第三方故障隔离就是采用类似机制，只不过它底层创建了线程池，通过<code>Hystrix</code> 的线程池将第三方服务调用与业务线程做了隔离，实现了非侵入式的故障隔离。</p>
+<h3 id="3-4-性能和资源利用率提升"><a href="#3-4-性能和资源利用率提升" class="headerlink" title="3.4 性能和资源利用率提升"></a>3.4 性能和资源利用率提升</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于一个同步串行化调用的系统，大量的业务线程都在等待服务端返回响应，系统的 <code>CPU</code>使用率很低，但是性能却无法有效提升，这个问题几乎是所有采用同步 <code>RPC</code> 调用的业务都遇到的一个通病。要想充分利用<code>CPU</code> 资源，需要让业务线程尽可能的跑满<code>CPU</code>，而不是经常性的处于同步等待状态。采用异步 <code>RPC</code>调用之后，在单位时间内业务线程可以接收并处理更多的请求消息，更充分的利用 <code>CPU</code> 资源，提升系统的吞吐量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据一些公开的测试数据，一些业务采用异步 <code>RPC</code> 替换同步 <code>RPC</code>调用之后，综合性能提升 2-3 倍 +。</p>
+<h2 id="4-异步-RPC-调用实践"><a href="#4-异步-RPC-调用实践" class="headerlink" title="4. 异步 RPC 调用实践"></a>4. 异步 RPC 调用实践</h2><h3 id="4-1-Tomcat-Servlet3-X-的异步化"><a href="#4-1-Tomcat-Servlet3-X-的异步化" class="headerlink" title="4.1 Tomcat + Servlet3.X 的异步化"></a>4.1 Tomcat + Servlet3.X 的异步化</h3><h4 id="4-1-1-工作原理"><a href="#4-1-1-工作原理" class="headerlink" title="4.1.1 工作原理"></a>4.1.1 工作原理</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Servlet</code> 异步是指 <code>Servlet 3</code>规范中提供了对异步处理<code>Servlet</code>请求的支持，可以把<code>HTTP</code>协议处理线程和业务逻辑执行线程隔离开</strong>：</p>
+<p>1．<code>Servlet3.0</code> 对异步的支持：<code>Servlet3</code> 之前一个 <code>HTTP</code> 请求消息的处理流程，包括：<code>HTTP</code> 请求消息的解析、<code>Read Body</code>、<code>Response Body</code>，以及后续的业务逻辑处理都是由 <code>Tomcat</code> 线程池中的工作线程处理。<strong><code>Servlet3</code> 之后可以让 <code>I/O</code>线程和业务处理线程分开，进而对业务做隔离和异步化处理</strong>。<strong>还可以根据业务重要性进行业务分级，同时把业务线程池分类，实现业务的优先级处理，隔离核心业务和普通业务，提升应用可靠性</strong>。</p>
+<p>2．<code>Servlet3.1</code>对非阻塞<code>I/O</code>的支持：<code>Servlet3.1</code>以后增加了对非阻塞<code>I/O</code> 的支持，根据<code>Servlet3.1</code>规范中描述：非阻塞 <code>I/O</code> 仅对在 <code>Servlet</code> 中的异步处理请求有效，否则，当调用 <code>ServletInputStream.setReadListener 或 ServletOutputStream.setWriteListener</code> 方法时抛出 <code>IllegalStateException</code>异常。<code>Servlet3.1</code> 对非阻塞<code>I/O</code> 的支持是对之前异步化版本的增强，配套 <code>Tomcat8.X</code>版本。</p>
+<p><code>Tomcat + Servlet3</code>的异步化处理原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6d47236b4adffeb9683680f125f35ed6.jpg" alt="img"></p>
+<p><em>Tomcat + Servlet3 异步处理原理</em></p>
+<h4 id="4-1-2-异步化处理流程"><a href="#4-1-2-异步化处理流程" class="headerlink" title="4.1.2 异步化处理流程"></a>4.1.2 异步化处理流程</h4><p>关键处理流程如下：</p>
+<p>1．声明 <code>Servlet</code>，增加 <code>asyncSupported</code> 属性，开启异步支持，例如 ：<code>@WebServlet(urlPatterns=“/AsyncLongRunningServlet”,asyncSupported=true)</code>。</p>
+<p>2．通过 <code>request</code> 获取异步上下文<code>AsyncContext</code>， <code>AsyncContext context = request.startAsync()</code>, 相关接口定义如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/76fdc10dade77f4e9015090c4bb978b7.jpg" alt="img"></p>
+<p>3．启动业务逻辑处理线程，并将 <code>AsyncContext</code>对象传递给业务线程。例如：<code>Executor.execute(()-&gt;{context, request, response…})</code>。</p>
+<p>4．在业务线程中，通过获取 <code>request</code> 进行业务逻辑处理，完成之后填充 <code>response</code> 对象。</p>
+<p>5．业务逻辑处理完成之后，调用 <code>AsyncContext</code>的 <code>complete()</code>方法完成响应消息的发送。</p>
+<h3 id="4-2-Spring-MVC-异步化"><a href="#4-2-Spring-MVC-异步化" class="headerlink" title="4.2 Spring MVC 异步化"></a>4.2 Spring MVC 异步化</h3><h4 id="4-2-1-工作原理"><a href="#4-2-1-工作原理" class="headerlink" title="4.2.1 工作原理"></a>4.2.1 工作原理</h4><p><code>SpringMVC 3.2+</code> 版本基于<code>Servlet3</code>做了封装，以简化业务使用。它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/f296a43d4981071c53f8e35bbce28f90.jpg" alt="img"></p>
+<p><em>SpringMVC 异步工作原理</em></p>
+<h4 id="4-2-2-异步的几种实现方式"><a href="#4-2-2-异步的几种实现方式" class="headerlink" title="4.2.2 异步的几种实现方式"></a>4.2.2 异步的几种实现方式</h4><p><code>SpringMVC</code>支持多种异步化模式，常用的有两种：</p>
+<p>1．<code>Controller</code> 的返回值为 <code>DeferredResult</code>，在业务<code>Controller</code>方法中构造 <code>DeferredResult</code>对象，然后将请求封装成 <code>Task</code> 投递到业务线程池中异步执行，业务执行完成之后，构造 <code>ModelAndView</code>，调用 <code>deferredResult.setResult(ModelAndView)</code>完成异步化处理和响应消息的发送。</p>
+<p>2．<code>Controller</code> 的返回值为 <code>WebAsyncTask</code>，实现<code>Callable</code>, 在 <code>call</code> 方法中完成业务逻辑处理，由 <code>SpringMVC</code> 框架的线程池来异步执行业务逻辑（非 <code>Tomcat</code>工作线程）。</p>
+<p>以 <code>DeferredResult</code>为例，它的异步处理流程如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/80c2e301535a3d81922ecae76856be0a.jpg" alt="img"></p>
+<p><em>SpringMVC DeferredResult 工作原理</em></p>
+<h3 id="4-3-Apache-ServiceComb-的异步化服务调用"><a href="#4-3-Apache-ServiceComb-的异步化服务调用" class="headerlink" title="4.3 Apache ServiceComb 的异步化服务调用"></a>4.3 Apache ServiceComb 的异步化服务调用</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Apache ServiceComb</code>是一个开箱即用、高性能、兼容流行生态、支持多语言的一站式开源微服务解决方案。它同时支持同步和异步服务调用，下面一起分析下它的异步化服务调用机制。</p>
+<h4 id="4-3-1-纯-Reactive-模式"><a href="#4-3-1-纯-Reactive-模式" class="headerlink" title="4.3.1 纯 Reactive 模式"></a>4.3.1 纯 Reactive 模式</h4><p>纯 <code>Reactive</code>模式的特点是：</p>
+<p>1．异步化接口，消费端不需要同步等待服务提供端返回响应，不会产生阻塞。</p>
+<p>2．与传统流程不同的，所有功能都在 <code>eventloop</code> 中执行，并不会进行线程切换。</p>
+<p>3．只要有任务，线程就不会停止，会一直执行任务，可以充分利用 <code>cpu</code>资源，也不会产生多余的线程切换，去无谓地消耗 <code>cpu</code>。</p>
+<p>它的处理流程如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/e64c6dd0a374a8e23f17c60650354c8a.jpg" alt="img"></p>
+<p><em>ServiceComb 的 Reactive 工作模式</em></p>
+<p>关键流程解读：</p>
+<p>1．异步：橙色箭头走完后，对本线程的占用即完成了，不会阻塞等待应答，该线程可以处理其他任务。</p>
+<p>2．当收到远端应答后，由网络数据驱动开始走红色箭头的应答流程。</p>
+<p>对应的代码示例如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/c865a24d7496f09f93681d0fd37398fa.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过代码示例可以看出，<code>ServiceComb</code> 的 <code>Reactive</code> 工作模式采用了<code>JDK8</code> 的 <code>CompletableFuture</code>作为异步编程模型，利用 <code>CompletableFuture</code>可以方便的对多个异步操作结果做编排，以及做级联异步操作，功能强大，使用灵活。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;纯<code>Reactive</code>模式的使用约束：所有在 <code>eventloop</code> 中执行的逻辑，不允许有任何的阻塞动作，包括不限于 <code>wait</code>、<code>sleep</code>、巨大循环、同步查询 DB 等等。实际上就是如果业务的微服务采用了 <code>Reactive</code>，则需要做全栈异步，否则会阻塞 <code>eventloop</code>线程，导致消息收发出现问题。如果业务的微服务想做异步化，但是由于数据库、缓存等原因无法实现全栈异步，则可以采用后面介绍的混合 <code>Reactive</code> 模式。</p>
+<h4 id="4-3-2-混合-Reactive-模式"><a href="#4-3-2-混合-Reactive-模式" class="headerlink" title="4.3.2 混合 Reactive 模式"></a>4.3.2 混合 Reactive 模式</h4><p>混合 <code>Reactive</code> 模式的实现策略如下：</p>
+<p>1．服务端接口返回值为<code>CompletableFuture</code>，这样采用透明 <code>RPC</code>调用时就可以实现异步化。</p>
+<p>2．对于可能产生同步阻塞的业务逻辑代码，采用独立线程池的方式进行处理，防止阻塞平台的<code>eventloop</code>线程。</p>
+<p>混合 <code>Reactive</code> 模式与纯<code>Reactive</code> 模式相比，主要有两点差异：</p>
+<p>1．存在线程切换。</p>
+<p>2．可能导致同步阻塞的业务逻辑放到独立的线程池中执行，纯 <code>Reactive</code>模式所有业务逻辑都在 <code>eventloop</code> 线程中执行（与 <code>I/O</code> 线程相同）。</p>
+<p>它的处理流程如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/b24c1b854726e12f3d42884a4a3d1880.jpg" alt="img"></p>
+<p><em>ServiceComb 的混合 Reactive 工作模式</em></p>
+<h4 id="4-3-3-异步模式的几个特点"><a href="#4-3-3-异步模式的几个特点" class="headerlink" title="4.3.3 异步模式的几个特点"></a>4.3.3 异步模式的几个特点</h4><p>相比于其它的微服务框架（<code>RPC</code>框架），<code>ServiceComb</code> 的 <code>Reactive</code> 有如下几个特点：</p>
+<p>对于微服务提供端：</p>
+<p>1．<code>producer</code>是否使用<code>reactive</code>与 <code>consumer</code> 如何调用，没有任何联系。</p>
+<p>2．当<code>operation</code> 返回值为 <code>CompletableFuture</code> 类型时，默认此 <code>operation</code> 工作于<code>reactive</code> 模式，此时如果需要强制此 <code>operation</code>工作于线程池模式，需要在微服务的配置文件中（<code>microservice.yaml</code>）中明确配置，指定业务线程池。这样业务逻辑的执行就可以由 <code>eventloop</code>线程（<code>I/O</code> 线程）切换到业务线程。</p>
+<p>对于微服务消费端：</p>
+<p>1．<code>consumer</code> 是否使用 <code>reactive</code> 与 <code>producer</code>如何实现，没有任何联系。</p>
+<p>2．当前只支持透明 <code>RPC</code>模式，使用 <code>JDK</code>原生的 <code>CompletableFuture</code>来承载此功能<code>ompletableFuture</code> 的 <code>when</code>、<code>then</code> 等等功能都可直接使用。</p>
+<p>对于 <code>ServiceComb</code>，无论服务端定义的接口是同步还是异步的，消费端都可以采用异步的方式调用它，对具体细节感兴趣的读者可以到 <code>ServiceComb</code> 官网下载 <code>Demo</code>示例学习。</p>
+<h4 id="4-3-4-I-O-线程和业务线程的交互优化"><a href="#4-3-4-I-O-线程和业务线程的交互优化" class="headerlink" title="4.3.4 I/O 线程和业务线程的交互优化"></a>4.3.4 I/O 线程和业务线程的交互优化</h4><p><code>ServiceComb</code> 微服务的完整线程模型如下图所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6c2f4793e2c851eeb22b26a1de30b374.jpg" alt="img"></p>
+<p><em>I/O 线程和业务线程交互</em></p>
+<p><code>ServiceComb</code>通过线程绑定技术来减少锁竞争，提升性能：</p>
+<p>1．业务线程在第一次调用时会绑定某一个网络线程, 避免在不同网络线程之间切换, 无谓地增加线程冲突的概率。</p>
+<p>2．业务线程绑定网络线程后, 会再绑定该网络线程内部的某个连接, 同样是为了避免线程冲突。</p>
+<h3 id="4-4-gRPC-的异步化"><a href="#4-4-gRPC-的异步化" class="headerlink" title="4.4 gRPC 的异步化"></a>4.4 gRPC 的异步化</h3><p><code>gRPC</code> 的服务调用有三种方式：</p>
+<ol>
+<li><p>同步阻塞式服务调用，通常实现类是 <code>xxxBlockingStub</code>（基于 <code>proto</code> 定义生成）。</p>
+</li>
+<li><p>异步非阻塞调用，基于 <code>Future-Listener</code>机制，通常实现类是 <code>xxxFutureStub</code>。</p>
+</li>
+<li><p>异步非阻塞调用，基于 <code>Reactive</code> 的响应式编程模式，通常实现类是 <code>xxxStub</code>。</p>
+</li>
+</ol>
+<h4 id="4-4-1-基于-Future-的异步-RPC-调用"><a href="#4-4-1-基于-Future-的异步-RPC-调用" class="headerlink" title="4.4.1 基于 Future 的异步 RPC 调用"></a>4.4.1 基于 Future 的异步 RPC 调用</h4><p>业务调用代码示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/cd437e10d1647116046349a25770936a.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;调用 <code>GreeterFutureStub</code>的 <code>sayHello</code>方法返回的不是应答，而是<code>ListenableFuture</code>，它继承自<code>JDK</code> 的<code>Future</code>，接口定义如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/bf6b77e30f672c245159cf914fe70e17.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将 <code>ListenableFuture</code>加入到 <code>gRPC</code> 的<code>Future</code>列表中，创建一个新的 <code>FutureCallback</code>对象，当 <code>ListenableFuture</code>获取到响应之后，<code>gRPC</code> 的<code>DirectExecutor</code> 线程池会调用新创建的<code>FutureCallback</code>，执行 <code>onSuccess</code> 或者 <code>onFailure</code>，实现异步回调通知。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着我们分析下 <code>ListenableFuture</code>的实现原理，<code>ListenableFuture</code>的具体实现类是<code>GrpcFuture</code>，代码如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/cb6cc56b85ccf4cc1e3a9a28f94512f1.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;获取到响应之后，调用 <code>complete</code> 方法：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/9900c9e3f07e3e1238ac3b68a9762746.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将 <code>ListenableFuture</code> 加入到<code>Future</code> 列表中之后，同步获取响应（在 <code>gRPC</code> 线程池中阻塞，非业务调用方线程）：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6a0642ea70bc9db39180527529247553.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;获取到响应之后，回调<code>callback</code> 的<code>onSuccess</code>，代码如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/715a0b31f985528326fe58461e8163ec.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了将 <code>ListenableFuture</code> 加入到 <code>Futures</code>中由 <code>gRPC</code>的线程池执行异步回调，也可以自定义线程池执行异步回调，代码示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/b694ad13d4e3422cdb0a25cc70d48ef4.jpg" alt="img"></p>
+<h4 id="4-4-2-Reactive-风格异步-RPC-调用"><a href="#4-4-2-Reactive-风格异步-RPC-调用" class="headerlink" title="4.4.2.Reactive 风格异步 RPC 调用"></a>4.4.2.Reactive 风格异步 RPC 调用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务调用代码示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/0c4b08aa24c4e3a09d2228973dedb1e3.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;构造响应 <code>StreamObserver</code>，通过响应式编程，处理正常和异常回调，接口定义如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/2f6a62e6364710f7b3523a144121eb3b.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将响应<code>StreamObserver</code>作为入参传递到异步服务调用中，该方法返回空，程序继续向下执行，不阻塞当前业务线程，代码如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/ad447c073351677aec338df85672908d.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面分析下基于<code>Reactive</code> 方式异步调用的代码实现，把响应<code>StreamObserver</code>对象作为入参传递到异步调用中，代码如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/0c3e00d9e843fcc8f44b5bc9ae0a4106.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当收到响应消息时，调用 <code>StreamObserver</code>的 <code>onNext</code>方法，代码如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/f5c65e298e54a2e509e33f97bfcf6c6e.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当 <code>Streaming</code> 关闭时，调用 <code>onCompleted</code>方法，如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/7fdb5d12ab83b23a02233ff074fbac0c.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过源码分析可以发现，<code>Reactive</code> 风格的异步调用，相比于 <code>Future</code>模式，没有任何同步阻塞点，无论是业务线程还是 <code>gRPC</code>框架的线程都不会同步等待，相比于 <code>Future</code>异步模式，<code>Reactive</code>风格的调用异步化更彻底一些。</p>
+<h4 id="4-4-3-异步双向-streaming-调用"><a href="#4-4-3-异步双向-streaming-调用" class="headerlink" title="4.4.3 异步双向 streaming 调用"></a>4.4.3 异步双向 streaming 调用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>gRPC</code> 的通信协议基于标准的<code>HTTP/2</code>设计，除了普通的<code>RPC</code> 调用，还支持<code>streaming</code>调用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端发送 N 个请求，服务端返回 N 个或者 M 个响应，利用该特性，可以充分利用 <code>HTTP/2.0</code> 的多路复用功能，在某个时刻，<code>HTTP/2.0</code> 链路上可以既有请求也有响应，实现了全双工通信（对比单行道和双向车道），示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6481ceac00add9c3ac856b6449229d53.jpg" alt="img"></p>
+<p><em>双向 streaming 模式</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>proto</code> 文件定义如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/6bd15f0ddb8fe301f9b91cb1c41005fc.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务代码示例如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/d28809c57d6cbc7716fe47ec33b340db.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;构造<code>Streaming</code> 响应对象 <code>StreamObserver</code>并实现 <code>onNext</code>等接口，由于服务端也是<code>Streaming</code> 模式，因此响应是多个的，也就是说 <code>onNext</code> 会被调用多次。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过在循环中调用 <code>requestObserver</code> 的 <code>onNext</code>方法，发送请求消息，代码如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/84ac756179e0be71e28d75d0134d7a65.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>requestObserver</code>的 <code>onNext</code>方法实际调用了<code>ClientCall</code>的消息发送方法，代码如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/2a9870e1f8ae0f10f090655303dcc8a8.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于双向 <code>Streaming</code>模式，只支持异步调用方式。</p>
+<h4 id="4-4-4-总结"><a href="#4-4-4-总结" class="headerlink" title="4.4.4 总结"></a>4.4.4 总结</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>gRPC</code> 服务调用支持同步和异步方式，同时也支持普通的<code>RPC</code>和<code>streaming</code> 模式，可以最大程度的满足业务的需求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 <code>streaming</code> 模式，可以充分利用 <code>HTTP/2.0</code> 协议的多路复用功能，实现在一条<code>HTTP</code> 链路上并行双向传输数据，有效的解决了 <code>HTTP/1.X</code>的数据单向传输问题，在大幅减少 <code>HTTP</code>连接的情况下，充分利用单条链路的性能，可以媲美传统的 <code>RPC</code> 私有长连接协议：更少的链路、更高的性能：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/a43acabba14b20385467dfe1c0327d69.jpg" alt="img"></p>
+<p><em>传统 RPC 和双向 streaming 模式的对比</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>gRPC</code> 的网络<code>I/O</code>通信基于 <code>Netty</code>构建，服务调用底层统一使用异步方式，同步调用是在异步的基础上做了上层封装。因此，<code>gRPC</code> 的异步化是比较彻底的，对于提升<code>I/O</code>密集型业务的吞吐量和可靠性有很大的帮助。</p>
+<h2 id="5-异步化的一些技术难点"><a href="#5-异步化的一些技术难点" class="headerlink" title="5. 异步化的一些技术难点"></a>5. 异步化的一些技术难点</h2><h4 id="5-1-1-异步异常传递"><a href="#5-1-1-异步异常传递" class="headerlink" title="5.1.1 异步异常传递"></a>5.1.1 异步异常传递</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当采用异步编程之后，异步抛出的异常传递给调用方会变得非常困难，例如 <code>Runnable</code>, 当异步执行它时，异常需要在<code>run</code> 方法中捕获和处理，否则会导致线程跑飞，<code>run</code>方法中的异常是无法回传到调用方的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用<code>JDK8</code> 的 <code>CompletableFuture</code>之后，它的常用方法参数基本是 <code>Lambda</code>表达式，由于函数接口中的方法通常不允许检查期异常，在表达式中发生的异常无法回传给调用方，相比于以前同步调用可以将异常抛给调用方处理的方式有很大差异。</p>
+<p>异步异常的解决策略：</p>
+<p>1．如果异步的编程模型基于<code>JDK8</code>的 <code>CompletableFuture</code>，可以通过 <code>whenComplete</code>对返回值的异常进行非空判断，当异常非空时，进行异常逻辑处理，相关接口如下：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/504aa872a5921e2ef1be6d9aab28c58e.jpg" alt="img"></p>
+<p>也可以通过<code>exceptionally</code>方法来处理异步执行发生的异常，相关接口如下所示：</p>
+<p><img src="//blog.com/2019/07/27/深入剖析通信层和 RPC 调用的异步化/5eb1704acefff6f8ff8e4cee99463988.jpg" alt="img"></p>
+<p>2．异步回调（<code>Lambda</code> 表达式）代码块中的异常处理有两种策略：</p>
+<p>1）一定要通过 <code>exceptionally</code>方法或者 <code>whenComplete</code>对异常进行捕获处理，否则会导致<code>Lambda</code> 表达式异常退出，后续操作被忽略，最终导致业务逻辑跑飞。</p>
+<p>2）运行期异常，通常是无法抛出来由调用方处理的，需要在发生异常的地方就地捕获和处理。</p>
+<h4 id="5-1-2-超时控制"><a href="#5-1-2-超时控制" class="headerlink" title="5.1.2 超时控制"></a>5.1.2 超时控制</h4><p>异步代码块（<code>Lambda</code> 表达式）中可能会涉及到多种业务逻辑操作，例如：</p>
+<p>1．<strong>数据库、缓存、<code>MQ</code>等中间件平台调用</strong>。</p>
+<p>2．<strong>第三方接口调用</strong>。</p>
+<p>3．<strong>级联嵌套其它微服务调用</strong>。</p>
+<p>对于异步的超时控制，建议策略如下：</p>
+<p>1．对单个原子的中间件、第三方接口、微服务做超时控制。</p>
+<p>2．不建议直接对异步代码块（<code>Lambda</code> 表达式）整体做超时控制，例如包装出一个支持异步超时的<code>CompletableFuture</code>，主要原因如下：</p>
+<ol>
+<li>超时并不能确保中断当前正在执行的业务逻辑，例如同步 <code>Redis</code> 缓存调用。</li>
+<li>如果超时发生时，正好又发起了一次异步 <code>RPC</code> 调用，创建了一个新的 <code>CompletableFuture</code>，外层超时之后，已经创建的 <code>CompletableFuture</code>异步回调仍然可能会被执行，这会带来各种混乱。</li>
+<li>由于异步代码块（<code>Lambda</code>表达式）中的业务逻辑可能会非常复杂，所以超时之后的补偿操作非常困难。例如充值操作已经成功了，但是外层调用方超时失败了，这会给后续业务的处理带来很多困难，因为超时发生时调用方并不知道异步代码块中的哪些操作被执行，哪些没被执行。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;没有超时控制之后，要确保 <code>CompletableFuture</code>能够正常或者异常的结束，否则会导致 <code>CompletableFuture</code> 积压，最终发生 <code>OOM</code>。</p>
+<h4 id="5-1-3-上下文传递"><a href="#5-1-3-上下文传递" class="headerlink" title="5.1.3 上下文传递"></a>5.1.3 上下文传递</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在传统的同步 <code>RPC</code>调用时，业务往往通过线程变量来传递上下文，例如：<code>TraceID</code>、会话 <code>Session</code>、<code>IP</code>等信息。异步化之后，由于潜在的线程切换和线程被多个消息交叉复用，通常不建议继续使用线程变量传递上下文。</p>
+<p>异步化之后，上下文传递的建议策略：</p>
+<p>1．如果是 <code>Lambda</code> 表达式，可以直接引用局部变量，通过变量引用的方式将上下文信息传递到<code>Lambda</code>表达式中，后续可以通过方法传参等层层传递下去。</p>
+<p>2．在所有发生线程切换的地方，显式的进行上下文信息的拷贝和清理，特别需要注意的是隐式线程切换，例如 <code>Hystrix</code>，底层会自己启线程池。</p>
+<p>3．建议通过调用级的消息上下文来做参数传递，每个上下文都关联一次 <code>RPC</code> 调用，调用完成之后自动清理掉。</p>
+<p>4．异步化之后，需要排重点查所有使用 <code>ThreadLocal</code>的地方，通常情况下都会存在问题，需要做改造。</p>
+<h4 id="5-1-4-异步回调地狱问题"><a href="#5-1-4-异步回调地狱问题" class="headerlink" title="5.1.4 异步回调地狱问题"></a>5.1.4 异步回调地狱问题</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果使用的是<code>JDK8</code>的 <code>CompletableFuture</code>，它支持对异步操作结果做编排以及级联操作，能够比较好的解决类似 <code>JS</code> 和传统<code>Future-Listener</code>的回调地域问题，感兴趣的读者可以体会下 <code>CompletableFuture</code>的异步化接口。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/微服务/" rel="tag"># 微服务</a>
+          
+            <a href="/tags/RPC/" rel="tag"># RPC</a>
+          
+            <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/26/MySQL列转行/" rel="next" title="MySQL列转行">
+                <i class="fa fa-chevron-left"></i> MySQL列转行
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/27/RPC协议之争和选型要点/" rel="prev" title="RPC协议之争和选型要点">
+                RPC协议之争和选型要点 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#深入剖析通信层和-RPC-调用的异步化"><span class="nav-number">1.</span> <span class="nav-text">深入剖析通信层和 RPC 调用的异步化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-异步的一些常见误区"><span class="nav-number">1.1.</span> <span class="nav-text">1. 异步的一些常见误区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-常见的理解误区"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1. 常见的理解误区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-混淆-Tomcat-NIO-与-HTTP-服务的异步化"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2. 混淆 Tomcat NIO 与 HTTP 服务的异步化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-Tomcat-的-BIO-和-NIO"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">1.2.1. Tomcat 的 BIO 和 NIO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-2-Tomcat-NIO-与-Servlet-异步"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">1.2.2. Tomcat NIO 与 Servlet 异步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-Tomcat-NIO-与-HTTP-服务调用"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">1.2.3. Tomcat NIO 与 HTTP 服务调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-4-总结"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">1.2.4. 总结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-混淆-RPC-异步与-I-O-异步"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.3. 混淆 RPC 异步与 I/O 异步</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-Java-的各种-I-O-模型"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">1.3.1. Java 的各种 I/O 模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-RPC-工作原理"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">1.3.2. RPC 工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-3-RPC-异步与-I-O-的异步"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">1.3.3. RPC 异步与 I/O 的异步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-4-总结"><span class="nav-number">1.1.3.4.</span> <span class="nav-text">1.3.4. 总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-RPC-同步与异步调用"><span class="nav-number">1.2.</span> <span class="nav-text">2. RPC 同步与异步调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-同步-RPC-调用"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1. 同步 RPC 调用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-同步-RPC-调用流行的原因"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">2.1.1. 同步 RPC 调用流行的原因</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-同步-RPC-调用工作原理"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">2.1.2. 同步 RPC 调用工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-3-同步-RPC-调用面临的挑战"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">2.1.3. 同步 RPC 调用面临的挑战</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-异步-RPC-调用"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2. 异步 RPC 调用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-异步-RPC-调用工作原理"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">2.2.1. 异步 RPC 调用工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-2-异步-RPC-调用编程模型的优化"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">2.2.2. 异步 RPC 调用编程模型的优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-3-异步-RPC-调用的优势"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">2.2.3. 异步 RPC 调用的优势</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-总结"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3. 总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-1-异步-RPC-调用性能未必会更高"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">2.3.1. 异步 RPC 调用性能未必会更高</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-2-最佳实践"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">2.3.2. 最佳实践</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-异步-RPC-调用的应用场景"><span class="nav-number">1.3.</span> <span class="nav-text">3. 异步 RPC 调用的应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-缩短长流程的调用时延"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 缩短长流程的调用时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-服务调用耗时波动较大场景"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 服务调用耗时波动较大场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-第三方接口调用"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3 第三方接口调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-性能和资源利用率提升"><span class="nav-number">1.3.4.</span> <span class="nav-text">3.4 性能和资源利用率提升</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-异步-RPC-调用实践"><span class="nav-number">1.4.</span> <span class="nav-text">4. 异步 RPC 调用实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Tomcat-Servlet3-X-的异步化"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 Tomcat + Servlet3.X 的异步化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-1-工作原理"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">4.1.1 工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-2-异步化处理流程"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">4.1.2 异步化处理流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Spring-MVC-异步化"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 Spring MVC 异步化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-1-工作原理"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">4.2.1 工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-2-异步的几种实现方式"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">4.2.2 异步的几种实现方式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-Apache-ServiceComb-的异步化服务调用"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 Apache ServiceComb 的异步化服务调用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-1-纯-Reactive-模式"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">4.3.1 纯 Reactive 模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-2-混合-Reactive-模式"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">4.3.2 混合 Reactive 模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-3-异步模式的几个特点"><span class="nav-number">1.4.3.3.</span> <span class="nav-text">4.3.3 异步模式的几个特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-4-I-O-线程和业务线程的交互优化"><span class="nav-number">1.4.3.4.</span> <span class="nav-text">4.3.4 I/O 线程和业务线程的交互优化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-gRPC-的异步化"><span class="nav-number">1.4.4.</span> <span class="nav-text">4.4 gRPC 的异步化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-1-基于-Future-的异步-RPC-调用"><span class="nav-number">1.4.4.1.</span> <span class="nav-text">4.4.1 基于 Future 的异步 RPC 调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-2-Reactive-风格异步-RPC-调用"><span class="nav-number">1.4.4.2.</span> <span class="nav-text">4.4.2.Reactive 风格异步 RPC 调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-3-异步双向-streaming-调用"><span class="nav-number">1.4.4.3.</span> <span class="nav-text">4.4.3 异步双向 streaming 调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-4-总结"><span class="nav-number">1.4.4.4.</span> <span class="nav-text">4.4.4 总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-异步化的一些技术难点"><span class="nav-number">1.5.</span> <span class="nav-text">5. 异步化的一些技术难点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-1-异步异常传递"><span class="nav-number">1.5.0.1.</span> <span class="nav-text">5.1.1 异步异常传递</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-2-超时控制"><span class="nav-number">1.5.0.2.</span> <span class="nav-text">5.1.2 超时控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-3-上下文传递"><span class="nav-number">1.5.0.3.</span> <span class="nav-text">5.1.3 上下文传递</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-4-异步回调地狱问题"><span class="nav-number">1.5.0.4.</span> <span class="nav-text">5.1.4 异步回调地狱问题</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

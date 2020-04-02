@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,性能监控,SQL语句优化,MySql 性能监控,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分析SQL性能的几种方式explain生成执行计划expalin  sql  type：显示关联类型。重点关注ALL（全表扫描）、index（全索引扫描）； possible_keys：可能使用的索引   【看是否为null，为null时要考虑创建索引或者更新组合索引】； key：实际使用的索引   【看是否为null，在possible_keys不为null时，要注意这几种情况：SQL语句的写法">
+<meta name="keywords" content="数据库,MySql,性能监控,SQL语句优化,MySql 性能监控">
+<meta property="og:type" content="article">
+<meta property="og:title" content="show 分析SQL性能的几种方式">
+<meta property="og:url" content="http://blog.com/2019/04/20/分析SQL性能的几种方式/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="分析SQL性能的几种方式explain生成执行计划expalin  sql  type：显示关联类型。重点关注ALL（全表扫描）、index（全索引扫描）； possible_keys：可能使用的索引   【看是否为null，为null时要考虑创建索引或者更新组合索引】； key：实际使用的索引   【看是否为null，在possible_keys不为null时，要注意这几种情况：SQL语句的写法">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-04-20T16:10:35.358Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="show 分析SQL性能的几种方式">
+<meta name="twitter:description" content="分析SQL性能的几种方式explain生成执行计划expalin  sql  type：显示关联类型。重点关注ALL（全表扫描）、index（全索引扫描）； possible_keys：可能使用的索引   【看是否为null，为null时要考虑创建索引或者更新组合索引】； key：实际使用的索引   【看是否为null，在possible_keys不为null时，要注意这几种情况：SQL语句的写法">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/20/分析SQL性能的几种方式/">
+
+
+
+
+
+  <title>show 分析SQL性能的几种方式 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/20/分析SQL性能的几种方式/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">show 分析SQL性能的几种方式</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-20T12:12:57+08:00">
+                2019-04-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/SQL语句优化/" itemprop="url" rel="index">
+                    <span itemprop="name">SQL语句优化</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/SQL语句优化/性能监控/" itemprop="url" rel="index">
+                    <span itemprop="name">性能监控</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/SQL语句优化/性能监控/MySql-性能监控/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql 性能监控</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="分析SQL性能的几种方式"><a href="#分析SQL性能的几种方式" class="headerlink" title="分析SQL性能的几种方式"></a>分析SQL性能的几种方式</h1><h2 id="explain生成执行计划"><a href="#explain生成执行计划" class="headerlink" title="explain生成执行计划"></a>explain生成执行计划</h2><p><strong>expalin  sql</strong></p>
+<ol>
+<li><strong>type</strong>：显示关联类型。重点关注<strong>ALL（全表扫描）、index（全索引扫描）</strong>；</li>
+<li><strong>possible_keys</strong>：可能使用的索引   【<strong>看是否为null，为null时要考虑创建索引或者更新组合索引</strong>】；</li>
+<li><strong>key</strong>：实际使用的索引   【<strong>看是否为null，在possible_keys不为null时，要注意这几种情况：SQL语句的写法是否符合最左原则、是否存在表达式计算、是否存在隐式转换、是否存在like前缀匹配</strong>】</li>
+<li><strong>key_len</strong>：使用到索引的长度。通常该值⼤大于30就要注意被选中的索引是否字符串类型【<strong>对于text，varchar，char可以根据情况建立前缀索引</strong>】，可否进⼀步优化；</li>
+<li><strong>rows</strong>：预估扫描的行数。通常该值⼤大于1万就要注意可否选择更更合适的索引减少扫描的行数；</li>
+<li><strong>extra</strong>：显示额外信息。重点<strong>关注Using temporary，Using filesort</strong>，尽量量通过添加或调整来消除</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; explain select * from center_voucher_main where id&lt;211289\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: center_voucher_main</span><br><span class="line">         type: range</span><br><span class="line">possible_keys: PRIMARY</span><br><span class="line">          key: PRIMARY</span><br><span class="line">      key_len: 4</span><br><span class="line">          ref: NULL</span><br><span class="line">         rows: 14669</span><br><span class="line">        Extra: Using where</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">ERROR: </span><br><span class="line">No query specified</span><br><span class="line"></span><br><span class="line">mysql&gt; explain select * from center_voucher_main order by run_id desc\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: center_voucher_main</span><br><span class="line">         type: ALL</span><br><span class="line">possible_keys: NULL</span><br><span class="line">          key: NULL</span><br><span class="line">      key_len: NULL</span><br><span class="line">          ref: NULL</span><br><span class="line">         rows: 29339</span><br><span class="line">        Extra: Using filesort</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h2 id="optimizer-trace"><a href="#optimizer-trace" class="headerlink" title="optimizer_trace"></a>optimizer_trace</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MySQL的explain是各种执行计划选择的结果，如果想看整个执行计划以及对于<strong>多种索引方案之间是如何选择的</strong>？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MySQL5.6中支持这个功能，optimizer_trace，这个是mysql的参数，默认是关闭的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show variables like &apos;%optimizer_trace%&apos;;</span><br><span class="line">+------------------------------+----------------------------------------------------------------------------+</span><br><span class="line">| Variable_name                | Value                                                                      |</span><br><span class="line">+------------------------------+----------------------------------------------------------------------------+</span><br><span class="line">| optimizer_trace              | enabled=on,one_line=off                                                    |</span><br><span class="line">| optimizer_trace_features     | greedy_search=on,range_optimizer=on,dynamic_range=on,repeated_subselect=on |</span><br><span class="line">| optimizer_trace_limit        | 1                                                                          |</span><br><span class="line">| optimizer_trace_max_mem_size | 1000000                                                                    |</span><br><span class="line">| optimizer_trace_offset       | -1                                                                         |</span><br><span class="line">+------------------------------+----------------------------------------------------------------------------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>具体这么使用呢？</p>
+<p>需要设置如下：</p>
+<p>1、开启optimizer_trace，默认是关闭的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET optimizer_trace=&quot;enabled=on&quot;;</span><br></pre></td></tr></table></figure>
+<p>　</p>
+<p>2、设置optimizer_trace内存的大小</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET  OPTIMIZER_TRACE_MAX_MEM_SIZE=1000000</span><br></pre></td></tr></table></figure>
+<p>　　</p>
+<p>3、explain查询语句</p>
+<p><strong>optimizer_trace的定义</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show create table information_schema.optimizer_trace\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: OPTIMIZER_TRACE</span><br><span class="line">Create Table: CREATE TEMPORARY TABLE `OPTIMIZER_TRACE` (</span><br><span class="line">  `QUERY` longtext NOT NULL,</span><br><span class="line">  `TRACE` longtext NOT NULL,</span><br><span class="line">  `MISSING_BYTES_BEYOND_MAX_MEM_SIZE` int(20) NOT NULL DEFAULT &apos;0&apos;,</span><br><span class="line">  `INSUFFICIENT_PRIVILEGES` tinyint(1) NOT NULL DEFAULT &apos;0&apos;</span><br><span class="line">) ENGINE=MyISAM DEFAULT CHARSET=utf8</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; explain select * from center_voucher_main where id&lt;211289\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">           id: 1</span><br><span class="line">  select_type: SIMPLE</span><br><span class="line">        table: center_voucher_main</span><br><span class="line">         type: range</span><br><span class="line">possible_keys: PRIMARY</span><br><span class="line">          key: PRIMARY</span><br><span class="line">      key_len: 4</span><br><span class="line">          ref: NULL</span><br><span class="line">         rows: 14669</span><br><span class="line">        Extra: Using where</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">ERROR: </span><br><span class="line">No query specified</span><br><span class="line"></span><br><span class="line">mysql&gt; SET optimizer_trace=&quot;enabled=off&quot;;</span><br></pre></td></tr></table></figure>
+<p>　　</p>
+<p>4、查找对于的结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select * from information_schema.optimizer_trace\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">                            QUERY: explain select * from center_voucher_main where id&lt;211289</span><br><span class="line">                            TRACE: &#123;</span><br><span class="line">  &quot;steps&quot;: [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;join_preparation&quot;: &#123;</span><br><span class="line">        &quot;select#&quot;: 1,</span><br><span class="line">        &quot;steps&quot;: [</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;expanded_query&quot;: &quot;/* select#1 */ select `center_voucher_main`.`id` AS `id`,`center_voucher_main`.`batch_number` AS `batch_number`,`center_voucher_main`.`trade_no` AS `trade_no`,`center_voucher_main`.`account_date` AS `account_date`,`center_voucher_main`.`account_period` AS `account_period`,`center_voucher_main`.`finance_type` AS `finance_type`,`center_voucher_main`.`remark` AS `remark`,`center_voucher_main`.`happen_date` AS `happen_date`,`center_voucher_main`.`belong_date` AS `belong_date`,`center_voucher_main`.`valid_auth_user` AS `valid_auth_user`,`center_voucher_main`.`valid_time` AS `valid_time`,`center_voucher_main`.`import_user` AS `import_user`,`center_voucher_main`.`import_time` AS `import_time`,`center_voucher_main`.`status` AS `status`,`center_voucher_main`.`is_process` AS `is_process`,`center_voucher_main`.`source_module` AS `source_module`,`center_voucher_main`.`run_id` AS `run_id`,`center_voucher_main`.`update_user` AS `update_user`,`center_voucher_main`.`update_time` AS `update_time`,`center_voucher_main`.`create_time` AS `create_time`,`center_voucher_main`.`create_user` AS `create_user`,`center_voucher_main`.`error_msg` AS `error_msg` from `center_voucher_main` where (`center_voucher_main`.`id` &lt; 211289)&quot;</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;join_optimization&quot;: &#123;</span><br><span class="line">        &quot;select#&quot;: 1,</span><br><span class="line">        &quot;steps&quot;: [</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;condition_processing&quot;: &#123;</span><br><span class="line">              &quot;condition&quot;: &quot;WHERE&quot;,</span><br><span class="line">              &quot;original_condition&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;,</span><br><span class="line">              &quot;steps&quot;: [</span><br><span class="line">                &#123;</span><br><span class="line">                  &quot;transformation&quot;: &quot;equality_propagation&quot;,</span><br><span class="line">                  &quot;resulting_condition&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                  &quot;transformation&quot;: &quot;constant_propagation&quot;,</span><br><span class="line">                  &quot;resulting_condition&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                  &quot;transformation&quot;: &quot;trivial_condition_removal&quot;,</span><br><span class="line">                  &quot;resulting_condition&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;</span><br><span class="line">                &#125;</span><br><span class="line">              ]</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;table_dependencies&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;table&quot;: &quot;`center_voucher_main`&quot;,</span><br><span class="line">                &quot;row_may_be_null&quot;: false,</span><br><span class="line">                &quot;map_bit&quot;: 0,</span><br><span class="line">                &quot;depends_on_map_bits&quot;: [</span><br><span class="line">                ]</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;ref_optimizer_key_uses&quot;: [</span><br><span class="line">            ]</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;rows_estimation&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;table&quot;: &quot;`center_voucher_main`&quot;,</span><br><span class="line">                &quot;range_analysis&quot;: &#123;</span><br><span class="line">                  &quot;table_scan&quot;: &#123;</span><br><span class="line">                    &quot;rows&quot;: 29339,</span><br><span class="line">                    &quot;cost&quot;: 6350.9</span><br><span class="line">                  &#125;,</span><br><span class="line">                  &quot;potential_range_indices&quot;: [</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;index&quot;: &quot;PRIMARY&quot;,</span><br><span class="line">                      &quot;usable&quot;: true,</span><br><span class="line">                      &quot;key_parts&quot;: [</span><br><span class="line">                        &quot;id&quot;</span><br><span class="line">                      ]</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;index&quot;: &quot;trade_no&quot;,</span><br><span class="line">                      &quot;usable&quot;: false,</span><br><span class="line">                      &quot;cause&quot;: &quot;not_applicable&quot;</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;index&quot;: &quot;run_id&quot;,</span><br><span class="line">                      &quot;usable&quot;: false,</span><br><span class="line">                      &quot;cause&quot;: &quot;not_applicable&quot;</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;index&quot;: &quot;trade_no_inx&quot;,</span><br><span class="line">                      &quot;usable&quot;: false,</span><br><span class="line">                      &quot;cause&quot;: &quot;not_applicable&quot;</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;index&quot;: &quot;multi_field_index&quot;,</span><br><span class="line">                      &quot;usable&quot;: false,</span><br><span class="line">                      &quot;cause&quot;: &quot;not_applicable&quot;</span><br><span class="line">                    &#125;</span><br><span class="line">                  ],</span><br><span class="line">                  &quot;setup_range_conditions&quot;: [</span><br><span class="line">                  ],</span><br><span class="line">                  &quot;group_index_range&quot;: &#123;</span><br><span class="line">                    &quot;chosen&quot;: false,</span><br><span class="line">                    &quot;cause&quot;: &quot;not_group_by_or_distinct&quot;</span><br><span class="line">                  &#125;,</span><br><span class="line">                  &quot;analyzing_range_alternatives&quot;: &#123;</span><br><span class="line">                    &quot;range_scan_alternatives&quot;: [  ---- 执行计划及成本列表</span><br><span class="line">                      &#123;</span><br><span class="line">                        &quot;index&quot;: &quot;PRIMARY&quot;,    ---- 索引名称</span><br><span class="line">                        &quot;ranges&quot;: [</span><br><span class="line">                          &quot;id &lt; 211289&quot;</span><br><span class="line">                        ],</span><br><span class="line">                        &quot;index_dives_for_eq_ranges&quot;: true,</span><br><span class="line">                        &quot;rowid_ordered&quot;: true,</span><br><span class="line">                        &quot;using_mrr&quot;: false,</span><br><span class="line">                        &quot;index_only&quot;: false,</span><br><span class="line">                        &quot;rows&quot;: 14669,        ---- 扫描行数</span><br><span class="line">                        &quot;cost&quot;: 2975.1,       ---- 代价</span><br><span class="line">                        &quot;chosen&quot;: true        ---- 是否选中</span><br><span class="line">                      &#125;</span><br><span class="line">                    ],</span><br><span class="line">                    &quot;analyzing_roworder_intersect&quot;: &#123;</span><br><span class="line">                      &quot;usable&quot;: false,</span><br><span class="line">                      &quot;cause&quot;: &quot;too_few_roworder_scans&quot;</span><br><span class="line">                    &#125;</span><br><span class="line">                  &#125;,</span><br><span class="line">                  &quot;chosen_range_access_summary&quot;: &#123;</span><br><span class="line">                    &quot;range_access_plan&quot;: &#123;</span><br><span class="line">                      &quot;type&quot;: &quot;range_scan&quot;,</span><br><span class="line">                      &quot;index&quot;: &quot;PRIMARY&quot;,</span><br><span class="line">                      &quot;rows&quot;: 14669,</span><br><span class="line">                      &quot;ranges&quot;: [</span><br><span class="line">                        &quot;id &lt; 211289&quot;</span><br><span class="line">                      ]</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &quot;rows_for_plan&quot;: 14669,</span><br><span class="line">                    &quot;cost_for_plan&quot;: 2975.1,</span><br><span class="line">                    &quot;chosen&quot;: true</span><br><span class="line">                  &#125;</span><br><span class="line">                &#125;</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;considered_execution_plans&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;plan_prefix&quot;: [</span><br><span class="line">                ],</span><br><span class="line">                &quot;table&quot;: &quot;`center_voucher_main`&quot;,</span><br><span class="line">                &quot;best_access_path&quot;: &#123;</span><br><span class="line">                  &quot;considered_access_paths&quot;: [</span><br><span class="line">                    &#123;</span><br><span class="line">                      &quot;access_type&quot;: &quot;range&quot;,</span><br><span class="line">                      &quot;rows&quot;: 14669,</span><br><span class="line">                      &quot;cost&quot;: 5908.9,</span><br><span class="line">                      &quot;chosen&quot;: true</span><br><span class="line">                    &#125;</span><br><span class="line">                  ]</span><br><span class="line">                &#125;,</span><br><span class="line">                &quot;cost_for_plan&quot;: 5908.9,</span><br><span class="line">                &quot;rows_for_plan&quot;: 14669,</span><br><span class="line">                &quot;chosen&quot;: true</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;attaching_conditions_to_tables&quot;: &#123;</span><br><span class="line">              &quot;original_condition&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;,</span><br><span class="line">              &quot;attached_conditions_computation&quot;: [</span><br><span class="line">              ],</span><br><span class="line">              &quot;attached_conditions_summary&quot;: [</span><br><span class="line">                &#123;</span><br><span class="line">                  &quot;table&quot;: &quot;`center_voucher_main`&quot;,</span><br><span class="line">                  &quot;attached&quot;: &quot;(`center_voucher_main`.`id` &lt; 211289)&quot;</span><br><span class="line">                &#125;</span><br><span class="line">              ]</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;refine_plan&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;table&quot;: &quot;`center_voucher_main`&quot;,</span><br><span class="line">                &quot;access_type&quot;: &quot;range&quot;</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;join_explain&quot;: &#123;</span><br><span class="line">        &quot;select#&quot;: 1,</span><br><span class="line">        &quot;steps&quot;: [</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br><span class="line">MISSING_BYTES_BEYOND_MAX_MEM_SIZE: 0</span><br><span class="line">          INSUFFICIENT_PRIVILEGES: 0</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>　</p>
+<h2 id="profiling"><a href="#profiling" class="headerlink" title="profiling"></a>profiling</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>关注每一条SQL每一步的具体耗时</strong>，如：发送数据、排序……</p>
+<p><strong>Creating sort index</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; set profiling=1;</span><br><span class="line"></span><br><span class="line">mysql&gt; select……;</span><br><span class="line"></span><br><span class="line">mysql&gt; show profiles;</span><br><span class="line"></span><br><span class="line">mysql&gt; show profile for query query_id;</span><br><span class="line"></span><br><span class="line">mysql&gt; set profiling=0;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br></pre></td><td class="code"><pre><span class="line">set profiling=1;</span><br><span class="line"></span><br><span class="line">select * from center_voucher_main order by run_id desc;</span><br><span class="line"></span><br><span class="line">show profiles;</span><br><span class="line">+----------+------------+----------------------------------------------------------------+</span><br><span class="line">| Query_ID | Duration   | Query                                                          |</span><br><span class="line">+----------+------------+----------------------------------------------------------------+</span><br><span class="line">|        5 | 2.57044725 | select * from center_voucher_main order by run_id desc         |</span><br><span class="line">|        6 | 0.00463750 | show status like &quot;handler_read_%&quot;                              |</span><br><span class="line">|        7 | 0.00079075 | explain select * from center_voucher_main order by run_id desc |</span><br><span class="line">|        8 | 0.00053700 | explain select * from center_voucher_main where id&lt;211289      |</span><br><span class="line">|        9 | 0.00055025 | explain select * from center_voucher_main where id&lt;211289      |</span><br><span class="line">|       10 | 0.00066500 | explain select * from center_voucher_main where id&lt;211289      |</span><br><span class="line">|       11 | 0.00035050 | explain select * from center_voucher_main order by run_id desc |</span><br><span class="line">|       12 | 0.00122675 | show variables like &apos;%optimizer_trace%&apos;                        |</span><br><span class="line">|       13 | 0.00021300 | set optimizer_trace=&quot;enabled=on&quot;                               |</span><br><span class="line">|       14 | 0.00110200 | show variables like &apos;%optimizer_trace%&apos;                        |</span><br><span class="line">|       15 | 0.00106200 | explain select * from center_voucher_main where id&lt;211289      |</span><br><span class="line">|       16 | 0.00077275 | select * from information_schema.optimizer_trace               |</span><br><span class="line">|       17 | 0.00084625 | show create table information_schema.optimizer_trace           |</span><br><span class="line">|       18 | 0.00012625 | set profiling=1                                                |</span><br><span class="line">|       19 | 2.34017875 | select * from center_voucher_main order by run_id desc         |</span><br><span class="line">+----------+------------+----------------------------------------------------------------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">mysql&gt; show profile for query 19;</span><br><span class="line">+------------------------------+----------+</span><br><span class="line">| Status                       | Duration |</span><br><span class="line">+------------------------------+----------+</span><br><span class="line">| Waiting for query cache lock | 0.000039 |</span><br><span class="line">| Creating sort index          | 0.001343 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001397 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001385 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001454 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.002308 |</span><br><span class="line">| Waiting for query cache lock | 0.000011 |</span><br><span class="line">| Creating sort index          | 0.001377 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001358 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001321 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001428 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001388 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001382 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001461 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001282 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001270 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001575 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001754 |</span><br><span class="line">| Waiting for query cache lock | 0.000008 |</span><br><span class="line">| Creating sort index          | 0.001576 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001669 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001790 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001500 |</span><br><span class="line">| Waiting for query cache lock | 0.000008 |</span><br><span class="line">| Creating sort index          | 0.001537 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001490 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001507 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001596 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.002086 |</span><br><span class="line">| Waiting for query cache lock | 0.000010 |</span><br><span class="line">| Creating sort index          | 0.001511 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001480 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001486 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001250 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001202 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001368 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.227836 |</span><br><span class="line">| Waiting for query cache lock | 0.000012 |</span><br><span class="line">| Creating sort index          | 0.001724 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001901 |</span><br><span class="line">| Waiting for query cache lock | 0.000010 |</span><br><span class="line">| Creating sort index          | 0.001618 |</span><br><span class="line">| Waiting for query cache lock | 0.000009 |</span><br><span class="line">| Creating sort index          | 0.001519 |</span><br><span class="line">| Waiting for query cache lock | 0.000007 |</span><br><span class="line">| Creating sort index          | 0.001509 |</span><br><span class="line">| Waiting for query cache lock | 0.000005 |</span><br><span class="line">| Creating sort index          | 0.001595 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001509 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.002361 |</span><br><span class="line">| Waiting for query cache lock | 0.000010 |</span><br><span class="line">| Creating sort index          | 0.001472 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001485 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001458 |</span><br><span class="line">| Waiting for query cache lock | 0.000006 |</span><br><span class="line">| Creating sort index          | 0.001573 |</span><br><span class="line">| Waiting for query cache lock | 0.000008 |</span><br><span class="line">| Creating sort index          | 0.001827 |</span><br><span class="line">| Waiting for query cache lock | 0.000011 |</span><br><span class="line">| Creating sort index          | 0.001629 |</span><br><span class="line">| Waiting for query cache lock | 0.000010 |</span><br><span class="line">| Creating sort index          | 1.537206 |</span><br><span class="line">| end                          | 0.000015 |</span><br><span class="line">| query end                    | 0.000015 |</span><br><span class="line">| closing tables               | 0.000022 |</span><br><span class="line">| freeing items                | 0.000262 |</span><br><span class="line">| logging slow query           | 0.000066 |</span><br><span class="line">| cleaning up                  | 0.000019 |</span><br><span class="line">+------------------------------+----------+</span><br><span class="line">100 rows in set, 1 warning (0.01 sec)</span><br></pre></td></tr></table></figure>
+<h2 id="session-status"><a href="#session-status" class="headerlink" title="session status"></a>session status</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; pager cat - &gt; /dev/null;</span><br><span class="line"></span><br><span class="line">mysql&gt; flush status;</span><br><span class="line"></span><br><span class="line">mysql&gt; select ……;</span><br><span class="line"></span><br><span class="line">mysql&gt; nopager;</span><br><span class="line"></span><br><span class="line">mysql&gt; show status like &quot;handler_read_%&quot;;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Handler_read_rnd表示随机读取的条数，即未使用索引读取的条数</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show status like &quot;handler_read_%&quot;;</span><br><span class="line">+-----------------------+-------+</span><br><span class="line">| Variable_name         | Value |</span><br><span class="line">+-----------------------+-------+</span><br><span class="line">| Handler_read_first    | 2     |</span><br><span class="line">| Handler_read_key      | 60618 |</span><br><span class="line">| Handler_read_last     | 0     |</span><br><span class="line">| Handler_read_next     | 0     |</span><br><span class="line">| Handler_read_prev     | 0     |</span><br><span class="line">| Handler_read_rnd      | 60616 |</span><br><span class="line">| Handler_read_rnd_next | 60733 |</span><br><span class="line">+-----------------------+-------+</span><br><span class="line">7 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h2 id="mysqldumpslow或者pt-query-digest"><a href="#mysqldumpslow或者pt-query-digest" class="headerlink" title="mysqldumpslow或者pt-query-digest"></a>mysqldumpslow或者pt-query-digest</h2><h3 id="pt-query-digest"><a href="#pt-query-digest" class="headerlink" title="pt-query-digest"></a>pt-query-digest</h3><blockquote>
+<p><a href="http://www.php.cn/mysql-tutorials-357655.html" target="_blank" rel="noopener">http://www.php.cn/mysql-tutorials-357655.html</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://blog.csdn.net/seteor/article/details/24017913" target="_blank" rel="noopener">https://blog.csdn.net/seteor/article/details/24017913</a></p>
+</blockquote>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/<span class="built_in">local</span>/src</span><br><span class="line"></span><br><span class="line">wget percona.com/get/percona-toolkit.tar.gz</span><br><span class="line"></span><br><span class="line">tar zxf percona-toolkit.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> percona-toolkit-2.2.19</span><br><span class="line"></span><br><span class="line">perl Makefile.PL PREFIX=/usr/<span class="built_in">local</span>/percona-toolkit</span><br><span class="line"></span><br><span class="line">make &amp;&amp; make install</span><br><span class="line"></span><br><span class="line">yum install -y perl-Time-HiRes</span><br><span class="line"></span><br><span class="line">工具安装目录在：/usr/<span class="built_in">local</span>/percona-toolkit/bin</span><br></pre></td></tr></table></figure>
+<h4 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h4><blockquote>
+<p>pt-query-digest [OPTIONS] [FILES] [DSN]</p>
+<p>​    –create-review-table 当使用–review参数把分析结果输出到表中时，如果没有表就自动创建。</p>
+<p>​    –create-history-table 当使用–history参数把分析结果输出到表中时，如果没有表就自动创建。</p>
+<p>​    –filter 对输入的慢查询按指定的<a href="http://www.php.cn/wiki/57.html" target="_blank" rel="noopener">字符串</a>进行匹配过滤后再进行分析</p>
+<p>​    –limit 限制输出结果百分比或数量，默认值是20,即将最慢的20条语句输出，如果是50%则按总响应时间占比从大到小排序，输出到总和达到50%位置截止。</p>
+<p>​    –host mysql服务器地址</p>
+<p>​    –user mysql用户名</p>
+<p>​    –password mysql用户密码</p>
+<p>​    –history 将分析结果保存到表中，分析结果比较详细，下次再使用–history时，如果存在相同的语句，且查询所在的时间区间和历史表中的不同，则会记录到数据表中，可以通过查询同一CHECKSUM来比较某类型查询的历史变化。</p>
+<p>​    –review 将分析结果保存到表中，这个分析只是对查询条件进行参数化，一个类型的查询一条记录，比较简单。当下次使用–review时，如果存在相同的语句分析，就不会记录到数据表中。</p>
+<p>​    –output 分析结果输出类型，值可以是report(标准分析报告)、slowlog(Mysql slow log)、<a href="http://www.php.cn/wiki/1488.html" target="_blank" rel="noopener">json</a>、json-anon，一般使用report，以便于阅读。</p>
+<p>​    –since 从什么时间开始分析，值为字符串，可以是指定的某个”yyyy-mm-dd [hh:mm:ss]”格式的时间点，也可以是简单的一个时间值：s(秒)、h(小时)、m(分钟)、d(天)，如12h就表示从12小时前开始统计。</p>
+<p>​    –until 截止时间，配合—since可以分析一段时间内的慢查询。</p>
+</blockquote>
+<h4 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h4><h5 id="第一部分：总体统计结果"><a href="#第一部分：总体统计结果" class="headerlink" title="第一部分：总体统计结果"></a>第一部分：总体统计结果</h5><p>Overall：总共有多少条查询</p>
+<p>Time range：查询执行的时间范围</p>
+<p>unique：唯一查询数量，即对查询条件进行参数化以后，总共有多少个不同的查询</p>
+<p>total：总计 min：最小 max：最大 avg：平均</p>
+<p>95%：把所有值从小到大排列，位置位于95%的那个数，这个数一般最具有参考价值</p>
+<p>median：中位数，把所有值从小到大排列，位置位于中间那个数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"># 该工具执行日志分析的用户时间，系统时间，物理内存占用大小，虚拟内存占用大小</span><br><span class="line"></span><br><span class="line"># 340ms user time, 140ms system time, 23.99M rss, 203.11M vsz</span><br><span class="line"></span><br><span class="line"># 工具执行时间</span><br><span class="line"></span><br><span class="line"># Current date: Fri Nov 25 02:37:18 2016</span><br><span class="line"></span><br><span class="line"># 运行分析工具的主机名</span><br><span class="line"></span><br><span class="line"># Hostname: localhost.localdomain</span><br><span class="line"></span><br><span class="line"># 被分析的文件名</span><br><span class="line"></span><br><span class="line"># Files: slow.log</span><br><span class="line"></span><br><span class="line"># 语句总数量，唯一的语句数量，QPS，并发数</span><br><span class="line"></span><br><span class="line"># Overall: 2 total, 2 unique, 0.01 QPS, 0.01x concurrency </span><br><span class="line"></span><br><span class="line"># 日志记录的时间范围</span><br><span class="line"></span><br><span class="line"># Time range: 2016-11-22 06:06:18 to 06:11:40</span><br><span class="line"></span><br><span class="line"># 属性    总计  最小 最大 平均 95% 标准 中等</span><br><span class="line"></span><br><span class="line"># Attribute   total  min  max  avg  95% stddev median</span><br><span class="line"></span><br><span class="line"># ============  ======= ======= ======= ======= ======= ======= =======</span><br><span class="line"></span><br><span class="line"># 语句执行时间</span><br><span class="line"></span><br><span class="line"># Exec time    3s 640ms  2s  1s  2s 999ms  1s</span><br><span class="line"></span><br><span class="line"># 锁占用时间</span><br><span class="line"></span><br><span class="line"># Lock time   1ms  0  1ms 723us  1ms  1ms 723us</span><br><span class="line"></span><br><span class="line"># 发送到客户端的行数</span><br><span class="line"></span><br><span class="line"># Rows sent    5  1  4 2.50  4 2.12 2.50</span><br><span class="line"></span><br><span class="line"># select语句扫描行数</span><br><span class="line"></span><br><span class="line"># Rows examine  186.17k  0 186.17k 93.09k 186.17k 131.64k 93.09k</span><br><span class="line"></span><br><span class="line"># 查询的字符数</span><br><span class="line"></span><br><span class="line"># Query size   455  15  440 227.50  440 300.52 227.50</span><br></pre></td></tr></table></figure>
+<h5 id="第二部分：查询分组统计结果"><a href="#第二部分：查询分组统计结果" class="headerlink" title="第二部分：查询分组统计结果"></a>第二部分：查询分组统计结果</h5><p>Rank：所有语句的排名，默认按查询时间降序排列，通过–order-by指定</p>
+<p>Query ID：语句的ID，（去掉多余空格和文本字符，计算<a href="http://www.php.cn/wiki/762.html" target="_blank" rel="noopener">hash</a>值）</p>
+<p>Response：总的响应时间</p>
+<p>time：该查询在本次分析中总的时间占比</p>
+<p>calls：执行次数，即本次分析总共有多少条这种类型的查询语句</p>
+<p>R/Call：平均每次执行的响应时间</p>
+<p>V/M：响应时间Variance-to-mean的比率</p>
+<p>Item：查询<a href="http://www.php.cn/wiki/60.html" target="_blank" rel="noopener">对象</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># Profile</span><br><span class="line"></span><br><span class="line"># Rank Query ID   Response time Calls R/Call V/M Item</span><br><span class="line"></span><br><span class="line"># ==== ================== ============= ===== ====== ===== ===============</span><br><span class="line"></span><br><span class="line"># 1 0xF9A57DD5A41825CA 2.0529 76.2%  1 2.0529 0.00 SELECT</span><br><span class="line"></span><br><span class="line"># 2 0x4194D8F83F4F9365 0.6401 23.8%  1 0.6401 0.00 SELECT wx_member_base</span><br></pre></td></tr></table></figure>
+<h5 id="第三部分：每一种查询的详细统计结果"><a href="#第三部分：每一种查询的详细统计结果" class="headerlink" title="第三部分：每一种查询的详细统计结果"></a>第三部分：每一种查询的详细统计结果</h5><p>由下面查询的详细统计结果，最上面的<a href="http://www.php.cn/code/5947.html" target="_blank" rel="noopener">表格</a>列出了执行次数、最大、最小、平均、95%等各项目的统计。</p>
+<p>ID：查询的ID号，和上图的Query ID对应</p>
+<p>Databases：数据库名</p>
+<p>Users：各个用户执行的次数（占比）</p>
+<p>Query_time distribution ：查询时间分布, 长短体现区间占比，本例中1s-10s之间查询数量是10s以上的两倍。</p>
+<p>Tables：查询中涉及到的表</p>
+<p>Explain：SQL语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"># Query 1: 0 QPS, 0x concurrency, ID 0xF9A57DD5A41825CA at byte 802 </span><br><span class="line"></span><br><span class="line"># This item is included in the report because it matches --limit.</span><br><span class="line"></span><br><span class="line"># Scores: V/M = 0.00</span><br><span class="line"></span><br><span class="line"># Time range: all events occurred at 2016-11-22 06:11:40</span><br><span class="line"></span><br><span class="line"># Attribute pct total  min  max  avg  95% stddev median</span><br><span class="line"></span><br><span class="line"># ============ === ======= ======= ======= ======= ======= ======= =======</span><br><span class="line"></span><br><span class="line"># Count   50  1</span><br><span class="line"></span><br><span class="line"># Exec time  76  2s  2s  2s  2s  2s  0  2s</span><br><span class="line"></span><br><span class="line"># Lock time  0  0  0  0  0  0  0  0</span><br><span class="line"></span><br><span class="line"># Rows sent  20  1  1  1  1  1  0  1</span><br><span class="line"></span><br><span class="line"># Rows examine 0  0  0  0  0  0  0  0</span><br><span class="line"></span><br><span class="line"># Query size  3  15  15  15  15  15  0  15</span><br><span class="line"></span><br><span class="line"># String:</span><br><span class="line"></span><br><span class="line"># Databases test</span><br><span class="line"></span><br><span class="line"># Hosts  192.168.8.1</span><br><span class="line"></span><br><span class="line"># Users  mysql</span><br><span class="line"></span><br><span class="line"># Query_time distribution</span><br><span class="line"></span><br><span class="line"># 1us</span><br><span class="line"></span><br><span class="line"># 10us</span><br><span class="line"></span><br><span class="line"># 100us</span><br><span class="line"></span><br><span class="line"># 1ms</span><br><span class="line"></span><br><span class="line"># 10ms</span><br><span class="line"></span><br><span class="line"># 100ms</span><br><span class="line"></span><br><span class="line"># 1s ################################################################</span><br><span class="line"></span><br><span class="line"># 10s+</span><br><span class="line"></span><br><span class="line"># EXPLAIN /*!50100 PARTITIONS*/</span><br><span class="line"></span><br><span class="line">select sleep(2)\G</span><br></pre></td></tr></table></figure>
+<h4 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h4><p><strong>1.直接分析慢查询文件:</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest slow.log &gt; slow_report.log</span><br></pre></td></tr></table></figure>
+<p><strong>2.分析最近12小时内的查询：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --since=12h slow.log &gt; slow_report2.log</span><br></pre></td></tr></table></figure>
+<p><strong>3.分析指定时间范围内的查询：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest slow.log --since &apos;2017-01-07 09:30:00&apos; --until &apos;2017-01-07 10:00:00&apos;&gt; &gt; slow_report3.log</span><br></pre></td></tr></table></figure>
+<p><strong>4.分析指含有select语句的慢查询</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --filter &apos;$event-&gt;&#123;fingerprint&#125; =~ m/^select/i&apos; slow.log&gt; slow_report4.log</span><br></pre></td></tr></table></figure>
+<p><strong>5.针对某个用户的慢查询</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --filter &apos;($event-&gt;&#123;user&#125; || &quot;&quot;) =~ m/^root/i&apos; slow.log&gt; slow_report5.log</span><br></pre></td></tr></table></figure>
+<p><strong>6.查询所有所有的全表扫描或full join的慢查询</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --filter &apos;(($event-&gt;&#123;Full_scan&#125; || &quot;&quot;) eq &quot;yes&quot;) ||(($event-&gt;&#123;Full_join&#125; || &quot;&quot;) eq &quot;yes&quot;)&apos; slow.log&gt; slow_report6.log</span><br></pre></td></tr></table></figure>
+<p><strong>7.把查询保存到query_review表</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --user=root –password=abc123 --review h=localhost,D=test,t=query_review--create-review-table slow.log</span><br></pre></td></tr></table></figure>
+<p><strong>8.把查询保存到query_history表</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --user=root –password=abc123 --review h=localhost,D=test,t=query_history--create-review-table slow.log_0001``pt-query-digest --user=root –password=abc123 --review h=localhost,D=test,t=query_history--create-review-table slow.log_0002</span><br></pre></td></tr></table></figure>
+<p><strong>9.通过tcpdump抓取mysql的tcp协议数据，然后再分析</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 &gt; mysql.tcp.txt``pt-query-digest --type tcpdump mysql.tcp.txt&gt; slow_report9.log</span><br></pre></td></tr></table></figure>
+<p><strong>10.分析binlog</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqlbinlog mysql-bin.000093 &gt; mysql-bin000093.sql``pt-query-digest --type=binlog mysql-bin000093.sql &gt; slow_report10.log</span><br></pre></td></tr></table></figure>
+<p><strong>11.分析general log</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-query-digest --type=genlog localhost.log &gt; slow_report11.log</span><br></pre></td></tr></table></figure>
+<h3 id="mysqldumpslow"><a href="#mysqldumpslow" class="headerlink" title="mysqldumpslow"></a>mysqldumpslow</h3><blockquote>
+<p><a href="https://www.cnblogs.com/moss_tan_jun/p/8025504.html" target="_blank" rel="noopener">https://www.cnblogs.com/moss_tan_jun/p/8025504.html</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://blog.csdn.net/sunyuhua_keyboard/article/details/81204020" target="_blank" rel="noopener">https://blog.csdn.net/sunyuhua_keyboard/article/details/81204020</a></p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">-s 按照那种方式排序</span><br><span class="line">    c： 访问计数</span><br><span class="line">    l： 锁定时间</span><br><span class="line">    r:  返回记录</span><br><span class="line">    t:  查询时间</span><br><span class="line">    al：平均锁定时间</span><br><span class="line">    ar：平均访问记录数</span><br><span class="line">    at：平均查询时间</span><br><span class="line">-t 是top n的意思，返回多少条数据。</span><br><span class="line">-g 可以跟上正则匹配模式，大小写不敏感。</span><br></pre></td></tr></table></figure>
+<p><strong>得到访问时间最长的5个sql</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mysqldumpslow -s t -t 5 /var/log/mysql/mysql-slow.log</span><br><span class="line"></span><br><span class="line">Reading mysql slow query log from /var/log/mysql/mysql-slow.log</span><br><span class="line">Count: 1  Time=7536.34s (7536s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  DROP TABLE `test1`.`user`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=3513.11s (3513s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  insert into `sys_log_back`(`admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module`) SELECT `admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module` FROM `sys_log`</span><br><span class="line"></span><br><span class="line">Count: 6  Time=544.90s (3269s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@2hosts</span><br><span class="line">  #</span><br><span class="line"></span><br><span class="line">Count: 6  Time=456.27s (2737s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  insert into `sys_log`(`admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module`) SELECT `admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module` FROM `sys_log`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=864.30s (1728s)  Lock=0.00s (0s)  Rows=8057920.0 (16115840), root[root]@2hosts</span><br><span class="line">  select * from sys_log</span><br></pre></td></tr></table></figure>
+<p><strong>得到访问次数最多的20个sql</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mysqldumpslow -s c -t 20 /var/log/mysql/mysql-slow.log </span><br><span class="line"></span><br><span class="line">Reading mysql slow query log from /var/log/mysql/mysql-slow.log</span><br><span class="line">Count: 604  Time=2.50s (1512s)  Lock=0.00s (0s)  Rows=387.4 (233995), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT intcol1,charcol1 FROM t1</span><br><span class="line"></span><br><span class="line">Count: 272  Time=2.18s (593s)  Lock=0.00s (0s)  Rows=1.0 (272), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(distinct trade_no) AS tp_count FROM `center_view_voucher` WHERE  `account_period` = &apos;S&apos;  AND `first_business_code` IN (&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;)  AND `source_module` = &apos;S&apos;  AND `status` = N LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 170  Time=6.85s (1164s)  Lock=0.71s (121s)  Rows=0.0 (0), root[root]@[127.0.0.1]</span><br><span class="line">  UPDATE `flow_run_prcs`  SET `prcs_status`=N,`update_time`=&apos;S&apos;,`update_user`=N  WHERE  `op_user` IN (N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N)  AND `prcs_status` IN (N,N)</span><br><span class="line"></span><br><span class="line">Count: 137  Time=2.20s (300s)  Lock=0.00s (0s)  Rows=1.0 (137), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(distinct trade_no) AS tp_count FROM `center_view_voucher` WHERE  `account_period` = &apos;S&apos;  AND `first_business_code` IN (&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;,&apos;S&apos;)  AND `source_module` = &apos;S&apos;  AND `status` &lt;&gt; N LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 126  Time=2.44s (306s)  Lock=0.00s (0s)  Rows=1.0 (126), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(distinct trade_no) AS tp_count FROM `center_view_voucher` WHERE  `account_period` = &apos;S&apos;  AND `first_business_code` = &apos;S&apos;  AND `source_module` = &apos;S&apos;  AND `status` = N LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 91  Time=2.49s (226s)  Lock=0.00s (0s)  Rows=1.0 (91), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(distinct trade_no) AS tp_count FROM `center_view_voucher` WHERE  `account_period` = &apos;S&apos;  AND `first_business_code` = &apos;S&apos;  AND `source_module` = &apos;S&apos;  AND `status` &lt;&gt; N LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 90  Time=4.96s (446s)  Lock=0.02s (1s)  Rows=28.0 (2520), root[root]@[127.0.0.1]</span><br><span class="line">  select id from deviceattr where name=&apos;S&apos; or name=&apos;S&apos; group by id</span><br><span class="line"></span><br><span class="line">Count: 82  Time=2.81s (230s)  Lock=0.00s (0s)  Rows=124.5 (10211), root[root]@[192.168.132.2]</span><br><span class="line">  SHOW TABLE STATUS</span><br><span class="line"></span><br><span class="line">Count: 66  Time=3.47s (228s)  Lock=0.00s (0s)  Rows=1.0 (66), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(*) AS tp_count FROM `center_view_voucher` WHERE  (  `status` = N )  AND (  (first_business_code = &quot;S&quot;  ) or  (first_business_code = &quot;S&quot;  ) or  (first_business_code = &quot;S&quot;  ) or  (first_business_code = &quot;S&quot;  ) or  (first_business_code = &quot;S&quot;  ) or  (first_business_code = &quot;S&quot;  ) ) LIMIT N</span><br></pre></td></tr></table></figure>
+<p><strong>得到返回记录最多的20个sql</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mysqldumpslow -s r -t 20 /var/log/mysql/mysql-slow.log </span><br><span class="line"></span><br><span class="line">Reading mysql slow query log from /var/log/mysql/mysql-slow.log</span><br><span class="line">Count: 2  Time=864.30s (1728s)  Lock=0.00s (0s)  Rows=8057920.0 (16115840), root[root]@2hosts</span><br><span class="line">  select * from sys_log</span><br><span class="line"></span><br><span class="line">Count: 2  Time=5.47s (10s)  Lock=0.00s (0s)  Rows=400593.0 (801186), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `cfg_online`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=21.94s (43s)  Lock=0.00s (0s)  Rows=212758.0 (425516), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `web_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=5.81s (5s)  Lock=0.00s (0s)  Rows=408894.0 (408894), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `cfg_online`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=42.50s (42s)  Lock=0.00s (0s)  Rows=389465.0 (389465), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `web_log`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=3.05s (6s)  Lock=0.00s (0s)  Rows=170996.5 (341993), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `rck_resume_privilege`</span><br><span class="line"></span><br><span class="line">Count: 604  Time=2.50s (1512s)  Lock=0.00s (0s)  Rows=387.4 (233995), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT intcol1,charcol1 FROM t1</span><br></pre></td></tr></table></figure>
+<p><strong>得到平均访问记录数最多的20条sql</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mysqldumpslow -s ar -t 20 /var/log/mysql/mysql-slow.log </span><br><span class="line"></span><br><span class="line">Reading mysql slow query log from /var/log/mysql/mysql-slow.log</span><br><span class="line">Count: 2  Time=864.30s (1728s)  Lock=0.00s (0s)  Rows=8057920.0 (16115840), root[root]@2hosts</span><br><span class="line">  select * from sys_log</span><br><span class="line"></span><br><span class="line">Count: 1  Time=5.81s (5s)  Lock=0.00s (0s)  Rows=408894.0 (408894), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `cfg_online`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=5.47s (10s)  Lock=0.00s (0s)  Rows=400593.0 (801186), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `cfg_online`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=42.50s (42s)  Lock=0.00s (0s)  Rows=389465.0 (389465), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `web_log`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=21.94s (43s)  Lock=0.00s (0s)  Rows=212758.0 (425516), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `web_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=4.36s (4s)  Lock=0.00s (0s)  Rows=183650.0 (183650), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `rck_resume_operate_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=5.98s (5s)  Lock=0.00s (0s)  Rows=183650.0 (183650), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `rck_resume_operate_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=2.82s (2s)  Lock=0.00s (0s)  Rows=172210.0 (172210), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `rck_resume_privilege`</span><br><span class="line"></span><br><span class="line">Count: 2  Time=3.05s (6s)  Lock=0.00s (0s)  Rows=170996.5 (341993), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `rck_resume_privilege`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=14.95s (14s)  Lock=0.00s (0s)  Rows=170764.0 (170764), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `rck_resume`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=17.72s (17s)  Lock=0.00s (0s)  Rows=170764.0 (170764), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `rck_resume`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=17.90s (17s)  Lock=0.00s (0s)  Rows=168174.0 (168174), root[root]@localhost</span><br><span class="line">  SELECT /*!N SQL_NO_CACHE */ * FROM `rck_resume_body`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=20.77s (20s)  Lock=0.00s (0s)  Rows=168174.0 (168174), root[root]@[192.168.132.2]</span><br><span class="line">  SELECT * FROM `rck_resume_body`</span><br><span class="line"></span><br><span class="line">Count: 6  Time=2.15s (12s)  Lock=0.00s (0s)  Rows=30308.0 (181848), root[root]@localhost</span><br><span class="line">  select * from center_voucher_main</span><br></pre></td></tr></table></figure>
+<p><strong>得到平均访问次数最多,并且里面含有sys_log字符的20条sql</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">root@php5# mysqldumpslow -s ar -t 20 -g &quot;sys_log&quot; /var/log/mysql/mysql-slow.log </span><br><span class="line"></span><br><span class="line">Reading mysql slow query log from /var/log/mysql/mysql-slow.log</span><br><span class="line">Count: 2  Time=864.30s (1728s)  Lock=0.00s (0s)  Rows=8057920.0 (16115840), root[root]@2hosts</span><br><span class="line">  select * from sys_log</span><br><span class="line"></span><br><span class="line">Count: 1  Time=6.27s (6s)  Lock=0.00s (0s)  Rows=36.0 (36), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT * FROM `sys_log` WHERE  `system` = &apos;S&apos; ORDER BY `id`  desc LIMIT N,N</span><br><span class="line"></span><br><span class="line">Count: 1  Time=6.69s (6s)  Lock=0.00s (0s)  Rows=20.0 (20), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT * FROM `sys_log` ORDER BY update_time desc LIMIT N,N</span><br><span class="line"></span><br><span class="line">Count: 1  Time=5.79s (5s)  Lock=0.00s (0s)  Rows=1.0 (1), root[root]@[192.168.132.2]</span><br><span class="line">  select max(id) from sys_log</span><br><span class="line"></span><br><span class="line">Count: 2  Time=2.63s (5s)  Lock=0.00s (0s)  Rows=1.0 (2), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(*) AS tp_count FROM `sys_log` WHERE  `system` = &apos;S&apos; LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 1  Time=2.71s (2s)  Lock=0.00s (0s)  Rows=1.0 (1), root[root]@[127.0.0.1]</span><br><span class="line">  SELECT COUNT(*) AS tp_count FROM `sys_log` LIMIT N</span><br><span class="line"></span><br><span class="line">Count: 1  Time=11.38s (11s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@localhost</span><br><span class="line">  drop table sys_log</span><br><span class="line"></span><br><span class="line">Count: 1  Time=2.34s (2s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[127.0.0.1]</span><br><span class="line">  INSERT INTO `sys_log` (`atype` , `admin` , `remark` , `ip` , `update_time` , `system` , `module`) VALUES (&apos;S&apos; , &apos;S&apos; , &apos;S&apos; , &apos;S&apos; , N , &apos;S&apos; , &apos;S&apos;)</span><br><span class="line"></span><br><span class="line">Count: 6  Time=456.27s (2737s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  insert into `sys_log`(`admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module`) SELECT `admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module` FROM `sys_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=3513.11s (3513s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  insert into `sys_log_back`(`admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module`) SELECT `admin`,`atype`,`remark`,`ip`,`update_time`, `system`, `module` FROM `sys_log`</span><br><span class="line"></span><br><span class="line">Count: 1  Time=18.73s (18s)  Lock=0.00s (0s)  Rows=0.0 (0), root[root]@[192.168.132.2]</span><br><span class="line">  drop table sys_log_back</span><br><span class="line"></span><br><span class="line">Died at /usr/local/mysql/bin/mysqldumpslow line 161, &lt;&gt; chunk 2353.</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/性能监控/" rel="tag"># 性能监控</a>
+          
+            <a href="/tags/SQL语句优化/" rel="tag"># SQL语句优化</a>
+          
+            <a href="/tags/MySql-性能监控/" rel="tag"># MySql 性能监控</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/20/MySQL Explain详解/" rel="next" title="MySQL Explain详解">
+                <i class="fa fa-chevron-left"></i> MySQL Explain详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/21/聊聊 5.7 error log 那些事儿/" rel="prev" title="聊聊 5.7 error log 那些事儿">
+                聊聊 5.7 error log 那些事儿 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#分析SQL性能的几种方式"><span class="nav-number">1.</span> <span class="nav-text">分析SQL性能的几种方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#explain生成执行计划"><span class="nav-number">1.1.</span> <span class="nav-text">explain生成执行计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#optimizer-trace"><span class="nav-number">1.2.</span> <span class="nav-text">optimizer_trace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#profiling"><span class="nav-number">1.3.</span> <span class="nav-text">profiling</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session-status"><span class="nav-number">1.4.</span> <span class="nav-text">session status</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysqldumpslow或者pt-query-digest"><span class="nav-number">1.5.</span> <span class="nav-text">mysqldumpslow或者pt-query-digest</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#pt-query-digest"><span class="nav-number">1.5.1.</span> <span class="nav-text">pt-query-digest</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#安装"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#介绍"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分析"><span class="nav-number">1.5.1.3.</span> <span class="nav-text">分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#第一部分：总体统计结果"><span class="nav-number">1.5.1.3.1.</span> <span class="nav-text">第一部分：总体统计结果</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#第二部分：查询分组统计结果"><span class="nav-number">1.5.1.3.2.</span> <span class="nav-text">第二部分：查询分组统计结果</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#第三部分：每一种查询的详细统计结果"><span class="nav-number">1.5.1.3.3.</span> <span class="nav-text">第三部分：每一种查询的详细统计结果</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用示例"><span class="nav-number">1.5.1.4.</span> <span class="nav-text">使用示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mysqldumpslow"><span class="nav-number">1.5.2.</span> <span class="nav-text">mysqldumpslow</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

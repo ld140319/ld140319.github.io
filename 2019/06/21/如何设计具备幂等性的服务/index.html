@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,幂等性,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="如何设计具备幂等性的服务幂等的目的&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为何会存在需要服务的幂等，在互联网中由于网络的不稳定和一些业务重复确认设计，对一个接口的调用存在重试的机制，为了确保执行同一个请求执行一次和执行多次的效果是一样的，所以就存在了幂等的设计。 举个例子，如果在转账的交易中，A给B进行一笔转账，如果没有幂等性，很可能就因为各种原因导致了A给B进行了">
+<meta name="keywords" content="架构,幂等性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何设计具备幂等性的服务">
+<meta property="og:url" content="http://blog.com/2019/06/21/如何设计具备幂等性的服务/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="如何设计具备幂等性的服务幂等的目的&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为何会存在需要服务的幂等，在互联网中由于网络的不稳定和一些业务重复确认设计，对一个接口的调用存在重试的机制，为了确保执行同一个请求执行一次和执行多次的效果是一样的，所以就存在了幂等的设计。 举个例子，如果在转账的交易中，A给B进行一笔转账，如果没有幂等性，很可能就因为各种原因导致了A给B进行了">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-21T15:28:04.090Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何设计具备幂等性的服务">
+<meta name="twitter:description" content="如何设计具备幂等性的服务幂等的目的&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为何会存在需要服务的幂等，在互联网中由于网络的不稳定和一些业务重复确认设计，对一个接口的调用存在重试的机制，为了确保执行同一个请求执行一次和执行多次的效果是一样的，所以就存在了幂等的设计。 举个例子，如果在转账的交易中，A给B进行一笔转账，如果没有幂等性，很可能就因为各种原因导致了A给B进行了">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/21/如何设计具备幂等性的服务/">
+
+
+
+
+
+  <title>如何设计具备幂等性的服务 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/21/如何设计具备幂等性的服务/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">如何设计具备幂等性的服务</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-21T12:12:57+08:00">
+                2019-06-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/幂等性/" itemprop="url" rel="index">
+                    <span itemprop="name">幂等性</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="如何设计具备幂等性的服务"><a href="#如何设计具备幂等性的服务" class="headerlink" title="如何设计具备幂等性的服务"></a>如何设计具备幂等性的服务</h1><h2 id="幂等的目的"><a href="#幂等的目的" class="headerlink" title="幂等的目的"></a>幂等的目的</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为何会存在需要服务的幂等，在互联网中由于网络的不稳定和一些业务重复确认设计，对一个接口的调用存在重试的机制，<strong>为了确保执行同一个请求执行一次和执行多次的效果是一样的，所以就存在了幂等的设计</strong>。 举个例子，如果在转账的交易中，A给B进行一笔转账，如果没有幂等性，很可能就因为各种原因导致了A给B进行了多笔转账，在银行系统中，这个就是重大的灾难。</p>
+<h2 id="幂等的定义"><a href="#幂等的定义" class="headerlink" title="幂等的定义"></a>幂等的定义</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;服务的幂等可能划分为2个层面，一个是从<strong>接口的请求</strong>层面，一个是从<strong>业务</strong>层面考虑。</p>
+<h3 id="请求层面"><a href="#请求层面" class="headerlink" title="请求层面"></a>请求层面</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从请求层面考虑，就是<strong>一个接口得保证请求一个和请求多次得到的效果是一致的</strong>。 如果用数据表达式是这样的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">f...f(f(x)) = f(x) </span><br><span class="line">x是参数</span><br><span class="line">f是执行函数</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;把相同的参数传给执行函数，不管执行了多少次，结果是一致的。</p>
+<h3 id="业务层面"><a href="#业务层面" class="headerlink" title="业务层面"></a>业务层面</h3><p>从业务角度出来，保证重复执行不会对正常的业务造成影响。</p>
+<blockquote>
+<p>一个用户在一次购买中不能重复下单</p>
+<p>库存剩下了1个商品，现在有10个人抢购，怎么保证不超卖</p>
+<p>MQ的生产者是不需要保证幂等，很可能把同一条消息发送多次，需要保证MQ消费端去重，MQ消费者保证这批消息只会执行一个</p>
+</blockquote>
+<h2 id="导致非幂等原因"><a href="#导致非幂等原因" class="headerlink" title="导致非幂等原因"></a>导致非幂等原因</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;先了解下为何会出现不幂等的原因，因为<strong><code>retry</code>重试</strong>，如果取消<code>retry</code>机制，是否就能杜绝不幂等呢，答案应该是肯定的，但取消<code>retry</code>是否现实，我们来看看究竟在什么场合会出现<code>retry</code></p>
+<blockquote>
+<p>用户进行下订单，调用下单接口超时，调用方又发起一次创建下单接口。</p>
+<p>用户下单进行扣减库存，调用扣减库存接口超时了，调用方又发起一次扣减库存接口。</p>
+<p>下单完毕后，生产者发送一条MQ，MQ超时没有及时响应ACK，生产者又再发送一条MQ，消费者连续就收到了两条MQ</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从整个系统或业务层面其实很难去做到去<code>retry</code>，所以在一些接口的幂等性还是需要我们自己来做。</p>
+<h1 id="幂等作用范围"><a href="#幂等作用范围" class="headerlink" title="幂等作用范围"></a>幂等作用范围</h1><h3 id="读-写请求层面范围幂等"><a href="#读-写请求层面范围幂等" class="headerlink" title="读/写请求层面范围幂等"></a>读/写请求层面范围幂等</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;读没有造成数据的改变，只有写请求才会造成数据改变。</p>
+<h3 id="架构层面范围幂等"><a href="#架构层面范围幂等" class="headerlink" title="架构层面范围幂等"></a>架构层面范围幂等</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;究竟在哪些层会造成数据的改变</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;反向代理？网关？业务逻辑？数据访问？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从架构层面出发，哪些层会对数据造成改变，只有造成数据改变的层才需要做出幂等，很显然，数据访问层直接操作<code>DB</code>和<code>Cache</code>（业务逻辑层也可能访问操作<code>cache</code>），从请求层面来看，我们需要对数据访问层进行幂等操作。</p>
+<h4 id="数据访问层哪些操作需要幂等"><a href="#数据访问层哪些操作需要幂等" class="headerlink" title="数据访问层哪些操作需要幂等"></a>数据访问层哪些操作需要幂等</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从数据层面出发，数据访问层 也就提供了<code>CRUD</code>四个请求层面,先站在数据层出发，看看是否可以对数据访问层进行一定改造让数据访问层达到幂等性</p>
+<h5 id="Create-Select-操作"><a href="#Create-Select-操作" class="headerlink" title="Create / Select 操作"></a>Create / Select 操作</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user (name,pm) values (&apos;petty&apos;,18)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于<code>user</code>表的主键是自增ID，所以每次插入都会新增一条，可以考虑进行改造，让<code>prikey</code>程序实现而不依赖数据库，或者<strong>创建具备unique的索引，确保不会出现重复录入的行</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">insert into user (id,name,pm) values (100,&apos;petty&apos;,18) </span><br><span class="line"></span><br><span class="line">insert into user (id,name,pm) values (100,&apos;petty&apos;,18) </span><br><span class="line">[error : Duplicate entry &apos;100&apos; for key &apos;PRIMARY&apos;]</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实无论是否考虑到幂等性，在分布式服务中，都应该尽量避免使用数据库直接生成Id的方式去创建主键。</p>
+<h5 id="Update-操作"><a href="#Update-操作" class="headerlink" title="Update 操作"></a>Update 操作</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对数据库的update操作简单来说，有【绝对值】修改<code>set [ num = 100 ]</code>，【相对值】修改<code>set [ num++ ]</code>：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝对值修改，例如商品下架</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update product status = -1 where pid=1</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;属于天然幂等，如论执行多少次，结果都一直，不需要改造</p>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;（可能有人会有疑问说，如果又有另外一个线程把status修改成0，然后retry又把status修改成-1，那就达不到幂等效果，其实这个是另外一个问题了，这个不是本接口幂等的问题，而是业务隔离的问题）</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相对值修改，年龄增加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update xx set pm=pm++ where id = 100</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个就是明显的不具备幂等性，解决思路，现<strong>在程序层中查出数值进行计算</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">update xx set pm=19 where id = 100</span><br><span class="line">替换</span><br><span class="line">update xx set pm=pm++ where id = 100 and pm = 18</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里可以在数据层面解决幂等性，不过这里多查了一次<code>sql</code>也会带来性能上的一个问题。<strong>先查询出旧年龄pm=18、然后+1，直接update pm=19</strong></p>
+<h5 id="Delete-操作"><a href="#Delete-操作" class="headerlink" title="Delete 操作"></a>Delete 操作</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">delete from xx order by pm desc limit 10</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>delete</code>道理跟<code>update</code>一致，回到业务中，除非我们想<code>drop</code>掉整个表，不然其实不可以 <code>delete</code>掉相对的条件的范围，一般都是需要查询出来哪些确切要<code>delete</code>的<code>id</code>，然后针对这批<code>id</code>进行<code>delete</code></p>
+<h3 id="业务层面的幂等"><a href="#业务层面的幂等" class="headerlink" title="业务层面的幂等"></a>业务层面的幂等</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面从数据层面对<code>CRUD</code>做幂等处理，不过幂等性更多是考虑到业务场景，看一个例子。</p>
+<h4 id="状态机控制"><a href="#状态机控制" class="headerlink" title="状态机控制"></a>状态机控制</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如我们有一个订单，假如订单的状态有：未确认-&gt;已经创建-&gt;已付款-&gt;已确认</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">update order set status = 已经创建 where orderid=1 and status = 未确认</span><br><span class="line"></span><br><span class="line">update order set status = 已经创建 where orderid=1 and status = 未确认</span><br><span class="line">【无效】</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过在设计状态字段，<strong>使用状态机的机制，确保<code>status</code>必须按照业务的流程往下走，这样在第二次更新时也会无效达到了幂等性的效果</strong>。</p>
+<h4 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h4><p>（<strong>相同时间同时执行</strong>）</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;刚说到在<code>MQ</code>的消费场景中，可能出现多次消费的情况，这个情况只能由消费者自己解决，举个例子：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当用户下订单因为生产者不需要幂等产生了2个<code>MQ</code>，分别<code>msg=xx001,msg=xx002</code>,他们的<code>orderid</code>都是001，两个消息都发送给了<code>MQ</code>，<code>MQ</code>再将两个消息发送给2个消费者。两个消费者现在用<code>orderid</code>为<code>key</code>，组成了一把分布式锁，<strong>两个消费者同时去获取这一把锁，不过它们之间只能有一个消费者获取成功，或者成功的消费者将消费这个<code>mq</code>并执行，或者不成功的消费者将取消执行</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>分布式锁主要起到的作用是解决并行的问题，将原本可能出问题的并行转为串性</strong>。</p>
+<p>分布式锁解决不了的问题：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当一个消费线程获取锁之后，很快就执行了，然后把锁释放掉。另外一个线程因为<code>MQ</code>时延等问题在第一个线程执行完之后才接收到<code>MQ</code>，又获取到分布式锁，又将接口再一次执行。（<strong>不同时间重复执行</strong>）</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分布式锁其实并不解决幂等性问题，但是可以看得出来，这两次接口的执行并不是并发执行，两次是一个串行关系，<strong>只要是串行关系，那可以借助状态机的机器去解决</strong>。这个时候就变成了一个业务隔离的问题</p>
+<h4 id="去重表"><a href="#去重表" class="headerlink" title="去重表"></a>去重表</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个场景适合业务中<strong>有唯一插入的场景</strong>，例如在支付的场景中，订单只能被支付一次，可以把<code>orderid</code>作为一个唯一标示。新建一张<strong>去重表</strong>，并把<code>orderid</code>作为唯一索引，在写入订单表时，联通去重表一起写入并放在同一个事务中，如果重复调用，会由去重表抛出唯一索引约束的异常，进行回滚。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/幂等性/" rel="tag"># 幂等性</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/18/seq命令的使用/" rel="next" title="seq命令的使用">
+                <i class="fa fa-chevron-left"></i> seq命令的使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/21/Laravel 二级域名绑定子目录 Nginx 配置/" rel="prev" title="Laravel 二级域名绑定子目录 Nginx 配置">
+                Laravel 二级域名绑定子目录 Nginx 配置 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何设计具备幂等性的服务"><span class="nav-number">1.</span> <span class="nav-text">如何设计具备幂等性的服务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#幂等的目的"><span class="nav-number">1.1.</span> <span class="nav-text">幂等的目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#幂等的定义"><span class="nav-number">1.2.</span> <span class="nav-text">幂等的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#请求层面"><span class="nav-number">1.2.1.</span> <span class="nav-text">请求层面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#业务层面"><span class="nav-number">1.2.2.</span> <span class="nav-text">业务层面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#导致非幂等原因"><span class="nav-number">1.3.</span> <span class="nav-text">导致非幂等原因</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#幂等作用范围"><span class="nav-number">2.</span> <span class="nav-text">幂等作用范围</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#读-写请求层面范围幂等"><span class="nav-number">2.0.1.</span> <span class="nav-text">读/写请求层面范围幂等</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#架构层面范围幂等"><span class="nav-number">2.0.2.</span> <span class="nav-text">架构层面范围幂等</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据访问层哪些操作需要幂等"><span class="nav-number">2.0.2.1.</span> <span class="nav-text">数据访问层哪些操作需要幂等</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Create-Select-操作"><span class="nav-number">2.0.2.1.1.</span> <span class="nav-text">Create / Select 操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Update-操作"><span class="nav-number">2.0.2.1.2.</span> <span class="nav-text">Update 操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Delete-操作"><span class="nav-number">2.0.2.1.3.</span> <span class="nav-text">Delete 操作</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#业务层面的幂等"><span class="nav-number">2.0.3.</span> <span class="nav-text">业务层面的幂等</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#状态机控制"><span class="nav-number">2.0.3.1.</span> <span class="nav-text">状态机控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式锁"><span class="nav-number">2.0.3.2.</span> <span class="nav-text">分布式锁</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#去重表"><span class="nav-number">2.0.3.3.</span> <span class="nav-text">去重表</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

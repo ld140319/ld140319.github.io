@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Lua,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="metatable元表&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在 Lua table 中我们可以访问对应的key来得到value值，但是却无法对两个 table 进行操作。因此Lua 提供了元表(Metatable)，允许我们改变table的行为，每个行为关联了对应的元方法。 例如，使用元表我们可以定义Lua如何计算两个table的相加操作a+b。 &amp;nbsp;&amp;n">
+<meta name="keywords" content="Lua">
+<meta property="og:type" content="article">
+<meta property="og:title" content="metatable元表">
+<meta property="og:url" content="http://blog.com/2019/09/19/metatable元表/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="metatable元表&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在 Lua table 中我们可以访问对应的key来得到value值，但是却无法对两个 table 进行操作。因此Lua 提供了元表(Metatable)，允许我们改变table的行为，每个行为关联了对应的元方法。 例如，使用元表我们可以定义Lua如何计算两个table的相加操作a+b。 &amp;nbsp;&amp;n">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-09-19T14:48:06.221Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="metatable元表">
+<meta name="twitter:description" content="metatable元表&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在 Lua table 中我们可以访问对应的key来得到value值，但是却无法对两个 table 进行操作。因此Lua 提供了元表(Metatable)，允许我们改变table的行为，每个行为关联了对应的元方法。 例如，使用元表我们可以定义Lua如何计算两个table的相加操作a+b。 &amp;nbsp;&amp;n">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/19/metatable元表/">
+
+
+
+
+
+  <title>metatable元表 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/19/metatable元表/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">metatable元表</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-19T12:12:57+08:00">
+                2019-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Lua/" itemprop="url" rel="index">
+                    <span itemprop="name">Lua</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="metatable元表"><a href="#metatable元表" class="headerlink" title="metatable元表"></a>metatable元表</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在 Lua table 中我们可以访问对应的key来得到value值，但是却无法对两个 table 进行操作。因此<strong>Lua 提供了元表(Metatable)，允许我们改变table的行为，每个行为关联了对应的元方法</strong>。</p>
+<p>例如，使用元表我们可以定义Lua如何计算两个table的相加操作a+b。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当Lua试图对两个表进行相加时，先检查两者之一是否有元表，之后检查是否有一个叫”<strong>add”的字段，若找到，则调用对应的值。”</strong>add”等即时字段，其对应的值（往往是一个函数或是table）就是”元方法”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有两个很重要的函数来处理元表：</p>
+<ul>
+<li><strong>setmetatable(table,metatable):</strong> 对指定table设置元表(metatable)，如果元表(metatable)中存在__metatable键值，setmetatable会失败 。</li>
+<li><strong>getmetatable(table):</strong> 返回对象的元表(metatable)。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以下实例演示了如何对指定的表设置元表：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mytable = &#123;&#125;                          <span class="comment">-- 普通表 </span></span><br><span class="line">mymetatable = &#123;&#125;                      <span class="comment">-- 元表</span></span><br><span class="line"><span class="built_in">setmetatable</span>(mytable,mymetatable)     <span class="comment">-- 把 mymetatable 设为 mytable 的元表</span></span><br></pre></td></tr></table></figure>
+<p>以上代码也可以直接写成一行：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;&#125;,&#123;&#125;)</span><br></pre></td></tr></table></figure>
+<p>以下为返回对象元表：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">getmetatable</span>(mytable)                 <span class="comment">-- 这回返回mymetatable</span></span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="index-元方法"><a href="#index-元方法" class="headerlink" title="__index 元方法"></a>__index 元方法</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这是 metatable 最常用的键。当你通过键来访问 table 的时候，<strong>如果这个键没有值，那么Lua就会寻找该table的metatable（假定有metatable）中的__index 键。如果__index包含一个表格，Lua会在表格中查找相应的键</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们可以在使用 lua 命令进入交互模式查看：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ lua</span><br><span class="line">Lua <span class="number">5.3</span><span class="number">.0</span>  Copyright (C) <span class="number">1994</span><span class="number">-2015</span> Lua.org, PUC-Rio</span><br><span class="line">&gt; other = &#123; foo = <span class="number">3</span> &#125; </span><br><span class="line">&gt; t = <span class="built_in">setmetatable</span>(&#123;&#125;, &#123; <span class="built_in">__index</span> = other &#125;) </span><br><span class="line">&gt; t.foo</span><br><span class="line"><span class="number">3</span></span><br><span class="line">&gt; t.bar</span><br><span class="line"><span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果__index包含一个函数的话，Lua就会调用那个函数，table和键会作为参数传递给函数</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>__index 元方法查看表中元素是否存在，如果不存在，返回结果为 nil；如果存在则由 __index 返回结果</strong>。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;key1 = <span class="string">"value1"</span>&#125;, &#123;</span><br><span class="line">  <span class="built_in">__index</span> = <span class="function"><span class="keyword">function</span><span class="params">(mytable, key)</span></span></span><br><span class="line">    <span class="keyword">if</span> key == <span class="string">"key2"</span> <span class="keyword">then</span></span><br><span class="line">      <span class="keyword">return</span> <span class="string">"metatablevalue"</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(mytable.key1,mytable.key2)</span><br></pre></td></tr></table></figure>
+<p>实例输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">value1    metatablevalue</span><br></pre></td></tr></table></figure>
+<p>实例解析：</p>
+<ul>
+<li>mytable 表赋值为 <strong>{key1 = “value1”}</strong>。</li>
+<li>mytable 设置了元表，元方法为 __index。</li>
+<li>在mytable表中查找 key1，如果找到，返回该元素，找不到则继续。</li>
+<li>在mytable表中查找 key2，如果找到，返回 metatablevalue，找不到则继续。</li>
+<li>判断元表有没有__index方法，如果__index方法是一个函数，则调用该函数。</li>
+<li>元方法中查看是否传入 “key2” 键的参数（mytable.key2已设置），如果传入 “key2” 参数返回 “metatablevalue”，否则返回 mytable 对应的键值。</li>
+</ul>
+<p>我们可以将以上代码简单写成：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;key1 = <span class="string">"value1"</span>&#125;, &#123; <span class="built_in">__index</span> = &#123; key2 = <span class="string">"metatablevalue"</span> &#125; &#125;)</span><br><span class="line"><span class="built_in">print</span>(mytable.key1,mytable.key2)</span><br></pre></td></tr></table></figure>
+<p><strong>总结</strong></p>
+<p>Lua查找一个表元素时的规则，其实就是如下3个步骤:</p>
+<ul>
+<li>在表中查找，如果找到，返回该元素，找不到则继续</li>
+<li>判断该表是否有元表，如果没有元表，返回nil，有元表则继续。</li>
+<li>判断元表有没有__index方法，如果__index方法为nil，则返回nil；如果__index方法是一个表，则重复1、2、3；如果__index方法是一个函数，则返回该函数的返回值。</li>
+</ul>
+<hr>
+<h2 id="newindex-元方法"><a href="#newindex-元方法" class="headerlink" title="__newindex 元方法"></a>__newindex 元方法</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>__newindex 元方法用来对表更新，__index则用来对表访问</strong> 。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当你给表的一个缺少的索引赋值，解释器就会查找__newindex 元方法：如果存在则调用这个函数而不进行赋值操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以下实例演示了 __newindex 元方法的应用：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mymetatable = &#123;&#125;</span><br><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;key1 = <span class="string">"value1"</span>&#125;, &#123; <span class="built_in">__newindex</span> = mymetatable &#125;)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(mytable.key1)</span><br><span class="line"></span><br><span class="line">mytable.newkey = <span class="string">"新值2"</span></span><br><span class="line"><span class="built_in">print</span>(mytable.newkey,mymetatable.newkey)</span><br><span class="line"></span><br><span class="line">mytable.key1 = <span class="string">"新值1"</span></span><br><span class="line"><span class="built_in">print</span>(mytable.key1,mymetatable.key1)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上实例执行输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">value1</span><br><span class="line"><span class="literal">nil</span>    新值<span class="number">2</span></span><br><span class="line">新值<span class="number">1</span>    <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上实例中表设置了元方法 __newindex，在对新索引键（newkey）赋值时（mytable.newkey = “新值2”），会调用元方法，而不进行赋值。而如果对已存在的索引键（key1），则会进行赋值，而不调用元方法 __newindex。</p>
+<p>以下实例使用了 rawset 函数来更新表：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;key1 = <span class="string">"value1"</span>&#125;, &#123;</span><br><span class="line">  <span class="built_in">__newindex</span> = <span class="function"><span class="keyword">function</span><span class="params">(mytable, key, value)</span></span></span><br><span class="line">        <span class="built_in">rawset</span>(mytable, key, <span class="string">"\""</span>..value..<span class="string">"\""</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">mytable.key1 = <span class="string">"new value"</span></span><br><span class="line">mytable.key2 = <span class="number">4</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(mytable.key1,mytable.key2)</span><br></pre></td></tr></table></figure>
+<p>以上实例执行输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">new value    <span class="string">"4"</span></span><br></pre></td></tr></table></figure>
+<hr>
+<p><strong>a.如果__newindex是一个函数，则在给table不存在的字段赋值时，会调用这个函数，这个函数里的table只能够是自身</strong></p>
+<p><strong>b.如果__newindex是一个table，则在给table不存在的字段赋值时，会直接给__newindex的table赋值</strong></p>
+<h2 id="为表添加操作符"><a href="#为表添加操作符" class="headerlink" title="为表添加操作符"></a>为表添加操作符</h2><p>以下实例演示了两表相加操作：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 计算表中最大值，table.maxn在Lua5.2以上版本中已无法使用</span></span><br><span class="line"><span class="comment">-- 自定义计算表中最大键值函数 table_maxn，即计算表的元素个数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">table_maxn</span><span class="params">(t)</span></span></span><br><span class="line">    <span class="keyword">local</span> mn = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="built_in">pairs</span>(t) <span class="keyword">do</span></span><br><span class="line">        <span class="keyword">if</span> mn &lt; k <span class="keyword">then</span></span><br><span class="line">            mn = k</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">return</span> mn</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 两表相加操作</span></span><br><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123; <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span> &#125;, &#123;</span><br><span class="line">  <span class="built_in">__add</span> = <span class="function"><span class="keyword">function</span><span class="params">(mytable, newtable)</span></span></span><br><span class="line">    <span class="keyword">for</span> i = <span class="number">1</span>, table_maxn(newtable) <span class="keyword">do</span></span><br><span class="line">      <span class="built_in">table</span>.<span class="built_in">insert</span>(mytable, table_maxn(mytable)+<span class="number">1</span>,newtable[i])</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">return</span> mytable</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">secondtable = &#123;<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>&#125;</span><br><span class="line"></span><br><span class="line">mytable = mytable + secondtable</span><br><span class="line"><span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="built_in">ipairs</span>(mytable) <span class="keyword">do</span></span><br><span class="line">	<span class="built_in">print</span>(k,v)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>以上实例执行输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>    <span class="number">1</span></span><br><span class="line"><span class="number">2</span>    <span class="number">2</span></span><br><span class="line"><span class="number">3</span>    <span class="number">3</span></span><br><span class="line"><span class="number">4</span>    <span class="number">4</span></span><br><span class="line"><span class="number">5</span>    <span class="number">5</span></span><br><span class="line"><span class="number">6</span>    <span class="number">6</span></span><br></pre></td></tr></table></figure>
+<p><strong>add 键包含在元表中，并进行相加操作</strong></p>
+<p>以下实例演示了两表相除操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">function table_maxn(t)</span><br><span class="line">    local mn = 0</span><br><span class="line">    for k, v in pairs(t) do</span><br><span class="line">        if mn &lt; k then</span><br><span class="line">            mn = k</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">    return mn</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">-- 两表相除操作</span><br><span class="line">mytable = setmetatable(&#123; 1, 2, 3 &#125;, &#123;</span><br><span class="line">  __div = function(mytable, newtable)</span><br><span class="line">  if (table_maxn(mytable) ~= table_maxn(newtable)) </span><br><span class="line">  then</span><br><span class="line">  	error(&quot;两个数组元素不相等&quot;)</span><br><span class="line">  end</span><br><span class="line">  return_data=&#123;&#125;</span><br><span class="line">  for i = 1, table_maxn(newtable) do</span><br><span class="line">    table.insert(return_data, table_maxn(return_data)+1,mytable[i]/newtable[i])</span><br><span class="line">  end</span><br><span class="line">  return return_data</span><br><span class="line">  end</span><br><span class="line">&#125;)</span><br><span class="line">othertable=&#123;4,5,6&#125;</span><br><span class="line">return_data = mytable/othertable</span><br><span class="line">for k,v in ipairs(return_data)</span><br><span class="line">do</span><br><span class="line">	print(k,v)</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p><strong>div 键包含在元表中，并进行相除操作</strong></p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>__add</td>
+<td>对应的运算符 ‘+’.</td>
+</tr>
+<tr>
+<td>__sub</td>
+<td>对应的运算符 ‘-‘.</td>
+</tr>
+<tr>
+<td>__mul</td>
+<td>对应的运算符 ‘*’.</td>
+</tr>
+<tr>
+<td>__div</td>
+<td>对应的运算符 ‘/‘.</td>
+</tr>
+<tr>
+<td>__mod</td>
+<td>对应的运算符 ‘%’.</td>
+</tr>
+<tr>
+<td>__unm</td>
+<td>对应的运算符 ‘-‘.</td>
+</tr>
+<tr>
+<td>__concat</td>
+<td>对应的运算符 ‘..’.</td>
+</tr>
+<tr>
+<td>__eq</td>
+<td>对应的运算符 ‘==’.</td>
+</tr>
+<tr>
+<td>__lt</td>
+<td>对应的运算符 ‘&lt;’.</td>
+</tr>
+<tr>
+<td>__le</td>
+<td>对应的运算符 ‘&lt;=’.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="call-元方法"><a href="#call-元方法" class="headerlink" title="__call 元方法"></a>__call 元方法</h2><p>__call 元方法在 Lua 调用一个值时调用。以下实例演示了计算表中元素的和：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 计算表中最大值，table.maxn在Lua5.2以上版本中已无法使用</span></span><br><span class="line"><span class="comment">-- 自定义计算表中最大键值函数 table_maxn，即计算表的元素个数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">table_maxn</span><span class="params">(t)</span></span></span><br><span class="line">    <span class="keyword">local</span> mn = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="built_in">pairs</span>(t) <span class="keyword">do</span></span><br><span class="line">        <span class="keyword">if</span> mn &lt; k <span class="keyword">then</span></span><br><span class="line">            mn = k</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">return</span> mn</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 定义元方法__call</span></span><br><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123;<span class="number">10</span>&#125;, &#123;</span><br><span class="line">  <span class="built_in">__call</span> = <span class="function"><span class="keyword">function</span><span class="params">(mytable, newtable)</span></span></span><br><span class="line">    sum = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i = <span class="number">1</span>, table_maxn(mytable) <span class="keyword">do</span></span><br><span class="line">        sum = sum + mytable[i]</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">for</span> i = <span class="number">1</span>, table_maxn(newtable) <span class="keyword">do</span></span><br><span class="line">        sum = sum + newtable[i]</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">&#125;)</span><br><span class="line">newtable = &#123;<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>&#125;</span><br><span class="line"><span class="built_in">print</span>(mytable(newtable))</span><br></pre></td></tr></table></figure>
+<p>以上实例执行输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">70</span></span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="tostring-元方法"><a href="#tostring-元方法" class="headerlink" title="__tostring 元方法"></a>__tostring 元方法</h2><p>__tostring 元方法用于修改表的输出行为。以下实例我们自定义了表的输出内容：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mytable = <span class="built_in">setmetatable</span>(&#123; <span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span> &#125;, &#123;</span><br><span class="line">  <span class="built_in">__tostring</span> = <span class="function"><span class="keyword">function</span><span class="params">(mytable)</span></span></span><br><span class="line">    sum = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="built_in">pairs</span>(mytable) <span class="keyword">do</span></span><br><span class="line">        sum = sum + v</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"表所有元素的和为 "</span> .. sum</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="built_in">print</span>(mytable)</span><br></pre></td></tr></table></figure>
+<p>以上实例执行输出结果为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">表所有元素的和为 <span class="number">60</span></span><br></pre></td></tr></table></figure>
+<h3 id="Lua中-index和-newindex之间的沉默与合作"><a href="#Lua中-index和-newindex之间的沉默与合作" class="headerlink" title="Lua中__index和__newindex之间的沉默与合作"></a>Lua中__index和__newindex之间的沉默与合作</h3><h4 id="1-沉默技能——拒绝-index和-newindex效果"><a href="#1-沉默技能——拒绝-index和-newindex效果" class="headerlink" title="1. 沉默技能——拒绝__index和__newindex效果"></a>1. 沉默技能——拒绝__index和__newindex效果</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;虽然__index和__newindex是很好用的功能，但是，有时候我们又希望很纯粹地去调用table或者给table赋值。那，这时候怎么办？给table重新设置一个元表？不，这个做法很糟糕~</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> smartMan = &#123;</span><br><span class="line">     name = <span class="string">"none"</span>,</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">local</span> t1 = &#123;</span><br><span class="line">     hehe = <span class="number">123</span>;</span><br><span class="line"> &#125;;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">local</span> mt = &#123;</span><br><span class="line">     <span class="built_in">__index</span> = smartMan,</span><br><span class="line">     <span class="built_in">__newindex</span> = <span class="function"><span class="keyword">function</span><span class="params">(t, k, v)</span></span></span><br><span class="line">         <span class="built_in">print</span>(<span class="string">"别赋值！"</span>);</span><br><span class="line">     <span class="keyword">end</span></span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="built_in">setmetatable</span>(t1, mt);</span><br><span class="line"></span><br><span class="line"> <span class="built_in">print</span>(<span class="built_in">rawget</span>(t1, <span class="string">"name"</span>)); <span class="comment">-- nil</span></span><br><span class="line"> <span class="built_in">print</span>(<span class="built_in">rawget</span>(t1, <span class="string">"hehe"</span>)); <span class="comment">-- 123</span></span><br><span class="line"> <span class="built_in">rawset</span>(t1, <span class="string">"name"</span>, <span class="string">"小偷"</span>); </span><br><span class="line"> <span class="built_in">print</span>(t1.name);            <span class="comment">-- 小偷</span></span><br></pre></td></tr></table></figure>
+<p>通过rawget函数可以忽略元表的__index功效，纯粹地从t1中调用字段。</p>
+<p>rawget的第一个参数是要调用的table，第二个参数是table的字段名。</p>
+<p>因此，通过rawget调用t1的name字段，只能返回nil，而调用hehe字段，则能正确取得值。</p>
+<p>同样的是，rawset函数可以忽略元表的__newindex功效，纯粹地给t1赋值。</p>
+<p>这就相当于t1并不存在__index和__newindex元方法了。</p>
+<h4 id="2-只读的table"><a href="#2-只读的table" class="headerlink" title="2. 只读的table"></a>2. 只读的table</h4><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">readOnly</span><span class="params">(t)</span></span></span><br><span class="line">    <span class="keyword">local</span> newT = &#123;&#125;;</span><br><span class="line">    <span class="keyword">local</span> mt = &#123;</span><br><span class="line">        <span class="built_in">__index</span> = t,</span><br><span class="line">        <span class="built_in">__newindex</span> = <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">            <span class="built_in">error</span>(<span class="string">"别修改我！我是只读的！"</span>);</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">setmetatable</span>(newT, mt);</span><br><span class="line">    <span class="keyword">return</span> newT;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">local</span> days = readOnly(&#123;<span class="string">"星期一"</span>, <span class="string">"星期二"</span>, <span class="string">"星期日"</span>&#125;);</span><br><span class="line">   </span><br><span class="line">days[<span class="number">2</span>] = <span class="string">"星期三哪去了啊？"</span> ;</span><br><span class="line"></span><br><span class="line"><span class="comment">--[[</span></span><br><span class="line"><span class="comment">lua: hello.lua:7: 别修改我！我是只读的！</span></span><br><span class="line"><span class="comment">stack traceback:</span></span><br><span class="line"><span class="comment">	[C]: in function 'error'</span></span><br><span class="line"><span class="comment">	hello.lua:7: in function &lt;hello.lua:6&gt;</span></span><br><span class="line"><span class="comment">	hello.lua:15: in main chunk</span></span><br><span class="line"><span class="comment">	[C]: ?</span></span><br><span class="line"><span class="comment">--]]</span></span><br></pre></td></tr></table></figure>
+<p>没错，通过readOnly产生的table，是无法进行赋值操作的。</p>
+<p> 那么，原理呢？我们来一步步思考吧：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a.首先，readOnly会创建一个新的table，然后把我们传进去的table作为__index元方法。</span><br><span class="line"></span><br><span class="line">b.元表里还增加了__newindex，用来阻止不存在字段的赋值操作。</span><br><span class="line"></span><br><span class="line">c.readOnly返回的table已经不是我们原来的table了，它是一个空的table，但是它被设置了一个新的元表。</span><br><span class="line"></span><br><span class="line">d.开始对days执行赋值操作：days[2] = “星期三哪去了啊？” 。</span><br><span class="line"></span><br><span class="line">e.days是一个空的table，所以它不存在这个字段，也因此，会调用__newindex元方法，赋值失败。</span><br><span class="line"></span><br><span class="line">f.如果只是调用days，不进行赋值，如：print(days[2]); 则能正常输出字段值，因为days的元表里有__index元方法。虽然days中不存在2这个字段，但是可以通过__index找到这个字段。</span><br></pre></td></tr></table></figure>
+<p>总而言之，最终，days成为了一个只可以读取，不能进行赋值操作的table。</p>
+<p><strong>通过rawset可以修改，打破限制</strong></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Lua/" rel="tag"># Lua</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/19/OpenResty实战应用/" rel="next" title="OpenResty实战应用">
+                <i class="fa fa-chevron-left"></i> OpenResty实战应用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/19/nginx与lua的执行顺序和步骤说明/" rel="prev" title="nginx与lua的执行顺序和步骤说明">
+                nginx与lua的执行顺序和步骤说明 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#metatable元表"><span class="nav-number">1.</span> <span class="nav-text">metatable元表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#index-元方法"><span class="nav-number">1.1.</span> <span class="nav-text">__index 元方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#newindex-元方法"><span class="nav-number">1.2.</span> <span class="nav-text">__newindex 元方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为表添加操作符"><span class="nav-number">1.3.</span> <span class="nav-text">为表添加操作符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#call-元方法"><span class="nav-number">1.4.</span> <span class="nav-text">__call 元方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tostring-元方法"><span class="nav-number">1.5.</span> <span class="nav-text">__tostring 元方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Lua中-index和-newindex之间的沉默与合作"><span class="nav-number">1.5.1.</span> <span class="nav-text">Lua中__index和__newindex之间的沉默与合作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-沉默技能——拒绝-index和-newindex效果"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">1. 沉默技能——拒绝__index和__newindex效果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-只读的table"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">2. 只读的table</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

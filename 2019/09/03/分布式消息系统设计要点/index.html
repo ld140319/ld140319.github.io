@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分布式消息系统设计要点 原文地址：https://mp.weixin.qq.com/s/5sjiKmXlDv6gM3IcekEJew  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式缓存方面，redis勇夺花魁。但对于消息队列mq来说，还处于百花齐放的年代。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;缓存系统，基本上解决一个存取问题，就万事大吉了，调用是同步的。对于消息队列来说，就不">
+<meta name="keywords" content="消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式消息系统设计要点">
+<meta property="og:url" content="http://blog.com/2019/09/03/分布式消息系统设计要点/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="分布式消息系统设计要点 原文地址：https://mp.weixin.qq.com/s/5sjiKmXlDv6gM3IcekEJew  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式缓存方面，redis勇夺花魁。但对于消息队列mq来说，还处于百花齐放的年代。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;缓存系统，基本上解决一个存取问题，就万事大吉了，调用是同步的。对于消息队列来说，就不">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/1.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/2.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/3.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/4.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/5.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/6.webp">
+<meta property="og:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/7.webp">
+<meta property="og:updated_time" content="2019-09-03T15:17:06.943Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式消息系统设计要点">
+<meta name="twitter:description" content="分布式消息系统设计要点 原文地址：https://mp.weixin.qq.com/s/5sjiKmXlDv6gM3IcekEJew  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式缓存方面，redis勇夺花魁。但对于消息队列mq来说，还处于百花齐放的年代。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;缓存系统，基本上解决一个存取问题，就万事大吉了，调用是同步的。对于消息队列来说，就不">
+<meta name="twitter:image" content="http://blog.com/2019/09/03/分布式消息系统设计要点/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/03/分布式消息系统设计要点/">
+
+
+
+
+
+  <title>分布式消息系统设计要点 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/03/分布式消息系统设计要点/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">分布式消息系统设计要点</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-03T12:12:57+08:00">
+                2019-09-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="分布式消息系统设计要点"><a href="#分布式消息系统设计要点" class="headerlink" title="分布式消息系统设计要点"></a>分布式消息系统设计要点</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/5sjiKmXlDv6gM3IcekEJew" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/5sjiKmXlDv6gM3IcekEJew</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;分布式缓存方面，<code>redis</code>勇夺花魁。但对于消息队列<code>mq</code>来说，还处于百花齐放的年代。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>缓存系统，基本上解决一个存取问题，就万事大吉了，调用是同步的。对于消息队列来说，就不太一样。它的使用场景多样，可靠级别多变，从生产端到消费端，过程是异步的。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;消息系统的设计要点，有很多。现在，很难有一个消息系统，能够兼顾下面提到的设计要点。它要是说可以，那就是母体在吹。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;所以很多时候，现在流行的<code>Kafka</code>、<code>RabbitMQ</code>、<code>RocketMQ</code>等，会被同时使用。如果你在做相关方面的选型，下面这些技术点就是权衡之处。那句话叫什么来着：牝鸡司晨，惟家之索。</p>
+<h2 id="要点"><a href="#要点" class="headerlink" title="要点"></a>要点</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;本文将针对这些<code>mq</code>，从整体上抽象一些共有特性。包括：协议、类型、消费方式、堆积能力、高可用、高可靠、高性能、扩展性和生态。如果你想要深入某个<code>mq</code>，这里也有几篇关于<code>kafka</code>的文章。</p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzA4MTc4NTUxNQ==&amp;mid=2650519314&amp;idx=1&amp;sn=69c16694e2a2f0e35188ccf3e1aa3e70&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">Kafka基础知识索引</a> 系统讲解<code>kafka</code>的基础知识<br><a href="https://mp.weixin.qq.com/s?__biz=MzA4MTc4NTUxNQ==&amp;mid=2650518478&amp;idx=1&amp;sn=a95a9b61166029be0979e8ec3cd97783&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">360度测试：KAFKA会丢数据么？其高可用是否满足需求？</a> 通过测试深入探讨<code>kafka</code>业务场景的使用</p>
+<h3 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/1.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;高可用主要解决集群单节点，在异常情况下的<code>failover</code>和<code>HA</code>。解决高可用问题的一般思路就是<strong>副本机制</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过增加副本，可以将数据的风险分散到多台机器上。这就需要在主<strong>分片</strong>出现问题时，能够从副本中找出一个作为新的主分片。有很多这样的协调工具，比如<code>zk</code>。也有的<code>mq</code>，自己去实现这个过程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有的模式就比较浪费资源了，比如<code>rocketmq</code>，使用<code>standby</code><strong>从机</strong>进行高可用保证，出问题再顶上来。</p>
+<h3 id="高可靠"><a href="#高可靠" class="headerlink" title="高可靠"></a>高可靠</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/2.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>消息系统的可靠性和性能是相悖的</strong>。一般的<code>mq</code>，可靠性级别都是可以调节的，但性能会发生相反的联动性。从消息级别来说，大体路线有：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;发出去就不管了-&gt;单节点确认-&gt;多节点确认-&gt;多节点确认同步刷盘-&gt;所有节点同步刷盘-&gt;事务消息等。</p>
+<h4 id="单机高可靠"><a href="#单机高可靠" class="headerlink" title="单机高可靠"></a>单机高可靠</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>集群的高可靠方面，会有<code>ack</code>机制和多副本机制进行保证</strong>。对于单个节点来说，断电或者主机异常，会是一个比较大的挑战。为了处理这种情况，需要有<strong>刷盘机制或者其他持久化机制</strong>。同时，数据的完整性校验也是需要的，这也是类似<code>kafka</code>这种消息系统，数据量大的时候，启动时间非常长的原因。</p>
+<h4 id="生产端"><a href="#生产端" class="headerlink" title="生产端"></a>生产端</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;生产端除了要<strong>考虑<code>buffer</code>丢失的问题，还要考虑到一些发送错误的情况，包括与集群通信的超时和重试处理</strong>。</p>
+<h4 id="消费端"><a href="#消费端" class="headerlink" title="消费端"></a>消费端</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;消费端通过<strong>消息确认机制</strong>来保证消息已经被正确消费。由于其间会发生很多异常情况，所以大多数消息系统保证<code>at least once</code>语义。即确保消息至少被消费1次。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;言外之意，<strong>消息是会重复的，消费者需要做到幂等，保证重复消费不会引起业务异常</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;消费端同样会发生一些错误情况，有些<code>mq</code>可以在多次消费失败后自动进入<strong>死信队列</strong>，有些<code>mq</code>需要自行设计<code>topic</code>进行规划。</p>
+<h3 id="高性能"><a href="#高性能" class="headerlink" title="高性能"></a>高性能</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/3.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;作为一个数据传输的通道，性能是一个非常有分量的考量点。其中两个比较重要的指标，<strong>一个是消息的延迟性，一个就是消息的吞吐量</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;消息从生产端发出，到消费者处理，其间的过程不能太长，对于使用拉模式来消费的<code>mq</code>来说，就要加快轮询速度，并使用零拷贝一类的技术加快数据传输。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于消息吞吐量来说，是一个生产端、<code>mq</code>节点、消费端共同优化的结果。目前主要有以下手段：</p>
+<h4 id="异步化"><a href="#异步化" class="headerlink" title="异步化"></a>异步化</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;消息采用<strong>异步发送的方式，发送端不用同步等待</strong>，加快了处理速度。</p>
+<h4 id="batch"><a href="#batch" class="headerlink" title="batch"></a>batch</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;采用<strong>批量发送的方式，减少网络传输的次数，方便进行数据压缩</strong>。一般是内存中缓冲一个<code>buffer</code>，如果<code>buffer</code>满了，或者到达了时间窗口，则进行一次传输。这能够显著增加传输速度，但处理不当容易丢失数据。</p>
+<h4 id="顺序IO"><a href="#顺序IO" class="headerlink" title="顺序IO"></a>顺序IO</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>顺序性操作磁盘，比随机操作内存速度快的多</strong>。这也是<code>kafka</code>之类的消息队列速度快的原因之一，但要注意主题的数量（想下为什么)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;另外，还有其他手段。比如优化操作系统参数，使用分片增加并行度等。</p>
+<h3 id="消息类型"><a href="#消息类型" class="headerlink" title="消息类型"></a>消息类型</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/4.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;消息有点对点的，一条消息只会被消费一次。<code>Pub/Sub</code>通过发布/订阅模式，一条消息能够被多个消费端消费。还有一种消息是通过广播模式进行广播，即<code>producer</code>发送消息，所有的<code>consumer</code>都会收到。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;除了普通发送的消息，还有一些特殊用途的消息。顺序性消息有全局有序和分区有序之分，一般用于有严格顺序要求的业务。通过业务的设计，可以规避全局有序这种非常耗性能的操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有些<code>mq</code>还支持定时消息（私以为这种放业务系统更佳）。事务消息更加耗费性能，慎用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;还有一些<code>mq</code>，提供打<code>tag</code>、进行消息过滤的功能。比如订单信息发送到一个<code>topic</code>，消费者只订阅相关商品的订单，某些有求隔离的情况，非常有用。</p>
+<h3 id="消费模式"><a href="#消费模式" class="headerlink" title="消费模式"></a>消费模式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;消费模式，主要有推模式和拉模式。<strong>拉模式最为实用和流行，因为消费处理速度可以由消费端进行调节</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>推模式的实时性更好一些，但不好评估消费端能力，容易将其压垮</strong>。同时，处理<code>pub/sub</code>，失败重试等，也有很多挑战。</p>
+<h3 id="协议"><a href="#协议" class="headerlink" title="协议"></a>协议</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/5.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;大家都知道<code>java</code>中有一个<code>JMS</code>规范，但是类似于<code>kafka</code>这种却没有实现这个规范。所以一些协议，比如<code>amqp</code>、<code>openwire</code>等，有更加明显的定制型。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这个传输协议，与功能关系不大。比如就有基于<code>http</code>协议的，或者<code>redis</code>协议，甚至<code>websocket</code>之上的<code>stomp</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<code>mqtt</code>是物联网<code>IoT</code>的应用协议，你会发现一大坨基于它的消息队列。</p>
+<h3 id="堆积能力"><a href="#堆积能力" class="headerlink" title="堆积能力"></a>堆积能力</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/6.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;现在的数据都长这么大，<code>mq</code>的堆积能力是非常非常重要的。就拿<code>redis</code>这种内存型的队列来说，分分钟就给撑爆。<code>mq</code>除了作为消息处理的通道，还可以作为备用存储用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;堆积能力的体现在海量存储上，比如存放在数据库中（矛盾转移），挂载非常大的磁盘等。但别高兴的太早，大型集群的启动加载，以及故障再平衡，通常会花费比较长的时间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;堆积能力的另外一个体现，就是对历史消息的清理。一般有两个策略：磁盘上线和过期清理，可以结合需求灵活设置。</p>
+<h3 id="生态"><a href="#生态" class="headerlink" title="生态"></a>生态</h3><p><img src="//blog.com/2019/09/03/分布式消息系统设计要点/7.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;一个开源软件的生态是非常重要的，对于<code>mq</code>来说也是如此。主要体现在两个方面，一个是支持的的开发语言多样（需要提供<code>producer</code>和<code>consumer</code>两方的包），一个是针对周边软件的支持。比如<code>spring</code>，<code>spark</code>，<code>hadoop</code>，<code>flink</code>等，减少集成成本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这方面除了比较新的<code>mq</code>系统，都做的不错。</p>
+<h2 id="消息系统的作用"><a href="#消息系统的作用" class="headerlink" title="消息系统的作用"></a>消息系统的作用</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;消息系统在目前的分布式系统中设计中，作用越来越大。它的使用场景，包括但不限于：</p>
+<h3 id="削峰"><a href="#削峰" class="headerlink" title="削峰"></a>削峰</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;用于承接超出业务系统处理能力的请求，使业务平稳运行。这能够大量节约成本，比如某些秒杀活动，并不是针对峰值设计容量。</p>
+<h3 id="缓冲"><a href="#缓冲" class="headerlink" title="缓冲"></a>缓冲</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在服务层和缓慢的落地层作为缓冲层存在，作用与削峰类似，但主要用于服务内数据流转。比如批量短信发送。</p>
+<h3 id="解耦"><a href="#解耦" class="headerlink" title="解耦"></a>解耦</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;项目尹始，并不能确定具体需求。消息队列可以作为一个接口层，解耦重要的业务流程。只需要遵守约定，针对数据编程即可获取扩展能力。</p>
+<h3 id="冗余"><a href="#冗余" class="headerlink" title="冗余"></a>冗余</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;消息数据能够采用一对多的方式，供多个毫无关联的业务使用。</p>
+<h3 id="健壮性"><a href="#健壮性" class="headerlink" title="健壮性"></a>健壮性</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;消息队列可以堆积请求，所以消费端业务即使短时间死掉，也不会影响主要业务的正常进行。</p>
+<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;根据消息的体量和用途，目前可以将分布式<code>mq</code>大体分为两类。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;一类<strong>用于业务系统，保证极高的可靠性。要求不能够丢失消息</strong>，比如订单、支付等，有较高的<code>SLA</code>服务水准。这种情况，对mq的功能要求也比较多，包括消息的可查性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;另外一类<strong>用于大数据相关的系统，典型的特点就是吞吐量非常大</strong>。<strong>异常情况下，丢失几条消息，无伤大雅</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但消息系统，可能关注的只是<code>mq</code>本身。怎么保证生产端、消费端、<code>mq</code>本身三者的可用性，是需要业务进行权衡的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/01/GO语言的修饰器编程/" rel="next" title="GO语言的修饰器编程">
+                <i class="fa fa-chevron-left"></i> GO语言的修饰器编程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/03/Go Channel 应用模式/" rel="prev" title="Go Channel 应用模式">
+                Go Channel 应用模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#分布式消息系统设计要点"><span class="nav-number">1.</span> <span class="nav-text">分布式消息系统设计要点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#要点"><span class="nav-number">1.1.</span> <span class="nav-text">要点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#高可用"><span class="nav-number">1.1.1.</span> <span class="nav-text">高可用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高可靠"><span class="nav-number">1.1.2.</span> <span class="nav-text">高可靠</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#单机高可靠"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">单机高可靠</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#生产端"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">生产端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消费端"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">消费端</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高性能"><span class="nav-number">1.1.3.</span> <span class="nav-text">高性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#异步化"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">异步化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#batch"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">batch</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#顺序IO"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">顺序IO</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息类型"><span class="nav-number">1.1.4.</span> <span class="nav-text">消息类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消费模式"><span class="nav-number">1.1.5.</span> <span class="nav-text">消费模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协议"><span class="nav-number">1.1.6.</span> <span class="nav-text">协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#堆积能力"><span class="nav-number">1.1.7.</span> <span class="nav-text">堆积能力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生态"><span class="nav-number">1.1.8.</span> <span class="nav-text">生态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消息系统的作用"><span class="nav-number">1.2.</span> <span class="nav-text">消息系统的作用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#削峰"><span class="nav-number">1.2.1.</span> <span class="nav-text">削峰</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓冲"><span class="nav-number">1.2.2.</span> <span class="nav-text">缓冲</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解耦"><span class="nav-number">1.2.3.</span> <span class="nav-text">解耦</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#冗余"><span class="nav-number">1.2.4.</span> <span class="nav-text">冗余</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#健壮性"><span class="nav-number">1.2.5.</span> <span class="nav-text">健壮性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#End"><span class="nav-number">1.3.</span> <span class="nav-text">End</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

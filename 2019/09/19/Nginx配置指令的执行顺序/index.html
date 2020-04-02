@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Nginx,Lua,OpenResty,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Nginx配置指令的执行顺序总览&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Nginx处理请求的过程一共划分为 11 个阶段，按照执行顺序依次是 post-read、server-rewrite、find-config、rewrite、post-rewrite、preaccess、access、post-access、try-files、content 以及 log 执">
+<meta name="keywords" content="Nginx,Lua,OpenResty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx配置指令的执行顺序">
+<meta property="og:url" content="http://blog.com/2019/09/19/Nginx配置指令的执行顺序/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Nginx配置指令的执行顺序总览&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Nginx处理请求的过程一共划分为 11 个阶段，按照执行顺序依次是 post-read、server-rewrite、find-config、rewrite、post-rewrite、preaccess、access、post-access、try-files、content 以及 log 执">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-09-22T14:08:02.133Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nginx配置指令的执行顺序">
+<meta name="twitter:description" content="Nginx配置指令的执行顺序总览&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Nginx处理请求的过程一共划分为 11 个阶段，按照执行顺序依次是 post-read、server-rewrite、find-config、rewrite、post-rewrite、preaccess、access、post-access、try-files、content 以及 log 执">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/19/Nginx配置指令的执行顺序/">
+
+
+
+
+
+  <title>Nginx配置指令的执行顺序 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/19/Nginx配置指令的执行顺序/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Nginx配置指令的执行顺序</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-19T12:12:57+08:00">
+                2019-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/OpenResty/" itemprop="url" rel="index">
+                    <span itemprop="name">OpenResty</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/OpenResty/Lua/" itemprop="url" rel="index">
+                    <span itemprop="name">Lua</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Nginx配置指令的执行顺序"><a href="#Nginx配置指令的执行顺序" class="headerlink" title="Nginx配置指令的执行顺序"></a>Nginx配置指令的执行顺序</h1><h2 id="总览"><a href="#总览" class="headerlink" title="总览"></a>总览</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code>处理请求的过程一共划分为 11 个阶段，按照执行顺序依次是 <code>post-read</code>、<code>server-rewrite</code>、<code>find-config</code>、<code>rewrite</code>、<code>post-rewrite</code>、<code>preaccess</code>、<code>access</code>、<code>post-access</code>、<code>try-files</code>、<code>content</code> 以及 <code>log</code></p>
+<h2 id="执行顺序初探"><a href="#执行顺序初探" class="headerlink" title="执行顺序初探"></a>执行顺序初探</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大多数<code>Nginx</code>新手都会频繁遇到这样一个困惑，那就是<strong>当同一个 <code>location</code> 配置块使用了多个 Nginx 模块的配置指令时，这些指令的执行顺序很可能会跟它们的书写顺序大相径庭</strong>。于是许多人选择了“试错法”，然后他们的配置文件就时常被改得一片狼藉。这个系列的教程就旨在帮助读者逐步地理解这些配置指令背后的执行时间和先后顺序的奥秘。</p>
+<p>​    现在就来看这样一个令人困惑的例子：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">32</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$a</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">56</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$a</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从这个例子的本意来看，我们期望的输出是一行 <code>32</code> 和一行 <code>56</code>，因为我们第一次用 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 配置指令输出了 <code>$a</code>变量的值以后，又紧接着使用 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 配置指令修改了 <code>$a</code>. 然而不幸的是，事实并非如此：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test</span><br><span class="line">56</span><br><span class="line">56</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到，语句 <code>set $a 56</code> 似乎在第一条 <code>echo $a</code> 语句之前就执行过了。这究竟是为什么呢？难道我们遇到了 <code>Nginx</code>中的一个<code>bug</code>？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，这里并没有 <code>Nginx</code> 的 <code>bug</code>；要理解这里发生的事情，就首先需要知道<strong><code>Nginx</code>处理每一个用户请求时，都是按照若干个不同阶段（<code>phase</code>）依次处理的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code> 的请求处理阶段共有 11 个之多，我们先介绍其中 3 个比较常见的。按照它们执行时的先后顺序，依次是 <code>rewrite</code> 阶段、<code>access</code> 阶段以及 <code>content</code> 阶段（后面我们还有机会见到其他更多的处理阶段）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>所有 <code>Nginx</code> 模块提供的配置指令一般只会注册并运行在其中的某一个处理阶段</strong>。比如上例中的 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令就是在 <code>rewrite</code> 阶段运行的，而 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令就只会在 <code>content</code> 阶段运行。前面我们已经知道，在单个请求的处理过程中，<code>rewrite</code> 阶段总是在 <code>content</code> 阶段之前执行，因此属于 <code>rewrite</code> 阶段的配置指令也总是会无条件地在 <code>content</code> 阶段的配置指令之前执行。于是在同一个 <code>location</code> 配置块中，<a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令总是会在 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令之前执行，即使我们在配置文件中有意把 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句写在 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 语句的后面。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;回到刚才那个例子，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">set $a 32;</span><br><span class="line">echo $a;</span><br><span class="line"> </span><br><span class="line">set $a 56;</span><br><span class="line">echo $a;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实际的执行顺序应当是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">set $a 32;</span><br><span class="line">set $a 56;</span><br><span class="line">echo $a;</span><br><span class="line">echo $a;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即先在 <code>rewrite</code> 阶段执行完这里的两条 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 赋值语句，然后再在后面的 <code>content</code> 阶段依次执行那两条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a>语句。分属两个不同处理阶段的配置指令之间是不能穿插着运行的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了进一步验证这一点，我们不妨借助 <code>Nginx</code> 的“调试日志”来一窥 <code>Nginx</code>的实际执行过程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为这是我们第一次提及<code>Nginx</code> 的“调试日志”，所以有必要先简单介绍一下它的启用方法。调试日志默认是禁用的，因为它会引入比较大的运行时开销，让 <code>Nginx</code>服务器显著变慢。一般我们需要重新编译和构造 <code>Nginx</code>可执行文件，并且在调用<strong><code>Nginx</code> 源码包提供的 <code>./configure</code> 脚本时传入 <code>--with-debug</code> 命令行选项</strong>。例如我们下载完 <code>Nginx</code>源码包后在<code>Linux</code> 或者 <code>Mac OS X</code>等系统上构建时，典型的步骤是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tar xvf nginx-1.0.10.tar.gz</span><br><span class="line">cd nginx-1.0.10/</span><br><span class="line">./configure --with-debug</span><br><span class="line">make</span><br><span class="line">sudu make install</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果你使用的是我维护的 <a href="http://openresty.org/" target="_blank" rel="noopener">ngx_openresty</a> 软件包，则同样可以向它的 <code>./configure</code> 脚本传递 <code>--with-debug</code> 命令行选项。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当我们启用 <code>--with-debug</code> 选项重新构建好调试版的 <code>Nginx</code> 之后，还需要同时在配置文件中通过标准的<a href="http://wiki.nginx.org/CoreModule#error_log" target="_blank" rel="noopener">error_log</a> 配置指令为错误日志使用 <code>debug</code> 日志级别（这同时也是最低的日志级别）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error_log logs/error.log debug;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里重要的是 <a href="http://wiki.nginx.org/CoreModule#error_log" target="_blank" rel="noopener">error_log</a> 指令的第二个参数，<code>debug</code>，而前面第一个参数是错误日志文件的路径，<code>logs/error.log</code>. 当然，你也可以指定其他路径，但后面我们会检查这个文件的内容，所以请特别留意一下这里实际配置的文件路径。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在我们重新启动 <code>Nginx</code>（注意，如果 <code>Nginx</code> 可执行文件也被更新过，仅仅让 <code>Nginx</code>重新加载配置是不够的，需要关闭再启动 <code>Nginx</code> 主服务进程），然后再请求一下我们刚才那个示例接口：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">56</span><br><span class="line">56</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在可以检查一下前面配置的<code>Nginx</code> 错误日志文件中的输出。因为文件中的输出比较多（在我的机器上有 700 多行），所以不妨用 <code>grep</code> 命令在终端上过滤出我们感兴趣的部分：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -E &apos;http (output filter|script (set|value))&apos; logs/error.log</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在我机器上的输出是这个样子的（为了方便呈现，这里对 <code>grep</code> 命令的实际输出作了一些简单的编辑，略去了每一行的行首时间戳）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[debug] 5363#0: *1 http script value: &quot;32&quot;</span><br><span class="line">[debug] 5363#0: *1 http script set $a</span><br><span class="line">[debug] 5363#0: *1 http script value: &quot;56&quot;</span><br><span class="line">[debug] 5363#0: *1 http script set $a</span><br><span class="line">[debug] 5363#0: *1 http output filter &quot;/test?&quot;</span><br><span class="line">[debug] 5363#0: *1 http output filter &quot;/test?&quot;</span><br><span class="line">[debug] 5363#0: *1 http output filter &quot;/test?&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里需要稍微解释一下这些调试信息的具体含义。<a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 配置指令在实际运行时会打印出两行以 <code>http script</code> 起始的调试信息，其中第一行信息是 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句中被赋予的值，而第二行则是 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句中被赋值的 Nginx 变量名。于是上面首先过滤出来的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 5363#0: *1 http script value: &quot;32&quot;</span><br><span class="line">[debug] 5363#0: *1 http script set $a</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这两行就对应我们例子中的配置语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set $a 32;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而接下来这两行调试信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 5363#0: *1 http script value: &quot;56&quot;</span><br><span class="line">[debug] 5363#0: *1 http script set $a</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则对应配置语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set $a 56;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此外，凡在 Nginx 中输出响应体数据时，都会调用 <code>Nginx</code> 的所谓“输出过滤器”（output filter），我们一直在使用的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令自然也不例外。而一旦调用 <code>Nginx</code> 的“输出过滤器”，便会产生类似下面这样的调试信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[debug] 5363#0: *1 http output filter &quot;/test?&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，这里的 <code>&quot;/test?&quot;</code> 部分对于其他接口可能会发生变化，因为它显示的是当前请求的<code>URI</code>. 这样联系起来看，就不难发现，上例中的那两条 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句确实都是在那两条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 语句之前执行的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;细心的读者可能会问，为什么这个例子明明只使用了两条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 语句进行输出，但却有三行 <code>http output filter</code> 调试信息呢？其实，前两行 <code>http output filter</code> 信息确实分别对应那两条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 语句，而<strong>最后那一行信息则是对应 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块输出指示响应体末尾的结束标记</strong>。正是为了输出这个特殊的结束标记，才会多出一次对 <code>Nginx</code> “输出过滤器”的调用。包括 <a href="http://wiki.nginx.org/HttpProxyModule" target="_blank" rel="noopener">ngx_proxy</a> 在内的许多模块在输出响应体数据流时都具有此种行为。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在我们就不会再为前面那个例子输出两行一模一样的 <code>56</code> 而感到惊讶了。我们根本没有机会在第二条 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句之前用 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 输出。幸运的是，仍然可以借助一些小技巧来达到最初的目的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    set $a 32;</span><br><span class="line">    set $saved_a $a;</span><br><span class="line">    set $a 56;</span><br><span class="line"> </span><br><span class="line">    echo $saved_a;</span><br><span class="line">    echo $a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时的输出便符合那个问题示例的初衷了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">32</span><br><span class="line">56</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里通过引入新的用户变量 <code>$saved_a</code>，在改写 <code>$a</code> 之前及时保存了 <code>$a</code> 的初始值。而对于多条 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令而言，它们之间的执行顺序是由 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块来保证与书写顺序相一致的。同理，<a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块自身也会保证它的多条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令之间的执行顺序。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;细心的读者应当发现，我们在 <a href="http://blog.sina.com.cn/s/articlelist_1834459124_1_1.html" target="_blank" rel="noopener">Nginx 变量漫谈系列</a> 的示例中已经广泛使用了这种技巧，来绕过因处理阶段而引起的指令执行顺序上的限制。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;看到这里，有的读者可能会问：“那么我在使用一条陌生的配置指令之前，如何知道它究竟运行在哪一个处理阶段呢？”答案是：查看该指令的文档（当然，高级开发人员也可以直接查看模块的 C 源码）。在许多模块的文档中，都会专门标记其配置指令所运行的具体阶段。例如 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令的文档中有这么一行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">phase: content</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这一行便是说，当前配置指令运行在 <code>content</code> 阶段。如果你使用的 <code>Nginx</code>模块碰巧没有指示运行阶段的文档，可以直接联系该模块的作者请求补充。不过，值得一提的是，<strong>并非所有的配置指令都与某个处理阶段相关联</strong>，例如： <a href="http://wiki.nginx.org/HttpGeoModule#geo" target="_blank" rel="noopener">geo</a> 指令以及 <a href="http://wiki.nginx.org/HttpMapModule#map" target="_blank" rel="noopener">map</a> 指令。<strong>这些不与处理阶段相关联的配置指令基本上都是“声明性的”（<code>declarative</code>），即不直接产生某种动作或者过程</strong>。<code>Nginx</code> 的作者 Igor Sysoev 在公开场合曾不止一次地强调，<strong><code>Nginx</code>配置文件所使用的语言本质上是“声明性的”，而非“过程性的”（procedural）</strong>。</p>
+<h2 id="post-read"><a href="#post-read" class="headerlink" title="post-read"></a>post-read</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>最先执行的 <code>post-read</code> 阶段在 <code>Nginx</code> 读取并解析完请求头（request headers）之后就立即开始运行</strong>。这个阶段像前面介绍过的 <code>rewrite</code> 阶段那样支持 <code>Nginx</code> 模块注册处理程序。比如<strong>标准模块 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 就在<code>post-read</code> 阶段注册了处理程序，它的功能是迫使 <code>Nginx</code> 认为当前请求的来源地址是指定的某一个请求头的值</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面这个例子就使用了 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块提供的 <a href="http://wiki.nginx.org/HttpRealIpModule#set_real_ip_from" target="_blank" rel="noopener">set_real_ip_from</a> 和 <a href="http://wiki.nginx.org/HttpRealIpModule#real_ip_header" target="_blank" rel="noopener">real_ip_header</a> 这两条配置指令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    set_real_ip_from 127.0.0.1;</span><br><span class="line">    real_ip_header   X-My-IP;</span><br><span class="line"> </span><br><span class="line">    location /test &#123;</span><br><span class="line">        set $addr $remote_addr;</span><br><span class="line">        echo &quot;from: $addr&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里的配置是让<code>Nginx</code> 把那些来自 <code>127.0.0.1</code> 的所有请求的来源地址，都改写为请求头 <code>X-My-IP</code> 所指定的值。同时该例使用了标准内建变量 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 来输出当前请求的来源地址，以确认是否被成功改写。</p>
+<p>​    首先在本地请求一下这个 <code>/test</code> 接口：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -H &apos;X-My-IP: 1.2.3.4&apos; localhost:8080/test</span><br><span class="line">from: 1.2.3.4</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里使用了 <code>curl</code> 工具的 <code>-H</code> 选项指定了额外的 HTTP 请求头 <code>X-My-IP: 1.2.3.4</code>. 从输出可以看到，<a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 变量的值确实在 <code>rewrite</code> 阶段就已经成为了 <code>X-My-IP</code> 请求头中指定的值，即 <code>1.2.3.4</code>. 那么 <code>Nginx</code> 究竟是在什么时候改写了当前请求的来源地址呢？答案是：在 <code>post-read</code> 阶段。由于 <code>rewrite</code> 阶段的运行远在 <code>post-read</code> 阶段之后，所以当在 <code>location</code> 配置块中通过 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 配置指令读取 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 内建变量时，读出的来源地址已经是经过 <code>post-read</code> 阶段篡改过的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果在请求上例中的 <code>/test</code> 接口时没有指定 <code>X-My-IP</code> 请求头，或者提供的 <code>X-My-IP</code> 请求头的值不是合法的 IP 地址，那么 <code>Nginx</code> 就不会对来源地址进行改写，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">from: 127.0.0.1</span><br><span class="line"> </span><br><span class="line">$ curl -H &apos;X-My-IP: abc&apos; localhost:8080/test</span><br><span class="line">from: 127.0.0.1</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果从另一台机器访问这个 <code>/test</code> 接口，那么即使指定了合法的 <code>X-My-IP</code> 请求头，也不会触发 <code>Nginx</code> 对来源地址进行改写。这是因为上例已经使用 <a href="http://wiki.nginx.org/HttpRealIpModule#set_real_ip_from" target="_blank" rel="noopener">set_real_ip_from</a> 指令规定了来源地址的改写操作只对那些来自 <code>127.0.0.1</code> 的请求生效。这种过滤机制可以避免来自其他不受信任的地址的恶意欺骗。当然，也可以通过 <a href="http://wiki.nginx.org/HttpRealIpModule#set_real_ip_from" target="_blank" rel="noopener">set_real_ip_from</a> 指令指定一个 IP 网段。此外，同时配置多个<a href="http://wiki.nginx.org/HttpRealIpModule#set_real_ip_from" target="_blank" rel="noopener">set_real_ip_from</a> 语句也是允许的，这样可以指定多个受信任的来源地址或地址段。下面是一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set_real_ip_from 10.32.10.5;</span><br><span class="line">set_real_ip_from 127.0.0.0/24;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有的读者可能会问，<a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块究竟有什么实际用途呢？为什么我们需要去改写请求的来源地址呢？答案是：当 <code>Nginx</code> 处理的请求经过了某个 <code>HTTP</code> 代理服务器的转发时，这个模块就变得特别有用。当原始的用户请求经过转发之后，<code>Nginx</code> 接收到的请求的来源地址无一例外地变成了该代理服务器的 IP 地址，于是 <code>Nginx</code> 以及 <code>Nginx</code> 背后的应用就无法知道原始请求的真实来源。所以，一般我们会在 <code>Nginx</code>之前的代理服务器中把请求的原始来源地址编码进某个特殊的<code>HTTP</code> 请求头中（例如上例中的 <code>X-My-IP</code> 请求头），然后再在 Nginx 一侧把这个请求头中编码的地址恢复出来。这样 <code>Nginx</code> 中的后续处理阶段（包括 <code>Nginx</code> 背后的各种后端应用）就会认为这些请求直接来自那些原始的地址，代理服务器就仿佛不存在一样。正是因为这个需求，所以 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块才需要在第一个处理阶段，即 <code>post-read</code> 阶段，注册处理程序，以便尽可能早地改写请求的来源。</p>
+<h2 id="server-rewrite"><a href="#server-rewrite" class="headerlink" title="server-rewrite"></a>server-rewrite</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>post-read</code> 阶段之后便是 <code>server-rewrite</code> 阶段</strong>。我们曾提到，当 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的配置指令直接书写在 <code>server</code> 配置块中时，基本上都是运行在 <code>server-rewrite</code> 阶段。下面就来看这样的一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    location /test &#123;</span><br><span class="line">        set $b &quot;$a, world&quot;;</span><br><span class="line">        echo $b;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    set $a hello;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，配置语句 <code>set $a hello</code> 直接写在了 <code>server</code> 配置块中，因此它就运行在 <code>server-rewrite</code> 阶段。而<code>server-rewrite</code> 阶段要早于 <code>rewrite</code> 阶段运行，因此写在 <code>location</code> 配置块中的语句 <code>set $b &quot;$a, world&quot;</code>便晚于外面的 <code>set $a hello</code> 语句运行。该例的测试结果证明了这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">hello, world</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于 <code>server-rewrite</code> 阶段位于 <code>post-read</code> 阶段之后，所以 <code>server</code> 配置块中的 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令也就总是运行在 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块改写请求的来源地址之后。来看下面这个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    set $addr $remote_addr;</span><br><span class="line"> </span><br><span class="line">    set_real_ip_from 127.0.0.1;</span><br><span class="line">    real_ip_header   X-Real-IP;</span><br><span class="line"> </span><br><span class="line">    location /test &#123;</span><br><span class="line">        echo &quot;from: $addr&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请求 <code>/test</code> 接口的结果如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -H &apos;X-Real-IP: 1.2.3.4&apos; localhost:8080/test</span><br><span class="line">from: 1.2.3.4</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这个例子中，虽然 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令写在了 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 的配置指令之前，但仍然晚于 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块执行。所以<code>$addr</code> 变量在 <code>server-rewrite</code> 阶段被 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令赋值时，从 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 变量读出的来源地址已经是经过改写过的了。</p>
+<h2 id="find-config"><a href="#find-config" class="headerlink" title="find-config"></a>find-config</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;紧接在 <code>server-rewrite</code> 阶段后边的是 <code>find-config</code> 阶段。<strong>这个阶段并不支持 <code>Nginx</code> 模块注册处理程序，而是由 <code>Nginx</code> 核心来完成当前请求与 <code>location</code> 配置块之间的配对工作</strong>。换句话说，在此阶段之前，请求并没有与任何 <code>location</code> 配置块相关联。因此，对于运行在 <code>find-config</code> 阶段之前的 <code>post-read</code> 和 <code>server-rewrite</code> 阶段来说，只有 <code>server</code> 配置块以及更外层作用域中的配置指令才会起作用。这就是为什么只有写在<code>server</code> 配置块中的 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的指令才会运行在 <code>server-rewrite</code> 阶段，这也是为什么前面所有例子中的 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块的指令也都特意写在了 <code>server</code> 配置块中，以确保其注册在 <code>post-read</code> 阶段的处理程序能够生效。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当<code>Nginx</code> 在 <code>find-config</code> 阶段成功匹配了一个 <code>location</code> 配置块后，会立即打印一条调试信息到错误日志文件中</strong>。我们来看这样的一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">location /hello &#123;</span><br><span class="line">    echo &quot;hello world&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果启用了<code>Nginx</code> 的“调试日志”，那么当请求 <code>/hello</code> 接口时，便可以在 <code>error.log</code> 文件中过滤出下面这一行信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ grep &apos;using config&apos; logs/error.log</span><br><span class="line">[debug] 84579#0: *1 using configuration &quot;/hello&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们有意省略了信息行首的时间戳，以便放在这里。</p>
+<h2 id="rewrite与set"><a href="#rewrite与set" class="headerlink" title="rewrite与set"></a>rewrite与set</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;运行在 <code>find-config</code> 阶段之后的便是我们的老朋友 <code>rewrite</code> 阶段。由于 Nginx 已经在 <code>find-config</code> 阶段完成了当前请求与 <code>location</code> 的配对，所以从 <code>rewrite</code> 阶段开始，<code>location</code> 配置块中的指令便可以产生作用。前面已经介绍过，当 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的指令用于 <code>location</code> 块中时，便是运行在这个 <code>rewrite</code> 阶段。另外，<a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 模块的指令也是如此，还有 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块的 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令和 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 指令也不例外。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们前面已经知道，当<strong><a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令用在 <code>location</code> 配置块中时，都是在当前请求的 <code>rewrite</code> 阶段运行的</strong>。事实上，在此上下文中，<a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块中的几乎全部指令，都运行在 <code>rewrite</code> 阶段，包括  <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令。不过，值得一提的是，<strong>当这些指令使用在 <code>server</code> 配置块中时，则会运行在一个我们尚未提及的更早的处理阶段，<code>server-rewrite</code> 阶段</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 模块的 <a href="http://wiki.nginx.org/HttpSetMiscModule#set_unescape_uri" target="_blank" rel="noopener">set_unescape_uri</a> 指令同样也运行在 <code>rewrite</code> 阶段</strong>。特别地，<a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 模块的指令还可以和 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 的指令混合在一起依次执行。我们来看这样的一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    set $a &quot;hello%20world&quot;;</span><br><span class="line">    set_unescape_uri $b $a;</span><br><span class="line">    set $c &quot;$b!&quot;;</span><br><span class="line"> </span><br><span class="line">    echo $c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;访问这个接口可以得到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">hello world!</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到，<a href="http://wiki.nginx.org/HttpSetMiscModule#set_unescape_uri" target="_blank" rel="noopener">set_unescape_uri</a> 语句前后的 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句都按书写时的顺序一前一后地执行了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了进一步确认这一点，我们不妨再检查一下<code>Nginx</code> 的“调试日志”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -E &apos;http script (value|copy|set)&apos; t/servroot/logs/error.log</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;过滤出来的调试日志信息如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[debug] 11167#0: *1 http script value: &quot;hello%20world&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $a</span><br><span class="line">[debug] 11167#0: *1 http script value (post filter): &quot;hello world&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $b</span><br><span class="line">[debug] 11167#0: *1 http script copy: &quot;!&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $c</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开头的两行信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 11167#0: *1 http script value: &quot;hello%20world&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $a</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;就对应我们的配置语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set $a &quot;hello%20world&quot;;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而接下来的两行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 11167#0: *1 http script value (post filter): &quot;hello world&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $b</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则对应配置语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set_unescape_uri $b $a;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到第一行信息与 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令略有区别，多了 <code>&quot;(post filter)&quot;</code> 这个标记，而且最后显示出 <code>URI</code>解码操作确实如我们期望的那样工作了，即 <code>&quot;hello%20world&quot;</code> 在这里被成功解码为 <code>&quot;hello world&quot;</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 而最后两行调试信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 11167#0: *1 http script copy: &quot;!&quot;</span><br><span class="line">[debug] 11167#0: *1 http script set $c</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则对应最后一条 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set $c &quot;$b!&quot;;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意，因为这条指令在为 <code>$c</code> 变量赋值时使用了“变量插值”功能，所以第一行调试信息是以 <code>http script copy</code> 起始的，后面则是拼接到最终取值的字符串常量 <code>&quot;!&quot;</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 把这些调试信息联系起来看，我们不难发现，这些配置指令的实际执行顺序是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set $a &quot;hello%20world&quot;;</span><br><span class="line">set_unescape_uri $b $a;</span><br><span class="line">set $c &quot;$b!&quot;;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这与它们在配置文件中的书写顺序完全一致。</p>
+<h3 id="set与set-by-lua"><a href="#set与set-by-lua" class="headerlink" title="set与set_by_lua"></a>set与set_by_lua</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;第三方模块 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a>，它提供的 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 配置指令也和 <a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 模块的指令一样，可以和 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的指令混合使用。<a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令支持通过一小段用户 <code>Lua</code>代码来计算出一个结果，然后赋给指定的 <code>Nginx</code> 变量。和 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令相似，<a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令也有自动创建不存在的<code>Nginx</code>变量的功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面我们就来看一个 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令与 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令混合使用的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    set $a 32;</span><br><span class="line">    set $b 56;</span><br><span class="line">    set_by_lua $c &quot;return ngx.var.a + ngx.var.b&quot;;</span><br><span class="line">    set $equation &quot;$a + $b = $c&quot;;</span><br><span class="line"> </span><br><span class="line">    echo $equation;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里我们先将 <code>$a</code> 和 <code>$b</code> 变量分别初始化为 <code>32</code> 和 <code>56</code>，然后利用 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令内联一行我们自己指定的 Lua 代码，计算出 Nginx 变量 <code>$a</code> 和 <code>$b</code> 的“代数和”（sum），并赋给变量 <code>$c</code>，接着利用“变量插值”功能，把变量 <code>$a</code>、 <code>$b</code> 和 <code>$c</code> 的值拼接成一个字符串形式的等式，赋予变量 <code>$equation</code>，最后再用 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令输出 <code>$equation</code> 的值。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子值得注意的地方是：首先，我们在<code>Lua</code>代码中是通过 <a href="http://wiki.nginx.org/HttpLuaModule#ngx.var.VARIABLE" target="_blank" rel="noopener">ngx.var.VARIABLE</a> 接口来读取 <code>Nginx</code>变量 <code>$VARIABLE</code> 的；其次，因为 <code>Nginx</code> 变量的值只有字符串这一种类型，所以在<code>Lua</code> 代码里读取 <code>ngx.var.a</code> 和<code>ngx.var.b</code> 时得到的其实都是 <code>Lua</code> 字符串类型的值 <code>&quot;32&quot;</code> 和 <code>&quot;56&quot;</code>；接着，我们对两个字符串作加法运算会触发 <code>Lua</code>对加数进行自动类型转换（<code>Lua</code> 会把两个加数先转换为数值类型再求和）；然后，我们在<code>Lua</code> 代码中把最终结果通过 <code>return</code> 语句返回给外面的 <code>Nginx</code> 变量 <code>$c</code>；最后，<a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块在给 <code>$c</code> 实际赋值之前，也会把 <code>return</code> 语句返回的数值类型的结果，也就是<code>Lua</code>加法计算得出的“和”，自动转换为字符串（这同样是因为<code>Nginx</code>变量的值只能是字符串）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子的实际运行结果符合我们的期望：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">32 + 56 = 88</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;于是这验证了 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令确实也可以和 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 这样的 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块提供的指令混合在一起工作。</p>
+<h3 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;还有不少第三方模块，例如 <a href="http://wiki.nginx.org/HttpArrayVarModule" target="_blank" rel="noopener">ngx_array_var</a> 以及后面即将接触到的用于加解密用户会话（session）的 <a href="http://wiki.nginx.org/HttpEncryptedSessionModule" target="_blank" rel="noopener">ngx_encrypted_session</a>，也都可以和 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的指令无缝混合工作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;标准 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的应用是如此广泛，所以能够和它的配置指令混合使用的第三方模块是幸运的。事实上，上面提到的这些第三方模块都采用了特殊的技术，将它们自己的配置指令“注入”到了 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a>模块的指令序列中（它们都借助了 Marcus Clyne 编写的第三方模块 <a href="https://github.com/simpl/ngx_devel_kit" target="_blank" rel="noopener">ngx_devel_kit</a>）。换句话说，更多常规的在 <code>Nginx</code> 的 <code>rewrite</code> 阶段注册和运行指令的第三方模块就没那么幸运了。这些“常规模块”的指令虽然也运行在 <code>rewrite</code> 阶段，但其配置指令和 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块（以及同一阶段内的其他模块）都是分开独立执行的。在运行时，不同模块的配置指令集之间的先后顺序一般是不确定的（严格来说，一般是由模块的加载顺序决定的，但也有例外的情况）。比如 <code>A</code> 和 <code>B</code> 两个模块都在 <code>rewrite</code> 阶段运行指令，于是要么是 <code>A</code> 模块的所有指令全部执行完再执行 <code>B</code> 模块的那些指令，要么就是反过来，把 <code>B</code> 的指令全部执行完，再去运行 <code>A</code> 的指令。除非模块的文档中有明确的交待，否则用户一般不应编写依赖于此种不确定顺序的配置。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code>的 <code>rewrite</code> 阶段是一个比较早的请求处理阶段，这个阶段的配置指令<strong>一般用来对当前请求进行各种修改</strong>（比如对<code>URI</code> 和 <code>URL</code> 参数进行改写），或者<strong>创建并初始化一系列后续处理阶段可能需要的 <code>Nginx</code>变量</strong>。当然，也不能阻止一些用户在 <code>rewrite</code> 阶段做一系列更复杂的事情，比如读取请求体，或者访问数据库等远方服务，毕竟有 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 这样的指令可以嵌入任意复杂的 <code>Lua</code> 代码。</p>
+<h2 id="rewrite-tail"><a href="#rewrite-tail" class="headerlink" title="rewrite tail"></a>rewrite tail</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如前文所述，除非像 <a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 模块那样使用特殊技术，其他模块的配置指令即使是在 <code>rewrite</code> 阶段运行，也不能和 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的指令混合使用。不妨来看几个这样的例子。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;第三方模块 <a href="http://wiki.nginx.org/HttpHeadersMoreModule" target="_blank" rel="noopener">ngx_headers_more</a> 提供了一系列配置指令，用于操纵当前请求的请求头和响应头。其中有一条名叫 <a href="http://wiki.nginx.org/HttpHeadersMoreModule#more_set_input_headers" target="_blank" rel="noopener">more_set_input_headers</a> 的指令可以在 <code>rewrite</code> 阶段改写指定的请求头（或者在请求头不存在时自动创建）。这条指令总是运行在 <code>rewrite</code> 阶段的末尾，该指令的文档中有这么一行标记：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">phase: rewrite tail</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其中的<strong><code>rewrite tail</code> 的意思就是 <code>rewrite</code> 阶段的末尾</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 既然<strong>运行在 <code>rewrite</code> 阶段的末尾，那么也就总是会运行在 <code>ngx_rewrite</code> 模块的指令之后，即使我们在配置文件中把它写在前面</strong>。</p>
+<h3 id="more-set-input-headers"><a href="#more-set-input-headers" class="headerlink" title="more_set_input_headers"></a>more_set_input_headers</h3><p>例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    set $value dog;</span><br><span class="line">    more_set_input_headers &quot;X-Species: $value&quot;;</span><br><span class="line">    set $value cat;</span><br><span class="line">    </span><br><span class="line">    echo &quot;X-Species: $http_x_species&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子用到的 <a href="http://wiki.nginx.org/HttpCoreModule#.24http_HEADER" target="_blank" rel="noopener">$http_XXX</a> 内建变量在读取时会返回当前请求中名为 <code>XXX</code> 的请求头。需要注意的是，<strong><a href="http://wiki.nginx.org/HttpCoreModule#.24http_HEADER" target="_blank" rel="noopener">$http_XXX</a> 变量在匹配请求头时会自动对请求头的名字进行归一化，即将名字的大写字母转换为小写字母，同时把间隔符（<code>-</code>）替换为下划线（<code>_</code>）</strong>，所以变量名<code>$http_x_species</code> 才得以成功匹配 <a href="http://wiki.nginx.org/HttpHeadersMoreModule#more_set_input_headers" target="_blank" rel="noopener">more_set_input_headers</a> 语句中设置的请求头 <code>X-Species</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此例书写的指令顺序会误导我们认为 <code>/test</code> 接口输出的 <code>X-Species</code> 头的值是 <code>dog</code>，然而实际的结果却并非如此：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">X-Species: cat</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，写在 <a href="http://wiki.nginx.org/HttpHeadersMoreModule#more_set_input_headers" target="_blank" rel="noopener">more_set_input_headers</a> 指令之后的 <code>set $value cat</code> 语句却先执行了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面这个例子证明了即使运行在同一个请求处理阶段，分属不同模块的配置指令也可能会分开独立运行（除非像 <a href="http://wiki.nginx.org/HttpSetMiscModule" target="_blank" rel="noopener">ngx_set_misc</a> 等模块那样针对 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块提供特殊支持）。换句话说，在单个请求处理阶段内部，一般也会以 <code>Nginx</code>模块为单位进一步地划分出内部子阶段。</p>
+<h3 id="rewrite-by-lua"><a href="#rewrite-by-lua" class="headerlink" title="rewrite_by_lua"></a>rewrite_by_lua</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>第三方模块 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 提供的 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 配置指令也和 <a href="http://wiki.nginx.org/HttpHeadersMoreModule#more_set_input_headers" target="_blank" rel="noopener">more_set_input_headers</a> 一样运行在<code>rewrite</code> 阶段的末尾</strong>。我们来验证一下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    set $a 1;</span><br><span class="line">    rewrite_by_lua &quot;ngx.var.a = ngx.var.a + 1&quot;;</span><br><span class="line">    set $a 56;</span><br><span class="line">    </span><br><span class="line">    echo $a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里我们在 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 语句内联的<code>Lua</code> 代码中对 <code>Nginx</code> 变量 <code>$a</code> 进行了自增计算。从该例的指令书写顺序上看，我们或许会期望输出是 <code>56</code>，可是因为<strong><a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 会在所有的 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句之后执行</strong>，所以结果是 <code>57</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">57</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，<a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 指令的行为不同于我们前面介绍过的 <a href="http://wiki.nginx.org/HttpLuaModule#set_by_lua" target="_blank" rel="noopener">set_by_lua</a> 指令。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有的读者可能要问，既然 <strong><a href="http://wiki.nginx.org/HttpHeadersMoreModule#more_set_input_headers" target="_blank" rel="noopener">more_set_input_headers</a> 和 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 指令都运行在 <code>rewrite</code> 阶段的末尾，那么它们之间的先后顺序又是怎样的呢？答案是：不一定</strong>。<strong>我们应当避免写出依赖它们二者间顺序的配置</strong>。</p>
+<h2 id="post-rewrite"><a href="#post-rewrite" class="headerlink" title="post-rewrite"></a>post-rewrite</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>rewrite</code> 阶段再往后便是所谓的 <code>post-rewrite</code> 阶段。这个阶段也像 <code>find-config</code> 阶段那样<strong>不接受 <code>Nginx</code> 模块注册处理程序，而是由 <code>Nginx</code> 核心完成 <code>rewrite</code> 阶段所要求的“内部跳转”操作（如果 <code>rewrite</code>阶段有此要求的话）</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    location /foo &#123;</span><br><span class="line">        set $a hello;</span><br><span class="line">        rewrite ^ /bar;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    location /bar &#123;</span><br><span class="line">        echo &quot;a = [$a]&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里在 <code>location /foo</code> 中通过 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令把当前请求的<code>URI</code>无条件地改写为 <code>/bar</code>，同时发起一个“内部跳转”，最终跳进了 <code>location /bar</code> 中。这里比较有趣的地方是“内部跳转”的工作原理。<strong>“内部跳转”本质上其实就是把当前的请求处理阶段强行倒退到 <code>find-config</code> 阶段，以便重新进行请求 <code>URI</code> 与 <code>location</code> 配置块的配对</strong>。比如上例中，运行在 <code>rewrite</code> 阶段的 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令就让当前请求的处理阶段倒退回了 <code>find-config</code>阶段。由于此时当前请求的 <code>URI</code> 已经被 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令修改为了 <code>/bar</code>，所以这一次换成了 <code>location /bar</code> 与当前请求相关联，然后再接着从 <code>rewrite</code> 阶段往下执行。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不过这里更有趣的地方是，<strong>倒退回 <code>find-config</code> 阶段的动作并不是发生在 <code>rewrite</code> 阶段，而是发生在后面的 <code>post-rewrite</code> 阶段</strong>。上例中的 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令只是简单地指示 <code>Nginx</code> 有必要在 <code>post-rewrite</code> 阶段发起“内部跳转”。这个设计对于 <code>Nginx</code> 初学者来说，或许显得有些古怪：“为什么不直接在 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令执行时立即进行跳转呢？”答案其实很简单，那就是为了在最初匹配的 <code>location</code> 块中支持多次反复地改写<code>URI</code>，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">location /foo &#123;</span><br><span class="line">    rewrite ^ /bar;</span><br><span class="line">    rewrite ^ /baz;</span><br><span class="line"> </span><br><span class="line">    echo foo;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /bar &#123;</span><br><span class="line">    echo bar;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /baz &#123;</span><br><span class="line">    echo baz;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里在 <code>location /foo</code> 中连续把当前请求的 <code>URI</code> 改写了两遍：第一遍先无条件地改写为 <code>/bar</code>，第二遍再无条件地改写为 <code>/baz</code>. 而这两条 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 语句只会最终导致 <code>post-rewrite</code> 阶段发生一次“内部跳转”操作，从而不至于在第一次改写 <code>URI</code> 时就直接跳离了当前的 <code>location</code> 而导致后面的 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 语句没有机会执行。请求 <code>/foo</code> 接口的结果证实了这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/foo</span><br><span class="line">baz</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从输出结果可以看到，上例确实成功地从 <code>/foo</code> 一步跳到了 <code>/baz</code> 中。如果启用 Nginx “调试日志”的话，还可以从 <code>find-config</code> 阶段生成的 <code>locatin</code> 块的匹配信息中进一步证实这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ grep &apos;using config&apos; logs/error.log</span><br><span class="line">[debug] 89449#0: *1 using configuration &quot;/foo&quot;</span><br><span class="line">[debug] 89449#0: *1 using configuration &quot;/baz&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到，对于该次请求，Nginx 一共只匹配过 <code>/foo</code> 和 <code>/baz</code> 这两个 <code>location</code>，从而只发生过一次“内部跳转”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，如果在 <code>server</code> 配置块中直接使用 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 配置指令对请求 URI 进行改写，则不会涉及“内部跳转”，因为此时 URI 改写发生在 <code>server-rewrite</code> 阶段，早于执行 <code>location</code> 配对的 <code>find-config</code> 阶段。比如下面这个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    rewrite ^/foo /bar;</span><br><span class="line"> </span><br><span class="line">    location /foo &#123;</span><br><span class="line">        echo foo;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    location /bar &#123;</span><br><span class="line">        echo bar;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，我们在 <code>server-rewrite</code> 阶段就把那些以 <code>/foo</code> 起始的 <code>URI</code> 改写为 <code>/bar</code>，而此时请求并没有和任何 <code>location</code> 相关联，所以 Nginx 正常往下运行 <code>find-config</code> 阶段，完成最终的 <code>location</code> 匹配。如果我们请求上例中的 <code>/foo</code> 接口，那么 <code>location /foo</code> 根本就没有机会匹配，因为在第一次（也是唯一的一次）运行 <code>find-config</code> 阶段时，当前请求的 <code>URI</code>已经被改写为 <code>/bar</code>，从而只会匹配 <code>location /bar</code>. 实际请求的输出正是如此：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/foo</span><br><span class="line">bar</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code> “调试日志”可以再一次佐证我们的结论：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ grep &apos;using config&apos; logs/error.log</span><br><span class="line">[debug] 92693#0: *1 using configuration &quot;/bar&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以看到，<code>Nginx</code> 总共只进行过一次 <code>location</code> 匹配，并无“内部跳转”发生。</p>
+<h2 id="preaccess"><a href="#preaccess" class="headerlink" title="preaccess"></a>preaccess</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;运行在 <code>post-rewrite</code> 阶段之后的是所谓的 <code>preaccess</code> 阶段。该阶段在 <code>access</code> 阶段之前执行，故名 <code>preaccess</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>标准模块 <a href="http://wiki.nginx.org/HttpLimitReqModule" target="_blank" rel="noopener">ngx_limit_req</a> 和 <a href="http://wiki.nginx.org/HttpLimitZoneModule" target="_blank" rel="noopener">ngx_limit_zone</a> 就运行在此阶段，前者可以控制请求的访问频度，而后者可以限制访问的并发度</strong>。这里我们仅仅和它们打个照面，后面还会有机会专门接触到这两个模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面反复提到的标准模块 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 其实也在这个阶段注册了处理程序。有些读者可能会问：“这是为什么呢？它不是已经在 <code>post-read</code> 阶段注册处理程序了吗？”我们不妨通过下面这个例子来揭晓答案：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    location /test &#123;</span><br><span class="line">        set_real_ip_from 127.0.0.1;</span><br><span class="line">        real_ip_header X-Real-IP;</span><br><span class="line"> </span><br><span class="line">        echo &quot;from: $remote_addr&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与先看前到的例子相比，此例最重要的区别在于把 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 的配置指令放在了 <code>location</code> 配置块中。前面我们介绍过，<code>Nginx</code> 匹配 <code>location</code> 的动作发生在 <code>find-config</code> 阶段，而 <code>find-config</code> 阶段远远晚于 <code>post-read</code>阶段执行，所以在 <code>post-read</code> 阶段，当前请求还没有和任何 <code>location</code> 相关联。在这个例子中，因为 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 的配置指令都写在了 <code>location</code> 配置块中，所以在 <code>post-read</code> 阶段，<a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块的处理程序没有看到任何可用的配置信息，便不会执行来源地址的改写工作了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了解决这个难题，<a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块便又特意在 <code>preaccess</code> 阶段注册了处理程序，这样它才有机会运行 <code>location</code> 块中的配置指令。正是因为这个缘故，上面这个例子的运行结果才符合直觉预期：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -H &apos;X-Real-IP: 1.2.3.4&apos; localhost:8080/test</span><br><span class="line">from: 1.2.3.4</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不幸的是，<a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块的这个解决方案还是存在漏洞的，比如下面这个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 8080;</span><br><span class="line"> </span><br><span class="line">    location /test &#123;</span><br><span class="line">        set_real_ip_from 127.0.0.1;</span><br><span class="line">        real_ip_header X-Real-IP;</span><br><span class="line"> </span><br><span class="line">        set $addr $remote_addr;</span><br><span class="line">        echo &quot;from: $addr&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，我们在 <code>rewrite</code> 阶段将 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 的值保存到了用户变量 <code>$addr</code> 中，然后再输出。因为 <code>rewrite</code>阶段先于 <code>preaccess</code> 阶段执行，所以当 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块尚未在 <code>preaccess</code> 阶段改写来源地址时，最初的来源地址就已经在 <code>rewrite</code> 阶段被读取了。上例的实际请求结果证明了我们的结论：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -H &apos;X-Real-IP: 1.2.3.4&apos; localhost:8080/test</span><br><span class="line">from: 127.0.0.1</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;输出的地址确实是未经改写过的。<code>Nginx</code> 的“调试日志”可以进一步确认这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ grep -E &apos;http script (var|set)|realip&apos; logs/error.log</span><br><span class="line">[debug] 32488#0: *1 http script var: &quot;127.0.0.1&quot;</span><br><span class="line">[debug] 32488#0: *1 http script set $addr</span><br><span class="line">[debug] 32488#0: *1 realip: &quot;1.2.3.4&quot;</span><br><span class="line">[debug] 32488#0: *1 realip: 0100007F FFFFFFFF 0100007F</span><br><span class="line">[debug] 32488#0: *1 http script var: &quot;127.0.0.1&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其中第一行调试信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[debug] 32488#0: *1 http script var: &quot;127.0.0.1&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;是 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句读取 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 变量时产生的。信息中的字符串 <code>&quot;127.0.0.1&quot;</code> 便是 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 当时读出来的值。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而第二行调试信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[debug] 32488#0: *1 http script set $addr</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则显示我们对变量 <code>$addr</code> 进行了赋值操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;后面两行信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[debug] 32488#0: *1 realip: &quot;1.2.3.4&quot;</span><br><span class="line">[debug] 32488#0: *1 realip: 0100007F FFFFFFFF 0100007F</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;是 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块在 <code>preaccess</code> 阶段改写当前请求的来源地址。我们看到，改写后的新地址确实是期望的<code>1.2.3.4</code>. 但很明显这个操作发生在 <code>$addr</code> 变量赋值之后，所以已经太迟了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而最后一行信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[debug] 32488#0: *1 http script var: &quot;127.0.0.1&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则是 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 配置指令在输出时读取变量 <code>$addr</code> 时产生的，我们看到它的值是改写前的来源地址。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;看到这里，有的读者可能会问：“如果 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 模块不在 <code>preaccess</code> 阶段注册处理程序，而在 <code>rewrite</code> 阶段注册，那么上例不就可以工作了？”答案是：不一定。因为 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块的处理程序也同样注册在 <code>rewrite</code> 阶段，而前面特别提到，在这种情况下，<strong>不同模块之间的执行顺序一般是不确定的，所以 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 的处理程序可能仍然在 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 语句之后执行</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  一个建议是：<strong>尽量在 <code>server</code> 配置块中配置 <a href="http://wiki.nginx.org/HttpRealIpModule" target="_blank" rel="noopener">ngx_realip</a> 这样的模块</strong>，以避免上面介绍的这种棘手的例外情况。</p>
+<h2 id="access"><a href="#access" class="headerlink" title="access"></a>access</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在 <code>rewrite</code> 阶段之后，有一个名叫 <code>access</code> 的请求处理阶段。第三方模块 <a href="http://mdounin.ru/hg/ngx_http_auth_request_module/" target="_blank" rel="noopener">ngx_auth_request</a> 的指令就运行在 <code>access</code> 阶段。在 <code>access</code> 阶段运行的配置指令多是<strong>执行访问控制</strong>性质的任务，比如检查用户的访问权限，检查用户的来源 IP 地址是否合法，诸如此类。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;标准模块 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a>、第三方模块 <a href="http://mdounin.ru/hg/ngx_http_auth_request_module/" target="_blank" rel="noopener">ngx_auth_request</a> 以及第三方模块 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 的 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 指令就运行在这个阶段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如，<strong>标准模块 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 提供的 <a href="http://wiki.nginx.org/HttpAccessModule#allow" target="_blank" rel="noopener">allow</a> 和 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 配置指令可用于控制哪些 IP 地址可以访问，哪些不可以</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">location /hello &#123;</span><br><span class="line">    allow 127.0.0.1;</span><br><span class="line">    deny all;</span><br><span class="line"> </span><br><span class="line">    echo &quot;hello world&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个 <code>/test</code> 接口被配置为只允许从本机（IP 地址为保留的 <code>127.0.0.1</code>）访问，而从其他 IP 地址访问都会被拒（返回 <code>403</code> 错误页）。<strong><a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块自己的多条配置指令之间是按顺序执行的，直到遇到第一条满足条件的指令就不再执行后续的 <a href="http://wiki.nginx.org/HttpAccessModule#allow" target="_blank" rel="noopener">allow</a> 和 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 指令</strong>。如果首先匹配的指令是 <a href="http://wiki.nginx.org/HttpAccessModule#allow" target="_blank" rel="noopener">allow</a>，则会继续执行后续其他模块的指令或者跳到后续的处理阶段；而如果首先满足的是 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 则会立即中止当前整个请求的处理，并立即返回 <code>403</code>错误页。所以看上面这个例子，如果是从本地访问的，则首先匹配 <code>allow 127.0.0.1</code> 这一条语句，于是 <code>Nginx</code> 就继续往下执行其他模块的指令以及后续的处理阶段；而如果是从其他机器访问，则首先匹配的则是 <code>deny all</code>这一条语句，即拒绝所有地址，它会导致 <code>403</code> 错误页立即返回给客户端。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们来实测一下。从本机访问这个接口可以得到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/hello&apos;</span><br><span class="line">hello world</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而从另一台机器访问这台机器（假设运行 Nginx 的机器地址是 <code>192.168.1.101</code>）提供的接口时则得到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://192.168.1.101:8080/hello&apos;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;&lt;title&gt;403 Forbidden&lt;/title&gt;&lt;/head&gt;</span><br><span class="line">&lt;body bgcolor=&quot;white&quot;&gt;</span><br><span class="line">&lt;center&gt;&lt;h1&gt;403 Forbidden&lt;/h1&gt;&lt;/center&gt;</span><br><span class="line">&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;值得一提的是，<a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块还支持所谓的“CIDR 记法”来表示一个网段，例如 <code>169.200.179.4/24</code> 则表示路由前缀是 <code>169.200.179.0</code>（或者说子网掩码是 <code>255.255.255.0</code>）的网段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块的指令运行在 <code>access</code> 阶段，而 <code>access</code> 阶段又处于 <code>rewrite</code> 阶段之后，所以前面我们见到的所有那些在 <code>rewrite</code> 阶段运行的配置指令，都总是在 <a href="http://wiki.nginx.org/HttpAccessModule#allow" target="_blank" rel="noopener">allow</a> 和 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 之前执行，而无论它们在配置文件中的书写顺序是怎样的。所以，<strong>为了避免阅读配置时的混乱，我们应该总是让指令的书写顺序和它们的实际执行顺序保持一致</strong>。</p>
+<h2 id="access-tail与access-by-lua"><a href="#access-tail与access-by-lua" class="headerlink" title="access tail与access_by_lua"></a>access tail与access_by_lua</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块提供了配置指令 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a>，用于在 <code>access</code> 请求处理阶段插入用户 <code>Lua</code>代码。这条指令<strong>运行于 <code>access</code> 阶段的末尾，因此总是在 <a href="http://wiki.nginx.org/HttpAccessModule#allow" target="_blank" rel="noopener">allow</a> 和 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 这样的指令之后运行，虽然它们同属 <code>access</code> 阶段</strong>。一般我们通过 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 在 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 这样的模块检查过客户端 IP 地址之后，再通过 <code>Lua</code>代码执行一系列更为复杂的请求验证操作，比如实时查询数据库或者其他后端服务，以验证当前用户的身份或权限。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 我们来看一个简单的例子，利用 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 来实现 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块的 IP 地址过滤功能：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">location /hello &#123;</span><br><span class="line">    access_by_lua &apos;</span><br><span class="line">        if ngx.var.remote_addr == &quot;127.0.0.1&quot; then</span><br><span class="line">            return</span><br><span class="line">        end</span><br><span class="line"> </span><br><span class="line">        ngx.exit(403)</span><br><span class="line">    &apos;;</span><br><span class="line"> </span><br><span class="line">    echo &quot;hello world&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里在 <code>Lua</code> 代码中通过引用 <code>Nginx</code> 标准的内建变量 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 来获取字符串形式的客户端 IP 地址，然后用 <code>Lua</code> 的 <code>if</code> 语句判断是否为本机地址，即是否等于 <code>127.0.0.1</code>. 如果是本机地址，则直接利用<code>Lua</code> 的 <code>return</code> 语句返回，让 <code>Nginx</code> 继续执行后续的请求处理阶段（包括 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令所处的 <code>content</code> 阶段）；而如果不是本机地址，则通过 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块提供的 <code>Lua</code>函数 <a href="http://wiki.nginx.org/HttpLuaModule#ngx.exit" target="_blank" rel="noopener">ngx.exit</a> 中断当前的整个请求处理流程，直接返回 <code>403</code>错误页给客户端。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子在功能上完全等价于使用 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">location /hello &#123;</span><br><span class="line">    allow 127.0.0.1;</span><br><span class="line">    deny all;</span><br><span class="line"> </span><br><span class="line">    echo &quot;hello world&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;虽然这两个例子在功能上完全相同，但在性能上还是有区别的，毕竟 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 是用纯 C 实现的专门化的 <code>Nginx</code>模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面使用 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 的例子还可以通过换用 <a href="http://wiki.nginx.org/HttpCoreModule#.24binary_remote_addr" target="_blank" rel="noopener">$binary_remote_addr</a> 内建变量进行优化，因为 <a href="http://wiki.nginx.org/HttpCoreModule#.24binary_remote_addr" target="_blank" rel="noopener">$binary_remote_addr</a> 读出的是二进制形式的 IP 地址，而 <a href="http://wiki.nginx.org/HttpCoreModule#.24remote_addr" target="_blank" rel="noopener">$remote_addr</a> 则返回更长一些的字符串形式的地址。更短的地址意味着用<code>Lua</code> 进行字符串比较时通常可以更快。</p>
+<h2 id="post-access"><a href="#post-access" class="headerlink" title="post-access"></a>post-access</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>access</code> 阶段之后便是 <code>post-access</code> 阶段。从这个阶段的名字，我们也能一眼看出它是紧跟在 <code>access</code> 阶段后面执行的。这个阶段也和 <code>post-rewrite</code> 阶段类似，<strong>并不支持 <code>Nginx</code>模块注册处理程序，而是由 Nginx 核心自己完成一些处理工作</strong>。<code>post-access</code> 阶段<strong>主要用于配合 <code>access</code> 阶段实现标准 <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html" target="_blank" rel="noopener">ngx_http_core</a> 模块提供的配置指令 <a href="http://wiki.nginx.org/HttpCoreModule#satisfy" target="_blank" rel="noopener">satisfy</a> 的功能</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于多个 Nginx 模块注册在 <code>access</code> 阶段的处理程序，<strong><a href="http://wiki.nginx.org/HttpCoreModule#satisfy" target="_blank" rel="noopener">satisfy</a> 配置指令可以用于控制它们彼此之间的协作方式</strong>。比如模块 A 和 B 都在 <code>access</code> 阶段注册了与访问控制相关的处理程序，那就有两种协作方式，一是模块 A 和模块 B 都得通过验证才算通过，二是模块 A 和模块 B 只要其中任一个通过验证就算通过。第一种协作方式称为 <code>all</code> 方式（或者说“与关系”），第二种方式则被称为 <code>any</code> 方式（或者说“或关系”）。默认情况下，<code>Nginx</code> 使用的是 <code>all</code> 方式。下面是一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    satisfy all;</span><br><span class="line"> </span><br><span class="line">    deny all;</span><br><span class="line">    access_by_lua &apos;ngx.exit(ngx.OK)&apos;;</span><br><span class="line"> </span><br><span class="line">    echo something important;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，我们在 <code>/test</code> 接口中同时配置了 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块和 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块，这样 <code>access</code> 阶段就由这两个模块一起来做检验工作。其中，语句 <code>deny all</code> 会让 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块的处理程序总是拒绝当前请求，而语句<code>access_by_lua &#39;ngx.exit(ngx.OK)&#39;</code> 则总是允许访问。当我们通过 <a href="http://wiki.nginx.org/HttpCoreModule#satisfy" target="_blank" rel="noopener">satisfy</a> 指令配置了 <code>all</code> 方式时，就需要 <code>access</code> 阶段的所有模块都通过验证，但不幸的是，这里 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块总是会拒绝访问，所以整个请求就会被拒：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;&lt;title&gt;403 Forbidden&lt;/title&gt;&lt;/head&gt;</span><br><span class="line">&lt;body bgcolor=&quot;white&quot;&gt;</span><br><span class="line">&lt;center&gt;&lt;h1&gt;403 Forbidden&lt;/h1&gt;&lt;/center&gt;</span><br><span class="line">&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;细心的读者会在 <code>Nginx</code> 错误日志文件中看到类似下面这一行的出错信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[error] 6549\#0: *1 access forbidden by rule</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然而，如果我们把上例中的 <code>satisfy all</code> 语句更改为 <code>satisfy any</code>，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    satisfy any;</span><br><span class="line"> </span><br><span class="line">    deny all;</span><br><span class="line">    access_by_lua &apos;ngx.exit(ngx.OK)&apos;;</span><br><span class="line"> </span><br><span class="line">    echo something important;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结果则会完全不同：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">something important</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即请求反而最终通过了验证。这是因为在 <code>any</code> 方式下，<code>access</code> 阶段只要有一个模块通过了验证，就会认为请求整体通过了验证，而在上例中，<a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块的 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 语句总是会通过验证的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在配置了 <code>satisfy any</code> 的情况下，只有当 <code>access</code> 阶段的所有模块的处理程序都拒绝访问时，整个请求才会被拒</strong>，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    satisfy any;</span><br><span class="line"> </span><br><span class="line">    deny all;</span><br><span class="line">    access_by_lua &apos;ngx.exit(ngx.HTTP_FORBIDDEN)&apos;;</span><br><span class="line"> </span><br><span class="line">    echo something important;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时访问 <code>/test</code> 接口才会得到 <code>403 Forbidden</code> 错误页。这里，<code>post-access</code> 阶段参与了 <code>access</code> 阶段各模块处理程序的“或关系”的实现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;值得一提的是，上面这几个的例子需要 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 0.5.0rc19 或以上版本；之前的版本是不能和 <code>satisfy any</code> 配置语句一起工作的。</p>
+<h2 id="try-files"><a href="#try-files" class="headerlink" title="try-files"></a>try-files</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;紧跟在 <code>post-access</code> 阶段之后的是 <code>try-files</code> 阶段。这个阶段专门用于实现标准配置指令 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a>的功能，<strong>并不支持 Nginx 模块注册处理程序</strong>。由于 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令在许多 <code>FastCGI</code> 应用的配置中都有用到，所以我们不妨在这里简单介绍一下。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令接受两个以上任意数量的参数，每个参数都指定了一个 <code>URI</code>. 这里假设配置了 <code>N</code> 个参数，则 <code>Nginx</code> 会在 <code>try-files</code> 阶段，依次把前 <code>N-1</code> 个参数映射为文件系统上的对象（文件或者目录），然后检查这些对象是否存在。一旦<code>Nginx</code> 发现某个文件系统对象存在，就会在 <code>try-files</code> 阶段把当前请求的 <code>URI</code> 改写为该对象所对应的参数 <code>URI</code>（但不会包含末尾的斜杠字符，也不会发生 “内部跳转”）。如果前 <code>N-1</code> 个参数所对应的文件系统对象都不存在，<code>try-files</code> 阶段就会立即发起“内部跳转”到最后一个参数（即第 <code>N</code> 个参数）所指定的<code>URI</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;静态资源服务模块会把当前请求的 <code>URI</code> 映射到文件系统，通过 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 配置指令所指定的“文档根目录”进行映射。例如，当“文档根目录”是 <code>/var/www/</code> 的时候，请求 <code>URI</code> <code>/foo/bar</code> 会被映射为文件 <code>/var/www/foo/bar</code>，而请求 <code>URI</code> <code>/foo/baz/</code> 则会被映射为目录 <code>/var/www/foo/baz/</code>. 注意这里是如何通过 <code>URI</code> 末尾的斜杠字符是否存在来区分“目录”和“文件”的。我们正在讨论的 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a>配置指令使用同样的规则来完成其各个参数 <code>URI</code> 到文件系统对象的映射。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不妨来看下面这个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">root /var/www/;</span><br><span class="line"> </span><br><span class="line">location /test &#123;</span><br><span class="line">    try_files /foo /bar/ /baz;</span><br><span class="line">    echo &quot;uri: $uri&quot;;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /foo &#123;</span><br><span class="line">    echo foo;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /bar/ &#123;</span><br><span class="line">    echo bar;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /baz &#123;</span><br><span class="line">    echo baz;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里通过 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 指令把“文档根目录”配置为 <code>/var/www/</code>，如果你系统中的 <code>/var/www/</code> 路径下存放有重要数据，则可以把它替换为其他任意路径，但此路径对运行 <code>Nginx worker</code> 进程的系统帐号至少有可读权限。我们在<code>location /test</code> 中使用了 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 配置指令，并提供了三个参数，<code>/foo</code>、<code>/bar/</code> 和 <code>/baz</code>. 根据前面对 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令的介绍，我们可以知道，它会在 <code>try-files</code> 阶段依次检查前两个参数 <code>/foo</code> 和 <code>/bar/</code> 所对应的文件系统对象是否存在。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不妨先来做一组实验。假设现在 <code>/var/www/</code> 路径下是空的，则第一个参数 <code>/foo</code> 映射成的文件<code>/var/www/foo</code> 是不存在的；同样，对于第二个参数 <code>/bar/</code> 所映射成的目录 <code>/var/www/bar/</code> 也是不存在的。于是此时 <code>Nginx</code> 会在 <code>try-files</code> 阶段发起到最后一个参数所指定的<code>URI</code>（即 <code>/baz</code>）的“内部跳转”。实际的请求结果证实了这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">baz</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，该请求最终和 <code>location /baz</code> 绑定在一起，执行了输出 <code>baz</code> 字符串的工作。上例中定义的 <code>location /foo</code> 和 <code>location /bar/</code> 完全不会参与这里的运行过程，因为对于 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 的前 <code>N-1</code> 个参数，<code>Nginx</code> 只会检查文件系统，而不会去执行 <code>URI</code>与 <code>location</code> 之间的匹配。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于上面这个请求，<code>Nginx</code> 会产生类似下面这样的“调试日志”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ grep trying logs/error.log</span><br><span class="line">[debug] 3869#0: *1 trying to use file: &quot;/foo&quot; &quot;/var/www/foo&quot;</span><br><span class="line">[debug] 3869#0: *1 trying to use dir: &quot;/bar&quot; &quot;/var/www/bar&quot;</span><br><span class="line">[debug] 3869#0: *1 trying to use file: &quot;/baz&quot; &quot;/var/www/baz&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过这些信息可以清楚地看到 <code>try-files</code> 阶段发生的事情：Nginx 依次检查了文件 <code>/var/www/foo</code> 和目录<code>/var/www/bar</code>，末了又处理了最后一个参数 <code>/baz</code>. 这里最后一条“调试信息”容易产生误解，会让人误以为 <code>Nginx</code>也把最后一个参数 <code>/baz</code> 给映射成了文件系统对象进行检查，事实并非如此。当 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令处理到它的最后一个参数时，总是直接执行“内部跳转”，而不论其对应的文件系统对象是否存在。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接下来再做一组实验：在 <code>/var/www/</code> 下创建一个名为 <code>foo</code> 的文件，其内容为 <code>hello world</code>（注意你需要有 <code>/var/www/</code> 目录下的写权限）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ echo &apos;hello world&apos; &gt; /var/www/foo</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后再请求 <code>/test</code> 接口：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">uri: /foo</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里发生了什么？我们来看，<a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令的第一个参数 <code>/foo</code> 可以映射为文件 <code>/var/www/foo</code>，而 <code>Nginx</code> 在 <code>try-files</code> 阶段发现此文件确实存在，于是立即把当前请求的 <code>URI</code> 改写为这个参数的值，即 <code>/foo</code>，并且不再继续检查后面的参数，而直接运行后面的请求处理阶段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面这个请求在 <code>try-files</code> 阶段所产生的“调试日志”如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ grep trying logs/error.log</span><br><span class="line">[debug] 4132#0: *1 trying to use file: &quot;/foo&quot; &quot;/var/www/foo&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，在 <code>try-files</code> 阶段，<code>Nginx</code> 确实只检查和处理了 <code>/foo</code> 这一个参数，而后面的参数都被“短路”掉了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;类似地，假设我们删除刚才创建的 <code>/var/www/foo</code> 文件，而在 <code>/var/www/</code> 下创建一个名为 <code>bar</code> 的子目录：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir /var/www/bar</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则请求 <code>/test</code> 的结果也是类似的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:8080/test</span><br><span class="line">uri: /bar</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这种情况下，<code>Nginx</code> 在 <code>try-files</code> 阶段发现第一个参数 <code>/foo</code> 对应的文件不存在，就会转向检查第二个参数对应的文件系统对象（在这里便是目录 <code>/var/www/bar/</code>）。由于此目录存在，<code>Nginx</code> 就会把当前请求的 <code>URI</code> 改写为第二个参数的值，即 <code>/bar</code>（注意，原始参数值是 <code>/bar/</code>，但 <a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 会自动去除末尾的斜杠字符）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这一组实验所产生的“调试日志”如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ grep trying logs/error.log</span><br><span class="line">[debug] 4223#0: *1 trying to use file: &quot;/foo&quot; &quot;/var/www/foo&quot;</span><br><span class="line">[debug] 4223#0: *1 trying to use dir: &quot;/bar&quot; &quot;/var/www/bar&quot;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到，<a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令在这里只检查和处理了它的前两个参数。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过前面这几组实验不难看到，<a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令本质上只是有条件地改写当前请求的 <code>URI</code>，而这里说的“条件”其实就是文件系统上的对象是否存在。当“条件”都不满足时，它就会无条件地发起一个指定的“内部跳转”。当然，除了无条件地发起“内部跳转”之外，<a href="http://wiki.nginx.org/HttpCoreModule#try_files" target="_blank" rel="noopener">try_files</a> 指令还支持直接返回指定状态码的<code>HTTP</code>错误页，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">try_files /foo /bar/ =404;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这行配置是说，当 <code>/foo</code> 和 <code>/bar/</code> 参数所对应的文件系统对象都不存在时，就直接返回 <code>404 Not Found</code> 错误页。注意这里它是如何使用等号字符前缀来标识 HTTP 状态码的。</p>
+<h2 id="content"><a href="#content" class="headerlink" title="content"></a>content</h2><h3 id="location里面指定生成内容方式"><a href="#location里面指定生成内容方式" class="headerlink" title="location里面指定生成内容方式"></a>location里面指定生成内容方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code>的 <code>content</code> 阶段是所有请求处理阶段中最为重要的一个，因为运行在这个阶段的配置指令一般都肩负着<strong>生成“内容”（content）并输出 HTTP 响应的使命</strong>。正因为其重要性，这个阶段的配置指令也异常丰富，例如前面我们一直在示例中使用的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令、 <a href="http://wiki.nginx.org/HttpEchoModule#echo_exec" target="_blank" rel="noopener">echo_exec</a> 指令、<a href="http://wiki.nginx.org/HttpProxyModule#proxy_pass" target="_blank" rel="noopener">proxy_pass</a> 指令、<a href="http://wiki.nginx.org/HttpEchoModule#echo_location" target="_blank" rel="noopener">echo_location</a> 指令、<a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 指令，都运行在这个阶段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>content</code> 阶段属于一个比较靠后的处理阶段，运行在先前介绍过的 <code>rewrite</code> 和 <code>access</code> 这两个阶段之后。当和 <code>rewrite</code>、<code>access</code> 阶段的指令一起使用时，这个阶段的指令总是最后运行，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    # rewrite phase</span><br><span class="line">    set $age 1;</span><br><span class="line">    rewrite_by_lua &quot;ngx.var.age = ngx.var.age + 1&quot;;</span><br><span class="line"> </span><br><span class="line">    # access phase</span><br><span class="line">    deny 10.32.168.49;</span><br><span class="line">    access_by_lua &quot;ngx.var.age = ngx.var.age * 3&quot;;</span><br><span class="line"> </span><br><span class="line">    # content phase</span><br><span class="line">    echo &quot;age = $age&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子中各个配置指令的执行顺序便是它们的书写顺序。测试结果完全符合预期：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">age = 6</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即使改变它们的书写顺序，也不会影响到执行顺序。其中，<a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a> 指令来自 <a href="http://wiki.nginx.org/HttpRewriteModule" target="_blank" rel="noopener">ngx_rewrite</a> 模块，运行于 <code>rewrite</code>阶段；而 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 指令来自 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块，运行于 <code>rewrite</code> 阶段的末尾；接下来，<a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 指令来自 <a href="http://wiki.nginx.org/HttpAccessModule" target="_blank" rel="noopener">ngx_access</a> 模块，运行于 <code>access</code> 阶段；再下来，<a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 指令同样来自 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块，运行于 <code>access</code> 阶段的末尾；最后，我们的老朋友 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令则来自 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块，运行在 <code>content</code> 阶段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子展示了通过同时使用多个处理阶段的配置指令来实现多个模块协同工作的效果。在这个过程中，<code>Nginx</code> 变量则经常扮演着在指令间乃至模块间传递（小份）数据的角色。这些配置指令的执行顺序，也强烈地受到请求处理阶段的影响。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;进一步地，在 <code>rewrite</code> 和 <code>access</code> 这两个阶段，多个模块的配置指令可以同时使用，譬如上例中的 <a href="http://wiki.nginx.org/HttpRewriteModule#set" target="_blank" rel="noopener">set</a>指令和 <a href="http://wiki.nginx.org/HttpLuaModule#rewrite_by_lua" target="_blank" rel="noopener">rewrite_by_lua</a> 指令同处 <code>rewrite</code> 阶段，而 <a href="http://wiki.nginx.org/HttpAccessModule#deny" target="_blank" rel="noopener">deny</a> 指令和 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a> 指令则同处 <code>access</code> 阶段。但不幸的是，这通常不适用于 <code>content</code> 阶段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝大多数 <code>Nginx</code> 模块在向 <code>content</code> 阶段注册配置指令时，本质上是在当前的 <code>location</code> 配置块中注册所谓的“内容处理程序”（<code>content handler</code>）。<strong>每一个 <code>location</code> 只能有一个“内容处理程序”，因此，当在 <code>location</code> 中同时使用多个模块的 <code>content</code> 阶段指令时，只有其中一个模块能成功注册“内容处理程序”</strong>。考虑下面这个有问题的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    echo hello;</span><br><span class="line">    content_by_lua &apos;ngx.say(&quot;world&quot;)&apos;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，<a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令和 <a href="http://wiki.nginx.org/HttpLuaModule" target="_blank" rel="noopener">ngx_lua</a> 模块的 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 指令同处 <code>content</code> 阶段，于是只有其中一个模块能注册和运行这个 <code>location</code> 的“内容处理程序”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">world</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实际运行结果表明，写在后面的 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 指令反而胜出了，而 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令则完全没有运行。具体哪一个模块的指令会胜出是不确定的，例如把上例中的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 语句和 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 语句交换顺序，则输出就会变成<code>hello</code>，即 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块胜出。所以我们应当<strong>避免在同一个 <code>location</code> 中使用多个模块的 <code>content</code> 阶段指令</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将上例中的 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 指令替换为 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令就可以如愿了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    echo hello;</span><br><span class="line">    echo world;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;测试结果证明了这一点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">hello</span><br><span class="line">world</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里使用多条 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令是没问题的，因为它们同属 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块，而且 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块规定和实现了它们之间的执行顺序。值得一提的是，并非所有模块的指令都支持在同一个 <code>location</code> 中被使用多次，例如 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 就只能使用一次，所以下面这个例子是错误的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"> location /test &#123;</span><br><span class="line">    content_by_lua &apos;ngx.say(&quot;hello&quot;)&apos;;</span><br><span class="line">    content_by_lua &apos;ngx.say(&quot;world&quot;)&apos;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个配置在 <code>Nginx</code> 启动时就会报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[emerg] &quot;content_by_lua&quot; directive is duplicate ...</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;正确的写法应当是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    content_by_lua &apos;ngx.say(&quot;hello&quot;) ngx.say(&quot;world&quot;)&apos;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即在 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 内联的 Lua 代码中调用两次 <a href="http://wiki.nginx.org/HttpLuaModule#ngx.say" target="_blank" rel="noopener">ngx.say</a> 函数，而不是在当前 <code>location</code> 中使用两次<a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a> 指令。</p>
+<p>​    类似地，<strong><a href="http://wiki.nginx.org/HttpProxyModule" target="_blank" rel="noopener">ngx_proxy</a> 模块的 <a href="http://wiki.nginx.org/HttpProxyModule#proxy_pass" target="_blank" rel="noopener">proxy_pass</a> 指令和 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令也不能同时用在一个 <code>location</code> 中，因为它们也同属 <code>content</code> 阶段</strong>。不少 <code>Nginx</code> 新手都会犯类似下面这样的错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    echo &quot;before...&quot;;</span><br><span class="line">    proxy_pass http://127.0.0.1:8080/foo;</span><br><span class="line">    echo &quot;after...&quot;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location /foo &#123;</span><br><span class="line">    echo &quot;contents to be proxied&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个例子表面上是想在 <a href="http://wiki.nginx.org/HttpProxyModule" target="_blank" rel="noopener">ngx_proxy</a> 模块返回的内容前后，通过 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令分别输出字符串 <code>&quot;before...&quot;</code> 和 <code>&quot;after...&quot;</code>，但其实只有其中一个模块能在 <code>content</code> 阶段运行。测试结果表明，在这个例子中是 <a href="http://wiki.nginx.org/HttpProxyModule" target="_blank" rel="noopener">ngx_proxy</a> 模块胜出，而 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块的 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令根本没有运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">contents to be proxied</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要实现这个例子希望达到的效果，需要改用 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块提供的 <a href="http://wiki.nginx.org/HttpEchoModule#echo_before_body" target="_blank" rel="noopener">echo_before_body</a> 和 <a href="http://wiki.nginx.org/HttpEchoModule#echo_after_body" target="_blank" rel="noopener">echo_after_body</a> 这两条配置指令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location /test &#123;</span><br><span class="line">    echo_before_body &quot;before...&quot;;</span><br><span class="line">    proxy_pass http://127.0.0.1:8080/foo;</span><br><span class="line">    echo_after_body &quot;after...&quot;;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /foo &#123;</span><br><span class="line">    echo &quot;contents to be proxied&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;测试结果表明这一次我们成功了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/test&apos;</span><br><span class="line">before...</span><br><span class="line">contents to be proxied</span><br><span class="line">after...</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>配置指令 <a href="http://wiki.nginx.org/HttpEchoModule#echo_before_body" target="_blank" rel="noopener">echo_before_body</a> 和 <a href="http://wiki.nginx.org/HttpEchoModule#echo_after_body" target="_blank" rel="noopener">echo_after_body</a> 之所以可以和其他模块运行在 <code>content</code> 阶段的指令一起工作，是因为它们运行在 <code>Nginx</code> 的“输出过滤器”中</strong>。前面我们在分析 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 指令产生的“调试日志”时已经知道，<code>Nginx</code>在输出响应体数据时都会调用“输出过滤器”，所以 <a href="http://wiki.nginx.org/HttpEchoModule" target="_blank" rel="noopener">ngx_echo</a> 模块才有机会在“输出过滤器”中对 <a href="http://wiki.nginx.org/HttpProxyModule" target="_blank" rel="noopener">ngx_proxy</a> 模块产生的响应体输出进行修改（即在首尾添加新的内容）。值得一提的是，“输出过滤器”并不属于中提到的那 11 个请求处理阶段（毕竟许多阶段都可以通过输出响应体数据来调用“输出过滤器”），但这并不妨碍 <a href="http://wiki.nginx.org/HttpEchoModule#echo_before_body" target="_blank" rel="noopener">echo_before_body</a> 和 <a href="http://wiki.nginx.org/HttpEchoModule#echo_after_body" target="_blank" rel="noopener">echo_after_body</a> 指令在文档中标记下面这一行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">phase: output filter</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这一行的意思是，当前配置指令运行在“输出过滤器”这个特殊的阶段。</p>
+<h3 id="静态资源服务模块"><a href="#静态资源服务模块" class="headerlink" title="静态资源服务模块"></a><strong>静态资源服务模块</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面我们提到，在一个 <code>location</code> 中使用 <code>content</code> 阶段指令时，通常情况下就是对应的 <code>Nginx</code> 模块注册该 <code>location</code> 中的“内容处理程序”。那么<strong>当一个 <code>location</code> 中未使用任何 <code>content</code> 阶段的指令，即没有模块注册“内容处理程序”时，<code>content</code> 阶段会发生什么事情呢？</strong>谁又来担负起生成内容和输出响应的重担呢？答案就是那些把当前请求的 <code>URI</code>映射到文件系统的<strong>静态资源服务模块</strong>。当存在“内容处理程序”时，这些静态资源服务模块并不会起作用；反之，请求的处理权就会自动落到这些模块上。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Nginx</code> 一般会在 <code>content</code> 阶段安排三个这样的静态资源服务模块（除非你的<code>Nginx</code>在构造时显式禁用了这三个模块中的一个或者多个，又或者启用了这种类型的其他模块）。按照它们在 <code>content</code> 阶段的运行顺序，<strong>依次是 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块，<a href="http://wiki.nginx.org/HttpAutoindexModule" target="_blank" rel="noopener">ngx_autoindex</a> 模块，以及 <code>ngx_static</code> 模块</strong>。下面就来逐一介绍一下这三个模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 和 <a href="http://wiki.nginx.org/HttpAutoindexModule" target="_blank" rel="noopener">ngx_autoindex</a> 模块都只会作用于那些 URI 以 <code>/</code> 结尾的请求</strong>，例如请求 <code>GET /cats/</code>，而对于不以 <code>/</code> 结尾的请求则会直接忽略，同时把处理权移交给 <code>content</code> 阶段的下一个模块。而<strong><code>ngx_static</code> 模块则刚好相反，直接忽略那些 URI 以 <code>/</code> 结尾的请求</strong>。</p>
+<h4 id="ngx-index"><a href="#ngx-index" class="headerlink" title="ngx_index"></a>ngx_index</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块主要用于在文件系统目录中自动查找指定的首页文件</strong>，类似 <code>index.html</code> 和 <code>index.htm</code>这样的，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    root /var/www/;</span><br><span class="line">    index index.htm index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这样，当用户请求 <code>/</code> 地址时，<code>Nginx</code> 就会自动在 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 配置指令指定的文件系统目录下依次寻找 <code>index.htm</code> 和 <code>index.html</code> 这两个文件。如果 <code>index.htm</code> 文件存在，则直接发起“内部跳转”到 <code>/index.htm</code> 这个新的地址；而如果 <code>index.htm</code> 文件不存在，则继续检查 <code>index.html</code> 是否存在。如果存在，同样发起“内部跳转”到<code>/index.html</code>；如果 <code>index.html</code> 文件仍然不存在，则放弃处理权给 <code>content</code> 阶段的下一个模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们前面提到， <a href="http://wiki.nginx.org/HttpEchoModule#echo_exec" target="_blank" rel="noopener">echo_exec</a> 指令和 <a href="http://wiki.nginx.org/HttpRewriteModule#rewrite" target="_blank" rel="noopener">rewrite</a> 指令可以发起“内部跳转”。这种跳转会自动修改当前请求的 <code>URI</code>，并且重新匹配与之对应的 <code>location</code> 配置块，再重新执行<code>rewrite</code>、<code>access</code>、<code>content</code> 等处理阶段。因为是“内部跳转”，所以有别于 HTTP 协议中定义的基于 302 和 301 响应的“外部跳转”，最终用户的浏览器的地址栏也不会发生变化，依然是原来的 <code>URI</code>位置。而 <strong><a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块一旦找到了 <a href="http://wiki.nginx.org/HttpIndexModule#index" target="_blank" rel="noopener">index</a> 指令中列举的文件之后，就会发起这样的“内部跳转”，仿佛用户是直接请求的这个文件所对应的 <code>URI</code>一样</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了进一步确认 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块在找到文件时的“内部跳转”行为，我们不妨设计下面这个小例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    root /var/www/;</span><br><span class="line">    index index.html;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">location /index.html &#123;</span><br><span class="line">    set $a 32;</span><br><span class="line">    echo &quot;a = $a&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时我们在本机的 <code>/var/www/</code> 目录下创建一个空白的 <code>index.html</code> 文件，并确保该文件的权限设置对于运行<code>Nginx worker</code> 进程的帐户可读。然后我们来请求一下根位置（<code>/</code>）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/&apos;</span><br><span class="line">a = 32</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里发生了什么？为什么输出不是 <code>index.html</code> 文件的内容（即空白）？首先对于用户的原始请求 <code>GET /</code>，<code>Nginx</code> 匹配出 <code>location /</code> 来处理它，然后 <code>content</code> 阶段的 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块在 <code>/var/www/</code> 下找到了 <code>index.html</code>，于是立即发起一个到 <code>/index.html</code> 位置的“内部跳转”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;到这里，相信大家都不会有问题。接下来有趣的事情发生了！在重新为 <code>/index.html</code> 这个新位置匹配<code>location</code> 配置块时，<code>location /index.html</code> 的优先级要高于 <code>location /</code>，因为 <code>location</code> 块按照<code>URI</code> 前缀来匹配时遵循所谓的“最长子串匹配语义”。这样，在进入 <code>location /index.html</code> 配置块之后，又重新开始执行 <code>rewrite</code> 、<code>access</code>、以及 <code>content</code> 等阶段。最终输出 <code>a = 32</code> 自然也就在情理之中了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们接着研究上面这个例子。如果此时把 <code>/var/www/index.html</code> 文件删除，再访问 <code>/</code> 又会发生什么事情呢？答案是返回 <code>403 Forbidden</code> 出错页。为什么呢？因为 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块找不到 <a href="http://wiki.nginx.org/HttpIndexModule#index" target="_blank" rel="noopener">index</a> 指令指定的文件（在这里就是 <code>index.html</code>），接着把处理权转给 <code>content</code> 阶段的后续模块，而后续的模块也都无法处理这个请求，于是 <code>Nginx</code>只好放弃，输出了错误页，并且在 <code>Nginx</code>错误日志中留下了类似这一行信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[error] 28789#0: *1 directory index of &quot;/var/www/&quot; is forbidden</span><br></pre></td></tr></table></figure>
+<h4 id="ngx-autoindex"><a href="#ngx-autoindex" class="headerlink" title="ngx_autoindex"></a>ngx_autoindex</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所谓<strong><code>directory index</code> 便是生成“目录索引”的意思，典型的方式就是生成一个网页，上面列举出 <code>/var/www/</code>目录下的所有文件和子目录</strong>。而运行在 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块之后的 <a href="http://wiki.nginx.org/HttpAutoindexModule" target="_blank" rel="noopener">ngx_autoindex</a> 模块就可以用于自动生成这样的“目录索引”网页。我们来把上例修改一下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    root /var/www/;</span><br><span class="line">    index index.html;</span><br><span class="line">    autoindex on;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时仍然保持文件系统中的 <code>/var/www/index.html</code> 文件不存在。我们再访问 <code>/</code> 位置时，就会得到一张漂亮的网页：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/&apos;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;&lt;title&gt;Index of /&lt;/title&gt;&lt;/head&gt;</span><br><span class="line">&lt;body bgcolor=&quot;white&quot;&gt;</span><br><span class="line">&lt;h1&gt;Index of /&lt;/h1&gt;&lt;hr&gt;&lt;pre&gt;&lt;a href=&quot;../&quot;&gt;../&lt;/a&gt;</span><br><span class="line">&lt;a href=&quot;cgi-bin/&quot;&gt;cgi-bin/&lt;/a&gt;  08-Mar-2010 19:36   -</span><br><span class="line">&lt;a href=&quot;error/&quot;&gt;error/&lt;/a&gt;      08-Mar-2010 19:36   -</span><br><span class="line">&lt;a href=&quot;htdocs/&quot;&gt;htdocs/&lt;/a&gt;    05-Apr-2010 03:55   -</span><br><span class="line">&lt;a href=&quot;icons/&quot;&gt;icons/&lt;/a&gt;      08-Mar-2010 19:36   -</span><br><span class="line">&lt;/pre&gt;&lt;hr&gt;&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生成的 <code>HTML</code> 源码显示，我本机的 <code>/var/www/</code> 目录下还有 <code>cgi-bin/</code>, <code>error/</code>, <code>htdocs/</code>, 以及 <code>icons/</code> 这几个子目录。在你的系统中尝试上面的例子，输出很可能会不太一样。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;值得一提的是，当你的文件系统中存在 <code>/var/www/index.html</code> 时，优先运行的 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块就会发起“内部跳转”，根本轮不到 <a href="http://wiki.nginx.org/HttpAutoindexModule" target="_blank" rel="noopener">ngx_autoindex</a> 执行。感兴趣的读者可以自己测试一下。</p>
+<h4 id="ngx-static"><a href="#ngx-static" class="headerlink" title="ngx_static"></a>ngx_static</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在 <code>content</code> 阶段默认“垫底”的最后一个模块便是极为常用的 <code>ngx_static</code> 模块。这个模块主要实现<strong>服务静态文件</strong>的功能。比方说，一个网站的静态资源，包括静态 <code>.html</code> 文件、静态 <code>.css</code> 文件、静态 <code>.js</code> 文件、以及静态图片文件等等，全部可以通过这个模块对外服务。前面介绍的 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 模块虽然可以在指定的首页文件存在时发起“内部跳转”，但<strong>真正把相应的首页文件服务出去（即把该文件的内容作为响应体数据输出，并设置相应的响应头），还是得靠这个 <code>ngx_static</code> 模块来完成</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;来看一个 <code>ngx_static</code> 模块服务磁盘文件的例子。我们使用下面这个配置片段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    root /var/www/;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时在本机的 <code>/var/www/</code> 目录下创建两个文件，一个文件叫做 <code>index.html</code>，内容是一行文本 <code>this is my home</code>；另一个文件叫做 <code>hello.html</code>，内容是一行文本 <code>hello world</code>. 同时注意这两个文件的权限设置，确保它们都对运行 <code>Nginx worker</code> 进程的系统帐户可读。</p>
+<p>​    现在来通过 HTTP 协议请求一下这两个文件所对应的 URI：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/index.html&apos;</span><br><span class="line">this is my home</span><br><span class="line"> </span><br><span class="line">$ curl &apos;http://localhost:8080/hello.html&apos;</span><br><span class="line">hello world</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们看到，先前创建的那两个磁盘文件的内容被分别输出了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不妨来分析一下这里发生的事情：<code>location /</code> 中没有使用运行在 <code>content</code> 阶段的模块指令，于是也就没有模块注册这个 <code>location</code> 的“内容处理程序”，处理权便自动落到了在 <code>content</code> 阶段“垫底”的那 3 个静态资源服务模块。首先运行的 <a href="http://wiki.nginx.org/HttpIndexModule" target="_blank" rel="noopener">ngx_index</a> 和 <a href="http://wiki.nginx.org/HttpAutoindexModule" target="_blank" rel="noopener">ngx_autoindex</a> 模块先后看到当前请求的 URI，<code>/index.html</code> 和<code>/hello.html</code>，并不以 <code>/</code> 结尾，于是直接弃权，将处理权转给了最后运行的 <code>ngx_static</code> 模块。<code>ngx_static</code> 模块根据 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 指令指定的“文档根目录”（document root），分别将请求 URI <code>/index.html</code> 和 <code>/hello.html</code>映射为文件系统路径 <code>/var/www/index.html</code> 和 <code>/var/www/hello.html</code>，在确认这两个文件存在后，将它们的内容分别作为响应体输出，并自动设置 <code>Content-Type</code>、<code>Content-Length</code> 以及 <code>Last-Modified</code> 等响应头。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了确认 <code>ngx_static</code> 模块确实运行了，可以启用 <code>Nginx</code> “调试日志”，然后再次请求 <code>/index.html</code> 这个接口。此时，在 <code>Nginx</code> 错误日志文件中可以看到类似下面这一行的调试信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[debug] 3033#0: *1 http static fd: 8</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这一行信息便是 <code>ngx_static</code> 模块生成的，其含义是“正在输出的静态文件的描述符是数字 <code>8</code>”。当然，具体的文件描述符编号会经常发生变化，这里只是我机器的一次典型输出。值得一提的是，能生成这一行调试信息的还有标准模块 <a href="http://wiki.nginx.org/HttpGzipStaticModule" target="_blank" rel="noopener">ngx_gzip_static</a> ，但它默认是不启用的，后面会专门介绍到这个模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意上面这个例子中使用的 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 配置指令只起到了声明“文档根目录”的作用，并不是它开启了 <code>ngx_static</code> 模块。<code>ngx_static</code> 模块总是处于开启状态，但是否轮得到它运行就要看 <code>content</code> 阶段先于它运行的那些模块是否“弃权”了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了进一步确认这一点，来看下面这个空白 <code>location</code> 的定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为没有配置 <a href="http://wiki.nginx.org/HttpCoreModule#root" target="_blank" rel="noopener">root</a> 指令，所以在访问这个接口时，<code>Nginx</code> 会自动计算出一个缺省的“文档根目录”。该缺省值是取所谓的“配置前缀”（configure prefix）路径下的 <code>html/</code> 子目录。举一个例子，假设“配置前缀”是<code>/foo/bah/</code>，则缺省的“文档根目录”便是 <code>/foo/bar/html/</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 那么“配置前缀”是由什么来决定的呢？默认情况下，就是 Nginx 安装时的根目录（或者说 Nginx 构造时传递给 <code>./configure</code> 脚本的 <code>--prefix</code> 选项的路径值）。如果 Nginx 安装到了 <code>/usr/local/nginx/</code> 下，则“配置前缀”便是 <code>/usr/local/nginx/</code>，同时默认的“文档根目录”便是 <code>/usr/local/nginx/html/</code>. 不过，我们也可以在启动 <code>Nginx</code> 的时候，通过 <code>--prefix</code> 命令行选项临时指定自己的“配置前缀”路径。假设我们启动<code>Nginx</code> 时使用的命令是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -p /home/agentzh/test/</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;则对于该服务器实例，其“配置前缀”便是 <code>/home/agentzh/test/</code>，而默认的“文档根目录”便是<code>/home/agentzh/test/html/</code>. “配置前缀”不仅会决定默认的“文档根目录”，还决定着 <code>Nginx</code>配置文件中许多相对路径值如何解释为绝对路径，后面我们还会看到许多需要引用到“配置前缀”的例子。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 获取当前“文档根目录”的路径有一个非常简便的方法，那就是请求一个肯定不存在的文件所对应的资源名，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ curl &apos;http://localhost:8080/blah-blah.txt&apos;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;</span><br><span class="line">&lt;body bgcolor=&quot;white&quot;&gt;</span><br><span class="line">&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;</span><br><span class="line">&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们会很自然地得到 <code>404</code> 错误页。此时再看 <code>Nginx</code> 错误日志文件，应该会看到类似下面这一行错误消息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[error] 9364#0: *1 open() &quot;/home/agentzh/test/html/blah-blah.txt&quot; failed (2: No such file or directory)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这条错误消息是 <code>ngx_static</code> 模块打印出来的，因为它并不能在文件系统的对应路径上找到名为 <code>blah-blah.txt</code>的文件。因为这条错误信息中包含有 <code>ngx_static</code> 试图打开的文件的绝对路径，所以从这个路径不难看出，当前的“文档根目录”是 <code>/home/agentzh/test/html/</code>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多初学者会想当然地把 <code>404</code> 错误理解为某个 <code>location</code> 不存在，其实上面这个例子表明，即使<code>location</code> 存在并成功匹配，也是可能返回 <code>404</code> 错误页的。因为<strong>决定着 <code>404</code> 错误页的是抽象的“资源”是否存在，而非某个具体的 <code>location</code> 是否存在</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;初学者常犯的一个错误是忘记配置 <code>content</code> 阶段的模块指令，而他们自己其实并不期望使用 <code>content</code> 阶段缺省运行的静态资源服务，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">location /auth &#123;</span><br><span class="line">    access_by_lua &apos;</span><br><span class="line">        -- a lot of Lua code omitted here...</span><br><span class="line">    &apos;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，这个 <code>/auth</code> 接口只定义了 <code>access</code> 阶段的配置指令，即 <a href="http://wiki.nginx.org/HttpLuaModule#access_by_lua" target="_blank" rel="noopener">access_by_lua</a>，并未定义任何 <code>content</code> 阶段的配置指令。于是当我们请求 <code>/auth</code> 接口时，在 <code>access</code> 阶段的 <code>Lua</code> 代码会如期执行，然后 <code>content</code> 阶段的那些静态文件服务会紧接着自动发生作用，直至 <code>ngx_static</code> 模块去文件系统上找名为 <code>auth</code> 的文件。而经常地，<code>404</code> 错误页会抛出，除非运气太好，在对应路径上确实存在一个叫做 <code>auth</code> 的文件。所以，一条经验是，<strong>当遇到意外的 <code>404</code> 错误并且又不涉及静态文件服务时，应当首先检查是否在对应的 <code>location</code> 配置块中恰当地配置了 <code>content</code> 阶段的模块指令</strong>，例如 <a href="http://wiki.nginx.org/HttpLuaModule#content_by_lua" target="_blank" rel="noopener">content_by_lua</a>、 <a href="http://wiki.nginx.org/HttpEchoModule#echo" target="_blank" rel="noopener">echo</a> 以及 <a href="http://wiki.nginx.org/HttpProxyModule#proxy_pass" target="_blank" rel="noopener">proxy_pass</a> 之类。当然，<code>Nginx</code> 的 <code>error.log</code>文件一般总是会提供各种意外问题的答案，例如对于上面这个例子，我的 <code>error.log</code> 中有下面这条错误信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[error] 9364#0: *1 open() &quot;/home/agentzh/test/html/auth&quot; failed (2: No such file or directory)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+          
+            <a href="/tags/Lua/" rel="tag"># Lua</a>
+          
+            <a href="/tags/OpenResty/" rel="tag"># OpenResty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/19/lua操作数据库/" rel="next" title="lua操作数据库">
+                <i class="fa fa-chevron-left"></i> lua操作数据库
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/19/table(表)/" rel="prev" title="table(表)">
+                table(表) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Nginx配置指令的执行顺序"><span class="nav-number">1.</span> <span class="nav-text">Nginx配置指令的执行顺序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#总览"><span class="nav-number">1.1.</span> <span class="nav-text">总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行顺序初探"><span class="nav-number">1.2.</span> <span class="nav-text">执行顺序初探</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#post-read"><span class="nav-number">1.3.</span> <span class="nav-text">post-read</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#server-rewrite"><span class="nav-number">1.4.</span> <span class="nav-text">server-rewrite</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#find-config"><span class="nav-number">1.5.</span> <span class="nav-text">find-config</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rewrite与set"><span class="nav-number">1.6.</span> <span class="nav-text">rewrite与set</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#set与set-by-lua"><span class="nav-number">1.6.1.</span> <span class="nav-text">set与set_by_lua</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其它"><span class="nav-number">1.6.2.</span> <span class="nav-text">其它</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.6.3.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rewrite-tail"><span class="nav-number">1.7.</span> <span class="nav-text">rewrite tail</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#more-set-input-headers"><span class="nav-number">1.7.1.</span> <span class="nav-text">more_set_input_headers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rewrite-by-lua"><span class="nav-number">1.7.2.</span> <span class="nav-text">rewrite_by_lua</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#post-rewrite"><span class="nav-number">1.8.</span> <span class="nav-text">post-rewrite</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#preaccess"><span class="nav-number">1.9.</span> <span class="nav-text">preaccess</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#access"><span class="nav-number">1.10.</span> <span class="nav-text">access</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#access-tail与access-by-lua"><span class="nav-number">1.11.</span> <span class="nav-text">access tail与access_by_lua</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#post-access"><span class="nav-number">1.12.</span> <span class="nav-text">post-access</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#try-files"><span class="nav-number">1.13.</span> <span class="nav-text">try-files</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#content"><span class="nav-number">1.14.</span> <span class="nav-text">content</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#location里面指定生成内容方式"><span class="nav-number">1.14.1.</span> <span class="nav-text">location里面指定生成内容方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#静态资源服务模块"><span class="nav-number">1.14.2.</span> <span class="nav-text">静态资源服务模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ngx-index"><span class="nav-number">1.14.2.1.</span> <span class="nav-text">ngx_index</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ngx-autoindex"><span class="nav-number">1.14.2.2.</span> <span class="nav-text">ngx_autoindex</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ngx-static"><span class="nav-number">1.14.2.3.</span> <span class="nav-text">ngx_static</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Nginx,Lua,OpenResty,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Lua在Nginx的应用当 Nginx 标准模块和配置不能灵活地适应系统要求时，就可以考虑使用 Lua 扩展和定制 Nginx 服务。OpenResty 集成了大量精良的 Lua 库、第三方模块，可以方便地搭建能够处理超高并发、扩展性极高的 Web 服务，所以这里选择 OpenResty 提供的 lua-nginx-module 方案。">
+<meta name="keywords" content="Nginx,Lua,OpenResty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua在Nginx的应用">
+<meta property="og:url" content="http://blog.com/2019/09/19/Lua在Nginx的应用/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Lua在Nginx的应用当 Nginx 标准模块和配置不能灵活地适应系统要求时，就可以考虑使用 Lua 扩展和定制 Nginx 服务。OpenResty 集成了大量精良的 Lua 库、第三方模块，可以方便地搭建能够处理超高并发、扩展性极高的 Web 服务，所以这里选择 OpenResty 提供的 lua-nginx-module 方案。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/09/19/Lua在Nginx的应用/63113174-45d7-4a27-8472-d037675c2cbd.jpg">
+<meta property="og:updated_time" content="2019-09-19T14:55:52.247Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lua在Nginx的应用">
+<meta name="twitter:description" content="Lua在Nginx的应用当 Nginx 标准模块和配置不能灵活地适应系统要求时，就可以考虑使用 Lua 扩展和定制 Nginx 服务。OpenResty 集成了大量精良的 Lua 库、第三方模块，可以方便地搭建能够处理超高并发、扩展性极高的 Web 服务，所以这里选择 OpenResty 提供的 lua-nginx-module 方案。">
+<meta name="twitter:image" content="http://blog.com/2019/09/19/Lua在Nginx的应用/63113174-45d7-4a27-8472-d037675c2cbd.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/19/Lua在Nginx的应用/">
+
+
+
+
+
+  <title>Lua在Nginx的应用 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/19/Lua在Nginx的应用/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Lua在Nginx的应用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-19T12:12:57+08:00">
+                2019-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/OpenResty/" itemprop="url" rel="index">
+                    <span itemprop="name">OpenResty</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/OpenResty/Lua/" itemprop="url" rel="index">
+                    <span itemprop="name">Lua</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Lua在Nginx的应用"><a href="#Lua在Nginx的应用" class="headerlink" title="Lua在Nginx的应用"></a>Lua在Nginx的应用</h1><p>当 Nginx 标准模块和配置不能灵活地适应系统要求时，就可以考虑使用 Lua 扩展和定制 Nginx 服务。<a href="http://openresty.org/en/" target="_blank" rel="noopener">OpenResty</a> 集成了大量精良的 Lua 库、第三方模块，可以方便地搭建能够处理超高并发、扩展性极高的 Web 服务，所以这里选择 OpenResty 提供的 <a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="noopener">lua-nginx-module</a> 方案。</p>
+<p><img src="//blog.com/2019/09/19/Lua在Nginx的应用/63113174-45d7-4a27-8472-d037675c2cbd.jpg" alt=""><a id="more"></a></p>
+<h2 id="安装Lua环境"><a href="#安装Lua环境" class="headerlink" title="安装Lua环境"></a>安装Lua环境</h2><p>lua-nginx-module 依赖于 LuaJIT 和 ngx_devel_kit。LuaJIT 需要安装，ngx_devel_kit 只需下载源码包，在 Nginx 编译时指定 ngx_devel_kit 目录。</p>
+<h3 id="系统依赖库"><a href="#系统依赖库" class="headerlink" title="系统依赖库"></a>系统依赖库</h3><p>首先确保系统已安装如下依赖库。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> yum install readline-devel pcre-devel openssl-devel gcc</span><br></pre></td></tr></table></figure>
+<h3 id="安装LuaJIT"><a href="#安装LuaJIT" class="headerlink" title="安装LuaJIT"></a>安装LuaJIT</h3><p>首先，安装 <a href="http://luajit.org/index.html" target="_blank" rel="noopener">LuaJIT</a> 环境，如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> wget http://luajit.org/download/LuaJIT-2.0.5.tar.gz</span><br><span class="line"><span class="meta">$</span> tar zxvf LuaJIT-2.0.5.tar.gz</span><br><span class="line"><span class="meta">$</span> cd LuaJIT-2.0.5</span><br><span class="line"><span class="meta">$</span> make install</span><br><span class="line"><span class="meta">#</span> 安装成功</span><br><span class="line">==== Successfully installed LuaJIT 2.0.5 to /usr/local ====</span><br></pre></td></tr></table></figure>
+<p>设置 LuaJIT 有关的环境变量。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> export LUAJIT_LIB=/usr/local/lib</span><br><span class="line"><span class="meta">$</span> export LUAJIT_INC=/usr/local/include/luajit-2.0</span><br><span class="line"><span class="meta">$</span> echo "/usr/local/lib" &gt; /etc/ld.so.conf.d/usr_local_lib.conf</span><br><span class="line"><span class="meta">$</span> ldconfig</span><br></pre></td></tr></table></figure>
+<h3 id="下载相关模块"><a href="#下载相关模块" class="headerlink" title="下载相关模块"></a>下载相关模块</h3><p>下载 <a href="https://github.com/simpl/ngx_devel_kit/tags" target="_blank" rel="noopener">ngx_devel_kit</a> 源码包，如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> wget https://github.com/simpl/ngx_devel_kit/archive/v0.3.0.tar.gz</span><br><span class="line"><span class="meta">$</span> tar zxvf v0.3.0.tar.gz</span><br><span class="line"><span class="meta">#</span> 解压缩后目录名</span><br><span class="line">ngx_devel_kit-0.3.0</span><br></pre></td></tr></table></figure>
+<p><strong>接下来</strong>，下载 Lua 模块  <a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="noopener">lua-nginx-module</a> 源码包，为 Nginx 编译作准备。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> wget https://github.com/openresty/lua-nginx-module/archive/v0.10.10.tar.gz</span><br><span class="line"><span class="meta">$</span> tar zxvf v0.10.10.tar.gz</span><br><span class="line"><span class="meta">#</span> 解压缩后目录名</span><br><span class="line">lua-nginx-module-0.10.10</span><br></pre></td></tr></table></figure>
+<h3 id="加载Lua模块"><a href="#加载Lua模块" class="headerlink" title="加载Lua模块"></a>加载Lua模块</h3><p>Nginx 1.9 版本后可以动态加载模块，但这里由于版本太低只能重新编译安装 Nginx。下载 Nginx 源码包并解压：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> wget http://nginx.org/download/nginx-1.13.5.tar.gz</span><br><span class="line"><span class="meta">$</span> tar zxvf nginx-1.13.5.tar.gz</span><br></pre></td></tr></table></figure>
+<p>编译并重新安装 Nginx：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cd nginx-1.13.5</span><br><span class="line"><span class="meta">#</span> 增加--add-module=/usr/src/lua-nginx-module-0.10.10 --add-module=/usr/src/ngx_devel_kit-0.3.0</span><br><span class="line"><span class="meta">$</span> ./configure --prefix=/usr/local/nginx --with-http_ssl_module --with-http_v2_module --with-http_stub_status_module --with-pcre --add-module=/usr/src/lua-nginx-module-0.10.10 --add-module=/usr/src/ngx_devel_kit-0.3.0</span><br><span class="line"><span class="meta">$</span> make</span><br><span class="line"><span class="meta">$</span> make install</span><br><span class="line"><span class="meta">#</span> 查看是否安装成功</span><br><span class="line"><span class="meta">$</span> nginx -v</span><br></pre></td></tr></table></figure>
+<h3 id="配置Nginx环境"><a href="#配置Nginx环境" class="headerlink" title="配置Nginx环境"></a>配置Nginx环境</h3><p>现在只需配置 Nginx，即可嵌入 Lua 脚本。首先，在 http 部分配置 Lua 模块和第三方库路径：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 第三方库（cjson）地址luajit-2.0/lib</span><br><span class="line">lua_package_path &apos;/home/www/lua/?.lua;;&apos;;</span><br><span class="line">lua_package_cpath &apos;/usr/local/include/luajit-2.0/lib/?.so;;&apos;;</span><br></pre></td></tr></table></figure>
+<p>接着，配置一个 Lua 脚本服务：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># hello world测试</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">location</span> /lua_content &#123;</span><br><span class="line">        <span class="comment"># 定义MIME类型</span></span><br><span class="line">        <span class="attribute">default_type</span> <span class="string">'text/plain'</span>;</span><br><span class="line">        <span class="section">content_by_lua_block</span> &#123;</span><br><span class="line">            ngx.say('Hello,world!')</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>测试安装和配置是否正常：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> service nginx test</span><br><span class="line"><span class="meta">$</span> service nginx reload</span><br><span class="line"><span class="meta">#</span> 访问地址/lua_content输出</span><br><span class="line">Hello,world!</span><br></pre></td></tr></table></figure>
+<h2 id="Lua调用Nginx"><a href="#Lua调用Nginx" class="headerlink" title="Lua调用Nginx"></a>Lua调用Nginx</h2><p>lua-nginx-module 模块中已经为 Lua 提供了丰富的 Nginx 调用 API，每个 API 都有各自的作用环境，详细描述见 <a href="https://github.com/openresty/lua-nginx-module#nginx-api-for-lua" target="_blank" rel="noopener">Nginx API for Lua</a>。这里只列举基本 API 的使用 。</p>
+<p>先配一个 Lua 脚本服务，配置文件如下：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> <span class="regexp">~ /lua_api</span> &#123;  </span><br><span class="line">    <span class="comment"># 示例用的Nginx变量  </span></span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$name</span> <span class="variable">$host</span>;</span><br><span class="line">    <span class="attribute">default_type</span> <span class="string">"text/html"</span>;  </span><br><span class="line">    <span class="comment"># 通过Lua文件进行内容处理</span></span><br><span class="line">    <span class="attribute">content_by_lua_file</span> /home/www/nginx-api.lua;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="请求部分"><a href="#请求部分" class="headerlink" title="请求部分"></a>请求部分</h3><ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxvarvariable" target="_blank" rel="noopener">ngx.var</a></li>
+</ul>
+<p>可以通过<code>ngx.var.var_name</code>形式获取或设置 Nginx 变量值，例如 request_uri、host、request 等。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- ngx.say打印内容</span></span><br><span class="line">ngx.say(ngx.var.request_uri)</span><br><span class="line">ngx.var.name = <span class="string">'www.fanhaobai.com'</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxreqget_headers" target="_blank" rel="noopener">ngx.req.get_headers()</a></li>
+</ul>
+<p>该方法会以表的形式返回当前请求的头信息。查看请求的头信息：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ngx.say(<span class="string">'Host : '</span>, ngx.req.get_headers().host, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line"><span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="built_in">pairs</span>(ngx.req.get_headers()) <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">type</span>(v) == <span class="string">"table"</span> <span class="keyword">then</span></span><br><span class="line">        ngx.say(k, <span class="string">" : "</span>, <span class="built_in">table</span>.<span class="built_in">concat</span>(v, <span class="string">","</span>), <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ngx.say(k,<span class="string">" : "</span>, v, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>当然，通过 <a href="https://github.com/openresty/lua-nginx-module#ngxreqset_header" target="_blank" rel="noopener">ngx.req.set_header()</a> 也可以设置头信息。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.req.set_header(<span class="string">"Content-Type"</span>, <span class="string">"text/html"</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxreqget_uri_args" target="_blank" rel="noopener">ngx.req.get_uri_args()</a></li>
+</ul>
+<p>该方法以表形式返回当前请求的所有 GET 参数。查看请求 query 为<code>?name=fhb</code>的 GET 参数：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ngx.say(<span class="string">'name : '</span>, ngx.req.get_uri_args().name, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line"><span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="built_in">pairs</span>(ngx.req.get_uri_args()) <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">type</span>(v) == <span class="string">"table"</span> <span class="keyword">then</span></span><br><span class="line">        ngx.say(k, <span class="string">" : "</span>, <span class="built_in">table</span>.<span class="built_in">concat</span>(v, <span class="string">","</span>), <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ngx.say(k,<span class="string">" : "</span>, v, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>同样，可以通过 <a href="https://github.com/openresty/lua-nginx-module#ngxreqset_uri_args" target="_blank" rel="noopener">ngx.req.set_uri_args()</a> 设置请求的所有 GET 参数。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.req.set_uri_args(&#123;name=<span class="string">'fhb'</span>&#125;) <span class="comment">--&#123;name='fhb'&#125;可以为query形式name=fhb</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxreqget_post_args" target="_blank" rel="noopener">get_post_args()</a></li>
+</ul>
+<p>该方法以表形式返回当前请求的所有 POST 参数，POST 数据必须是 application/x-www-form-urlencoded 类型。查看请求<code>curl --data &#39;name=fhb&#39; localhost/lua_api</code>的 POST 参数：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--必须先读取body体</span></span><br><span class="line">ngx.req.read_body()</span><br><span class="line">ngx.say(<span class="string">'name : '</span>, ngx.req.get_post_args().name, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line"><span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="built_in">pairs</span>(ngx.req.get_post_args()) <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">type</span>(v) == <span class="string">"table"</span> <span class="keyword">then</span></span><br><span class="line">        ngx.say(k, <span class="string">" : "</span>, <span class="built_in">table</span>.<span class="built_in">concat</span>(v, <span class="string">","</span>), <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ngx.say(k,<span class="string">" : "</span>, v, <span class="string">'&lt;br&gt;'</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>通过 <a href="https://github.com/openresty/lua-nginx-module#ngxreqget_body_data" target="_blank" rel="noopener">ngx.req.get_body_data()</a> 方法可以获取未解析的请求 body 体内容字符串。</p>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxreqget_method" target="_blank" rel="noopener">ngx.req.get_method()</a></li>
+</ul>
+<p>获取请求的大写字母形式的请求方式，通过 <a href="https://github.com/openresty/lua-nginx-module#ngxreqset_method" target="_blank" rel="noopener">ngx.req.set_method()</a> 可以设置请求方式。例如：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.say(ngx.req.get_method())</span><br></pre></td></tr></table></figure>
+<h3 id="响应部分"><a href="#响应部分" class="headerlink" title="响应部分"></a>响应部分</h3><ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxheaderheader" target="_blank" rel="noopener">ngx.header</a></li>
+</ul>
+<p>通过<code>ngx.header.header_name</code>的形式获取或设置响应头信息。如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ngx.say(ngx.header.content_type)</span><br><span class="line">ngx.header.content_type = <span class="string">'text/plain'</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#print" target="_blank" rel="noopener">ngx.print()</a></li>
+</ul>
+<p>ngx.print() 方法会填充指定内容到响应 body 中。如下所示：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.<span class="built_in">print</span>(ngx.header.content_type)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxsay" target="_blank" rel="noopener">ngx.say()</a></li>
+</ul>
+<p>如上述使用，ngx.say() 方法同 ngx.print() 方法，只是会在后追加一个换行符。</p>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxexit" target="_blank" rel="noopener">ngx.exit()</a></li>
+</ul>
+<p>以某个状态码返回响应内容，状态码常量对应关系见 <a href="https://github.com/openresty/lua-nginx-module#http-status-constants" target="_blank" rel="noopener">HTTP status constants</a> 部分，也支持数字形式的状态码。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.<span class="built_in">exit</span>(<span class="number">403</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxredirect" target="_blank" rel="noopener">ngx.redirect()</a></li>
+</ul>
+<p>重定向当前请求到新的 url，响应状态码可选列表为 301、302（默认）、303、307。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ngx.redirect(<span class="string">'http://www.fanhaobai.com'</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxrematch" target="_blank" rel="noopener">ngx.re.match</a></li>
+</ul>
+<p>该方法提供了正则表达式匹配方法。请求<code>?name=fhb&amp;age=24</code>匹配 GET 参数中的数字：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> m, err = ngx.re.<span class="built_in">match</span>(ngx.req.set_uri_args, <span class="string">"[0-9]+"</span>)</span><br><span class="line"><span class="keyword">if</span> m <span class="keyword">then</span></span><br><span class="line">    ngx.say(m[<span class="number">0</span>])</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    ngx.say(<span class="string">"match not found"</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxlog" target="_blank" rel="noopener">ngx.log()</a></li>
+</ul>
+<p>通过该方法可以将内容写入 Nginx 日志文件，日志文件级别需同 log 级别一致。</p>
+<ul>
+<li><a href="https://github.com/openresty/lua-nginx-module#ngxmd5" target="_blank" rel="noopener">ngx.md5()</a> | <a href="https://github.com/openresty/lua-nginx-module#ngxencode_base64" target="_blank" rel="noopener">ngx.encode_base64()</a> | ngx.decode_base64()</li>
+</ul>
+<p>它们都是字符串编码方式。ngx.md5() 可以对字符串进行 md5 加密处理，而 ngx.encode_base64() 是对字符串 base64 编码， ngx.decode_base64() 为 base64 解码。</p>
+<h2 id="Nginx中嵌入Lua"><a href="#Nginx中嵌入Lua" class="headerlink" title="Nginx中嵌入Lua"></a>Nginx中嵌入Lua</h2><p>上面讲述了怎么在 Lua 中调用 Nginx 的 API 来扩展或定制 Nginx 的功能，那么编写好的 Lua 脚本怎么在 Nginx 中得到执行呢？其实，Nginx 是通过模块指令形式在其 11 个处理阶段做插入式处理，指令覆盖 http、server、server if、location、location if 这几个范围。</p>
+<h3 id="模块指令列表"><a href="#模块指令列表" class="headerlink" title="模块指令列表"></a>模块指令列表</h3><p>这里只列举基本的 Lua 模块指令，更多信息参考 <a href="https://www.nginx.com/resources/wiki/modules/lua/#directives" target="_blank" rel="noopener">Directives</a> 部分。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>所在阶段</th>
+<th>使用范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>init_by_lua<br>init_by_lua_file</td>
+<td>加载配置文件</td>
+<td>http</td>
+<td>可以用于初始化全局配置</td>
+</tr>
+<tr>
+<td>set_by_lua<br>set_by_lua_file</td>
+<td>rewrite</td>
+<td>server<br>location<br>location if</td>
+<td>复杂逻辑的变量赋值，注意是阻塞的</td>
+</tr>
+<tr>
+<td>rewrite_by_lua<br>rewrite_by_lua_file</td>
+<td>rewrite</td>
+<td>http<br>server<br>location<br>location if</td>
+<td>实现复杂逻辑的转发或重定向</td>
+</tr>
+<tr>
+<td>content_by_lua<br>content_by_lua_file</td>
+<td>content</td>
+<td>location<br>location if</td>
+<td>处理请求并输出响应</td>
+</tr>
+<tr>
+<td>header_filter_by_lua<br>header_filter_by_lua_file</td>
+<td>响应头信息过滤</td>
+<td>http<br>server<br>location<br>location if</td>
+<td>设置响应头信息</td>
+</tr>
+<tr>
+<td>body_filter_by_lua<br>body_filter_by_lua_file</td>
+<td>输出过滤</td>
+<td>http<br>server<br>location<br>location if</td>
+<td>对输出进行过滤或修改</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用指令"><a href="#使用指令" class="headerlink" title="使用指令"></a>使用指令</h3><p>注意到，每个指令都会有<code>*_lua</code>和<code>*_lua_file</code>两个指令，<code>*_lua</code>指令后为 Lua 代码块，而<code>*_lua_file</code>指令后为 Lua 脚本文件路径。下面将只对<code>*_lua</code>指令进行说明。</p>
+<ul>
+<li>init_by_lua</li>
+</ul>
+<p>该指令会在 Nginx 的 Master 进程加载配置时执行，所以可以完成 Lua 模块初始化工作，Worker 进程同样会继承这些。</p>
+<p><code>nginx.conf</code>配置文件中的 http 部分添加如下代码：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-- 所有worker共享的全局变量</span><br><span class="line"><span class="attribute">lua_shared_dict</span> shared_data <span class="number">1m</span>;  </span><br><span class="line"><span class="attribute">init_by_lua_file</span> /usr/example/lua/init.lua;</span><br></pre></td></tr></table></figure>
+<p><code>init.lua</code>初始化脚本为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> cjson = <span class="built_in">require</span> <span class="string">'cjson'</span></span><br><span class="line"><span class="keyword">local</span> redis = <span class="built_in">require</span> <span class="string">'resty.redis'</span></span><br><span class="line"><span class="keyword">local</span> shared_data = ngx.shared.shared_data</span><br></pre></td></tr></table></figure>
+<ul>
+<li>set_by_lua</li>
+</ul>
+<p>我们直接使用 set 指令很难实现很复杂的变量赋值逻辑，而 set_by_lua 模块指令就可以解决这个问题。</p>
+<p><code>nginx.conf</code>配置文件 location 部分内容为：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /lua &#123;</span><br><span class="line">    <span class="attribute">set_by_lua_file</span> <span class="variable">$num</span> /home/www/set.lua;</span><br><span class="line">    <span class="attribute">default_type</span> <span class="string">'text/html'</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$num</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>set.lua</code>脚本内容为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> uri_args = ngx.req.get_uri_args()</span><br><span class="line"><span class="keyword">local</span> i = uri_args.a <span class="keyword">or</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">local</span> j = uri_args.b <span class="keyword">or</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">return</span> i + j</span><br></pre></td></tr></table></figure>
+<p>上述赋值逻辑，请求 query 为<code>?a=10&amp;b=2</code>时响应内容为 12。</p>
+<ul>
+<li>rewrite_by_lua</li>
+</ul>
+<p>可以实现内部 URL 重写或者外部重定向。<code>nginx.conf</code>配置如下：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /lua &#123;</span><br><span class="line">    <span class="attribute">default_type</span> <span class="string">"text/html"</span>;</span><br><span class="line">    <span class="attribute">rewrite_by_lua_file</span> /home/www/rewrite.lua;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>rewrite.lua</code>脚本内容：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ngx.req.get_uri_args()[<span class="string">"type"</span>] == <span class="string">"app"</span> <span class="keyword">then</span></span><br><span class="line">    ngx.req.set_uri(<span class="string">"/m_h5"</span>, <span class="literal">false</span>);</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>access_by_lua</li>
+</ul>
+<p>用于访问权限控制。例如，只允许带有身份标识用户访问，<code>nginx.conf</code>配置为：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /lua &#123;  </span><br><span class="line">    <span class="attribute">default_type</span> <span class="string">"text/html"</span>;</span><br><span class="line">    <span class="attribute">access_by_lua_file</span> /home/www/access.lua;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>access.lua</code>脚本内容为：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ngx.req.get_uri_args()[<span class="string">"token"</span>] == <span class="string">"fanhb"</span> <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> ngx.<span class="built_in">exit</span>(<span class="number">403</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>content_by_lua</li>
+</ul>
+<p>该指令在 <a href="#Lua调用Nginx">Lua 调用 Nginx</a> 部分已经使用过了，用于输出响应内容。</p>
+<h2 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h2><h3 id="访问权限控制"><a href="#访问权限控制" class="headerlink" title="访问权限控制"></a>访问权限控制</h3><p>使用 Lua 模块对本站的 ES 服务做受信操作控制，即非受信 IP 只能查询操作。<code>nginx.conf</code>配置如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    set $allowed <span class="string">'115.171.226.212'</span>;</span><br><span class="line">    access_by_lua_block &#123;</span><br><span class="line">        <span class="keyword">if</span> ngx.re.<span class="built_in">match</span>(ngx.req.get_method(), <span class="string">"PUT|POST|DELETE"</span>) <span class="keyword">and</span> <span class="keyword">not</span> ngx.re.<span class="built_in">match</span>(ngx.var.request_uri, <span class="string">"_search"</span>) <span class="keyword">then</span></span><br><span class="line">	    start, _ = <span class="built_in">string</span>.<span class="built_in">find</span>(ngx.var.allowed, ngx.var.remote_addr)</span><br><span class="line">	    <span class="keyword">if</span> <span class="keyword">not</span> start <span class="keyword">then</span></span><br><span class="line">		ngx.<span class="built_in">exit</span>(<span class="number">403</span>)</span><br><span class="line">	    <span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">    proxy_pass http://<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">9200</span>$request_uri;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="访问频率控制"><a href="#访问频率控制" class="headerlink" title="访问频率控制"></a>访问频率控制</h3><p>在 Nginx 配置文件的 location 部分配置 Lua 脚本基本参数，并配置 Lua 模块指令：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">default_type</span> <span class="string">"text/html"</span>;</span><br><span class="line"><span class="attribute">set</span> rate_per <span class="number">300</span></span><br><span class="line">access_by_lua_file /home/www/access.lua;</span><br></pre></td></tr></table></figure>
+<p>Lua 脚本实现频率控制逻辑，使用 Redis 对单位时间内的访问次数做缓存，key 为访问 uri 拼接 token 后的 md5 值。具体内容如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> redis = <span class="built_in">require</span> <span class="string">"resty.redis"</span></span><br><span class="line"><span class="keyword">local</span> red = redis:new()</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> limit = <span class="built_in">tonumber</span>(ngx.var.rate_per) <span class="keyword">or</span> <span class="number">200</span></span><br><span class="line"><span class="keyword">local</span> expire_time = <span class="built_in">tonumber</span>(ngx.var.rate_expire) <span class="keyword">or</span> <span class="number">1000</span></span><br><span class="line"><span class="keyword">local</span> key = <span class="string">"rate.limit:string:"</span></span><br><span class="line"></span><br><span class="line">red:set_timeout(<span class="number">500</span>)</span><br><span class="line"><span class="keyword">local</span> ok, err = red:connect(<span class="string">"www.fanhaobai.com"</span>, <span class="number">6379</span>)</span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> ok <span class="keyword">then</span></span><br><span class="line">    ngx.<span class="built_in">log</span>(ngx.ERR, <span class="string">"failed to connect redis: "</span> .. err)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">key = key .. ngx.md5(ngx.var.request_uri .. (ngx.req.get_uri_args()[<span class="string">'token'</span>] <span class="keyword">or</span> ngx.req.get_post_args()[<span class="string">'token'</span>]))</span><br><span class="line"><span class="keyword">local</span> times, err = red:incr(key)</span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> times <span class="keyword">then</span></span><br><span class="line">    ngx.<span class="built_in">log</span>(ngx.ERR, <span class="string">"failed to exec incr: "</span> .. err)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line"><span class="keyword">elseif</span> times == <span class="number">1</span> <span class="keyword">then</span></span><br><span class="line">    ok, err = red:expire(key, expire_time)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> ok <span class="keyword">then</span></span><br><span class="line">        ngx.<span class="built_in">log</span>(ngx.ERR, <span class="string">"failed to exec expire: "</span> .. err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> times &gt; limit <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> ngx.<span class="built_in">exit</span>(<span class="number">403</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+          
+            <a href="/tags/Lua/" rel="tag"># Lua</a>
+          
+            <a href="/tags/OpenResty/" rel="tag"># OpenResty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/19/错误处理/" rel="next" title="错误处理">
+                <i class="fa fa-chevron-left"></i> 错误处理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/19/Lua函数传递self的深入理解/" rel="prev" title="Lua函数传递self的深入理解">
+                Lua函数传递self的深入理解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Lua在Nginx的应用"><span class="nav-number">1.</span> <span class="nav-text">Lua在Nginx的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装Lua环境"><span class="nav-number">1.1.</span> <span class="nav-text">安装Lua环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#系统依赖库"><span class="nav-number">1.1.1.</span> <span class="nav-text">系统依赖库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装LuaJIT"><span class="nav-number">1.1.2.</span> <span class="nav-text">安装LuaJIT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下载相关模块"><span class="nav-number">1.1.3.</span> <span class="nav-text">下载相关模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加载Lua模块"><span class="nav-number">1.1.4.</span> <span class="nav-text">加载Lua模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置Nginx环境"><span class="nav-number">1.1.5.</span> <span class="nav-text">配置Nginx环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lua调用Nginx"><span class="nav-number">1.2.</span> <span class="nav-text">Lua调用Nginx</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#请求部分"><span class="nav-number">1.2.1.</span> <span class="nav-text">请求部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#响应部分"><span class="nav-number">1.2.2.</span> <span class="nav-text">响应部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">1.2.3.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx中嵌入Lua"><span class="nav-number">1.3.</span> <span class="nav-text">Nginx中嵌入Lua</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#模块指令列表"><span class="nav-number">1.3.1.</span> <span class="nav-text">模块指令列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用指令"><span class="nav-number">1.3.2.</span> <span class="nav-text">使用指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#案例"><span class="nav-number">1.4.</span> <span class="nav-text">案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#访问权限控制"><span class="nav-number">1.4.1.</span> <span class="nav-text">访问权限控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#访问频率控制"><span class="nav-number">1.4.2.</span> <span class="nav-text">访问频率控制</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

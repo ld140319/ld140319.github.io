@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,一致性协议,ZooKeeper,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="ZooKeeper 的功能和原理  原文地址：https://blog.csdn.net/weijifeng_/article/details/79775738 ​           https://www.cnblogs.com/felixzh/p/5869212.html ​           https://www.cnblogs.com/wuxl360/p/5817471.html">
+<meta name="keywords" content="架构,一致性协议,ZooKeeper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ZooKeeper 的功能和原理">
+<meta property="og:url" content="http://blog.com/2019/02/12/ZooKeeper 的功能和原理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="ZooKeeper 的功能和原理  原文地址：https://blog.csdn.net/weijifeng_/article/details/79775738 ​           https://www.cnblogs.com/felixzh/p/5869212.html ​           https://www.cnblogs.com/wuxl360/p/5817471.html">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/96fea87c7024afd577376e7a4b26e460.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/5e245feb8f8311195763d2abb3e27c20.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184447i91rsvg573m888f5.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184557iv77xzbyas7bc99o.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184729rximw9ziz9zeclxd.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184755snznkmmh7at9nti9.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184816e10ftmax08k88nqp.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184847c41aywumfqymxju3.png">
+<meta property="og:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/184909zniwhnguhilho1zg.png">
+<meta property="og:updated_time" content="2019-02-12T12:34:42.153Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ZooKeeper 的功能和原理">
+<meta name="twitter:description" content="ZooKeeper 的功能和原理  原文地址：https://blog.csdn.net/weijifeng_/article/details/79775738 ​           https://www.cnblogs.com/felixzh/p/5869212.html ​           https://www.cnblogs.com/wuxl360/p/5817471.html">
+<meta name="twitter:image" content="http://blog.com/2019/02/12/ZooKeeper%20的功能和原理/96fea87c7024afd577376e7a4b26e460.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/02/12/ZooKeeper 的功能和原理/">
+
+
+
+
+
+  <title>ZooKeeper 的功能和原理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/02/12/ZooKeeper 的功能和原理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ZooKeeper 的功能和原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-12T12:12:57+08:00">
+                2019-02-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/ZooKeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">ZooKeeper</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/ZooKeeper/一致性协议/" itemprop="url" rel="index">
+                    <span itemprop="name">一致性协议</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="ZooKeeper-的功能和原理"><a href="#ZooKeeper-的功能和原理" class="headerlink" title="ZooKeeper 的功能和原理"></a>ZooKeeper 的功能和原理</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://blog.csdn.net/weijifeng_/article/details/79775738" target="_blank" rel="noopener">https://blog.csdn.net/weijifeng_/article/details/79775738</a></p>
+<p>​           <a href="https://www.cnblogs.com/felixzh/p/5869212.html" target="_blank" rel="noopener">https://www.cnblogs.com/felixzh/p/5869212.html</a></p>
+<p>​           <a href="https://www.cnblogs.com/wuxl360/p/5817471.html" target="_blank" rel="noopener">https://www.cnblogs.com/wuxl360/p/5817471.html</a></p>
+</blockquote>
+<h2 id="一-Zookeeper功能简介"><a href="#一-Zookeeper功能简介" class="headerlink" title="一 .Zookeeper功能简介"></a>一 .Zookeeper功能简介</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>分布式协调服务</strong></p>
+<p>关键点：<strong>znode数据结构 + 原语 + watcher通知机制</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ZooKeeper 是一个开源的分布式协调服务，由雅虎创建，是 Google Chubby 的开源实现。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;分布式应用程序可以基于 ZooKeeper 实现诸如数据发布/订阅、负载均衡、命名服务、分布式协调/通知、集群管理、Master 选举、配置维护，名字服务、分布式同步、分布式锁和分布式队列等功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper是以Fast Paxos算法为基础的，<strong><a href="https://baike.baidu.com/item/Paxos%20%E7%AE%97%E6%B3%95" target="_blank" rel="noopener">Paxos 算法</a>存在<a href="https://baike.baidu.com/item/%E6%B4%BB%E9%94%81" target="_blank" rel="noopener">活锁</a>的问题，即当有多个proposer交错提交时，有可能互相排斥导致没有一个proposer能提交成功</strong>，而Fast Paxos作了一些优化，<strong>通过选举产生一个leader (领导者)，只有leader才能提交proposer</strong>。</p>
+<h2 id="二-Zookeeper设计目的"><a href="#二-Zookeeper设计目的" class="headerlink" title="二.Zookeeper设计目的"></a>二.Zookeeper设计目的</h2><ol>
+<li><p>最终一致性：client不论连接到哪个Server，展示给它都是同一个视图，这是zookeeper最重要的性能。 </p>
+</li>
+<li><p>可靠性：具有简单、健壮、良好的性能，如果消息被到一台服务器接受，那么它将被所有的服务器接受。 </p>
+</li>
+<li><p>实时性：Zookeeper保证客户端将在一个时间间隔范围内获得服务器的更新信息，或者服务器失效的信息。但由于网络延时等原因，Zookeeper不能保证两个客户端能同时得到刚更新的数据，如果需要最新数据，应该在读数据之前调用sync()接口。 </p>
+</li>
+<li><p>等待无关（wait-free）：慢的或者失效的client不得干预快速的client的请求，使得每个client都能有效的等待。 </p>
+</li>
+<li><p>原子性：更新只能成功或者失败，没有中间状态。 </p>
+</li>
+<li><p>顺序性：包括全局有序和偏序两种：全局有序是指如果在一台服务器上消息a在消息b前发布，则在所有Server上消息a都将在消息b前被发布；偏序是指如果一个消息b在消息a后被同一个发送者发布，a必将排在b前面。 </p>
+</li>
+</ol>
+<h2 id="三-Zookeeper工作原理"><a href="#三-Zookeeper工作原理" class="headerlink" title="三.Zookeeper工作原理"></a>三.Zookeeper工作原理</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;Zookeeper 的核心是<strong>原子广播</strong>，这个机制保证了各个Server之间的同步。实现这个机制的协议叫做Zab协议。Zab协议有两种模式，它们分别是<strong>恢复模式（选主）和广播模式（同步</strong>。当服务启动或者在领导者崩溃后，Zab就进入了恢复模式，当领导者被选举出来，且大多数Server完成了和 leader的状态同步以后，恢复模式就结束了。状态同步保证了leader和Server具有相同的系统状态。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>为了保证事务的顺序一致性，zookeeper采用了递增的事务id号（zxid）来标识事务</strong>。所有的提议（proposal）都在被提出的时候加上了zxid。实现中zxid是一个64位的数字，它高32位是epoch用来标识leader关系是否改变，每次一个leader被选出来，它都会有一个新的epoch，标识当前属于那个leader的统治时期。低32位用于递增计数。  </p>
+<h2 id="四-ZooKeeper基本概念"><a href="#四-ZooKeeper基本概念" class="headerlink" title="四. ZooKeeper基本概念"></a>四. ZooKeeper基本概念</h2><h3 id="1-ZooKeeper-集群角色介绍"><a href="#1-ZooKeeper-集群角色介绍" class="headerlink" title="1 . ZooKeeper 集群角色介绍"></a>1 . ZooKeeper 集群角色介绍</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;一个 ZooKeeper 集群<strong>同一时刻只会有一个 Leader</strong>，其他都是 Follower 或 Observer。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 配置很简单，每个节点的配置文件(zoo.cfg)都是一样的，只有 myid 文件不一样。myid 的值必须是 zoo.cfg中server.{数值} 的{数值}部分。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在装有 ZooKeeper 的机器的终端执行 zookeeper-server status 可以看当前节点的角色</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最典型集群模式：Master/Slave 模式（主备模式）。在这种模式中，通常 Master 服务器作为主服务器提供写服务，其他的 Slave 服务器从服务器通过异步复制的方式获取 Master 服务器最新的数据提供读服务。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但是，在 ZooKeeper 中没有选择传统的 Master/Slave 概念，而是引入了Leader、Follower 和 Observer 三种角色。</p>
+<p>如下图所示：</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/96fea87c7024afd577376e7a4b26e460.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 集群中的所有机器通过一个 Leader 选举过程来选定一台称为 “Leader” 的机器。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Leader 既可以为客户端提供写服务又能提供读服务。除了 Leader 外，Follower 和  Observer 都只能提供读服务。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Follower 和 Observer 唯一的区别在于 Observer 机器不参与 Leader 的选举过程，也不参与写操作的“过半写成功”策略，因此<strong>Observer 机器可以在不影响写性能的情况下提升集群的读性能</strong>。</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/5e245feb8f8311195763d2abb3e27c20.png" alt="img"></p>
+<h3 id="2-节点读写服务分工"><a href="#2-节点读写服务分工" class="headerlink" title="2 . 节点读写服务分工"></a>2 . 节点读写服务分工</h3><ol>
+<li><p>ZooKeeper 集群的所有机器通过一个 Leader 选举过程来选定一台被称为『Leader』<br>   的机器，Leader服务器为客户端提供读和写服务。</p>
+</li>
+<li><p><strong>Follower 和 Observer 都能提供读服务，不能提供写服务</strong>。两者唯一的区别在于，<br>   <strong>Observer机器不参与 Leader 选举过程，也不参与写操作的『过半写成功』策略</strong>，因<br>   此 Observer 可以在不影响写性能的情况下提升集群的读性能，<strong>写请求转发给leader节点</strong>。</p>
+</li>
+</ol>
+<h3 id="3-Session"><a href="#3-Session" class="headerlink" title="3 . Session"></a>3 . Session</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;Session 是指客户端会话，在讲解客户端会话之前，我们先来了解下客户端连接。<strong>在 ZooKeeper 中，一个客户端连接是指客户端和 ZooKeeper 服务器之间的TCP长连接</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ZooKeeper 对外的服务端口默认是2181，客户端启动时，首先会与服务器建立一个TCP连接，从第一次连接建立开始，客户端会话的生命周期也开始了，通过这个连接，客户端能够通 过心跳检测和服务器保持有效的会话，也能够向 ZooKeeper 服务器发送请求并接受响应，同时还能通过该连接接收来自服务器的 Watch事件通知。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;  </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Session 的 SessionTimeout 值用来设置一个客户端会话的超时时间。当由于服务器 压力太大、网络故障或是客户端主动断开连接等各种原因导致客户端连接断开时，<strong>只要在 SessionTimeout 规定的时间内能够重新连接上集群中任意一台服务器，那么之前创建的会话仍然有效</strong>。</p>
+<h3 id="4-数据节点"><a href="#4-数据节点" class="headerlink" title="4 . 数据节点"></a>4 . 数据节点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;zookeeper的结构其实就是一个<strong>树形结构</strong>，每个节点都保留自己的内容。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">zookeeper的节点分两类：持久节点和临时节点</span><br><span class="line">- 持久节点：</span><br><span class="line">        所谓持久节点是指一旦这个 树形结构上被创建了，除非主动进行对树节点的移除操</span><br><span class="line">   作，否则这个节点将一直保存在 ZooKeeper 上。</span><br><span class="line"></span><br><span class="line">- 临时节点：</span><br><span class="line">        临时节点的生命周期跟客户端会话绑定，一旦客户端会话失效，那么这个客户端创</span><br><span class="line">   建的所有临时节点都会被移除。</span><br></pre></td></tr></table></figure>
+<h3 id="5-状态信息"><a href="#5-状态信息" class="headerlink" title="5 . 状态信息"></a>5 . 状态信息</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;每个节点除了存储数据内容之外，还存储了 节点本身的一些状态信息。用 get 命令可以同时获得某个 节点的内容和状态信息</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>在 ZooKeeper 中，version 属性是用来实现乐观锁机制中的『写入校验』的（保证分布<br>式数据原子性操作）</strong>。</p>
+<h3 id="6-事务操作"><a href="#6-事务操作" class="headerlink" title="6 .事务操作"></a>6 .事务操作</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;在ZooKeeper中，能改变ZooKeeper服务器状态的操作称为事务操作。一般包括数据节点创建与删除、数据内容更新和客户端会话创建与失效等操作。<strong>对应每一个事务请求，ZooKeeper都会为其分配一个全局唯一的事务ID，用 ZXID 表示，通常是一个64位的数字</strong>。<strong>每一个 ZXID对应一次更新操作，从这些 ZXID 中可以间接地识别出 ZooKeeper 处理这些事务操作请求的全局顺序</strong>。</p>
+<h3 id="7-Watcher-事件监听器"><a href="#7-Watcher-事件监听器" class="headerlink" title="7 .Watcher(事件监听器)"></a>7 .Watcher(事件监听器)</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>ZooKeeper允许用户在指定目录节点上注册一些 Watcher，并且在一些特定事件触发的时候，ZooKeeper 服务端会将事件通知到感兴趣的客户端上去</strong>。该机制是 ZooKeeper 实现分布式协调服务的重要特性。</p>
+<h3 id="8-Zookeeper文件系统"><a href="#8-Zookeeper文件系统" class="headerlink" title="8. Zookeeper文件系统"></a>8. Zookeeper文件系统</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;每个子目录项如 NameService 都被称作为znode，和文件系统一样，我们能够自由的增加、删除znode，在一个znode下增加、删除子znode，唯一的不同在于<strong>znode是可以存储数据的</strong>。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper中的节点有两种，分别为临时节点和永久节点。<strong>节点的类型在创建时即被确定，并且不能改变</strong>。</p>
+<p><strong>① 临时节点：</strong>该节点的生命周期依赖于创建它们的会话。一旦会话(Session)结束，临时节点将被<strong>自动删除</strong>，当然可以也可以手动删除。虽然每个临时的Znode都会绑定到一个客户端会话，但他们对所有的客户端还是可见的。另外，<strong>ZooKeeper的临时节点不允许拥有子节点</strong>。</p>
+<p><strong>② 永久节点：</strong>该节点的生命周期不依赖于会话，并且<strong>只有在客户端显示执行删除操作的时候，他们才能被删除</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当创建Znode的时候，用户可以请求在ZooKeeper的路径结尾添加一个<strong>递增的计数</strong>。这个计数<strong>对于此节点的父节点来说</strong>是唯一的，它的格式为”%10d”(10位数字，没有数值的数位用0补充，例如”0000000001”)。当计数值大于232-1时，计数器将溢出。</p>
+<p>所以一共有四种类型的znode： </p>
+<p><strong>1、PERSISTENT-持久化目录节点</strong></p>
+<p>客户端与zookeeper断开连接后，该节点依旧存在 </p>
+<p><strong>2、PERSISTENT_SEQUENTIAL-持久化顺序编号目录节点</strong> </p>
+<p>客户端与zookeeper断开连接后，该节点依旧存在，只是Zookeeper给该节点名称进行顺序编号 </p>
+<p><strong>3、EPHEMERAL-临时目录节点</strong></p>
+<p>客户端与zookeeper断开连接后，该节点被删除 </p>
+<p><strong>4、EPHEMERAL_SEQUENTIAL-临时顺序编号目录节点</strong></p>
+<p>客户端与zookeeper断开连接后，该节点被删除，只是Zookeeper给该节点名称进行顺序编号 </p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184447i91rsvg573m888f5.png" alt="img">  </p>
+<h4 id="1-引用方式"><a href="#1-引用方式" class="headerlink" title="(1) 引用方式"></a>(1) 引用方式</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;Zonde通过<strong>路径引用</strong>，如同Unix中的文件路径。路径必须是绝对的，因此他们必须由斜杠字符来<strong>开头</strong>。除此以外，他们必须是唯一的，也就是说每一个路径只有一个表示，因此这些路径不能改变。在ZooKeeper中，路径由Unicode字符串组成，并且有一些限制。字符串”/zookeeper”用以保存管理信息，比如关键配额信息。</p>
+<h4 id="2-Znode结构"><a href="#2-Znode结构" class="headerlink" title="(2) Znode结构"></a>(2) Znode结构</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper命名空间中的Znode，兼具文件和目录两种特点。既像文件一样维护着数据、元信息、ACL、时间戳等数据结构，又像目录一样可以作为路径标识的一部分。图中的每个节点称为一个Znode。 每个Znode由3部分组成:</p>
+<p><strong>①</strong> <strong>stat</strong>：此为状态信息, 描述该Znode的版本, 权限等信息</p>
+<p><strong>②</strong> <strong>data</strong>：与该Znode关联的数据</p>
+<p><strong>③</strong> <strong>children</strong>：该Znode下的子节点</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper虽然可以关联一些数据，但并没有被设计为常规的数据库或者大数据存储，相反的是，它用来<strong>管理调度数据</strong>，比如分布式应用中的配置文件信息、状态信息、汇集位置等等。这些数据的共同特性就是它们都是很小的数据，通常以KB为大小单位。<strong>ZooKeeper的服务器和客户端都被设计为严格检查并限制每个Znode的数据大小至多1M，但常规使用中应该远小于此值</strong>。</p>
+<h3 id="9-ZooKeeper中的时间"><a href="#9-ZooKeeper中的时间" class="headerlink" title="9 . ZooKeeper中的时间"></a>9 . ZooKeeper中的时间</h3><p>ZooKeeper有多种记录时间的形式，其中包含以下几个主要属性：</p>
+<p><strong>(1) Zxid</strong></p>
+<p>致使ZooKeeper节点状态改变的每一个操作都将使节点接收到一个Zxid格式的时间戳，并且这个时间戳全局有序。也就是说，也就是说，每个对 节点的改变都将产生一个唯一的Zxid。如果Zxid1的值小于Zxid2的值，那么Zxid1所对应的事件发生在Zxid2所对应的事件之前。实际 上，ZooKeeper的每个节点维护者三个Zxid值，为别为：cZxid、mZxid、pZxid。</p>
+<p><strong>①</strong> <strong>cZxid</strong>： 是节点的创建时间所对应的Zxid格式时间戳。<br><strong>② mZxid</strong>：是节点的修改时间所对应的Zxid格式时间戳。</p>
+<p>实现中Zxid是一个64为的数字，它<strong>高32位是epoch用来标识leader关系是否改变，每次一个leader被选出来，它都会有一个 新的epoch</strong>。<strong>低32位是个递增计数</strong>。</p>
+<p> <strong>(2) 版本号</strong></p>
+<p>对节点的每一个操作都将致使这个节点的版本号增加。每个节点维护着三个版本号，他们分别为：</p>
+<p><strong>① version</strong>：节点数据版本号<br><strong>② cversion</strong>：子节点版本号<br><strong>③ aversion</strong>：节点所拥有的ACL版本号</p>
+<h3 id="10-Zookeeper-下-Server工作状态"><a href="#10-Zookeeper-下-Server工作状态" class="headerlink" title="10 . Zookeeper 下 Server工作状态"></a>10 . Zookeeper 下 Server工作状态</h3><p>每个Server在工作过程中有三种状态： </p>
+<p>LOOKING：当前Server不知道leader是谁，正在搜寻<br>LEADING：当前Server即为选举出来的leader<br>FOLLOWING：leader已经选举出来，当前Server与之同步 </p>
+<h2 id="五-ZooKeeper应用的典型场景"><a href="#五-ZooKeeper应用的典型场景" class="headerlink" title="五.ZooKeeper应用的典型场景"></a>五.ZooKeeper应用的典型场景</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 是一个高可用的分布式数据管理与协调框架。基于对ZAB算法的实现，该框架能够很好地保证分布式环境中数据的一致性。也是基于这样的特性，使得 ZooKeeper 成为了解决分布式一致性问题的利器。</p>
+<h3 id="1-数据发布与订阅（配置中心）"><a href="#1-数据发布与订阅（配置中心）" class="headerlink" title="1 . 数据发布与订阅（配置中心）"></a>1 . 数据发布与订阅（配置中心）</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;数据发布与订阅，即所谓的配置中心，顾名思义就是发布者将数据发布到 ZooKeeper 节点上,供订阅者进行数据订阅，进而达到动态获取数据的目的，实现配置信息的集中式管理和动态更新。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于数据量通常比较小。数据内容在运行时动态变化。集群中各机器共享，配置一致。这样的全局配置信息就可以发布到 ZooKeeper上，让<strong>客户端（集群的机器）去订阅该消息</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">发布/订阅系统一般有两种设计模式，分别是推（Push）和拉（Pull）模式。</span><br><span class="line">      - 推模式</span><br><span class="line">          服务端主动将数据更新发送给所有订阅的客户端</span><br><span class="line">      - 拉模式</span><br><span class="line">          客户端主动发起请求来获取最新数据，通常客户端都采用定时轮询拉取的方式</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 采用的是推拉相结合的方式：<br>&nbsp;&nbsp;&nbsp;&nbsp;客户端想服务端注册自己需要关注的节点，一旦该节点的数据发生变更，那么服务端就会向相应的客户端发送Watcher事件通知，<strong>客户端接收到这个消息通知后，需要主动到服务端获取最新的数据</strong></p>
+<h3 id="2-命名服务"><a href="#2-命名服务" class="headerlink" title="2 . 命名服务"></a>2 . 命名服务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;命名服务也是分布式系统中比较常见的一类场景。在分布式系统中，通过使用命名服务，客户端应用能够根据指定名字来获取资源或服务的地址，提供者等信息。被命名的实体通常可以是集群中的机器，提供的服务，远程对象等等——这些我们都可以统称他们为名字。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;其中较为常见的就是一些分布式服务框架（如RPC）中的<strong>服务地址列表</strong>。<strong>通过在ZooKeepr里<br>创建顺序节点，能够很容易创建一个全局唯一的路径，这个路径就可以作为一个名字</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 的命名服务即生成全局唯一的ID。      </p>
+<h3 id="3-分布式协调服务-通知"><a href="#3-分布式协调服务-通知" class="headerlink" title="3 . 分布式协调服务/通知"></a>3 . 分布式协调服务/通知</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper 中特有<strong>Watcher 注册与异步通知机制</strong>，能够很好的实现分布式环境下不同机器，甚至不同系统之间的通知与协调，从而实现<strong>对数据变更的实时处理</strong>。使用方法<strong>通常是不同的客户端如果 机器节点 发生了变化，那么所有订阅的客户端都能够接收到相应的Watcher通知，并做出相应的处理</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;ZooKeeper的分布式协调/通知，是一种通用的分布式系统机器间的通信方式。</p>
+<h3 id="４-Master选举"><a href="#４-Master选举" class="headerlink" title="４ . Master选举"></a>４ . Master选举</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;Master 选举可以说是 ZooKeeper 最典型的应用场景了。比如 HDFS 中 Active NameNode 的选举、YARN 中 Active ResourceManager 的选举和 HBase 中 Active HMaster 的选举等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;针对 Master 选举的需求，通常情况下，我们可以选择常见的关系型数据库中的主键特性来实现;希望成为 Master 的机器都向数据库中插入一条相同主键ID的记录，数据库会帮我们进行主键冲突检查，也就是说，只有一台机器能插入成功——那么，我们就<strong>认为向数据库中成功插入数据的客户端机器成为Master</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">依靠关系型数据库的主键特性确实能够很好地保证在集群中选举出唯一的一个Master。</span><br><span class="line"></span><br><span class="line">但是，如果当前选举出的 Master 挂了，那么该如何处理？谁来告诉我 Master 挂了呢？</span><br></pre></td></tr></table></figure>
+<p>显然，<strong>关系型数据库无法通知我们这个事件</strong>。但是，ZooKeeper 可以做到！</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">利用 ZooKeepr 的强一致性，能够很好地保证在分布式高并发情况下节点的创建一定能够保证全局唯一性，即 ZooKeeper 将会保证客户端无法创建一个已经存在的 数据单元节点。也就是说，如果同时有多个客户端请求创建同一个临时节点，那么最终一定只有一个客户端请求能够创建成功。利用这个特性，就能很容易地在分布式环境中进行 Master 选举了。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;成功创建该节点的客户端所在的机器就成为了 Master。同时，<strong>其他没有成功创建该节点的客户端，都会在该节点上注册一个子节点变更的 Watcher</strong>，用于监控当前 Master 机器是否存活，一旦发现当前的Master挂了，那么其他客户端将会重新进行 Master 选举。这样就实现了 Master 的动态选举。</p>
+<h3 id="５-分布式锁"><a href="#５-分布式锁" class="headerlink" title="５ . 分布式锁"></a>５ . 分布式锁</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;分布式锁是控制分布式系统之间同步访问共享资源的一种方式<br>&nbsp;&nbsp;&nbsp;&nbsp;分布式锁又分为排他锁和共享锁两种</p>
+<h4 id="排它锁"><a href="#排它锁" class="headerlink" title="排它锁"></a>排它锁</h4><p>ZooKeeper如何实现排它锁？</p>
+<ol>
+<li>定义锁<br>ZooKeeper 上的一个 数据节点 可以表示一个锁</li>
+</ol>
+<ol start="2">
+<li><p>获得锁 </p>
+<blockquote>
+<p>把ZooKeeper上的一个节点看作是一个锁，获得锁就通过<strong>创建临时节点的方式来实现</strong>。<br>ZooKeeper 会保证在所有客户端中，最终只有一个客户端能够创建成功，那么就可以<br>认为该客户端获得了锁。同时，所有没有获取到锁的客户端就需要到/exclusive_lock<br>节点上注册一个子节点变更的Watcher监听，以便实时监听到lock节点的变更情况。</p>
+</blockquote>
+</li>
+</ol>
+<ol start="3">
+<li>释放锁 </li>
+</ol>
+<blockquote>
+<p>因为锁是一个临时节点，释放锁有两种方式：</p>
+<ol>
+<li><p>当前获得锁的客户端机器发生宕机或重启，那么该临时节点就会被删除，释放锁<br>正常执行完业务逻辑后，客户端就会主动将自己创建的临时节点删除，释放锁。</p>
+</li>
+<li><p>无论在什么情况下移除了lock节点，ZooKeeper 都会通知所有在 /exclusive_lock 节点上注册了节点变更 Watcher 监听的客户端。</p>
+</li>
+</ol>
+<p>   这些客户端在接收到通知后，再次重新发起分布式锁获取，即重复『获取锁』过程。</p>
+</blockquote>
+<h4 id="共享锁"><a href="#共享锁" class="headerlink" title="共享锁"></a>共享锁</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;共享锁在同一个进程中很容易实现，但是在跨进程或者在不同 Server 之间就不好实现了。Zookeeper 却很容易实现这个功能，实现方式也是需要获得锁的 Server 创建一个 EPHEMERAL_SEQUENTIAL 目录节点，然后调用 getChildren方法获取当前的目录节点列表中最小的目录节点是不是就是自己创建的目录节点，如果正是自己创建的，那么它就获得了这个锁，如果不是那么它就调用 exists(String path, boolean watch) 方法并监控 Zookeeper 上目录节点列表的变化，一直到自己创建的节点是列表中最小编号的目录节点，从而获得锁，释放锁很简单，只要删除前面它自己所创建的目录节点就行了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有了zookeeper的一致性文件系统，锁的问题变得容易。锁服务可以分为两类，<strong>一个是保持独占，另一个是控制时序</strong>。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于第一类，我们将zookeeper上的一个znode看作是一把锁，通过createznode的方式来实现。所有客户端都去创建 /distribute_lock 节点，最终成功创建的那个客户端也即拥有了这把锁。用完删除掉自己创建的distribute_lock 节点就释放出锁。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于第二类， /distribute_lock 已经预先存在，所有客户端在它下面创建临时顺序编号目录节点，和选master一样，<strong>编号最小的获得锁</strong>，用完删除，依次方便。</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184557iv77xzbyas7bc99o.png" alt="img">   </p>
+<h3 id="6-Zookeeper队列管理"><a href="#6-Zookeeper队列管理" class="headerlink" title="6 . Zookeeper队列管理"></a>6 . Zookeeper队列管理</h3><p>  两种类型的队列：</p>
+<p>1、同步队列，当一个队列的成员都聚齐时，这个队列才可用，否则一直等待所有成员到达。 </p>
+<p>2、队列按照 FIFO 方式进行入队和出队操作。 </p>
+<p>第一类，在约定目录下创建临时目录节点，监听节点数目是否是我们要求的数目。 </p>
+<p>第二类，和分布式锁服务中的控制时序场景基本原理一致，入列有编号，出列按编号。  </p>
+<h3 id="7-分布式与数据复制"><a href="#7-分布式与数据复制" class="headerlink" title="7 . 分布式与数据复制"></a>7 . 分布式与数据复制</h3><p>  Zookeeper作为一个集群提供一致的数据服务，自然，它要在所有机器间做数据复制。数据复制的好处： </p>
+<p>1、<strong>容错</strong>：一个节点出错，不致于让整个系统停止工作，别的节点可以接管它的工作； </p>
+<p>2、<strong>提高系统的扩展能力</strong> ：把负载分布到多个节点上，或者增加节点来提高系统的负载能力； </p>
+<p>3、<strong>提高性能</strong>：让客户端本地访问就近的节点，提高用户访问速度。 </p>
+<p>从客户端读写访问的透明度来看，数据复制集群系统分下面两种： </p>
+<p>1、写主(WriteMaster) ：对数据的修改提交给指定的节点。读无此限制，可以读取任何一个节点。这种情况下客户端需要对读与写进行区别，俗称读写分离； </p>
+<p>2、写任意(Write Any)：对数据的修改可提交给任意的节点，跟读一样。这种情况下，客户端对集群节点的角色与变化透明。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对zookeeper来说，它采用的方式是写任意。通过增加机器，它的读吞吐能力和响应能力扩展性非常好，而写，随着机器的增多吞吐能力肯定下降（这也是它建立observer的原因），而响应能力则取决于具体实现方式，是延迟复制保持最终一致性，还是立即复制快速响应。  </p>
+<h2 id="六-Zookeeper选主流程"><a href="#六-Zookeeper选主流程" class="headerlink" title="六. Zookeeper选主流程"></a>六. Zookeeper选主流程</h2><h3 id="basic-paxos"><a href="#basic-paxos" class="headerlink" title="basic paxos"></a>basic paxos</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;当leader崩溃或者leader失去大多数的follower，这时候zk进入恢复模式，恢复模式需要重新选举出一个新的leader，让所有的Server都恢复到一个正确的状态。Zk的选举算法有两种：一种是基于basic paxos实现的，另外一种是基于fast paxos算法实现的。系统默认的选举算法为fast paxos。</p>
+<ol>
+<li><p>选举线程由当前Server发起选举的线程担任，其主要功能是对投票结果进行统计，并选出推荐的Server； </p>
+</li>
+<li><p>选举线程首先向所有Server发起一次询问(包括自己)； </p>
+</li>
+<li><p>选举线程收到回复后，验证是否是自己发起的询问(验证zxid是否一致)，然后获取对方的id(myid)，并存储到当前询问对象列表中，最后获取对方提议的leader相关信息(id,zxid)，并将这些信息存储到当次选举的投票记录表中； </p>
+</li>
+<li><p>收到所有Server回复以后，就计算出zxid最大的那个Server，并将这个Server相关信息设置成下一次要投票的Server； </p>
+</li>
+<li><p>线程将当前zxid最大的Server设置为当前Server要推荐的Leader，如果此时获胜的Server获得n/2 + 1的Server票数，设置当前推荐的leader为获胜的Server，将根据获胜的Server相关信息设置自己的状态，否则，继续这个过程，直到leader被选举出来。 通过流程分析我们可以得出：要使Leader获得多数Server的支持，则Server总数必须是奇数2n+1，且存活的Server的数目不得少于n+1. 每个Server启动后都会重复以上流程。在恢复模式下，如果是刚从崩溃状态恢复的或者刚启动的server还会从磁盘快照中恢复数据和会话信息，zk会记录事务日志并定期进行快照，方便在恢复时进行状态恢复。选主的具体流程图所示： </p>
+</li>
+</ol>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184729rximw9ziz9zeclxd.png" alt="img"> </p>
+<h3 id="fast-paxos"><a href="#fast-paxos" class="headerlink" title="fast paxos"></a>fast paxos</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;fast paxos流程是在选举过程中，某Server首先向所有Server提议自己要成为leader，当其它Server收到提议以后，解决epoch和 zxid的冲突，并接受对方的提议，然后向对方发送接受提议完成的消息，重复这个流程，最后一定能选举出Leader。</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184755snznkmmh7at9nti9.png" alt="img"> </p>
+<h2 id="七-Zookeeper同步流程"><a href="#七-Zookeeper同步流程" class="headerlink" title="七.Zookeeper同步流程"></a>七.Zookeeper同步流程</h2><p>选完Leader以后，zk就进入状态同步过程。 </p>
+<ol>
+<li>Leader等待server连接； </li>
+<li>Follower连接leader，将最大的zxid发送给leader； </li>
+<li>Leader根据follower的zxid确定同步点； </li>
+<li>完成同步后通知follower 已经成为uptodate状态； </li>
+<li>Follower收到uptodate消息后，又可以重新接受client的请求进行服务了。</li>
+</ol>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184816e10ftmax08k88nqp.png" alt="img"> </p>
+<h2 id="八-Zookeeper工作流程-Leader"><a href="#八-Zookeeper工作流程-Leader" class="headerlink" title="八. Zookeeper工作流程-Leader"></a>八. Zookeeper工作流程-Leader</h2><p>1 .恢复数据； </p>
+<p>2 .维持与Learner的心跳，接收Learner请求并判断Learner的请求消息类型； </p>
+<p>3 .Learner的消息类型主要有PING消息、REQUEST消息、ACK消息、REVALIDATE消息，根据不同的消息类型，进行不同的处理。 </p>
+<p>PING 消息是指Learner的心跳信息；</p>
+<p>REQUEST消息是Follower发送的提议信息，包括写请求及同步请求；</p>
+<p>ACK消息是 Follower的对提议的回复，超过半数的Follower通过，则commit该提议；</p>
+<p>REVALIDATE消息是用来延长SESSION有效时间。</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184847c41aywumfqymxju3.png" alt="img"> </p>
+<h2 id="九-Zookeeper工作流程-Follower"><a href="#九-Zookeeper工作流程-Follower" class="headerlink" title="九. Zookeeper工作流程-Follower"></a>九. Zookeeper工作流程-Follower</h2><p>Follower主要有四个功能： </p>
+<ol>
+<li><p>向Leader发送请求（PING消息、REQUEST消息、ACK消息、REVALIDATE消息）； </p>
+</li>
+<li><p>接收Leader消息并进行处理； </p>
+</li>
+<li><p>接收Client的请求，如果为写请求，发送给Leader进行投票；</p>
+</li>
+<li><p>返回Client结果。 </p>
+</li>
+</ol>
+<p>Follower的消息循环处理如下几种来自Leader的消息： </p>
+<p>1 . PING消息： 心跳消息； </p>
+<p>2 . PROPOSAL消息：Leader发起的提案，要求Follower投票； </p>
+<p>3 . COMMIT消息：服务器端最新一次提案的信息； </p>
+<p>4 . UPTODATE消息：表明同步完成； </p>
+<p>5 . REVALIDATE消息：根据Leader的REVALIDATE结果，关闭待revalidate的session还是允许其接受消息； </p>
+<p>6 . SYNC消息：返回SYNC结果到客户端，这个消息最初由客户端发起，用来强制得到最新的更新。</p>
+<p><img src="//blog.com/2019/02/12/ZooKeeper 的功能和原理/184909zniwhnguhilho1zg.png" alt="img"> </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/一致性协议/" rel="tag"># 一致性协议</a>
+          
+            <a href="/tags/ZooKeeper/" rel="tag"># ZooKeeper</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/02/支付路由设计/" rel="next" title="支付路由设计">
+                <i class="fa fa-chevron-left"></i> 支付路由设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/14/Redis知识图谱 1/" rel="prev" title="Redis知识图谱 1">
+                Redis知识图谱 1 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ZooKeeper-的功能和原理"><span class="nav-number">1.</span> <span class="nav-text">ZooKeeper 的功能和原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-Zookeeper功能简介"><span class="nav-number">1.1.</span> <span class="nav-text">一 .Zookeeper功能简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-Zookeeper设计目的"><span class="nav-number">1.2.</span> <span class="nav-text">二.Zookeeper设计目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-Zookeeper工作原理"><span class="nav-number">1.3.</span> <span class="nav-text">三.Zookeeper工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四-ZooKeeper基本概念"><span class="nav-number">1.4.</span> <span class="nav-text">四. ZooKeeper基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ZooKeeper-集群角色介绍"><span class="nav-number">1.4.1.</span> <span class="nav-text">1 . ZooKeeper 集群角色介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-节点读写服务分工"><span class="nav-number">1.4.2.</span> <span class="nav-text">2 . 节点读写服务分工</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Session"><span class="nav-number">1.4.3.</span> <span class="nav-text">3 . Session</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-数据节点"><span class="nav-number">1.4.4.</span> <span class="nav-text">4 . 数据节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-状态信息"><span class="nav-number">1.4.5.</span> <span class="nav-text">5 . 状态信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-事务操作"><span class="nav-number">1.4.6.</span> <span class="nav-text">6 .事务操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-Watcher-事件监听器"><span class="nav-number">1.4.7.</span> <span class="nav-text">7 .Watcher(事件监听器)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-Zookeeper文件系统"><span class="nav-number">1.4.8.</span> <span class="nav-text">8. Zookeeper文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-引用方式"><span class="nav-number">1.4.8.1.</span> <span class="nav-text">(1) 引用方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Znode结构"><span class="nav-number">1.4.8.2.</span> <span class="nav-text">(2) Znode结构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-ZooKeeper中的时间"><span class="nav-number">1.4.9.</span> <span class="nav-text">9 . ZooKeeper中的时间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-Zookeeper-下-Server工作状态"><span class="nav-number">1.4.10.</span> <span class="nav-text">10 . Zookeeper 下 Server工作状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五-ZooKeeper应用的典型场景"><span class="nav-number">1.5.</span> <span class="nav-text">五.ZooKeeper应用的典型场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-数据发布与订阅（配置中心）"><span class="nav-number">1.5.1.</span> <span class="nav-text">1 . 数据发布与订阅（配置中心）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-命名服务"><span class="nav-number">1.5.2.</span> <span class="nav-text">2 . 命名服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-分布式协调服务-通知"><span class="nav-number">1.5.3.</span> <span class="nav-text">3 . 分布式协调服务/通知</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#４-Master选举"><span class="nav-number">1.5.4.</span> <span class="nav-text">４ . Master选举</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#５-分布式锁"><span class="nav-number">1.5.5.</span> <span class="nav-text">５ . 分布式锁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#排它锁"><span class="nav-number">1.5.5.1.</span> <span class="nav-text">排它锁</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#共享锁"><span class="nav-number">1.5.5.2.</span> <span class="nav-text">共享锁</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Zookeeper队列管理"><span class="nav-number">1.5.6.</span> <span class="nav-text">6 . Zookeeper队列管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-分布式与数据复制"><span class="nav-number">1.5.7.</span> <span class="nav-text">7 . 分布式与数据复制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六-Zookeeper选主流程"><span class="nav-number">1.6.</span> <span class="nav-text">六. Zookeeper选主流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#basic-paxos"><span class="nav-number">1.6.1.</span> <span class="nav-text">basic paxos</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fast-paxos"><span class="nav-number">1.6.2.</span> <span class="nav-text">fast paxos</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七-Zookeeper同步流程"><span class="nav-number">1.7.</span> <span class="nav-text">七.Zookeeper同步流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八-Zookeeper工作流程-Leader"><span class="nav-number">1.8.</span> <span class="nav-text">八. Zookeeper工作流程-Leader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#九-Zookeeper工作流程-Follower"><span class="nav-number">1.9.</span> <span class="nav-text">九. Zookeeper工作流程-Follower</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

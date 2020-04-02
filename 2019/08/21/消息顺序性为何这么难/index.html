@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,IM消息,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="消息顺序性为何这么难 原文地址：https://mp.weixin.qq.com/s/wF-jqn9QZAC8qsof3aAPoQ  业务需求很多业务都需要考虑消息投递的顺序性：  单聊消息投递，保证发送方发送顺序与接收方展现顺序一致 群聊消息投递，保证所有接收方展现顺序一致 充值支付消息，保证同一个用户发起的请求在服务端执行序列一致  消息顺序性是分布式系统架构设计中非常难的问题，有什么常见优化">
+<meta name="keywords" content="架构,IM消息">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息顺序性为何这么难">
+<meta property="og:url" content="http://blog.com/2019/08/21/消息顺序性为何这么难/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="消息顺序性为何这么难 原文地址：https://mp.weixin.qq.com/s/wF-jqn9QZAC8qsof3aAPoQ  业务需求很多业务都需要考虑消息投递的顺序性：  单聊消息投递，保证发送方发送顺序与接收方展现顺序一致 群聊消息投递，保证所有接收方展现顺序一致 充值支付消息，保证同一个用户发起的请求在服务端执行序列一致  消息顺序性是分布式系统架构设计中非常难的问题，有什么常见优化">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/2.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/3.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/4.jpg">
+<meta property="og:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/5.jpg">
+<meta property="og:updated_time" content="2019-08-21T06:25:07.604Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="消息顺序性为何这么难">
+<meta name="twitter:description" content="消息顺序性为何这么难 原文地址：https://mp.weixin.qq.com/s/wF-jqn9QZAC8qsof3aAPoQ  业务需求很多业务都需要考虑消息投递的顺序性：  单聊消息投递，保证发送方发送顺序与接收方展现顺序一致 群聊消息投递，保证所有接收方展现顺序一致 充值支付消息，保证同一个用户发起的请求在服务端执行序列一致  消息顺序性是分布式系统架构设计中非常难的问题，有什么常见优化">
+<meta name="twitter:image" content="http://blog.com/2019/08/21/消息顺序性为何这么难/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/21/消息顺序性为何这么难/">
+
+
+
+
+
+  <title>消息顺序性为何这么难 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/21/消息顺序性为何这么难/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">消息顺序性为何这么难</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-21T12:12:57+08:00">
+                2019-08-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/IM消息/" itemprop="url" rel="index">
+                    <span itemprop="name">IM消息</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="消息顺序性为何这么难"><a href="#消息顺序性为何这么难" class="headerlink" title="消息顺序性为何这么难"></a>消息顺序性为何这么难</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/wF-jqn9QZAC8qsof3aAPoQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/wF-jqn9QZAC8qsof3aAPoQ</a></p>
+</blockquote>
+<h2 id="业务需求"><a href="#业务需求" class="headerlink" title="业务需求"></a>业务需求</h2><p>很多业务都需要考虑消息投递的顺序性：</p>
+<ul>
+<li><strong>单聊</strong>消息投递，保证发送方发送顺序与接收方展现顺序一致</li>
+<li><strong>群聊</strong>消息投递，保证所有接收方展现顺序一致</li>
+<li><strong>充值支付消息</strong>，保证同一个用户发起的请求在服务端执行序列一致</li>
+</ul>
+<p>消息顺序性是分布式系统架构设计中非常难的问题，有什么常见优化实践呢？</p>
+<h2 id="顺序判断依据选择"><a href="#顺序判断依据选择" class="headerlink" title="顺序判断依据选择"></a>顺序判断依据选择</h2><h3 id="以客户端或者服务端的时序为准"><a href="#以客户端或者服务端的时序为准" class="headerlink" title="以客户端或者服务端的时序为准"></a>以客户端或者服务端的时序为准</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不管什么情况，都需要一个标尺来衡量时序的先后顺序，可以根据业务场景，以客户端或者服务端的时间为准，例如：</p>
+<ul>
+<li><strong>邮件展示顺序，其实是以客户端发送时间为准的</strong></li>
+</ul>
+<p><em>画外音：发送方只要将邮件协议里的时间调整为1970年或者2970年，就可以在接收方收到邮件后一直“置顶”或者“置底”。</em></p>
+<ul>
+<li><strong>秒杀活动时间判断，肯定得以服务器的时间为准</strong>，不可能让客户端修改本地时间，就能够提前秒杀</li>
+</ul>
+<h3 id="服务端生成单调递增id作为时序依据"><a href="#服务端生成单调递增id作为时序依据" class="headerlink" title="服务端生成单调递增id作为时序依据"></a>服务端生成单调递增id作为时序依据</h3><p>对于严格时序的业务场景，可以利用单点写<code>db</code>的<code>seq/auto_inc_id</code>生成单调递增的id，来保证顺序性。</p>
+<p><em>画外音：这个生成id的单点容易成为瓶颈。</em></p>
+<h3 id="假如业务能接受误差不大的趋势递增id"><a href="#假如业务能接受误差不大的趋势递增id" class="headerlink" title="假如业务能接受误差不大的趋势递增id"></a>假如业务能接受误差不大的趋势递增id</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息发送、帖子发布时间、甚至秒杀时间都没有这么精准时序的要求：</p>
+<ul>
+<li>同1s内发布的聊天消息时序乱了，没事</li>
+<li>同1s内发布的帖子排序不对，没事</li>
+<li>用1s内发起的秒杀，由于服务器多台之间时间有误差，落到A服务器的秒杀成功了，落到B服务器的秒杀还没开始，业务上也是可以接受的（用户感知不到）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以，大部分业务，<strong>长时间趋势递增的时序就能够满足业务需求，非常短时间的时序误差一定程度上能够接受</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;于是，可以<strong>始终分布式id生成算法来生成id，作为时序依据</strong>。</p>
+<h3 id="利用单点序列化，可以保证多机相同时序"><a href="#利用单点序列化，可以保证多机相同时序" class="headerlink" title="利用单点序列化，可以保证多机相同时序"></a>利用单点序列化，可以保证多机相同时序</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据为了保证高可用，需要做到进行数据冗余，同一份数据存储在多个地方，怎么保证这些数据的修改消息是一致的呢？</p>
+<p>“单点序列化”是可行的：</p>
+<ul>
+<li><strong>先在一台机器上序列化操作</strong></li>
+<li><strong>再将操作序列分发到所有的机器，以保证多机的操作序列是一致的，最终数据是一致的</strong></li>
+</ul>
+<p> <strong>这里本质上是以服务端接收时间为准的，因为不同发起方到达服务端的传输耗时不同</strong></p>
+<h4 id="数据库主从同步"><a href="#数据库主从同步" class="headerlink" title="数据库主从同步"></a>数据库主从同步</h4><p><img src="//blog.com/2019/08/21/消息顺序性为何这么难/1.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据库的主从架构，上游分别发起了<code>op1,op2,op3</code>三个操作，主库<code>master</code>来序列化所有的<code>SQL</code>写操作<code>op3,op1,op2</code>，然后把相同的序列发送给从库<code>slave</code>执行，以保证所有数据库数据的一致性，就是利用“单点序列化”这个思路。</p>
+<h4 id="GFS中文件的一致性"><a href="#GFS中文件的一致性" class="headerlink" title="GFS中文件的一致性"></a>GFS中文件的一致性</h4><p><img src="//blog.com/2019/08/21/消息顺序性为何这么难/2.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>GFS(Google File System)</code>为了保证文件的可用性，一份文件要存储多份，在多个上游对同一个文件进行写操作时，也是由一个主<code>chunk-server</code>先序列化写操作，再将序列化后的操作发送给其他<code>chunk-server</code>，来保证冗余文件的数据一致性的。</p>
+<h2 id="单对单聊天，怎么保证发送顺序与接收顺序一致呢？"><a href="#单对单聊天，怎么保证发送顺序与接收顺序一致呢？" class="headerlink" title="单对单聊天，怎么保证发送顺序与接收顺序一致呢？"></a>单对单聊天，怎么保证发送顺序与接收顺序一致呢？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;单人聊天的需求，发送方A依次发出了msg1，msg2，msg3三个消息给接收方B，这三条消息能否保证显示时序的一致性（发送与显示的顺序一致）？</p>
+<p>方案设计思路如下：</p>
+<p>（1）<strong>如果利用服务器单点序列化时序，可能出现服务端收到消息的时序为msg3，msg1，msg2，就会与发出序列不一致</strong>。</p>
+<p>（2）业务上不需要全局消息一致，只需要对于同一个发送方A，ta发给B的消息时序一致，常见优化方案，在A往B发出的消息中，<strong>加上发送方A本地的一个绝对时序，来表示接收方B的展现时序。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">msg1&#123;sender:A, seq:10, receiver:B, msg:content1&#125;</span><br><span class="line"></span><br><span class="line">msg2&#123;sender:A, seq:20, receiver:B, msg:content2&#125;</span><br><span class="line"></span><br><span class="line">msg3&#123;sender:A, seq:30, receiver:B, msg:content3&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="//blog.com/2019/08/21/消息顺序性为何这么难/3.jpg" alt="img"></p>
+<p>可能存在问题是：<strong>如果接收方B先收到msg3，msg3会先展现，后收到msg1和msg2后，会展现在msg3的前面</strong>。</p>
+<h2 id="群聊消息，怎么保证各接收方收到顺序一致？"><a href="#群聊消息，怎么保证各接收方收到顺序一致？" class="headerlink" title="群聊消息，怎么保证各接收方收到顺序一致？"></a>群聊消息，怎么保证各接收方收到顺序一致？</h2><p>群聊消息的需求，N个群友在一个群里聊，怎么保证所有群友收到的消息显示时序一致？</p>
+<p>方案设计思路如下：</p>
+<p>（1）假设和单聊消息一样，利用发送方的<code>seq</code>来保证时序，因为发送方不单点，<code>seq</code>无法统一生成，可能存在不一致。</p>
+<p>（2）于是，可以<strong>利用服务器的单点做序列化</strong>。</p>
+<p><img src="//blog.com/2019/08/21/消息顺序性为何这么难/4.jpg" alt="img"></p>
+<p>如上图，此时群聊的发送流程为：</p>
+<p>（1）sender1发出msg1，sender2发出msg2；</p>
+<p>（2）msg1和msg2经过接入集群，服务集群；</p>
+<p>（3）service层到底层拿一个唯一seq，来确定接收方展示时序；</p>
+<p>（4）service拿到msg2的seq是20，msg1的seq是30；</p>
+<p>（5）通过投递服务讲消息给多个群友，群友即使接收到msg1和msg2的时间不同，但可以统一按照seq来展现；</p>
+<p>这个方法能实现，所有群友的消息展示时序相同。</p>
+<p>缺点是，<strong>生成全局递增序列号</strong>的服务很容易成为系统瓶颈。</p>
+<p><strong>还有没有进一步的优化方法呢？</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;群消息其实也不用保证全局消息序列有序，而<strong>只要保证一个群内的消息有序即可</strong>，这样的话，“id串行化”就成了一个很好的思路。</p>
+<p><img src="//blog.com/2019/08/21/消息顺序性为何这么难/5.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个方案中，<code>service</code>层不再需要去一个统一的后端拿全局<code>seq</code>，而是在<code>service</code>连接池层面做细小的改造，<strong>保证一个群的消息落在同一个<code>service</code>上，这个<code>service</code>就可以用本地<code>seq</code>来序列化同一个群的所有消息，保证所有群友看到消息的时序是相同的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时利用本地时钟来生成<code>seq</code>就凑效了，是不是很巧妙？</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>（1）要“有序”，先得有衡量“有序”的标尺，可以是客户端标尺，可以是服务端标尺；</p>
+<p>（2）大部分业务能够接受大范围趋势有序，小范围误差；绝对有序的业务，可以借助服务器绝对时序的能力；</p>
+<p>（3）单点序列化，是一种常见的保证多机时序统一的方法，典型场景有<code>db</code>主从一致，<code>gfs</code>多文件一致；</p>
+<p>（4）单对单聊天，只需保证发出的时序与接收的时序一致，可以利用客户端<code>seq</code>；</p>
+<p>（5）群聊，只需保证所有接收方消息时序一致，需要利用服务端<code>seq</code>，方法有两种，一种单点绝对时序，另一种<code>id</code>串行化；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/IM消息/" rel="tag"># IM消息</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/21/微信多点登录，消息漫游，假如让你来实现/" rel="next" title="微信多点登录，消息漫游，假如让你来实现">
+                <i class="fa fa-chevron-left"></i> 微信多点登录，消息漫游，假如让你来实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/21/几万条群离线消息，如何高效拉取，会不会丢/" rel="prev" title="几万条群离线消息，如何高效拉取，会不会丢">
+                几万条群离线消息，如何高效拉取，会不会丢 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#消息顺序性为何这么难"><span class="nav-number">1.</span> <span class="nav-text">消息顺序性为何这么难</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#业务需求"><span class="nav-number">1.1.</span> <span class="nav-text">业务需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#顺序判断依据选择"><span class="nav-number">1.2.</span> <span class="nav-text">顺序判断依据选择</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#以客户端或者服务端的时序为准"><span class="nav-number">1.2.1.</span> <span class="nav-text">以客户端或者服务端的时序为准</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务端生成单调递增id作为时序依据"><span class="nav-number">1.2.2.</span> <span class="nav-text">服务端生成单调递增id作为时序依据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#假如业务能接受误差不大的趋势递增id"><span class="nav-number">1.2.3.</span> <span class="nav-text">假如业务能接受误差不大的趋势递增id</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#利用单点序列化，可以保证多机相同时序"><span class="nav-number">1.2.4.</span> <span class="nav-text">利用单点序列化，可以保证多机相同时序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据库主从同步"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">数据库主从同步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GFS中文件的一致性"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">GFS中文件的一致性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单对单聊天，怎么保证发送顺序与接收顺序一致呢？"><span class="nav-number">1.3.</span> <span class="nav-text">单对单聊天，怎么保证发送顺序与接收顺序一致呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#群聊消息，怎么保证各接收方收到顺序一致？"><span class="nav-number">1.4.</span> <span class="nav-text">群聊消息，怎么保证各接收方收到顺序一致？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

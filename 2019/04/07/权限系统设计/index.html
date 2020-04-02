@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,权限设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="权限系统设计   早期模型–ACL直接权限控制弊端：无法复用，无法批量套用，需要依次处理 ​     RBAC认为权限授权实际上是Who、What、How的问题。在RBAC模型中，who、what、how构成了访问权限三元组，也就是“Who对What(Which)进行How的操作”。  Who：权限的拥用者或主体（如Principal、User、Group、Role、Actor等等）  What：">
+<meta name="keywords" content="架构,权限设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="权限系统设计">
+<meta property="og:url" content="http://blog.com/2019/04/07/权限系统设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="权限系统设计   早期模型–ACL直接权限控制弊端：无法复用，无法批量套用，需要依次处理 ​     RBAC认为权限授权实际上是Who、What、How的问题。在RBAC模型中，who、what、how构成了访问权限三元组，也就是“Who对What(Which)进行How的操作”。  Who：权限的拥用者或主体（如Principal、User、Group、Role、Actor等等）  What：">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC3模型.webp">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/权限分类.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/角色权限设置.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC0ER图.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC1-权限继承.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC1ER图.png">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC3.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/页面权限.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/数据权限.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/组织划分.jpg">
+<meta property="og:image" content="http://blog.com/2019/04/07/权限系统设计/常见设计图1.png">
+<meta property="og:updated_time" content="2019-04-07T13:52:18.387Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="权限系统设计">
+<meta name="twitter:description" content="权限系统设计   早期模型–ACL直接权限控制弊端：无法复用，无法批量套用，需要依次处理 ​     RBAC认为权限授权实际上是Who、What、How的问题。在RBAC模型中，who、what、how构成了访问权限三元组，也就是“Who对What(Which)进行How的操作”。  Who：权限的拥用者或主体（如Principal、User、Group、Role、Actor等等）  What：">
+<meta name="twitter:image" content="http://blog.com/2019/04/07/权限系统设计/RBAC3模型.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/07/权限系统设计/">
+
+
+
+
+
+  <title>权限系统设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/07/权限系统设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">权限系统设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-07T12:12:57+08:00">
+                2019-04-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/权限设计/" itemprop="url" rel="index">
+                    <span itemprop="name">权限设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="权限系统设计"><a href="#权限系统设计" class="headerlink" title="权限系统设计"></a>权限系统设计</h1><p>   早期模型–ACL直接权限控制弊端：<strong>无法复用，无法批量套用，需要依次处理</strong></p>
+<p>​     RBAC认为权限授权实际上是Who、What、How的问题。在RBAC模型中，who、what、how构成了访问权限三元组，也就是“Who对What(Which)进行How的操作”。</p>
+<ul>
+<li><p><strong>Who：权限的拥用者或主体（如Principal、User、Group、Role、Actor等等）</strong></p>
+</li>
+<li><p><strong>What：权限针对的对象或资源（Resource、Class）</strong></p>
+</li>
+<li><p><strong>How：具体的权限（Privilege，正向授权与负向授权）</strong></p>
+</li>
+<li><p><strong>Operator：操作。表明对What的How操作。也就是Privilege+Resource</strong></p>
+</li>
+<li><p><strong>Role：角色，一定数量的权限的集合。权限分配的单位与载体,目的是隔离User与Privilege的逻辑关系</strong></p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/RBAC3模型.webp" alt="RBAC3模型"></p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;权限管理是做后台管理系统绕不开的部分，权限系统保证系统分工，不同部门、不同岗位的员工合理使用管理后台。在用户访问系统时，系统按照权限系统的设置来控制用户的访问<strong>功能和数据</strong></p>
+<p>权限可以分为功能权限和数据权限两类，每种权限基本可设置为不可读/可读/可编辑等三种状态。</p>
+<p>​    <strong>功能权限：</strong></p>
+<p>　　指某个功能的权限，如一个模块是否可用、子菜单是否可见、一个按钮是否可点击等。例如客服人员没有商品上下架的权限，运营人员可以查看订单，但是无法编辑订单。</p>
+<p>​    <strong>数据权限：</strong></p>
+<p>　　指某些数据的权限，如某个字段是否可见、同一类数据的某些值是否可见等。例如在查看订单时，华东区的运营人员只能看到华东区的订单数据，看不到华北、华南等地区的订单数据。</p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/权限分类.jpg" alt="权限分类"></p>
+<h2 id="1-权限体系"><a href="#1-权限体系" class="headerlink" title="1. 权限体系"></a>1. 权限体系</h2><p>　　在权限系统中，<strong>权限是通过角色与用户账号发生关联的</strong>。如图所示，给每个角色赋予功能权限、数据权限，有时会给角色分组，挂在部门下面。在新增用户账号时，给用户分配角色。每个用户既可以分配一个角色，也可以分配多个角色。根据用户的角色，就能获得用户的系统权限。在权限模型中，构建了<strong>“用户-角色-权限”</strong>的授权模型。</p>
+<h2 id="2-角色管理"><a href="#2-角色管理" class="headerlink" title="2. 角色管理"></a>2. 角色管理</h2><p>　　系统设计不可能根据不同用户单独去配置功能权限，如果后期增添功能，就需要再分别对不同用户配置不同的功能权限。这样操作会给批量操作带来很多麻烦，无法做到灵活配置，这就需要通过角色这个介质来实现。角色是什么？</p>
+<p>　　<strong>角色是一定数量操作权限和数据权限的权限集合，简单讲，角色是权限的载体。在控制用户操作功能权限的时候，可以通过授予不同角色不同的功能权限，然后通过对不同类型用户授予不同的用户角色，就控制了不同用户之间的不同功能操作权限，形成一个功能权限的完整闭环</strong></p>
+<p><strong>角色权限设置</strong></p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/角色权限设置.jpg" alt="角色权限设置"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在设置角色权限时，根据系统的菜单功能生成权限树。如图所示，勾选相应的功能选项，相应的角色就有类似的权限</strong></p>
+<p>　　怎么做到权限列表与实际功能一一对应？就需要在开发系统页面时，将统一的权限接口嵌入到页面中。</p>
+<p>　　系统在初始化时会赋予某些用户管理员角色，管理员有着系统所有模块的功能操作权限。管理员通过创建不同的用户角色，给不同角色授予不同功能权限。<strong>想批量修改用户权限时，只需要修改角色权限就行</strong></p>
+<p>　　<strong>有时当后台功能复杂、部门岗位较多时，由于每个人分工不同，就需要分配不同的权限，角色数量就会增加。为了方便管理，会对角色进行分组。角色分组一般是与部门进行绑定。</strong>如运营部下有活动运营、商品管理、专场运营、类目运营等角色，其他部门都不能使用这些角色。</p>
+<h2 id="3-账号管理部门管理"><a href="#3-账号管理部门管理" class="headerlink" title="3.  账号管理部门管理"></a>3.  账号管理部门管理</h2><p>　　按照企业的组织架构新建部门，主要是为了对员工进行聚类。<strong>有时会为部门分配默认的角色。当员工成为部门员工后，自动有默认角色的权限</strong></p>
+<h2 id="4-员工管理"><a href="#4-员工管理" class="headerlink" title="4. 员工管理"></a>4. 员工管理</h2><p>　　在管理用户账户时，除了用户的基本信息(用户名、姓名、职务、手机号、邮箱)，设置密码或由用户通过邮箱激活来设置密码。并且还要赋予用户角色(多角色也可以)。还要允许账号的作废和删除。</p>
+<p>　　为了科学地管理员工账户，有时会与企业的OA系统打通，当员工入职进入HR系统时，自动为其分配账号，员工离职后，其账号自动停用作废。</p>
+<p>　　<strong>对于用户权限，还有一些特殊场景。已有的角色无法满足当前用户的需求，单独为某个功能新建一个角色也不太合理，就需要给这个用户单独补充赋予角色之外的权限，这是一类特殊的需求</strong></p>
+<h2 id="5-什么是RBAC模型"><a href="#5-什么是RBAC模型" class="headerlink" title="5. 什么是RBAC模型"></a>5. 什么是RBAC模型</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>RBAC（Role-Based Access Control）即：基于角色的权限控制</strong>。通过角色关联用户，角色关联权限的方式间接赋予用户权限。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有人会问为什么不直接给用户分配权限，还多此一举的增加角色这一环节呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其实是可以<strong>直接给用户分配权限，只是直接给用户分配权限，少了一层关系，扩展性弱了许多，适合那些用户数量、角色类型少的平台</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于通常的系统，比如：存在多个用户拥有相同的权限，在分配的时候就要分别为这几个用户指定相同的权限，修改时也要为这几个用户的权限进行一一修改。有了角色后，我们只需要为该角色制定好权限后，<strong>将相同权限的用户都指定为同一个角色</strong>即可，便于权限管理。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于批量的用户权限调整，只需调整用户关联的角色权限，无需对每一个用户都进行权限调整，既大幅提升权限调整的效率，又降低了漏调权限的概率</strong></p>
+<h2 id="6-RBAC模型的分类"><a href="#6-RBAC模型的分类" class="headerlink" title="6. RBAC模型的分类"></a>6. RBAC模型的分类</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RBAC模型可以分为：RBAC0、RBAC1、RBAC2、RBAC3 四种。其中RBAC0是基础，也是最简单的，相当于底层逻辑，RBAC1、RBAC2、RBAC3都是以RBAC0为基础的升级。</p>
+<p>​    <strong>RBAC0定义了能构成RBAC控制系统的最小的元素集合</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>一般情况下，使用RBAC0模型就可以满足常规的权限管理系统设计了</strong></p>
+<h3 id="1-RBAC0模型"><a href="#1-RBAC0模型" class="headerlink" title="(1)  RBAC0模型"></a>(1)  RBAC0模型</h3><p><img src="//blog.com/2019/04/07/权限系统设计/RBAC0ER图.png" alt="RBAC0ER图"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最简单的用户、角色、权限模型。这里面又包含了2种：</p>
+<ol>
+<li><strong>用户和角色是多对一关系，即：一个用户只充当一种角色，一种角色可以有多个用户担当</strong></li>
+<li><strong>用户和角色是多对多关系，即：一个用户可同时充当多种角色，一种角色可以有多个用户担当</strong></li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，什么时候该使用多对一的权限体系，什么时候又该使用多对多的权限体系呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如果系统功能比较单一，使用人员较少，岗位权限相对清晰且确保不会出现兼岗的情况，此时可以考虑用多对一的权限体系。其余情况尽量使用多对多的权限体系，保证系统的可扩展性</strong>。如：张三既是行政，也负责财务工作，那张三就同时拥有行政和财务两个角色的权限。</p>
+<h3 id="2-RBAC1模型"><a href="#2-RBAC1模型" class="headerlink" title="(2) RBAC1模型"></a>(2) RBAC1模型</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相对于RBAC0模型，<strong>增加了子角色，引入了继承概念，即子角色可以继承父角色的所有权限</strong></p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/RBAC1-权限继承.jpg" alt="RBAC1-权限继承"></p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/RBAC1ER图.png" alt="RBAC1ER图"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>使用场景：</strong>如某个业务部门，有经理、主管、专员。主管的权限不能大于经理，专员的权限不能大于主管，<strong>如果采用RBAC0模型做权限系统，极可能出现分配权限失误，最终出现主管拥有经理都没有的权限的情况</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而RBAC1模型就很好解决了这个问题，创建完经理角色并配置好权限后，主管角色的权限继承经理角色的权限，并且支持在经理权限上删减主管权限<strong>(指定父角色， 支持排除特定权限)</strong></p>
+<p>RBAC1中角色分级具体如何设计?</p>
+<ol>
+<li><strong>在RBAC0的基础上，加上角色等级这个字段。</strong></li>
+<li><strong>权限分配规则制定</strong>：低等级角色只能在高等级角色权限基础上进行删减权限。</li>
+</ol>
+<h3 id="3-RBAC2模型"><a href="#3-RBAC2模型" class="headerlink" title="(3) RBAC2模型"></a>(3) RBAC2模型</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于RBAC0模型，增加了对角色的一些限制：角色互斥、基数约束、先决条件角色等。</p>
+<ul>
+<li><strong>角色互斥：</strong>同一用户不能分配到一组互斥角色集合中的多个角色，互斥角色是指权限互相制约的两个角色。案例：财务系统中一个用户不能同时被指派给会计角色和审计员角色。</li>
+<li><strong>基数约束：</strong>一个角色被分配的用户数量受限，它指的是有多少用户能拥有这个角色。例如：一个角色专门为公司CEO创建的，那这个角色的数量是有限的。</li>
+<li><strong>先决条件角色：</strong>指要想获得较高的权限，要首先拥有低一级的权限。例如：先有副总经理权限，才能有总经理权限。</li>
+<li><strong>运行时互斥：</strong>例如，允许一个用户具有两个角色的成员资格，但在运行中不可同时激活这两个角色。</li>
+</ul>
+<h3 id="4-RBAC3模型"><a href="#4-RBAC3模型" class="headerlink" title="(4) RBAC3模型"></a>(4) RBAC3模型</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;称为统一模型，它<strong>包含了RBAC1和RBAC2</strong>，利用传递性，也把RBAC0包括在内，综合了RBAC0、RBAC1和RBAC2的所有特点，这里就不在多描述了。</p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/RBAC3.jpg" alt="RBAC3"></p>
+<h2 id="7-什么是权限"><a href="#7-什么是权限" class="headerlink" title="7. 什么是权限"></a>7. 什么是权限</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;权限是资源的集合，这里的资源指的是软件中所有的内容，包括模块、菜单、页面、字段、操作功能（增删改查）等等。具体的权限配置上，目前形式多种多样，按照我个人的理解，可以将权限分为：<strong>页面权限、操作权限和数据权限</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>页面权限：</strong>所有系统都是由一个个的页面组成，页面再组成模块，用户是否能看到这个页面的菜单、是否能进入这个页面就称为页面权限。</p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/页面权限.jpg" alt="页面权限"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户列表、客户黑名单、客户审批页面组成了客户管理这个模块。对于普通用户，不能进行审批操作，即无客户审批页面权限，在他的账号登录后侧边导航栏只显示客户列表、客户黑名单两个菜单。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>操作权限：</strong>用户凡是在操作系统中的任何动作、交互都是操作权限，如增删改查等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>数据权限：</strong>一般业务管理系统，都有数据私密性的要求：哪些人可以看到哪些数据，不可以看到哪些数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;简单举个例子：某系统中有销售部门，销售专员负责推销商品，销售主管负责管理销售专员日常工作，经理负责组织管理销售主管作业。</p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/数据权限.jpg" alt="数据权限"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;按照实际理解，‘销售专员张三’登录时，只能看到自己负责的数据；销售主管2登录时，能看到他所领导的所有业务员负责的数据，但看不到其他团队业务员负责的数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;换另外一句话就是：我的客户只有我和我的直属上级以及直属上级的领导能看到，这就是我理解的数据权限。</p>
+<p>要实现数据权限有多种方式：</p>
+<ol>
+<li><p><strong>可以利用RBAC1模型，通过角色分级来实现</strong></p>
+</li>
+<li><p><strong>在‘用户-角色-权限’的基础上，增加用户与组织的关联关系，用组织决定用户的数据权限</strong></p>
+<p><strong>数据权限一般在代码逻辑里面实现，不需要单独的存储</strong></p>
+</li>
+</ol>
+<p>具体如何做呢？</p>
+<p><strong>①组织层级划分：</strong></p>
+<p><img src="//blog.com/2019/04/07/权限系统设计/组织划分.jpg" alt="组织划分"></p>
+<p><strong>②数据可视权限规则制定：</strong>上级组织只能看到下级组织员工负责的数据，而不能看到其他平级组织及其下级组织的员工数据等。</p>
+<p>通过以上两点，系统就可以在用户登录时，自动判断要给用户展示哪些数据了。</p>
+<h2 id="8-用户组的使用"><a href="#8-用户组的使用" class="headerlink" title="8. 用户组的使用"></a>8. 用户组的使用</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当平台用户基数增大，角色类型增多时，如果直接给用户配角色，管理员的工作量就会很大。这时候我们可以引入一个概念<strong>“用户组”，就是将相同属性的用户归类到一起，给用户组赋予角色</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如：加入用户组的概念后，可以将部门看做一个用户组，再给这个部门直接赋予角色（1万员工部门可能就几十个），使部门拥有部门权限，这样这个部门的所有用户都有了部门权限，而不需要为每一个用户再单独指定角色，极大的减少了分配权限的工作量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时，<strong>也可以为特定的用户指定角色，这样用户除了拥有所属用户组的所有权限外，还拥有自身特定的权限</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户组的优点，除了减少工作量，还有更便于理解、增加多级管理关系等。如：我们在进行组织机构配置的时候，除了加入部门，还可以加入科室、岗位等层级，来为用户组内部成员的权限进行等级上的区分</p>
+<p>   <strong>适用场景: </strong></p>
+<ol>
+<li><strong>在使用RBAC时，如果需要针对某几个用户做一定的特殊处理，可以根据需要创建用户组</strong></li>
+<li><strong>sys_user_role，增加一列type，来标识是单个用户还是用户组</strong></li>
+</ol>
+<p><strong>在针对部门来划分权限时， 如何针对单个用户做特殊处理  =》 用户组</strong></p>
+<h2 id="9-常见设计图"><a href="#9-常见设计图" class="headerlink" title="9. 常见设计图"></a>9. 常见设计图</h2><p><img src="//blog.com/2019/04/07/权限系统设计/常见设计图1.png" alt="常见设计图1"></p>
+<h2 id="10-常见数据库设计"><a href="#10-常见数据库设计" class="headerlink" title="10. 常见数据库设计"></a>10. 常见数据库设计</h2><h3 id="1-RBAC0"><a href="#1-RBAC0" class="headerlink" title="1. RBAC0"></a>1. RBAC0</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br></pre></td><td class="code"><pre><span class="line">DROP TABLE IF EXISTS `sys_user`;</span><br><span class="line">CREATE TABLE `sys_user`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `user_id` int(11) NOT NULL COMMENT &apos;工号&apos;,</span><br><span class="line">  `user_name` varchar(50) NOT NULL COMMENT &apos;姓名&apos;,</span><br><span class="line">  `user_type` tinyint(2) UNSIGNED NOT NULL DEFAULT 1 COMMENT &apos;用户类型:1内部，2外部&apos;,</span><br><span class="line">  `dept_id` int(11) NOT NULL COMMENT &apos;部门id&apos;,</span><br><span class="line">  `eamil` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT &apos;邮箱&apos;,</span><br><span class="line">  `telephone` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT &apos;手机号&apos;,</span><br><span class="line">  `employed_date` date NULL DEFAULT NULL COMMENT &apos;入职日期&apos;,</span><br><span class="line">  `status` tinyint(2) NULL DEFAULT 1 COMMENT &apos;状态：1在职，2离职&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  UNIQUE INDEX `user_id`(`user_id`)</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 CCOMMENT = &apos;用户表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_department`;</span><br><span class="line">CREATE TABLE `sys_department`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `department_name` varchar(50) NOT NULL COMMENT &apos;部门名称&apos;,</span><br><span class="line">  `parent_id` int(11) NOT NULL COMMENT &apos;父id, 上级部门id&apos;,  </span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  UNIQUE INDEX `user_id`(`user_id`)</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 CCOMMENT = &apos;部门表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_role`;</span><br><span class="line">CREATE TABLE `sys_role`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `sys_id` int(11) NOT NULL COMMENT &apos;系统id，可选字段&apos;,</span><br><span class="line">  `name` varchar(50) NOT NULL COMMENT &apos;角色名称&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT  NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE,</span><br><span class="line">  UNIQUE INDEX `name`(`name`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COMMENT = &apos;角色表&apos;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_user_role`;</span><br><span class="line">CREATE TABLE `sys_user_role`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `user_id` int(11) UNSIGNED NOT NULL COMMENT &apos;用户表自增ID或者工号&apos;,</span><br><span class="line">  `role_id` int(11) UNSIGNED NOT NULL COMMENT &apos;角色id&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT  NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE,</span><br><span class="line">  UNIQUE INDEX `idx_user_role_ids`(`user_id`, `role_id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;用户角色对应表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_menu`;</span><br><span class="line">CREATE TABLE `sys_menu`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `sys_id` int(11) NOT NULL COMMENT &apos;系统id，可选&apos;,</span><br><span class="line">  `pid` int(11) NOT NULL DEFAULT 0 COMMENT &apos;父id&apos;,</span><br><span class="line">  `title` varchar(100) NOT NULL COMMENT &apos;菜单名称&apos;,</span><br><span class="line">  `url` varchar(300)  NOT NULL DEFAULT &apos;&apos; COMMENT &apos;访问地址&apos;,</span><br><span class="line">  `hash` varchar(32)  NOT  NULL DEFAULT &apos;&apos; COMMENT &apos;md5(url)&apos;,</span><br><span class="line">  `order` int(11) NOT NULL COMMENT &apos;排序号，数值越大排序越靠前&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;菜单表&apos; ;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_privileges_all`;</span><br><span class="line">CREATE TABLE `sys_privileges_all`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `content` text  NOT NULL COMMENT &apos;操作集合&apos;,</span><br><span class="line">  `update_user` varchar(32)  NOT NULL DEFAULT &apos;&apos; COMMENT &apos;创建人&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,  </span><br><span class="line">  `update_time` int(10) UNSIGNED NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;所有可设置访问权限的集合快照&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_privileges`;</span><br><span class="line">CREATE TABLE `sys_privileges`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `url` varchar(300)  NOT NULL COMMENT &apos;地址&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,  </span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;所有勾选的需权限访问的集合表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_role_privilege`;</span><br><span class="line">CREATE TABLE `sys_role_privilege`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `role_id` int(11) UNSIGNED NOT NULL COMMENT &apos;角色id&apos;,</span><br><span class="line">  `url` varchar(300)  NOT NULL COMMENT &apos;用于权限判断的URL地址&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;角色权限表&apos; ;</span><br></pre></td></tr></table></figure>
+<h3 id="2-RBAC1"><a href="#2-RBAC1" class="headerlink" title="2. RBAC1"></a>2. RBAC1</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line">DROP TABLE IF EXISTS `sys_user`;</span><br><span class="line">CREATE TABLE `sys_user`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `user_id` int(11) NOT NULL COMMENT &apos;工号&apos;,</span><br><span class="line">  `user_name` varchar(50) NOT NULL COMMENT &apos;姓名&apos;,</span><br><span class="line">  `user_type` tinyint(2) UNSIGNED NOT NULL DEFAULT 1 COMMENT &apos;用户类型:1内部，2外部&apos;,</span><br><span class="line">  `dept_id` int(11) NOT NULL COMMENT &apos;部门id&apos;,</span><br><span class="line">  `eamil` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT &apos;邮箱&apos;,</span><br><span class="line">  `telephone` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT &apos;手机号&apos;,</span><br><span class="line">  `employed_date` date NULL DEFAULT NULL COMMENT &apos;入职日期&apos;,</span><br><span class="line">  `status` tinyint(2) NULL DEFAULT 1 COMMENT &apos;状态：1在职，2离职&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  UNIQUE INDEX `user_id`(`user_id`)</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 CCOMMENT = &apos;用户表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_department`;</span><br><span class="line">CREATE TABLE `sys_department`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `department_name` varchar(50) NOT NULL COMMENT &apos;部门名称&apos;,</span><br><span class="line">  `parent_id` int(11) NOT NULL COMMENT &apos;父id, 上级部门id&apos;,  </span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  UNIQUE INDEX `user_id`(`user_id`)</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 CCOMMENT = &apos;部门表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_role`;</span><br><span class="line">CREATE TABLE `sys_role`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `sys_id` int(11) NOT NULL COMMENT &apos;系统id，可选字段&apos;,</span><br><span class="line">  `name` varchar(50) NOT NULL COMMENT &apos;角色名称&apos;,</span><br><span class="line">  `parent_id` int(11) UNSIGNED NOT NULL COMMENT &apos;父角色id， 继承父角色的所有权限&apos;, </span><br><span class="line">  `exclude_role_privilege_id` TEXT NOT NULL DEFAULT &apos;&apos; COMMENT &apos;需要排除父角色下的特定权限&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT  NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE,</span><br><span class="line">  UNIQUE INDEX `name`(`name`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COMMENT = &apos;角色表&apos;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_user_role`;</span><br><span class="line">CREATE TABLE `sys_user_role`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `user_id` int(11) UNSIGNED NOT NULL COMMENT &apos;用户表自增ID或者工号&apos;,</span><br><span class="line">  `role_id` int(11) UNSIGNED NOT NULL COMMENT &apos;角色id&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT  NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE,</span><br><span class="line">  UNIQUE INDEX `idx_user_role_ids`(`user_id`, `role_id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;用户角色对应表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_menu`;</span><br><span class="line">CREATE TABLE `sys_menu`  (</span><br><span class="line">  `id` int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `sys_id` int(11) NOT NULL COMMENT &apos;系统id，可选&apos;,</span><br><span class="line">  `pid` int(11) NOT NULL DEFAULT 0 COMMENT &apos;父id&apos;,</span><br><span class="line">  `title` varchar(100) NOT NULL COMMENT &apos;菜单名称&apos;,</span><br><span class="line">  `url` varchar(300)  NOT NULL DEFAULT &apos;&apos; COMMENT &apos;访问地址&apos;,</span><br><span class="line">  `hash` varchar(32)  NOT  NULL DEFAULT &apos;&apos; COMMENT &apos;md5(url)&apos;,</span><br><span class="line">  `order` int(11) NOT NULL COMMENT &apos;排序号，数值越大排序越靠前&apos;,</span><br><span class="line">  `is_del` enum(&apos;Y&apos;,&apos;N&apos;) NOT NULL DEFAULT &apos;N&apos; COMMENT &apos;删除状态：Y已删除，N未删除&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;菜单表&apos; ;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_privileges_all`;</span><br><span class="line">CREATE TABLE `sys_privileges_all`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `content` text  NOT NULL COMMENT &apos;操作集合&apos;,</span><br><span class="line">  `update_user` varchar(32)  NOT NULL DEFAULT &apos;&apos; COMMENT &apos;创建人&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,  </span><br><span class="line">  `update_time` int(10) UNSIGNED NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;所有可设置访问权限的集合快照&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_privileges`;</span><br><span class="line">CREATE TABLE `sys_privileges`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `url` varchar(300)  NOT NULL COMMENT &apos;地址&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,  </span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;所有勾选的需权限访问的集合表&apos;;</span><br><span class="line"></span><br><span class="line">DROP TABLE IF EXISTS `sys_role_privilege`;</span><br><span class="line">CREATE TABLE `sys_role_privilege`  (</span><br><span class="line">  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,</span><br><span class="line">  `role_id` int(11) UNSIGNED NOT NULL COMMENT &apos;角色id&apos;,</span><br><span class="line">  `url` varchar(300)  NOT NULL COMMENT &apos;用于权限判断的URL地址&apos;,</span><br><span class="line">  `create_time` int(10) NOT NULL COMMENT &apos;添加时间&apos;,</span><br><span class="line">  `update_time` int(10) NOT NULL COMMENT &apos;更新时间&apos;,</span><br><span class="line">  PRIMARY KEY (`id`) USING BTREE</span><br><span class="line">) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8  COMMENT = &apos;角色权限表&apos; ;</span><br></pre></td></tr></table></figure>
+<h2 id="11-未完待续"><a href="#11-未完待续" class="headerlink" title="11. 未完待续"></a>11. 未完待续</h2><ol>
+<li>在针对部门来划分权限时， 如何针对单个用户做特殊处理  =》 用户组</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/权限设计/" rel="tag"># 权限设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/07/理解OAuth 2.0/" rel="next" title="理解OAuth 2.0">
+                <i class="fa fa-chevron-left"></i> 理解OAuth 2.0
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/10/积分系统/" rel="prev" title="积分系统">
+                积分系统 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#权限系统设计"><span class="nav-number">1.</span> <span class="nav-text">权限系统设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-权限体系"><span class="nav-number">1.1.</span> <span class="nav-text">1. 权限体系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-角色管理"><span class="nav-number">1.2.</span> <span class="nav-text">2. 角色管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-账号管理部门管理"><span class="nav-number">1.3.</span> <span class="nav-text">3.  账号管理部门管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-员工管理"><span class="nav-number">1.4.</span> <span class="nav-text">4. 员工管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-什么是RBAC模型"><span class="nav-number">1.5.</span> <span class="nav-text">5. 什么是RBAC模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-RBAC模型的分类"><span class="nav-number">1.6.</span> <span class="nav-text">6. RBAC模型的分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-RBAC0模型"><span class="nav-number">1.6.1.</span> <span class="nav-text">(1)  RBAC0模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-RBAC1模型"><span class="nav-number">1.6.2.</span> <span class="nav-text">(2) RBAC1模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-RBAC2模型"><span class="nav-number">1.6.3.</span> <span class="nav-text">(3) RBAC2模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-RBAC3模型"><span class="nav-number">1.6.4.</span> <span class="nav-text">(4) RBAC3模型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-什么是权限"><span class="nav-number">1.7.</span> <span class="nav-text">7. 什么是权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-用户组的使用"><span class="nav-number">1.8.</span> <span class="nav-text">8. 用户组的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-常见设计图"><span class="nav-number">1.9.</span> <span class="nav-text">9. 常见设计图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-常见数据库设计"><span class="nav-number">1.10.</span> <span class="nav-text">10. 常见数据库设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-RBAC0"><span class="nav-number">1.10.1.</span> <span class="nav-text">1. RBAC0</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-RBAC1"><span class="nav-number">1.10.2.</span> <span class="nav-text">2. RBAC1</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-未完待续"><span class="nav-number">1.11.</span> <span class="nav-text">11. 未完待续</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

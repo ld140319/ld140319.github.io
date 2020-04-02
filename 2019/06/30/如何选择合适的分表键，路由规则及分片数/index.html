@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="如何选择合适的分表键，路由规则及分片数  原文地址：https://github.com/Meituan-Dianping/Zebra/wiki/如何选择合适的分表键，路由规则及分片数.md  1 分表键的选择什么是分表键&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分表键即分库/分表字段，是在水平拆分过程中用于生成拆分规则的数据表字段。根据分表键的值将数据表水平拆分到每">
+<meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何选择合适的分表键，路由规则及分片数">
+<meta property="og:url" content="http://blog.com/2019/06/30/如何选择合适的分表键，路由规则及分片数/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="如何选择合适的分表键，路由规则及分片数  原文地址：https://github.com/Meituan-Dianping/Zebra/wiki/如何选择合适的分表键，路由规则及分片数.md  1 分表键的选择什么是分表键&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分表键即分库/分表字段，是在水平拆分过程中用于生成拆分规则的数据表字段。根据分表键的值将数据表水平拆分到每">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-30T07:38:46.633Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何选择合适的分表键，路由规则及分片数">
+<meta name="twitter:description" content="如何选择合适的分表键，路由规则及分片数  原文地址：https://github.com/Meituan-Dianping/Zebra/wiki/如何选择合适的分表键，路由规则及分片数.md  1 分表键的选择什么是分表键&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分表键即分库/分表字段，是在水平拆分过程中用于生成拆分规则的数据表字段。根据分表键的值将数据表水平拆分到每">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/30/如何选择合适的分表键，路由规则及分片数/">
+
+
+
+
+
+  <title>如何选择合适的分表键，路由规则及分片数 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/30/如何选择合适的分表键，路由规则及分片数/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">如何选择合适的分表键，路由规则及分片数</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-30T10:12:57+08:00">
+                2019-06-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库优化</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库设计</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/" itemprop="url" rel="index">
+                    <span itemprop="name">读写分离</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="如何选择合适的分表键，路由规则及分片数"><a href="#如何选择合适的分表键，路由规则及分片数" class="headerlink" title="如何选择合适的分表键，路由规则及分片数"></a>如何选择合适的分表键，路由规则及分片数</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://github.com/Meituan-Dianping/Zebra/wiki/如何选择合适的分表键，路由规则及分片数.md" target="_blank" rel="noopener">https://github.com/Meituan-Dianping/Zebra/wiki/如何选择合适的分表键，路由规则及分片数.md</a><br><br></p>
+</blockquote>
+<h2 id="1-分表键的选择"><a href="#1-分表键的选择" class="headerlink" title="1 分表键的选择"></a>1 分表键的选择</h2><h3 id="什么是分表键"><a href="#什么是分表键" class="headerlink" title="什么是分表键"></a>什么是分表键</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分表键即<strong>分库/分表字段</strong>，是在水平拆分过程中用于生成拆分规则的数据表字段。根据分表键的值将数据表水平拆分到每个物理分库中。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据表拆分的首要原则，就是要<strong>尽可能找到数据表中的数据在业务逻辑上的主体，并确定大部分（或核心的）数据库操作都是围绕这个主体的数据进行</strong>，然后可使用该主体对应的字段作为分表键，进行分库分表。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>业务逻辑上的主体，通常与业务的应用场景相关</strong>，下面的一些典型应用场景都有明确的业务逻辑主体，可用于分表键：</p>
+<ul>
+<li>面向用户的互联网应用，都是围绕<strong>用户维度</strong>来做各种操作，那么业务逻辑主体就是用户，可使用用户对应的字段作为分表键；</li>
+<li>侧重于卖家的电商应用，都是围绕<strong>卖家维度</strong>来进行各种操作，那么业务逻辑主体就是卖家，可使用卖家对应的字段作为分表键；</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以此类推，其它类型的应用场景，大多也能找到合适的业务逻辑主体作为分表键的选择。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果确实找不到合适的业务逻辑主体作为分表键，那么可以考虑下面的方法来选择分表键：</p>
+<ul>
+<li>根据数据分布和访问的均衡度来考虑分表键，<strong>尽量将数据表中的数据相对均匀地分布在不同的物理分库/分表中</strong>，适用于大量分析型查询的应用场景（查询并发度大部分能维持为1）；</li>
+<li>按照数字（字符串）类型与时间类型字段相结合作为分表键，进行分库和分表，适用于日志检索类的应用场景。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意：无论选择什么拆分键，采用何种拆分策略，都要<strong>注意拆分值是否存在热点的问题，尽量规避热点数据来选择拆分键</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意：不一定需要拿数据库主键当做分表键，也可以拿其他业务值当分表键。<strong>拿主键当分表键的好处是可以散列均衡，减少热点问题</strong>。</p>
+<h3 id="多个分表键如何处理"><a href="#多个分表键如何处理" class="headerlink" title="多个分表键如何处理"></a>多个分表键如何处理</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大部分场景下，一张表的查询条件比较单一，只需要一个分表键即可；但是有的时候，业务必须要有多个分表键，没有办法归一成一个。此时一般有四种处理方式：</p>
+<p>名词定义：</p>
+<ul>
+<li>主分表键=主维度，在主维度上，数据能够增删改查；</li>
+<li>辅助分表键=辅维度，<strong>在辅助维度上，只能进行数据查询</strong></li>
+</ul>
+<h4 id="在主维度上全表扫描"><a href="#在主维度上全表扫描" class="headerlink" title="在主维度上全表扫描"></a>在主维度上全表扫描</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于<code>SQL</code>中没有主维度，所以在对辅助维度进行查询时，只能在所有的主维度的表进行查询一遍，然后聚合，最终把结果合并输出。</p>
+<p>适用场景：<strong>辅助维度的查询请求的量很小，并且是运营查询，对性能要求不高</strong></p>
+<h4 id="多维度数据进行冗余同步"><a href="#多维度数据进行冗余同步" class="headerlink" title="多维度数据进行冗余同步"></a>多维度数据进行冗余同步</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主维度的数据，通过<code>binlog</code>的方式，同步到辅助维度一份。那么在查询辅助维度时，会落到辅助维度的数据上进行查询。</p>
+<p>适用场景：<strong>辅助维度的查询请求的量也很可观，不能直接使用第一种全表扫描的方式</strong></p>
+<h4 id="二维巧妙归一维"><a href="#二维巧妙归一维" class="headerlink" title="二维巧妙归一维"></a>二维巧妙归一维</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;辅助维度其实有的时候也是主维度，比如在订单表Order中，OrderID和UserID其实是一一对应的，Order表的主维度是UserID，OrderID是辅助维度，但是由于OrderID其中的6位和UserID完全一致，也就是说，<strong>在OrderID中会把UserID打进去</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在路由的时候，如果SQL中带有UserID，那么直接拿UserID进行Hash取模路由；如果SQL中带有的OrderID维度，那么取出OrderID中的6位UserID进行Hash取模路由，结果是一致的。</p>
+<blockquote>
+<p>查订单相关的用户信息，可直接通过订单id截取出用户id，然后调用用户服务</p>
+</blockquote>
+<p>适用场景：<strong>辅助维度和主维度其实可以通过将主维度和辅助维度的值进行信息共享</strong></p>
+<h4 id="建立索引表"><a href="#建立索引表" class="headerlink" title="建立索引表"></a>建立索引表</h4><p>对于辅助维度可以建一张辅助维度和主维度的<strong>映射表</strong>。</p>
+<p>举例来说，表A有两个维度，主维度a，辅助维度b，目前只有主维度的一份数据。</p>
+<p>此时，如果有<code>SQL： select * from A where b = ？</code>过来，那么势必会在主维度上进行全表扫描。</p>
+<p>那么建一张新表<code>B_A_Index</code>，里面就只有两个字段，a和b的值，这张表可以分表，也可以不分表，建议分表这张表的主维度就是b。</p>
+<p>所以可以先查：<code>select a from B_A_Index where b = ?</code>，获得到a的值，然后 查询<code>select * from A where a =</code>查询到的值<code>and b = ?</code>进行查询。</p>
+<p>适用场景：<strong>主副维度是一一对应的</strong>。</p>
+<p>优势是，<strong>无需数据冗余，只需要冗余一份索引数据</strong>。</p>
+<p>缺点是，<strong>需要业务进行略微的改造</strong>。</p>
+<h2 id="2-分片数的选择"><a href="#2-分片数的选择" class="headerlink" title="2 分片数的选择"></a>2 分片数的选择</h2><p>水平拆分有两个层次：分库和分表。</p>
+<h4 id="表数目决策"><a href="#表数目决策" class="headerlink" title="表数目决策"></a>表数目决策</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般情况下，<strong>建议单个物理分表的容量不超过1000万行数据</strong>。通常可以预估2到5年的数据增长量，用估算出的总数据量除以总的物理分库数，再除以建议的最大数据量1000万，即可得出每个物理分库上需要创建的物理分表数：</p>
+<ul>
+<li><strong>（未来3到5年内总共的记录行数) / 单张表建议记录行数 </strong>（单张表建议记录行数 <code>= 1000</code>万）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;表的数量不宜过多，涉及到聚合查询或者分表键在多个表上的<code>SQL</code>语句，就会并发到更多的表上进行查询。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;举个例子，分了4个表和分了2个表两种情况，一种需要并发到4表上执行，一种只需要并发到2张表上执行，显然后者效率更高。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;表的数目不宜过少，少的坏处在于一旦容量不够就又要扩容了，而分库分表的库想要扩容是比较麻烦的。一般建议一次分够。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>建议表的数目是2的幂次个数</strong>，方便未来可能的迁移。</p>
+<h4 id="库数目决策"><a href="#库数目决策" class="headerlink" title="库数目决策"></a>库数目决策</h4><ul>
+<li>计算公式：按照存储容量来计算 = <strong>（3到5年内的存储容量）/ 单个库建议存储容量 </strong>（单个库建议存储容量 <code>&lt;300G</code>以内）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>DBA</code>的操作，一般情况下，会把若干个分库放到一台实例上去。未来一旦容量不够，要发生迁移，通常是对数据库进行迁移。所以库的数目才是最终决定容量大小。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最差情况，所有的分库都共享数据库机器。最优情况，每个分库都独占一台数据库机器。<strong>一般建议一个数据库机器上存放8个数据库分库</strong>。</p>
+<h2 id="3-分表策略的选择"><a href="#3-分表策略的选择" class="headerlink" title="3 分表策略的选择"></a>3 分表策略的选择</h2><table>
+<thead>
+<tr>
+<th>分表方式</th>
+<th>解释</th>
+<th>优点</th>
+<th>缺点</th>
+<th>试用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hash</td>
+<td>拿分表键的值Hash取模进行路由。最常用的分表方式。</td>
+<td>数据量散列均衡，每个表的数据量大致相同。<strong>请求压力散列均衡，不存在访问热点</strong></td>
+<td>一旦现有的表数据量需要<strong>再次扩容时，需要涉及到数据移动</strong>，比较麻烦。所以一般建议是一次性分够。</td>
+<td>在线服务。一般均以UserID或者ShopID等进行hash。</td>
+</tr>
+<tr>
+<td>Range</td>
+<td>拿分表键按照ID范围进行路由，比如id在1-10000的在第一个表中，10001-20000的在第二个表中，依次类推。这种情况下，分表键只能是数值类型。</td>
+<td><strong>数据量可控，可以均衡，也可以不均衡扩容比较方便</strong>，因为如果ID范围不够了，只需要调整规则，然后建好新表即可。</td>
+<td><strong>无法解决热点问题</strong>，如果某一段数据访问QPS特别高，就会落到单表上进行操作。</td>
+<td>离线服务。</td>
+</tr>
+<tr>
+<td>时间</td>
+<td>拿分表键按照时间范围进行路由，比如时间在1月的在第一个表中，在2月的在第二个表中，依次类推。这种情况下，分表键只能是时间类型。</td>
+<td><strong>扩容比较方便</strong>，因为如果时间范围不够了，只需要调整规则，然后建好新表即可。</td>
+<td><strong>数据量不可控，有可能单表数据量特别大，有可能单表数据量特别小无法解决热点问题，如果某一段数据访问QPS特别高，就会落到单表上进行操作</strong>。</td>
+<td>离线服务。比如线下运营使用的表、日志表等等</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/数据库设计/" rel="tag"># 数据库设计</a>
+          
+            <a href="/tags/分库分表/" rel="tag"># 分库分表</a>
+          
+            <a href="/tags/数据库优化/" rel="tag"># 数据库优化</a>
+          
+            <a href="/tags/读写分离/" rel="tag"># 读写分离</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/建造者模式--Builder/" rel="next" title="建造者模式--Builder">
+                <i class="fa fa-chevron-left"></i> 建造者模式--Builder
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/30/异地多活场景下的数据同步之道/" rel="prev" title="异地多活场景下的数据同步之道">
+                异地多活场景下的数据同步之道 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何选择合适的分表键，路由规则及分片数"><span class="nav-number">1.</span> <span class="nav-text">如何选择合适的分表键，路由规则及分片数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-分表键的选择"><span class="nav-number">1.1.</span> <span class="nav-text">1 分表键的选择</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是分表键"><span class="nav-number">1.1.1.</span> <span class="nav-text">什么是分表键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多个分表键如何处理"><span class="nav-number">1.1.2.</span> <span class="nav-text">多个分表键如何处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在主维度上全表扫描"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">在主维度上全表扫描</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多维度数据进行冗余同步"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">多维度数据进行冗余同步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#二维巧妙归一维"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">二维巧妙归一维</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#建立索引表"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">建立索引表</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-分片数的选择"><span class="nav-number">1.2.</span> <span class="nav-text">2 分片数的选择</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#表数目决策"><span class="nav-number">1.2.0.1.</span> <span class="nav-text">表数目决策</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#库数目决策"><span class="nav-number">1.2.0.2.</span> <span class="nav-text">库数目决策</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-分表策略的选择"><span class="nav-number">1.3.</span> <span class="nav-text">3 分表策略的选择</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

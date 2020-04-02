@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,锁,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="锁问题分析查看当前存在的死锁情况1mysql&amp;gt; show processlist; 获取锁等待情况汇总可以通过检查 table_locks_waited 和 table_locks_immediate 状态变量来分析系统上的表锁定争夺 123456mysql&amp;gt; show status like &amp;apos;Table%&amp;apos;;+--------------------------">
+<meta name="keywords" content="数据库,MySql,锁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="锁问题分析">
+<meta property="og:url" content="http://blog.com/2019/01/24/锁问题分析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="锁问题分析查看当前存在的死锁情况1mysql&amp;gt; show processlist; 获取锁等待情况汇总可以通过检查 table_locks_waited 和 table_locks_immediate 状态变量来分析系统上的表锁定争夺 123456mysql&amp;gt; show status like &amp;apos;Table%&amp;apos;;+--------------------------">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-01-24T14:52:30.717Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="锁问题分析">
+<meta name="twitter:description" content="锁问题分析查看当前存在的死锁情况1mysql&amp;gt; show processlist; 获取锁等待情况汇总可以通过检查 table_locks_waited 和 table_locks_immediate 状态变量来分析系统上的表锁定争夺 123456mysql&amp;gt; show status like &amp;apos;Table%&amp;apos;;+--------------------------">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/24/锁问题分析/">
+
+
+
+
+
+  <title>锁问题分析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/24/锁问题分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">锁问题分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-24T12:12:57+08:00">
+                2019-01-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/锁/" itemprop="url" rel="index">
+                    <span itemprop="name">锁</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="锁问题分析"><a href="#锁问题分析" class="headerlink" title="锁问题分析"></a>锁问题分析</h1><h2 id="查看当前存在的死锁情况"><a href="#查看当前存在的死锁情况" class="headerlink" title="查看当前存在的死锁情况"></a>查看当前存在的死锁情况</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show processlist;</span><br></pre></td></tr></table></figure>
+<h2 id="获取锁等待情况汇总"><a href="#获取锁等待情况汇总" class="headerlink" title="获取锁等待情况汇总"></a>获取锁等待情况汇总</h2><p><strong>可以通过检查 table_locks_waited 和 table_locks_immediate 状态变量来分析系统上的表锁定争夺</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show status like &apos;Table%&apos;;</span><br><span class="line">+----------------------------+-------+</span><br><span class="line">| Variable_name              | Value |</span><br><span class="line">+----------------------------+-------+</span><br><span class="line">| Table_locks_immediate      | 89    |   不存在锁等待、立即执行的SQL</span><br><span class="line">| Table_locks_waited         | 0     |   存在锁等待的SQL</span><br></pre></td></tr></table></figure>
+<p><strong>可以通过检查 Innodb_row_lock 状态变量来分析系统上的行锁的争夺情况</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show status like &apos;innodb_row_lock%&apos;;</span><br><span class="line">+-------------------------------+-------+</span><br><span class="line">| Variable_name                 | Value |</span><br><span class="line">+-------------------------------+-------+</span><br><span class="line">| Innodb_row_lock_current_waits | 0     |</span><br><span class="line">| Innodb_row_lock_time          | 0     |</span><br><span class="line">| Innodb_row_lock_time_avg      | 0     |</span><br><span class="line">| Innodb_row_lock_time_max      | 0     |</span><br><span class="line">| Innodb_row_lock_waits         | 0     |</span><br></pre></td></tr></table></figure>
+<h2 id="什么情况下使用表锁"><a href="#什么情况下使用表锁" class="headerlink" title="什么情况下使用表锁"></a>什么情况下使用表锁</h2><p>表级锁在下列几种情况下比行级锁更优越：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1. 很多操作都是读表；</span><br><span class="line"></span><br><span class="line">2. 在严格条件的索引上读取和更新，当更新或者删除可以用单独的索引来读取得到时；</span><br><span class="line"></span><br><span class="line">3. UPDATE tbl_name SET column=value WHERE unique_key_col=key_value；</span><br><span class="line"></span><br><span class="line">4. DELETE FROM tbl_name WHERE unique_key_col=key_value；</span><br><span class="line"></span><br><span class="line">5. SELECT 和 INSERT 语句并发的执行，但是只有很少的 UPDATE 和 DELETE 语句；</span><br><span class="line"></span><br><span class="line">6. 很多的扫描表和对全表的 GROUP BY 操作，但是没有任何写表；</span><br></pre></td></tr></table></figure>
+<h2 id="什么情况下使用行锁"><a href="#什么情况下使用行锁" class="headerlink" title="什么情况下使用行锁"></a>什么情况下使用行锁</h2><p>行级锁定的优点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 当在许多线程中访问不同的行时只存在少量锁定冲突。</span><br><span class="line"></span><br><span class="line">2. 回滚时只有少量的更改。</span><br><span class="line"></span><br><span class="line">3. 可以长时间锁定单一的行。</span><br></pre></td></tr></table></figure>
+<p>   行级锁定的缺点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1. 比页级或表级锁定占用更多的内存。</span><br><span class="line"></span><br><span class="line">2. 当在表的大部分中使用时，比页级或表级锁定速度慢，因为你必须获取更多的锁。</span><br><span class="line"></span><br><span class="line">3. 如果你在大部分数据上经常进行 GROUP BY 操作或者必须经常扫描整个表，比其它锁定明显慢很多。</span><br><span class="line"></span><br><span class="line">4. 用高级别锁定，通过支持不同的类型锁定，你也可以很容易地调节应用程序，因为其锁成本小于行级锁定。</span><br></pre></td></tr></table></figure>
+<h2 id="insert-…select-…-带来的问题"><a href="#insert-…select-…-带来的问题" class="headerlink" title="insert  …select  … 带来的问题"></a>insert  …select  … 带来的问题</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>使用 insert…select…进行记录的插入时，如果 select 的表是 innodb 类型的，不论 insert 的表是什么类型的表，都会对 select 的表的纪录进行锁定</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于那些从 oracle 迁移过来的应用，需要特别的注意，因为 oracle 并不存在类似的问题，所以在 oracle 的应用中 insert…select…操作非常的常见。例如：有时候会对比较多的纪录进行统计分析，然后将统计的中间结果插入到另外一个表，这样的操作因为进行的非常少，所以可能并没有设置相应的索引。如果迁移到 mysql数据库后不进行相应的调整，那么在进行这个操作期间，对需要 select 的表实际上是进行的全表扫描导致的所有记录的锁定，将会对应用的其他操作造成非常严重的影响。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;究其主要原因，是因为 mysql 在实现复制的机制时和 oracle 是不同的，<strong>如果不进行 select 表的锁定，则可能造成从数据库在恢复期间插入结果集的不同，造成主从数据的不一致。如果不采用主从复制，关闭 binlog 并不能避免对 select 纪录的锁定，某些文档中提到可以通过设置 innodb_locks_unsafe_for_binlog 来避免这个现象，当这个参数设置为 true 的时候，将不会对 select 的结果集加锁，但是这样的设置将可能带来非常严重的隐患.</strong>如果使用这个 binlog 进行从数据库的恢复，或者进行主数据库的灾难恢复，都将可能和主数据库的执行效果不同。因此，我们并不推荐通过设置这个参数来避免 insert…select… 导致的锁，如果需要进行可能会扫描大量数据的 insert…select 操作，我们推荐使用select…into outfile 和 load data infile 的组合来实现，这样是不会对纪录进行锁定的.__</p>
+<h2 id="next-key锁对并发插入的影响"><a href="#next-key锁对并发插入的影响" class="headerlink" title="next-key锁对并发插入的影响"></a>next-key锁对并发插入的影响</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在行级锁定中，InnoDB 使用一个名为 next-key locking 的算法。InnoDB 以这样一种方式执行行级锁定：<strong>当它搜索或扫描表的索引之时，它对遇到的索引记录设置共享或独占锁定.因此，行级锁定事实上是索引记录锁定。InnoDB 对索引记录设置的锁定也映像索引记录之前的“间隙 ” .如果一个用户对一个索引上的记录 R 有共享或独占的锁定，另一个用户不能紧接在 R 之前以索引的顺序插入一个新索引记录。这个间隙的锁定被执行来防止所谓的“幽灵问题 ”。 </strong>可以用 next-key 锁定在你的应用程序上实现一个唯一性检查：如果你以共享模式读数据，并且没有看到你将要插入的行的重复，则你可以安全地插入你的行，并且知道在读过程中对你的行的继承者设置的 next-key 锁定与此同时阻止任何人对你的行插入一个重复。因此，the next-key 锁定允许你锁住在你的表中并不存在的一些东西__    </p>
+<h2 id="隔离级别对并发插入的影响"><a href="#隔离级别对并发插入的影响" class="headerlink" title="隔离级别对并发插入的影响"></a>隔离级别对并发插入的影响</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>REPEATABLE READ 是 InnoDB 的默认隔离级别。带唯一搜索条件使用唯一索引的SELECT … FOR UPDATE,SELECT … LOCK IN SHARE MODE, UPDATE 和 DELETE 语句只锁定找到的索引记录，而不锁定记录前的间隙。用其它搜索条件，这些操作采用next-key 锁定，用 next-key 锁定或者间隙锁定锁住搜索的索引范围，并且阻止其它用户的新插入.</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在重复读中，有一个与 READ COMMITTED 隔离级别重要的差别：在这个级别，在同一事务内所有重复读读取由第一次读所确定的同一快照.</strong>这个惯例意味着如果你在同一事务内发出数个无格式 SELECT 语句，这些 SELECT 语句对相互之间也是可重复的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;READ COMMITTED 隔离级别是一个有些像Oracle 的隔离级别。所有 SELECT …FOR UPDATE 和 SELECT … LOCK IN SHARE MOD 语句仅锁定索引记录，而不锁定记录前的间隙，因而允许随意紧挨着已锁定的记录插入新记录。UPDATE 和 DELETE 语句使用一个带唯一搜索条件的唯一的索引仅锁定找到的索引记录，而不包括记录前的间隙。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在范围类型UPDATE 和 DELETE 语句， InnoDB 必须对范围覆盖的间隙设置next-key锁定或间隙锁定以及其它用户做的块插入。这是很必要的，因为要让 MySQL 复制和恢复起作用， “幽灵行”必须被阻止掉</strong></p>
+<h2 id="如何减少锁冲突"><a href="#如何减少锁冲突" class="headerlink" title="如何减少锁冲突"></a>如何减少锁冲突</h2><ol>
+<li><p>对 Myisam 类型的表：</p>
+<p>1) <strong>Myisam 类型的表可以考虑通过改成 Innodb 类型的表来减少锁冲突</strong></p>
+<p>2) <strong>根据应用的情况，尝试横向拆分成多个表或者改成 Myisam 分区对减少锁冲突也会<br>有一定的帮助</strong></p>
+</li>
+<li><p>对 Innodb 类型的表：</p>
+<p>1) <strong>首先要确认，在对表获取行锁的时候，要尽量的使用索引检索纪录，如果没有使用索引访问，那么即便你只是要更新其中的一行纪录，也是全表锁定的.要确保 sql是使用索引来访问纪录的，必要的时候，请使用 explain 检查 sql 的执行计划，判断是否按照预期使用了索引.</strong></p>
+<p>2) <strong>由于 mysql 的行锁是针对索引加的锁，不是针对纪录加的锁，所以虽然是访问不同行的纪录，但是如果是相同的索引键，是会被加锁的.</strong>应用设计的时候也要注意，这里和 Oracle 有比较大的不同.</p>
+<p>3) <strong>当表有多个索引的时候，不同的事务可以使用不同的索引锁定不同的行，当表有主键或者唯一索引的时候，不是必须使用主键或者唯一索引锁定纪录，其他普通索引同样可以用来检索纪录，并只锁定符合条件的行.</strong></p>
+<p>4) 用 SHOW INNODB STATUS 来确定最后一个死锁的原因。查询的结果中，包括死锁的事务的详细信息，包括执行的 SQL 语句的内容，每个线程已经获得了什么锁，在等待什么锁，以及最后是哪个线程被回滚。详细的分析死锁产生的原因，可以通过改进程序有效的避免死锁的产生.</p>
+<p>5) 如果应用并不介意死锁的出现，那么可以在应用中对发现的死锁进行处理.</p>
+<p>6) <strong>确定更合理的事务大小，小事务更少地倾向于冲突.</strong></p>
+<p>7) <strong>如果你正使用锁定读，（SELECT … FOR UPDATE 或 … LOCK IN SHARE MODE ），试着用更低的隔离级别</strong>，比如 READ COMMITTED</p>
+<p>8) <strong>以固定的顺序访问你的表和行。则事务形成良好定义的查询并且没有死锁.</strong></p>
+</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/锁/" rel="tag"># 锁</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/24/【转】InnoDB，快照读，在RR和RC下有何差异？/" rel="next" title="【转】InnoDB，快照读，在RR和RC下有何差异？">
+                <i class="fa fa-chevron-left"></i> 【转】InnoDB，快照读，在RR和RC下有何差异？
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/24/MySQL索引索引选择/" rel="prev" title="MySQL索引索引选择">
+                MySQL索引索引选择 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#锁问题分析"><span class="nav-number">1.</span> <span class="nav-text">锁问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查看当前存在的死锁情况"><span class="nav-number">1.1.</span> <span class="nav-text">查看当前存在的死锁情况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取锁等待情况汇总"><span class="nav-number">1.2.</span> <span class="nav-text">获取锁等待情况汇总</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么情况下使用表锁"><span class="nav-number">1.3.</span> <span class="nav-text">什么情况下使用表锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么情况下使用行锁"><span class="nav-number">1.4.</span> <span class="nav-text">什么情况下使用行锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#insert-…select-…-带来的问题"><span class="nav-number">1.5.</span> <span class="nav-text">insert  …select  … 带来的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#next-key锁对并发插入的影响"><span class="nav-number">1.6.</span> <span class="nav-text">next-key锁对并发插入的影响</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隔离级别对并发插入的影响"><span class="nav-number">1.7.</span> <span class="nav-text">隔离级别对并发插入的影响</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何减少锁冲突"><span class="nav-number">1.8.</span> <span class="nav-text">如何减少锁冲突</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

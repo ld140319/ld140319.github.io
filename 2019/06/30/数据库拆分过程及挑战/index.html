@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="数据库拆分过程及挑战  原文地址：http://www.tianshouzhi.com/api/tutorials/dragon/362    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。 1 垂直拆分 &amp;nbsp;&amp;nbsp;&amp;nbs">
+<meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库拆分过程及挑战">
+<meta property="og:url" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="数据库拆分过程及挑战  原文地址：http://www.tianshouzhi.com/api/tutorials/dragon/362    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。 1 垂直拆分 &amp;nbsp;&amp;nbsp;&amp;nbs">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498732075074602.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498758162045122.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498779276077397.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498804787053892.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498823627017102.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498838422075385.png">
+<meta property="og:updated_time" content="2019-06-30T05:06:38.418Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库拆分过程及挑战">
+<meta name="twitter:description" content="数据库拆分过程及挑战  原文地址：http://www.tianshouzhi.com/api/tutorials/dragon/362    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。 1 垂直拆分 &amp;nbsp;&amp;nbsp;&amp;nbs">
+<meta name="twitter:image" content="http://blog.com/2019/06/30/数据库拆分过程及挑战/1510498732075074602.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/30/数据库拆分过程及挑战/">
+
+
+
+
+
+  <title>数据库拆分过程及挑战 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/30/数据库拆分过程及挑战/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据库拆分过程及挑战</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-30T10:12:57+08:00">
+                2019-06-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库优化</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库设计</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/" itemprop="url" rel="index">
+                    <span itemprop="name">读写分离</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="数据库拆分过程及挑战"><a href="#数据库拆分过程及挑战" class="headerlink" title="数据库拆分过程及挑战"></a>数据库拆分过程及挑战</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="http://www.tianshouzhi.com/api/tutorials/dragon/362" target="_blank" rel="noopener">http://www.tianshouzhi.com/api/tutorials/dragon/362</a></p>
+</blockquote>
+<p><br></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：<strong>垂直拆分、读写分离、分库分表(水平拆分)</strong>。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。</p>
+<h2 id="1-垂直拆分"><a href="#1-垂直拆分" class="headerlink" title="1 垂直拆分"></a>1 垂直拆分</h2><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于一个刚上线的互联网项目来说，由于前期活跃用户数量并不多，并发量也相对较小，所以此时企业一般都会选择将所有数据存放在一个数据库 中进行访问操作。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;举例来说，对于一个电商系统，其用户模块和产品模块的表刚开始都是位于一个<code>db_eshop</code>库中。</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498732075074602.png" alt="Image.png"></p>
+<p>其中：<code>user</code>表和<code>user_account</code>表属于用户模块，<code>product_category</code>表和<code>product</code>表属于产品模块</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;刚开始，可能公司的技术团队规模比较小，因此整个技术团队共同维护<code>db_eshop</code>库。随着公司业务的发展，技术团队人员也得到了扩张，划分为不同的技术小组，不同的小组负责不同的业务模块。例如A小组负责用户模块，B小组负责产品模块。此时数据库也迎来了第一次拆分：垂直拆分。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里的<strong>垂直拆分，指的是将一个包含了很多表的数据库，根据表的功能的不同，拆分为多个小的数据库，每个库包含部分表</strong>。下图演示将上面提到的<code>db_eshop</code>库，拆分为<code>db_user</code>库和<code>db_product</code>库。</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498758162045122.png" alt="Image.png"></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>关于垂直拆分，还有另一种说法，将一个包含了很多字段的大表拆分为多个小表，每个表包含部分字段。而笔者认为，根据表功能的不同的对数据库进行拆分，这种情况更加常见</strong>。</p>
+<blockquote>
+<p>垂直分表主要是为了提升查询效率，是MySQL可以一次性加载更多的行，将一些非必要字段或大字段选择性加载（通过join）</p>
+</blockquote>
+<h2 id="2-读写分离"><a href="#2-读写分离" class="headerlink" title="2 读写分离"></a>2 读写分离</h2><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着后续的市场推广力度不断加强，用户数量和并发量不断上升。这时如果仅靠一个数据库来支撑所有访问压力,几乎是在 自寻死路 。以产品库为例，可能库中包含了几万种商品，并且每天新增几十种，而产品库每天的访问了可能有几亿甚至几十亿次。数据库读的压力太大，单台<code>mysql</code>实例扛不住，此时大部分 <strong><code>Mysql DBA</code> 就会将数据库设置成 读写分离状态 ，也就是一个 <code>Master</code> 节点(主库)对应多个<code>Salve</code> 节点(从库)</strong>。<strong>可以将<code>slave</code>节点的数据理解为<code>master</code>节点数据的全量备份</strong>。</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498779276077397.png" alt="Image.png"></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>master</code>节点只有一个且可读可写，<code>slave</code>节点有多个且只可以读。新增产品时，应用将数据写入<code>master</code>主库，主库将数据同步给多个<code>slave</code>从库。当查询产品时，应用选择某个<code>salve</code>节点读取数据。</p>
+<p><strong>读写分离的优点：</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这样通过配置多个<code>slave</code>节点，可以有效的避免过大的访问量对单个库造成的压力。</p>
+<p><strong>读写分离的挑战：</strong></p>
+<p>1、对于DBA而言，需要配置数据库主从同步</p>
+<p>​     关于如何配置数据库的主从同步，这个目前方案已经很成熟。以<code>mysql</code>为例：</p>
+<p>​     可以参考官方文档：<a href="https://dev.mysql.com/doc/refman/5.7/en/replication.html，" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/replication.html，</a></p>
+<p>​     笔者也写了一篇文章介绍如何通过mysql_multi的方式配置主从同步：<a href="http://www.tianshouzhi.com/api/tutorials/mysql" target="_blank" rel="noopener">http://www.tianshouzhi.com/api/tutorials/mysql</a>。</p>
+<p>2、对于开发人员而言，必须要对<code>sql</code>类型进行判断，如果是<code>select</code>等读请求，就走从库，如果是<code>insert</code>、<code>update</code>、<code>delete</code>等写请求，就走主库。此外还有一些其他的问题要考虑：</p>
+<ul>
+<li><strong>主从数据同步延迟问题：</strong>因为数据是从<code>master</code>节点通过网络同步给多个<code>slave</code>节点，因此必然存在延迟。因此有可能出现我们在<code>master</code>节点中已经插入了数据，但是从<code>slave</code>节点却读取不到的问题。<strong>对于一些强一致性的业务场景，要求插入后必须能读取到，因此对于这种情况，我们需要提供一种方式，让读请求也可以走主库，而主库上的数据必然是最新的</strong>。</li>
+<li><strong>事务问题：</strong>如果一个事务中同时包含了读请求(如<code>select</code>)和写请求(如<code>insert</code>)，如果读请求走从库，写请求走主库，由于跨了多个库，那么<code>jdbc</code>本地事务已经无法控制，属于分布式事务的范畴。而分布式事务非常复杂且效率较低。因此<strong>对于读写分离，目前主流的做法是，事务中的所有<code>sql</code>统一都走主库，由于只涉及到一个库，<code>jdbc</code>本地事务就可以搞定</strong>。</li>
+<li><strong>高可用的考虑：</strong>例如<code>master</code>配置了多个<code>slave</code>节点，如果其中某个<code>slave</code>节点挂了，那么之后的读请求，我们应用将其转发到正常工作的<code>slave</code>节点上。另外，如果新增了<code>slave</code>节点，应用也应该感知到，可以将读请求转发到新的<code>slave</code>节点上。</li>
+</ul>
+<h2 id="3-分库分表"><a href="#3-分库分表" class="headerlink" title="3 分库分表"></a>3 分库分表</h2><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;经过垂直分区后的 <code>Master/Salve</code>模式完全可以承受住难以想象的高并发访问操作，但是否可以永远 高枕无忧 了？答案是否定的，一旦业务表中的数据量大了，从维护和性能角度来看，无论是任何的 <code>CRUD</code> 操作，对于数据库而言都是一件极其耗费资源的事情。即便设置了索引， 仍然无法掩盖<strong>因为数据量过大从而导致的数据库性能下降</strong>的事实 ，因此这个时候 <code>Mysql DBA</code> 或许就该对数据库进行 水平分区 （<code>sharding</code>，即分库分表 ）。<strong>经过水平分区设置后的业务表，必然能够将原本一张表维护的海量数据分配给 N 个子表进行存储和维护</strong>。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>水平分表从具体实现上又可以分为3种：只分表、只分库、分库分表</strong>，下图展示了这三种情况：</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498804787053892.png" alt="Image.png"></p>
+<p><strong>只分表</strong>：</p>
+<p>​        将<code>db</code>库中的<code>user</code>表拆分为2个分表，<code>user_0</code>和<code>user_1</code>，这两个表还位于同一个库中。  </p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;适用场景：<strong>如果库中的多个表中只有某张表或者少数表数据量过大，那么只需要针对这些表进行拆分，其他表保持不变</strong>。</p>
+<p><strong>只分库</strong>：</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将<code>db</code>库拆分为<code>db_0</code>和<code>db_1</code>两个库，同时在<code>db_0</code>和<code>db_1</code>库中各自新建一个<code>user</code>表，<code>db_0.user</code>表和<code>db_1.user</code>表中各自只存原来的<code>db.user</code>表中的部分数据。</p>
+<p><strong>分库分表</strong>：</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将<code>db库</code>拆分为<code>db_0</code>和<code>db_1</code>两个库，<code>db_0</code>中包含<code>user_0</code>、<code>user_1</code>两个分表，<code>db_1</code>中包含<code>user_2</code>、<code>user_3</code>两个分表。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下图演示了在分库分表的情况下，数据是如何拆分的：假设<code>db</code>库的user表中原来有<code>4000W</code>条数据，现在将<code>db</code>库拆分为2个分库<code>db_0</code>和<code>db_1</code>，<code>user</code>表拆分为<code>user_0、user_1、user_2、user_3</code>四个分表，每个分表存储<code>1000W</code>条数据。</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498823627017102.png" alt="Image.png"></p>
+<p><strong>分库的好处：</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>降低单台机器的负载压力</strong></p>
+<p><strong>分表的好处：</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>提高数据操作的效率</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;举个例子说明，比如<code>user</code>表中现在有<code>4000w</code>条数据，此时我们需要在这个表中增加（<code>insert</code>）一条新的数据，<code>insert</code>完毕后，数据库会针对这张表重新建立索引，<code>4000w</code>行数据建立索引的系统开销还是不容忽视的。但是反过来，假如我们将这个表分成4 个<code>table</code>呢，从<code>user_0</code>一直到<code>user_3</code>，<code>4000w</code>行数据平均下来，每个子表里边就只有<code>1000W</code>行数据，这时候我们向一张 只有<code>1000W</code>行数据的<code>table</code>中<code>insert</code>数据后建立索引的时间就会下降，从而提高<code>DB</code>的运行时效率，提高了<code>DB</code>的并发量。当然分表的好处还不知这些，还有诸如写操作的锁操作等，都会带来很多显然的好处。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分库分表的挑战主要体现在4个方面：基本的数据库增删改功能，分布式id，分布式事务，动态扩容，下面逐一进行讲述。 </p>
+<p><strong>挑战1：基本的数据库增删改功能</strong>   </p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于开发人员而言，虽然分库分表的，但是其还是希望能和单库单表那样的去操作数据库。例如我们要批量插入四条用户记录，并且希望根据用户的id字段，确定这条记录插入哪个库的哪张表。例如1号记录插入user_1表，2号记录插入user_2表，3号记录插入user_3表，4号记录插入user_0表，以此类推。<code>sql</code>如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">user</span>(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">1</span>,”tianshouzhi”),(<span class="number">2</span>,”huhuamin”), (<span class="number">3</span>,”wanghanao”),(<span class="number">4</span>,”luyang”)</span><br></pre></td></tr></table></figure>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 这样的<code>sql</code>明显是无法执行的，因为我们已经对库和表进行了拆分,这种<code>sql</code>语法只能操作<code>mysql</code>的单个库和单个表。所以必须将<code>sql</code>改成4条如下所示，然后分别到每个库上去执行。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_1(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">1</span>,”tianshouzhi”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_2(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">2</span>,”huhuamin”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_3(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">3</span>,”wanghanao”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_0(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span>  (<span class="number">4</span>,”luyang”);</span><br></pre></td></tr></table></figure>
+<p>具体流程可以用下图进行描述：</p>
+<p><img src="//blog.com/2019/06/30/数据库拆分过程及挑战/1510498838422075385.png" alt="Image.png"></p>
+<p>解释如下：</p>
+<p>​    <strong><code>sql</code>解析</strong>：首先对<code>sql</code>进行解析，得到需要插入的四条记录的id字段的值分别为1,2,3,4</p>
+<p>​    <strong><code>sql</code>路由</strong>：<code>sql</code>路由包括库路由和表路由。库路由用于确定这条记录应该插入哪个库，表路由用于确定这条记录应该插入哪个表。</p>
+<p>​    <strong><code>sql</code>改写</strong>：因为一条记录只能插入到一个库中，而上述批量插入的语法将会在 每个库中都插入四条记录，明显是不合适的，因此需要对<code>sql</code>进行改写，每个库只插入一条记录。</p>
+<p>​    <strong><code>sql</code>执行</strong>：一条<code>sql</code>经过改写后变成了多条<code>sql</code>，为了提升效率应该并发的到不同的库上去执行，而不是按照顺序逐一执行</p>
+<p>​    <strong>结果集合并</strong>：每个<code>sql</code>执行之后，都会有一个执行结果，我们需要对分库分表的结果集进行合并，从而得到一个完整的结果。</p>
+<p><strong>挑战2：分布式id</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在分库分表后，我们不能再使用<code>mysql</code>的自增主键。因为在插入记录的时候，不同的库生成的记录的自增<code>id</code>可能会出现冲突</strong>。因此需要有一个全局的<code>id</code>生成器。目前分布式<code>id</code>有很多中方案，其中一个比较轻量级的方案是<code>twitter</code>的<code>snowflake</code>算法。</p>
+<p><strong>挑战3：分布式事务</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>分布式事务是分库分表绕不过去的一个坎，因此涉及到了同时更新多个数据库</strong>。例如上面的批量插入记录到四个不同的库，如何保证要么同时成功，要么同时失败。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于分布式事务，<code>mysql</code>支持<code>XA</code>事务，但是效率较低。柔性事务是目前比较主流的方案，柔性事务包括：最大努力通知型、可靠消息最终一致性方案以及<code>TCC</code>两阶段提交。但是无论<code>XA</code>事务还是柔性事务，实现起来都是非常复杂的。</p>
+<p><strong>挑战4：动态扩容</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态扩容指的是增加分库分表的数量。例如原来的user表拆分到2个库的四张表上。现在我们希望将分库的数量变为4个，分表的数量变为8个。这种情况下一般要伴随着数据迁移。例如在4张表的情况下，id为7的记录，<code>7%4=3</code>，因此这条记录位于user_3这张表上。但是现在分表的数量变为了8个，而<code>7%8=7</code>，而user_0这张表上根本就没有id=7的这条记录，因此<strong>如果不进行数据迁移的话，就会出现记录找不到的情况</strong>。</p>
+<h2 id="4、总结"><a href="#4、总结" class="headerlink" title="4、总结"></a>4、总结</h2><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在上面我们已经看到了，读写分离和分库分表带来的好处，但是也面临了极大的挑战。如果由业务开发人员来完成这些工作，难度比较大。因此就有一些公司专门来做一些数据库中间件，对业务开发人员屏蔽底层的繁琐细节，开发人员使用了这些中间件后，不论是读写分离还是分库分表，都可以像操作单库单表那样去操作。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/数据库设计/" rel="tag"># 数据库设计</a>
+          
+            <a href="/tags/分库分表/" rel="tag"># 分库分表</a>
+          
+            <a href="/tags/数据库优化/" rel="tag"># 数据库优化</a>
+          
+            <a href="/tags/读写分离/" rel="tag"># 读写分离</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/30/异地多活场景下的数据同步之道/" rel="next" title="异地多活场景下的数据同步之道">
+                <i class="fa fa-chevron-left"></i> 异地多活场景下的数据同步之道
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/30/分库分表/" rel="prev" title="分库分表">
+                分库分表 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库拆分过程及挑战"><span class="nav-number">1.</span> <span class="nav-text">数据库拆分过程及挑战</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-垂直拆分"><span class="nav-number">1.1.</span> <span class="nav-text">1 垂直拆分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-读写分离"><span class="nav-number">1.2.</span> <span class="nav-text">2 读写分离</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-分库分表"><span class="nav-number">1.3.</span> <span class="nav-text">3 分库分表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4、总结"><span class="nav-number">1.4.</span> <span class="nav-text">4、总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

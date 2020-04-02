@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="使用ElasticSearch的44条建议  原文地址：https://mp.weixin.qq.com/s/ER70p1edqkScx_DAMSsuVA   在搜索业务上摸爬滚打3年，使用的Es版本也从1.x升级到了5.x，扮演的角色也逐渐从Es的使用方变为维护方，这里大致汇总了使用Es过程中踩的一些坑以及一些注意事项，也会穿插一下我们的解法。&amp;nbsp;01—es中建索引是指创建一个保存数据的">
+<meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用ElasticSearch的44条建议">
+<meta property="og:url" content="http://blog.com/2019/05/20/使用ElasticSearch的44条建议/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="使用ElasticSearch的44条建议  原文地址：https://mp.weixin.qq.com/s/ER70p1edqkScx_DAMSsuVA   在搜索业务上摸爬滚打3年，使用的Es版本也从1.x升级到了5.x，扮演的角色也逐渐从Es的使用方变为维护方，这里大致汇总了使用Es过程中踩的一些坑以及一些注意事项，也会穿插一下我们的解法。&amp;nbsp;01—es中建索引是指创建一个保存数据的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-20T14:33:25.556Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用ElasticSearch的44条建议">
+<meta name="twitter:description" content="使用ElasticSearch的44条建议  原文地址：https://mp.weixin.qq.com/s/ER70p1edqkScx_DAMSsuVA   在搜索业务上摸爬滚打3年，使用的Es版本也从1.x升级到了5.x，扮演的角色也逐渐从Es的使用方变为维护方，这里大致汇总了使用Es过程中踩的一些坑以及一些注意事项，也会穿插一下我们的解法。&amp;nbsp;01—es中建索引是指创建一个保存数据的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/20/使用ElasticSearch的44条建议/">
+
+
+
+
+
+  <title>使用ElasticSearch的44条建议 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/20/使用ElasticSearch的44条建议/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用ElasticSearch的44条建议</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-20T12:12:57+08:00">
+                2019-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">Elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/" itemprop="url" rel="index">
+                    <span itemprop="name">搜索引擎</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/Lucene/" itemprop="url" rel="index">
+                    <span itemprop="name">Lucene</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="使用ElasticSearch的44条建议"><a href="#使用ElasticSearch的44条建议" class="headerlink" title="使用ElasticSearch的44条建议"></a>使用ElasticSearch的44条建议</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/ER70p1edqkScx_DAMSsuVA" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/ER70p1edqkScx_DAMSsuVA</a></p>
+</blockquote>
+<p><br></p>
+<p><section style="max-width: 100%;box-sizing: border-box;color: rgb(62, 62, 62);font-size: 16px;white-space: normal;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 10px;padding-left: 10px;max-width: 100%;box-sizing: border-box;line-height: 1.6;word-wrap: break-word !important;"><p>在搜索业务上摸爬滚打3年，使用的Es版本也从1.x升级到了5.x，扮演的角色也逐渐从Es的使用方变为维护方，这里大致汇总了使用Es过程中踩的一些坑以及一些注意事项，也会穿插一下我们的解法。&nbsp;</p></section></section></section></section><section style="max-width: 100%;box-sizing: border-box;color: rgb(62, 62, 62);font-size: 16px;white-space: normal;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">01</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section></p><p style="max-width: 100%;min-height: 1em;color: rgb(62, 62, 62);font-size: 16px;white-space: normal;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es中建索引是指创建一个保存数据的目录，用于保存倒排索引，索引创建之后是不可变的（Immutable），只允许新增字段。</p><p style="max-width: 100%;min-height: 1em;color: rgb(62, 62, 62);font-size: 16px;white-space: normal;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>因为lucene中field是带类型的，不同类型的字段进入倒排索引后会经过压缩，long/int/short占用的字节长度不一，如果修改字段类型，很可能导致从索引文件中解压字段失败，更不要提string=&gt;int之类的变换了；此外</em></span><em style="color: rgb(136, 136, 136);font-size: 12px;">es会将文档id压缩存储（有序列表-&gt;差值形式-&gt;压缩），并通过跳跃表来提高查询性能，</em><em style="color: rgb(136, 136, 136);font-size: 12px;">倒排索引查出term对应的doc_id集合，再用doc_id取field value用于排序或聚合，其实是lucene的实现，所以要变更索引文件代价很大，需要解压=&gt;变更=&gt;压缩，大量的CPU和io操作。</em></p><section style="max-width: 100%;box-sizing: border-box;white-space: normal;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 10px;padding-left: 10px;max-width: 100%;box-sizing: border-box;line-height: 1.6;word-wrap: break-word !important;"><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">02</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es字段是否索引只能在创建索引时配置，不能在字段创建后再给字段“加索引”。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>lucene的字段有indexed的属性，如果设置false则不会写入倒排索引文件，如果要后期将某个字段改为indexed，相当于把整个索引重建一次，既然索引都要重建，也就没必要提供类似的功能了。</em></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">03</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">索引字段有为“索引（indexed）”和“存储（stored）”两个属性，只有被“索引”的字段才能在查询/排序条件中使用，只有被“存储”的字段才能在请求的时候返回字段内容。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>同上，另外要说明的是，如果字段没有被设置为stored，则这个文档在update后会丢失该字段，因为Es的update操作其实是从索引文件中取到stored的原始值，合并后index回去，如果没有存储该字段内容，新生成的文档也不会带有该字段，index后原文档被覆盖也就丢失该字段了。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">04</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">必须保证索引字段都存储（stored）才能使用update操作，update原理是先从索引中get到原文档内容，然后与传入的欲更新字段合并，作为一个新的文档index回去，如果有字段不是stored，那么update之后该字段就丢失了。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>同03条注释。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);font-size: 24px;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);font-size: 24px;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);font-size: 24px;">05</span><br></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">为了提升查询性能，索引文件被设计为不可变文件（便于如跳跃表之类的访问性能优化），在生成后不会发生变更，通过Es看到的数据均为某个时刻引擎打开的快照数据，为了能做到反应数据变化，会有刷新时间refresh_interval的概念。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="color: rgb(0, 82, 255);">这里会反复提到近实时（NRT）的概念，希望大家在使用过程中一定明确一点，Es不是一个真实时的存储服务，务必不要用在实时业务场景中。</span></p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>假定某个时刻为t，t时刻引擎打开的快照数据</em></span><span style="font-size: 12px;color: rgb(136, 136, 136);"><em><span style="font-size: 12px;background-color: rgb(255, 255, 255);">也就是t时刻的全部有效段文件，t时刻之后写入的数据是不可见的，这些数据会生成新的段，在<em style="color: rgb(136, 136, 136);font-size: 12px;white-space: normal;background-color: rgb(255, 255, 255);">t+refresh_interval时刻，Es会</em></span></em></span><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>重新扫描并打开该时刻的全部有效索引文件，以此近实时的反应数据变化。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">06</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es还无法做到资源二级调度（共享线程池/缓存区等，无法按索引隔离资源），所以如果集群内某一个索引发生大量慢查询或者污染缓存区（用低复用率内容踢出其他索引高复用率缓存），会导致search线程池满或者引起gc，阻塞集群内其他索引的响应。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>如题，重要业务最好保障物理隔离。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">07</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es每次refresh需要重新打开所有索引文件（需要解压/刷缓存等），如果索引文件较多且更新频繁，每次refresh的开销会比较大，使机器负载升高，影响查询rt，所以更新频繁的大索引设置的刷新时间会限制到5s以上（实时程度下降），要提高实时性，必须减小索引大小。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>Es默认是1s刷新，如果索引到达千万级别且更新频繁，rt可能会上升到100ms级别，算算qps是不是很虚呢。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">08</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es有window size的概念（from+size），每次查询先从每个shard中取window size条数据，然后在集群中某个节点汇聚数据，排序后取size条数据返回，假设有n个shard，有效数据占比＝size / (n * (from+size))，故Es查询时会限制window size，避免产生过多垃圾数据加重gc和IO负担。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>如题。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;"><br></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;color: rgb(26, 173, 25);font-size: 24px;word-wrap: break-word !important;">09</span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">因为索引文件是不可变的，要反应数据的变化需要一次刷新操作来重新扫描并加载新的索引文件，所以任意时刻查询的数据都是t时刻（扫描并加载索引文件的时刻）的快照数据，刷新时间的长短决定了数据的近实时（nrt）程度。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>原因见第05条，刷新时间默认1s，可以通过settings API动态调整，一般建议5s，Es/Solr都是nrt（近实时）的服务，务必明确，不要当实时存储来用。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">10</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">es有translog，也就是write ahead log，用来保障数据的故障恢复，写操作都必须保证写translog成功，避免服务挂的时候数据丢失。</p><p style="color: rgb(62, 62, 62);font-size: 16px;white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>translog其实也不是绝对的靠谱，有async和request两种模式，如果是async模式（Es1.x只有这个模式），会在内存中积累一定大小或到一定时间后触发flush操作来持久化到磁盘，如果掉电还是有丢数据的可能性，得通过主从副本来保障数据的持久化，如果是request模式（Es5.x默认）则要靠谱的多，每次写操作都会将translog落盘，但是很明显会导致磁盘io压力上升，依赖各自的实际业务场景来取舍。</em></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;"><span style="font-size: 12px;color: rgb(136, 136, 136);"></span></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">11</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">search操作是检索searcher打开的快照数据，所以search是个近实时操作，取决于快照数据的近实时程度；不同于search，es的get操作可以在保证必要条件的情况下做到真实时，可以从translog中提取文档，拿到最新写入的文档数据。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>其实get也有refresh和realtime的，要真实时必须指定realtime为true（默认），Es会通过检查versionMap（存储两次刷新间隔中写入数据的元信息）中是否有当前文档的_uid来判断是否触发一次刷新操作（Es是通过searcher来get到文档的，translog只是用来取source），refresh参数用来提示get操作前是否一定进行一次刷新操作（可以达到真实时目的，但是不建议开，性能损耗太大，用realtime就可以达到目的了），另外必须指定preference为_primary，否则还是可能会get到旧版本数据，比如写入时没有指</em></span><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>定wait_for_active_shards，默认只要_primary存活即可，且不保证写入到全部副本，如果副本短时上下线就有可能会导致数据延迟。</em></span></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">12</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;">在假设正常情况下并发更新概率很小的前提下，为了性能考虑，es通过乐观锁解决文档并发更新问题，创建文档时如果不设置version，默认初始version=1，之后每次update时version自增；如果要重置version，只能通过index操作并设置force＝true，来强制重置文档version。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>如题，另外Es6.x开始已经在考虑取消force参数了。</em></span></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">13</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p>es原生不支持在update时设置version（理论上是可以实现的，给开发组提了个issue：<a href="https://github.com/elastic/elasticsearch/issues/25996，但是没通过），实在要做可以在业务程序中一定程度上模拟带version更新操作" target="_blank" rel="noopener">https://github.com/elastic/elasticsearch/issues/25996，但是没通过），实在要做可以在业务程序中一定程度上模拟带version更新操作</a><span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>Es的更新操作就是先get到最新文档，然后与传入的文档合并后再index回去，同时标记原文档为deleted，这个过程就可以将自增的版本号设置为外部版本号。</em></span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="font-size: 12px;color: rgb(136, 136, 136);"><em>还有要注意的一点是VersionType尽量不要设置为新version&gt;=原version，可能会导致并发更新时的多个请求的数据有一个或多个被覆盖。</em></span></p></section></section></section></section><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">14</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es1.x版本默认date类型处理会在format parse失败后尝试用long.valueOf来转换，假设字段配置为date类型，format为YYYY-MM-dd HH:mm:ss，那么传入一个”12345”的string类型，es1.x版本是不会报错的，会把”12345”转成long再转成UTC时间；es5.x版本已经修复这个问题<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">15</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es的source是单独作为一个字段存储的，而且是保持传入的样式原样保存，假设字段A类型为long，如果传入的doc={A: “12345”}，即使A为string类型也是可以正确录入的，但是返回的source中字段A还是保持string形式”12345”，不会转换成配置的long类型<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es作为存储来说更像是一个文档数据库，下文有提到。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">16</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es版本执行写请求时，如果源文档设置的version与已存在的文档冲突（默认策略provided version &gt; stored version算成功），会报version conflict异常，即使是在index或者create操作时显式设置version，也有可能会抛出版本冲突异常<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，除非修改VersionType为gte（设置force=true也行，不建议做，会强行覆盖原数据），否则有并发更新时，如果别的请求先于你的更新，乐观锁检查就会失败。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">17</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">update时可以通过设置retry-on-conflict来降低版本冲突异常出现次数，在遇到version冲突时，引擎会根据设置的retry次数（默认是0）来自动重试，如果重试后更新成功则返回成功，当然在极端情况下（重试n次之后依然冲突）还是会抛version conflict异常<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">注意，设置retryOnConflict请保证此次操作是幂等的，如果不是，还是在业务程序内处理重试吧，比如一个带状态的字段更新，A请求更新为1，B请求更新为2，B先于A更新成功，A报conflict异常，如果设置了重试，最终的更新结果是状态变为1，sad。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">18</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es的match操作不走缓存，即使索引量较小（几十万文档），一次匹配全文档的match操作（match: {title: xxx}）至少有几十万次计算（与文档数正相关），如果qps很高，同样会因为集群CPU过高而阻塞search线程池，导致集群无响应<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，match操作每次都会实打实的计算，耗CPU，搜索应用务必保证基础的结果缓存（需要自己实现）可用，减少match请求次数。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">19</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">translog有request落盘的方式（每次写数据都会落盘）和async方式（batch，累积一定量数据后落盘），es5.x默认使用的是request方式，也就是优先保障数据不丢；但es1.x只有async方式，以性能优先，每隔一段时间（默认5s）检查是否需要将translog落盘，在机器掉电情况会有数据丢失风险<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">translog的持久化参数主要有三个：<em style="white-space: normal;color: rgb(136, 136, 136);font-size: 12px;">index.translog.durability控制通过request还是async方式持久化到磁盘，如果通过async方式，</em></em><em style="color: rgb(136, 136, 136);font-size: 12px;">index.translog.flush_threshold_size控制堆积多少数据后触发一次flush操作，index.translog.sync_interval控制间隔多少时间出发一次flush操作。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">20</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">如果Es应用场景数据更新很频繁，新对象生命周期很短，如果young区分配比较小，可能会造成大量短生命周期的新对象涌入old区，引起full gc导致集群不能正常响应（视old gc的算法而定，如果是g1则full gc会退化成serial gc），需要控制young区在合适的比例，但是也会造成ygc的停顿时间变长，表现为比较明显的rt毛刺<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">视gc算法而定，g1算法的ygc也会stw，cms算法在heap超过16g情况下表现不是很好。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">21</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">操作es常见的三种异常：DocumentAlreadyExists（文档已存在，有并发create操作易发生），VersionConflict（版本冲突，有并发update操作易发生），DocumentMissing（文档不存在，有并发的create／update／delete操作时易发生）<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es5.x取消了<span style="background-color: rgb(255, 255, 255);">DocumentAlreadyExists异常，也将其视为<span style="background-color: rgb(255, 255, 255);">VersionConflict</span></span>。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">22</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">should查询子句在query和filter中语义不同，在filter中should条件必须至少满足一个（is or not的问题），在query中如果同时存在must或must_not条件则不要求should条件必须满足一个（how well的问题，should条件满足会提高查询得分_score），如果要求query中should与filter的语义类似，可以设置bool字句中的minimum_should_match参数为1解决<span style="color: rgb(62, 62, 62);font-size: 16px;">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">bool query中的should默认不做必须命中要求（只有should条件除外），bool filter中的should必要至少命中其中一个子条件。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">23</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">推荐将不用来计算相似度的字段的norm属性关闭，比如时间/状态等仅用来filter或aggregation的字段，可以减小索引大小，默认会用1 byte/doc来存储字段的norm值，即使某个文档根本没有对应的字段。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;"><span style="background-color: rgb(255, 255, 255);">tf/idf是经典的相似度计算模型，<em style="white-space: normal;color: rgb(136, 136, 136);font-size: 12px;"><span style="background-color: rgb(255, 255, 255);">可以用来理解相似度计算，</span></em>一个查询先分解为n个term，计算每个term的tf/idf值（其中就有norm），然后以该值作为空间向量权重，形成n维向量空间，再应用余弦定理计算n维空间内查询词与文档的相似度，得到文档匹配分。</span></em></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;"><span style="background-color: rgb(255, 255, 255);">Es5.x默认使用bm25作为相似度计算方法了</span>。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">24</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es的核心是倒排索引，也就是term -&gt; doc_id的形式，如果是分词字段，索引过程是先分词，然后将分词后的term与文档id结对成为倒排索引文件，假设索引字段为title=“测试商品”，采用bigram的分词方式，那么最终的倒排索引是”测试”=&gt;id / “试商”=&gt;id / “商品”=&gt;id；match查询则是将查询词分词后转为term，再用term去和倒排索引进行”精确”匹配，比如查询”商品”，分词后term=”商品”，和倒排表精确匹配得到doc_id即是查询结果，如果搜索”商”，分词term=”商”，倒排索引中是没有这个term的，因此查询结果为空；搜索引擎的match查询并不等同与mysql的like查询，如果要搜索类似mysql的”商品%”条件，Es的表现是不太好的。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es没有B树索引，prefix查询是通过状态机实现的。</em></p><p style="white-space: normal;max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><span style="color:#888888;"><span style="font-size: 12px;"><em>match操作能不能搜到结果主要看存储字段分词后的term能不能与查询条件分词后的term匹配上，假设”美观建筑真好看”分词后得到”美观”/“建筑”/“真”/“好看”/“好”，如果用term搜索”真好看”，那么在倒排表中无法找到对应的词条（term不分词），找不到结果；如果用match搜索”真好看”，那么也会被分词为”真”/“好看”/“好”，这时就可以在倒排表中找到对应的词条了；再比如搜索”观建”，假设分词后得到”观”/“建”/“观建”，虽然字段中存在这几个字符，但是倒排表中并没有，所以也找不到结果。</em></span></span></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">25</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">match_phrase匹配比较严格，在全匹配的基础上还要求字符顺序一致，可以有效提高查询准确率，但是为了保证召回率，一般情况下会搭配一个半匹配match使用，例如：”bool”:{“should”:[{“match_phrase”:{“title”:”test”}},{“match”:{“title”:”test”}}]}。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">比如”漂亮又美观的建筑”，通过match查询”漂亮 建筑”可以得到结果，但是通过match_phrase查不到，因为”漂亮”和”建筑”之间的position_gap&gt;1，可以通过slop参数控制position_gap的大小。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">26</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">使用scan操作时需注意，es1.x版本init scan不会返回hits，只有在next scroll时才会返回，循环调用scan时注意控制条件，第一次应当判断totalHits&gt;0，后续可以用hits.length&gt;0判断。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">scan操作只有Es1.x版本支持，Es5.x版本只提供scroll。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">27</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es1.x版本scroll和scan是不同的操作，在scan时如果设置size＝10，则返回size num_of_shards条数据，假设索引分了5个shard，共返回50条数据，而普通scroll操作时如果设置size＝10，则最多只会返回size条数据，即使索引分了5个shard，也只会返回10条数据，但是普通scroll效率没有scan高；es5.x对默认排序的scroll操作做了定向优化来替换scan，因此只保留了scroll。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">按照段内顺序（doc_id）直接出结果，减去聚合排序步骤，但是得到的结果可以被认为是无序的，doc_id按照写入顺序排列。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">28</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es的数值类型都是带符号的，尽量将数值字段值控制在signed long范围内[-2^63]~[2^63-1]，否则只能用分拆方法或者用string类型来存储，但是会使排序或者范围查询达不到预期效果。<br></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">对于java不是很熟悉的同学更需注意，不要因为数值范围限制而导致重建索引。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">29</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">索引mapping默认关闭了自动映射功能，写入不在mapping中的字段会抛出异常，原因是自动映射是根据第一次遇到的字段内容来推断类型的，假设字段A是商品名称且事先未配置mapping，那么如果第一个写入es的doc中字段A内容是”12345”，es就会给字段A定义为long类型，就不符合预期了。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">推荐将mapping中的dynamic设置为strict，在出现未配置的字段时抛出异常，避免因为字段自动映射错误而导致重建索引（原因见01条）。</em></p><p style="white-space: normal;"><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">30</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es通过任务队列来削峰限流，默认search queue=1000，index queue=200，如果短时流量过高导致队列溢出，就会抛出EsExecutionReject异常，而任务队列都是全集群共享的（某索引大量占用队列就会导致其他索引占不到资源，而无法响应），如果多索引共享集群，尽量能控制每个索引的写入速率。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，另外最好也能控制每个索引的match qps，避免过多match导致CPU资源耗尽。</em></p><p><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">31</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">慢查询比较多的索引也同样会堵塞es的search任务队列（典型的如单一的海量数据索引，短时一个波峰很容易导致es抛Reject异常），因此线上业务最好根据自身应用场景开启索引的慢查询日志。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es默认的慢查询阈值有点大（秒级），一般偏存储类的应用能接受的rt在200ms以内，线上业务需要做好慢查询优化，比如没有合理使用用filter缓存/terms条件内id过多/多次sort/match长度过长/索引数据量过大等。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">32</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es的Java API需要通过捕捉运行时异常来处理异常操作。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，写业务代码最好加上try catch代码块。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">33</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es的增改删（cud）操作本质都是lucene的index/delete两种操作的组合，update操作就是先取出stored的原文档字段，与本次操作数据合并后重新index回索引，然后delete原文档，也因此写操作index queue其实就包含了所有增改删的任务。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">lucene暴露的接口是addDocument/updateDocument，而addDocument接口还是调用updateDocument方法，不要只看名字，其实updateDocument就是先写入新文档（不是partial update），然后标记老文档为deleted状态。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">34</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es是一个近实时（NRT）的服务，索引的刷新时间（refresh_interval）控制了文档数据的延时程度，如果设置了-1，则新增文档或被更新的文档必须等到索引的translog达到commit条件触发刷新操作后才能可见。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">也就是达</em><em style="color: rgb(136, 136, 136);font-size: 12px;">到index.translog.flush_threshold_size配置的大小，进行一次lucene commit操作，生成新段并打开，注意不要混淆索引的flush操作和translog的fsync操作。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">35</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">因为lucene在删除文档时只是标记删除，标记删除的doc_id在查询出候选结果时被用来过滤，标记删除的文档只有在merge阶段才会被物理删除，真正释放磁盘空间和机器资源，一般更新比较多的索引残留的deleted docs会比较多（更新就是index＋delete的组合），在实际的搜索过程中，标记删除的索引文档会和普通文档一样会被加载到内存并纳入计算，也会被decode到doc_id，撑大倒排索引，这直接影响到索引的读写性能。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;"><span style="background-color: rgb(255, 255, 255);">Es的删除操作（也就是lucene的删除操作）是先标记删除，并单独在一个文件中存放标记删除的doc_id，用于在查询时将删除文档过滤掉；删除的文档只有在段合并（merge）阶段通过重写索引文件才会物理删除</span></em><em style="color: rgb(136, 136, 136);font-size: 12px;">。</em></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">更新太频繁导致merge跟不上新产生的标记删除文档，可以通过deleted文档比例来判断更新操作是否过于频繁，尽量合并多个字段的更新为一次请求。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">36</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es带sort的查询需要在倒排索引匹配结束后，拿到索引文档的id_set（此时无序），然后通过id获取对应字段的值（fielddata/doc_value），通过优先级队列或者其他容器来计算顺序，建议能少做sort就少做。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，尽量减少带文档字段排序的请求，如果有多个字段排序，避免第一字段值太单一（第一排序相等，降级到第二字段排序来确定文档顺序）</em></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">另外尽量避免用string/array/nested等高级类型来做排序，string排序是字典序，多值字段排序会有更多运行时计算，会拖慢查询影响时间。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">37</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es的_score排序表示按照查询匹配分排序，需要注意两点：1. 比如term之类的精确匹配其得分是固定值的；2. 模糊查询match条件返回的得分经过normalize之后也可能会得到相同的得分，得分相同的查询结果会在结果展示上表现出一定的随机性，建议在_score之后加上第二排序条件，在匹配分相同时保证顺序固定，比如：[{“_score”:”desc”},{“_id”:”desc”}]。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如题，另外需要注意的是，如果查询的意图是match，匹配度最高在前，但是又在sort条件中指定了字段排序，比如time:desc，那么得到的结果是满足match匹配度（默认75%）前提下time越新的越前（一般是不满足期望的）。解决方法可以是设置匹配度100%，要求全部文字匹配，或者用上面提到的方法，将_score排序放到第一位。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">38</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">close索引的时候最好先把alias去掉，如果一个alias包含多个索引，其中一个索引带着alias被close掉，用这个alias来检索会失败。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es可以通过一个alias来关联多个真实索引，可以实现比如按天切分的索引当作单一索引使用，但是如果alias包含了closed状态的索引，Es不会跳过这个索引，而是会抛出IndexClosed异常。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">39</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">使用了nested字段类型的索引，其创建某个文档，如果其中嵌套了2个子文档，加上父文档，总共会创建2+1个文档。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">使用nested字段类型如果嵌套文档过多，会导致索引极速膨胀，影响读写性能，使用嵌套字段务必先了解清楚业务应用场景。</em></p><p><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">40</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">lucene 6.x使用有限状态机FSA来提高模糊查询性能（fuzzy/prefix），但是实现有缺陷，使用了递归来判断状态机是否有限状态，如果前缀查询输入了一个长字符串（状态机很大），在调用Operations.isFinite方法时会导致栈溢出StackOverflow异常，使得执行此查询的索引的shard所在进程直接退出，Es6.x版本修复，6以下版本建议限制查询长度及正则查询，同时控制索引shard个数，避免全集群机器全部宕机。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">lucene内部用了一个递归操作来判断状态机是否有限，如果是个无限状态机或者状态机很大，递归太深就会导致栈溢出。。sad。</em></p><p><em style="color: rgb(136, 136, 136);font-size: 12px;"></em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color:#1aad19;"><span style="font-size: 24px;">41</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">es5.x版本在update时会判断更新前后的值是否有变化，如果欲更新字段的新值与已存在的值一致，那么会跳过实际的写操作直接返回OK，所以如果发现更新返回成功，但是version没有自增，可以检查是否欲更新字段的值与已存在的值相同。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如果发现更新后version没有变化，可以check一下是否此类情况，如有依赖version自增的业务，这点更是务必明确。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">42</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;background-color: rgb(255, 255, 255);">Es作为存储更像是个文档数据库，存的是个json，返回的数据格式也是json反序列化时自动推测的，不会按照预置的mapping字段类型返回，Es设置的mapping对存储内容无效，只是在建索引时类型检查/转换用。</p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es的_source内部是lucene的一个indexed=false/stored=true的字段，之所以单独存放到一个_source字段，猜想是为了提高存储内容的访问速度，如果是用lucene索引字段的stored内容，取一次source就需要遍历全部fields了。</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">43</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p><span class="" style="color: rgb(0, 0, 0);">推荐根据字段的取值来设置字段类型，如小于7个枚举值可以用byte，减少索引文件的overhead，也避免在Es中存储大容量字段，即使不用来索引；可以不索引的字段就不索引（indexed: no），可以减小倒排索引文件，提高读写性能</span><span style="background-color: rgb(255, 255, 255);">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">lucene生成的索引文件在存储时会根据字段类型占用的字节长度进行补齐，方便跳跃访问，用精确的字段类型可以减少io上的虚耗。</em></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">Es中存储的大字段也会在段文件中保存（段文件有很多不同用途文件组成），会影响读写性能（merge操作会变多，也变慢，访问频率如果很高也会导致内存中不断生成大对象）</em></p><section style="white-space: normal;max-width: 100%;box-sizing: border-box;background-color: rgb(255, 255, 255);word-wrap: break-word !important;"><section class="" powered-by="xiumi.us" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="max-width: 100%;box-sizing: border-box;word-wrap: break-word !important;"><section class="" style="padding-right: 20px;padding-left: 20px;max-width: 100%;box-sizing: border-box;line-height: 0.8;word-wrap: break-word !important;"><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;"><br></span></span></p><p style="max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="color: rgb(26, 173, 25);"><span style="font-size: 24px;">44</span></span></p><p style="color: rgb(62, 62, 62);font-size: 16px;max-width: 100%;box-sizing: border-box;min-height: 1em;text-align: center;word-wrap: break-word !important;"><span style="max-width: 100%;box-sizing: border-box;letter-spacing: 0px;color: rgb(26, 173, 25);font-size: 20px;word-wrap: break-word !important;">—</span></p></section></section></section></section><p style="white-space: normal;"><span class=""></span></p><p><span class="" style="color: rgb(0, 0, 0);">分词后的字段会变成小粒度的词条，比如”美观的建筑”分词后可能会变成”美观”/“建筑”（视分词算法而定），不会保留原始内容（”美观的建筑”不会进入倒排表），也就无法用term条件来查询了，只能用match</span><span style="background-color: rgb(255, 255, 255);">。</span></p><p style="font-size: 16px;white-space: normal;color: rgb(62, 62, 62);max-width: 100%;min-height: 1em;background-color: rgb(255, 255, 255);box-sizing: border-box !important;word-wrap: break-word !important;"><em style="color: rgb(136, 136, 136);font-size: 12px;">如果需要同时对某个字段进行多种分词（包括不分词），可以通过multi-field来解决。<em style="color: rgb(136, 136, 136);font-size: 12px;">分词问题详见第24条。</em></em></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Elasticsearch/" rel="tag"># Elasticsearch</a>
+          
+            <a href="/tags/搜索引擎/" rel="tag"># 搜索引擎</a>
+          
+            <a href="/tags/Lucene/" rel="tag"># Lucene</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/20/eBay Elasticsearch性能优化实践/" rel="next" title="eBay Elasticsearch性能优化实践">
+                <i class="fa fa-chevron-left"></i> eBay Elasticsearch性能优化实践
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/20/Elasticsearch高性能优化实践/" rel="prev" title="Elasticsearch高性能优化实践">
+                Elasticsearch高性能优化实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#使用ElasticSearch的44条建议"><span class="nav-number">1.</span> <span class="nav-text">使用ElasticSearch的44条建议</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

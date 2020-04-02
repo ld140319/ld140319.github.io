@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,shell,文件操作,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="读懂diffdiff是Unix系统的一个很重要的工具程序。 它用来比较两个文本文件的差异，是代码版本管理的基石之一。你在命令行下，输入：  　　$ diff &amp;lt;变动前的文件&amp;gt; &amp;lt;变动后的文件&amp;gt;  diff就会告诉你，这两个文件有何差异。它的显示结果不太好懂，下面我就来说明，如何读懂diff。  一、diff的三种格式 由于历史原因，diff有三种格式：   正常格式（nor">
+<meta name="keywords" content="Linux,shell,文件操作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读懂diff">
+<meta property="og:url" content="http://blog.com/2019/03/16/读懂diff/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="读懂diffdiff是Unix系统的一个很重要的工具程序。 它用来比较两个文本文件的差异，是代码版本管理的基石之一。你在命令行下，输入：  　　$ diff &amp;lt;变动前的文件&amp;gt; &amp;lt;变动后的文件&amp;gt;  diff就会告诉你，这两个文件有何差异。它的显示结果不太好懂，下面我就来说明，如何读懂diff。  一、diff的三种格式 由于历史原因，diff有三种格式：   正常格式（nor">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.ruanyifeng.com/blogimg/asset/201208/bg2012082901.png">
+<meta property="og:updated_time" content="2019-03-16T10:36:24.135Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="读懂diff">
+<meta name="twitter:description" content="读懂diffdiff是Unix系统的一个很重要的工具程序。 它用来比较两个文本文件的差异，是代码版本管理的基石之一。你在命令行下，输入：  　　$ diff &amp;lt;变动前的文件&amp;gt; &amp;lt;变动后的文件&amp;gt;  diff就会告诉你，这两个文件有何差异。它的显示结果不太好懂，下面我就来说明，如何读懂diff。  一、diff的三种格式 由于历史原因，diff有三种格式：   正常格式（nor">
+<meta name="twitter:image" content="http://www.ruanyifeng.com/blogimg/asset/201208/bg2012082901.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/16/读懂diff/">
+
+
+
+
+
+  <title>读懂diff | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/16/读懂diff/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">读懂diff</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-16T12:12:57+08:00">
+                2019-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/shell/" itemprop="url" rel="index">
+                    <span itemprop="name">shell</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/shell/文件操作/" itemprop="url" rel="index">
+                    <span itemprop="name">文件操作</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="读懂diff"><a href="#读懂diff" class="headerlink" title="读懂diff"></a>读懂diff</h1><p>diff是Unix系统的一个很重要的工具程序。</p>
+<p>它用来比较两个文本文件的差异，是代码版本管理的基石之一。你在命令行下，输入：</p>
+<blockquote>
+<p>　　$ diff &lt;变动前的文件&gt; &lt;变动后的文件&gt;</p>
+</blockquote>
+<p>diff就会告诉你，这两个文件有何差异。它的显示结果不太好懂，下面我就来说明，如何读懂diff。</p>
+<p><img src="http://www.ruanyifeng.com/blogimg/asset/201208/bg2012082901.png" alt="img"></p>
+<p><strong>一、diff的三种格式</strong></p>
+<p>由于历史原因，diff有三种格式：</p>
+<blockquote>
+<ul>
+<li>正常格式（normal diff）</li>
+<li>上下文格式（context diff）</li>
+<li>合并格式（unified diff）</li>
+</ul>
+</blockquote>
+<p>我们依次来看。</p>
+<p><strong>二、示例文件</strong></p>
+<p>为了便于讲解，先新建两个示例文件。</p>
+<p>第一个文件叫做f1，内容是每行一个a，一共7行。</p>
+<blockquote>
+<p>　　a<br>　　a<br>　　a<br>　　a<br>　　a<br>　　a<br>　　a</p>
+</blockquote>
+<p>第二个文件叫做f2，修改f1而成，第4行变成b，其他不变。</p>
+<blockquote>
+<p>　　a<br>　　a<br>　　a<br>　　<strong>b</strong><br>　　a<br>　　a<br>　　a</p>
+</blockquote>
+<p><strong>三、正常格式的diff</strong></p>
+<p>现在对f1和f2进行比较：</p>
+<blockquote>
+<p>　　$ diff f1 f2</p>
+</blockquote>
+<p>这时，diff就会显示正常格式的结果：</p>
+<blockquote>
+<p>　　4c4</p>
+<h2 id="lt-a"><a href="#lt-a" class="headerlink" title="　　&lt; a"></a>　　&lt; a</h2><blockquote>
+<p>b</p>
+</blockquote>
+</blockquote>
+<p>第一行是一个提示，用来说明变动位置。</p>
+<blockquote>
+<p>　　4c4</p>
+</blockquote>
+<p>它分成三个部分：前面的”4”，表示f1的第4行有变化；中间的”c”表示变动的模式是内容改变（change），其他模式还有”增加”（a，代表addition）和”删除”（d，代表deletion）；后面的”4”，表示变动后变成f2的第4行。</p>
+<p>第二行分成两个部分。</p>
+<blockquote>
+<p>　　&lt; a</p>
+</blockquote>
+<p>前面的小于号，表示要从f1当中去除该行（也就是第4行），后面的”a”表示该行的内容。</p>
+<p>第三行用来分割f1和f2。</p>
+<blockquote>
+<hr>
+</blockquote>
+<p>第四行，类似于第二行。</p>
+<blockquote>
+<blockquote>
+<p>b</p>
+</blockquote>
+</blockquote>
+<p>前面的大于号表示f2增加了该行，后面的”b”表示该行的内容。</p>
+<p>最早的<a href="http://www.ruanyifeng.com/blog/2010/03/unix_copyright_history.html" target="_blank" rel="noopener">Unix</a>（即AT&amp;T版本的Unix），使用的就是这种格式的diff。</p>
+<p><strong>四、上下文格式的diff</strong></p>
+<p>上个世纪80年代初，加州大学伯克利分校推出BSD版本的Unix时，觉得diff的显示结果太简单，最好加入上下文，便于了解发生的变动。因此，推出了上下文格式的diff。</p>
+<p>它的使用方法是加入c参数（代表context）。</p>
+<blockquote>
+<p>　　$ diff -c f1 f2</p>
+</blockquote>
+<p>显示结果如下：</p>
+<blockquote>
+<p>　　*** f1    2012-08-29 16:45:41.000000000 +0800<br>　　— f2    2012-08-29 16:45:51.000000000 +0800</p>
+<hr>
+<p>　　<strong>* 1,7 **</strong><br>　　 a<br>　　 a<br>　　 a<br>　　!a<br>　　 a<br>　　 a<br>　　 a<br>　　— 1,7 —-<br>　　 a<br>　　 a<br>　　 a<br>　　!b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>这个结果分成四个部分。</p>
+<p>第一部分的两行，显示两个文件的基本情况：文件名和时间信息。</p>
+<blockquote>
+<p>　　*** f1    2012-08-29 16:45:41.000000000 +0800<br>　　— f2    2012-08-29 16:45:51.000000000 +0800</p>
+</blockquote>
+<p>“***”表示变动前的文件，”—“表示变动后的文件。</p>
+<p>第二部分是15个星号，将文件的基本情况与变动内容分割开。</p>
+<blockquote>
+<hr>
+</blockquote>
+<p>第三部分显示变动前的文件，即f1。</p>
+<blockquote>
+<p>　　<strong>* 1,7 **</strong><br>　　 a<br>　　 a<br>　　 a<br>　　!a<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>这时不仅显示发生变化的第4行，还显示第4行的前面三行和后面三行，因此一共显示7行。所以，前面的”<strong>* 1,7 **</strong>“就表示，从第1行开始连续7行。</p>
+<p>另外，文件内容的每一行最前面，还有一个标记位。如果为空，表示该行无变化；如果是感叹号（!），表示该行有改动；如果是减号（-），表示该行被删除；如果是加号（+），表示该行为新增。</p>
+<p>第四部分显示变动后的文件，即f2。</p>
+<blockquote>
+<p>　　— 1,7 —-<br>　　 a<br>　　 a<br>　　 a<br>　　!b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>除了变动行（第4行）以外，也是上下文各显示三行，总共显示7行。</p>
+<p><strong>五、合并格式的diff</strong></p>
+<p>如果两个文件相似度很高，那么上下文格式的diff，将显示大量重复的内容，很浪费空间。1990年，GNU diff率先推出了”合并格式”的diff，将f1和f2的上下文合并在一起显示。</p>
+<p>它的使用方法是加入u参数（代表unified）。</p>
+<blockquote>
+<p>　　$ diff -u f1 f2</p>
+</blockquote>
+<p>显示结果如下：</p>
+<blockquote>
+<p>　　— f1    2012-08-29 16:45:41.000000000 +0800<br>　　+++ f2    2012-08-29 16:45:51.000000000 +0800<br>　　@@ -1,7 +1,7 @@<br>　　 a<br>　　 a<br>　　 a<br>　　-a<br>　　+b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>它的第一部分，也是文件的基本信息。</p>
+<blockquote>
+<p>　　— f1    2012-08-29 16:45:41.000000000 +0800<br>　　+++ f2    2012-08-29 16:45:51.000000000 +0800</p>
+</blockquote>
+<p>“—“表示变动前的文件，”+++”表示变动后的文件。</p>
+<p>第二部分，变动的位置用两个@作为起首和结束。</p>
+<blockquote>
+<p>　　@@ -1,7 +1,7 @@</p>
+</blockquote>
+<p>前面的”-1,7”分成三个部分：减号表示第一个文件（即f1），”1”表示第1行，”7”表示连续7行。合在一起，就表示下面是第一个文件从第1行开始的连续7行。同样的，”+1,7”表示变动后，成为第二个文件从第1行开始的连续7行。</p>
+<p>第三部分是变动的具体内容。</p>
+<blockquote>
+<p>　　 a<br>　　 a<br>　　 a<br>　　-a<br>　　+b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>除了有变动的那些行以外，也是上下文各显示3行。它将两个文件的上下文，合并显示在一起，所以叫做”合并格式”。每一行最前面的标志位，空表示无变动，减号表示第一个文件删除的行，加号表示第二个文件新增的行。</p>
+<p><strong>六、git格式的diff</strong></p>
+<p>版本管理系统git，使用的是合并格式diff的变体。</p>
+<blockquote>
+<p>　　$ git diff</p>
+</blockquote>
+<p>显示结果如下：</p>
+<blockquote>
+<p>　　diff –git a/f1 b/f1<br>　　index 6f8a38c..449b072 100644<br>　　— a/f1<br>　　+++ b/f1<br>　　@@ -1,7 +1,7 @@<br>　　 a<br>　　 a<br>　　 a<br>　　-a<br>　　+b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+<p>第一行表示结果为git格式的diff。</p>
+<blockquote>
+<p>　　diff –git a/f1 b/f1</p>
+</blockquote>
+<p>进行比较的是，a版本的f1（即变动前）和b版本的f1（即变动后）。</p>
+<p>第二行表示两个版本的git哈希值（index区域的6f8a38c对象，与工作目录区域的449b072对象进行比较），最后的六位数字是对象的模式（普通文件，644权限）。</p>
+<blockquote>
+<p>　　index 6f8a38c..449b072 100644</p>
+</blockquote>
+<p>第三行表示进行比较的两个文件。</p>
+<blockquote>
+<p>　　— a/f1<br>　　+++ b/f1</p>
+</blockquote>
+<p>“—“表示变动前的版本，”+++”表示变动后的版本。</p>
+<p>后面的行都与官方的合并格式diff相同。</p>
+<blockquote>
+<p>　　@@ -1,7 +1,7 @@<br>　　 a<br>　　 a<br>　　 a<br>　　-a<br>　　+b<br>　　 a<br>　　 a<br>　　 a</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/shell/" rel="tag"># shell</a>
+          
+            <a href="/tags/文件操作/" rel="tag"># 文件操作</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/16/sed入门/" rel="next" title="sed入门">
+                <i class="fa fa-chevron-left"></i> sed入门
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/16/linux下join命令的用法/" rel="prev" title="linux下join命令的用法">
+                linux下join命令的用法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#读懂diff"><span class="nav-number">1.</span> <span class="nav-text">读懂diff</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#lt-a"><span class="nav-number">1.1.</span> <span class="nav-text">　　&lt; a</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

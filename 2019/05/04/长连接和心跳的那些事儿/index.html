@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="网络,Tcp,长连接,心跳包,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="长连接和心跳的那些事儿 原文地址：https://www.jianshu.com/p/c6af08f853d0  介绍长连接&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 首先这里所说的连接是指网络传输层的使用TCP协议经过三次握手建立的连接；长连接是指建立的连接长期保持，不管此时有无数据包的发送；有长连接自然也有短连接，短连接是指双方有数据发送时，就建立连接，发送几次请">
+<meta name="keywords" content="网络,Tcp,长连接,心跳包">
+<meta property="og:type" content="article">
+<meta property="og:title" content="长连接和心跳的那些事儿">
+<meta property="og:url" content="http://blog.com/2019/05/04/长连接和心跳的那些事儿/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="长连接和心跳的那些事儿 原文地址：https://www.jianshu.com/p/c6af08f853d0  介绍长连接&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 首先这里所说的连接是指网络传输层的使用TCP协议经过三次握手建立的连接；长连接是指建立的连接长期保持，不管此时有无数据包的发送；有长连接自然也有短连接，短连接是指双方有数据发送时，就建立连接，发送几次请">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-04T15:26:40.768Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="长连接和心跳的那些事儿">
+<meta name="twitter:description" content="长连接和心跳的那些事儿 原文地址：https://www.jianshu.com/p/c6af08f853d0  介绍长连接&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 首先这里所说的连接是指网络传输层的使用TCP协议经过三次握手建立的连接；长连接是指建立的连接长期保持，不管此时有无数据包的发送；有长连接自然也有短连接，短连接是指双方有数据发送时，就建立连接，发送几次请">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/04/长连接和心跳的那些事儿/">
+
+
+
+
+
+  <title>长连接和心跳的那些事儿 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/04/长连接和心跳的那些事儿/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">长连接和心跳的那些事儿</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-04T12:12:57+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Tcp/" itemprop="url" rel="index">
+                    <span itemprop="name">Tcp</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Tcp/长连接/" itemprop="url" rel="index">
+                    <span itemprop="name">长连接</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Tcp/长连接/心跳包/" itemprop="url" rel="index">
+                    <span itemprop="name">心跳包</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="长连接和心跳的那些事儿"><a href="#长连接和心跳的那些事儿" class="headerlink" title="长连接和心跳的那些事儿"></a>长连接和心跳的那些事儿</h1><blockquote>
+<p>原文地址：<a href="https://www.jianshu.com/p/c6af08f853d0" target="_blank" rel="noopener">https://www.jianshu.com/p/c6af08f853d0</a></p>
+</blockquote>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><h3 id="长连接"><a href="#长连接" class="headerlink" title="长连接"></a>长连接</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 首先这里所说的连接是指网络传输层的使用TCP协议经过三次握手建立的连接；<strong>长连接是指建立的连接长期保持，不管此时有无数据包的发送</strong>；有长连接自然也有短连接，<strong>短连接是指双方有数据发送时，就建立连接，发送几次请求后，就主动或者被动断开连接</strong>。</p>
+<h3 id="心跳"><a href="#心跳" class="headerlink" title="心跳"></a>心跳</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;心跳这个名字比较形象，就像人体心跳一样，<strong>是用来检测一个系统是否存活或者网络链路是否通畅的一种方式</strong>，其一般做法是<strong>定时向被检测系统发送心跳包，被检测系统收到心跳包进行回复，收到回复说明对方存活</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;心跳和长连接在一起介绍的原因是，<strong>心跳能够给长连接提供保活功能，能够检测长连接是否正常</strong>（这里所说的保活不能简单的理解为保证活着，具体来说应该是<strong>一旦链路死了，不可用了，能够尽快知道，然后做些其他的高可用措施，来保证系统的正常运行</strong>）。</p>
+<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><p>长连接的优势</p>
+<ul>
+<li><strong>减少连接建立过程的耗时</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大家都知道TCP连接建立需要三次握手，三次握手也就说需要三次交互才能建立一个连接通道，同城的机器之间的大概是ms级别的延时，影响还不大，如果是北京和上海两地机房，走专线一来一回大概需要30ms，如果使用长连接，这个优化还是十分可观的。</li>
+<li><strong>方便实现push数据</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>数据交互－推模式实现的前提是网络长连接，有了长连接，连接两端很方便的互相push数据，来进行交互</strong>。</li>
+</ul>
+<h2 id="疑问"><a href="#疑问" class="headerlink" title="疑问"></a>疑问</h2><h3 id="TCP连接到底是什么？"><a href="#TCP连接到底是什么？" class="headerlink" title="TCP连接到底是什么？"></a>TCP连接到底是什么？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所谓的<code>TCP</code>连接不是物理的连接，是为了实现数据的可靠传输由通信双方进行三次握手交互而建立的逻辑上的连接，通信双方都需要维护这样的连接状态信息。比如<strong><code>netstat</code>经常看到连接的状态为<code>ESTABLISHED</code>，表示当前处于连接状态</strong>。（这里需要注意的是这个<code>ESTABLISHED</code>的连接状态只是操作系统认为当前还处在连接状态）</p>
+<h3 id="是不是建立了长连接，就可以高枕无忧了呢？"><a href="#是不是建立了长连接，就可以高枕无忧了呢？" class="headerlink" title="是不是建立了长连接，就可以高枕无忧了呢？"></a>是不是建立了长连接，就可以高枕无忧了呢？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 建立好长连接，两端的操作系统都维护了连接已经建立的状态，是不是这时向对端发送数据一定能到达呢？</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;答案是否定的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>可能此时链路已经不通，只是<code>TCP</code>层还没有感知到这一信息，操作系统层面显示的状态依然是连接状态，而且因为<code>TCP</code>层还认为连接是<code>ESTABLISHED</code>，所以作为应用层自然也就无法感知当前的链路不通</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种情况会导致什么问题？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如果此时有数据想要传输，显然，数据是无法传送到对端，但是<code>TCP</code>协议为了保证可靠性，会重传请求，如果问题只是网线接头松了，导致网络不通，此时如果及时将网线接头接好，数据还是能正常到达对端，且TCP的连接依然是<code>ESTABLISHED</code>，不会有任何变化。但不是任何时候都这么巧，有时就是某段链路瘫痪了，或者主机挂了，系统异常关闭了等。这时候如果应用系统不能感知到，是件很危险的事情。</p>
+<h3 id="长连接怎么保活？"><a href="#长连接怎么保活？" class="headerlink" title="长连接怎么保活？"></a>长连接怎么保活？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>TCP</code>协议实现中，是有保活机制的，也就是<code>TCP</code>的<code>KeepAlive</code>机制</strong>（此机制并不是<code>TCP</code>协议规范中的内容，由操作系统去实现），<code>KeepAlive</code>机制开启后，在一定时间内（一般时间为7200s，参数<code>tcp_keepalive_time</code>）在链路上没有数据传送的情况下，<code>TCP</code>层将发送相应的<code>KeepAlive</code>探针以确定连接可用性，探测失败后重试10（参数<code>tcp_keepalive_probes</code>）次，每次间隔时间75s（参数<code>tcp_keepalive_intvl</code>），所有探测失败后，才认为当前连接已经不可用。这些参数是机器级别，可以调整。</p>
+<h3 id="应用层需要做点什么吗？"><a href="#应用层需要做点什么吗？" class="headerlink" title="应用层需要做点什么吗？"></a>应用层需要做点什么吗？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 按照<code>TCP</code>的<code>KeepAlive</code>机制，默认的参数，显然不能满足要求。那是不是调小点就可以了呢？</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;调整参数，当然是有用的，但是首先参数的机器级别的，调整起来不太方便，更换机器还得记得调整参数，对系统的使用方来说，未免增加了维护成本，而且很可能忘记；其次由于<strong><code>KeepAlive</code>的保活机制只在链路空闲的情况下才会起到作用</strong>，假如此时有数据发送，且物理链路已经不通，操作系统这边的链路状态还是<code>ESTABLISHED</code>，这时会发生什么？自然会走<code>TCP</code>重传机制，要知道默认的<code>TCP</code>超时重传，指数退避算法也是一个相当长的过程。因此，<strong>一个可靠的系统，长连接的保活肯定是要依赖应用层的心跳来保证的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 这里应用层的心跳举个例子，比如客户端每隔3s通过长连接通道发送一个心跳请求到服务端，连续失败5次就断开连接。这样算下来最长15s就能发现连接已经不可用，一旦连接不可用，可以重连，也可以做其他的<code>failover</code>处理，比如请求其他服务器。(<strong>发送n次重试请求，未收到回复，认为不可用，重连其它机器</strong>)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;应用层心跳还有个好处，比如某台服务器因为某些原因导致负载超高，CPU飙高，或者线程池打满等等，无法响应任何业务请求，如果使用TCP自身的机制无法发现任何问题，然而对客户端而言，这时的最好选择就是断连后重新连接其他服务器，而不是一直认为当前服务器是可用状态，向当前服务器发送一些必然会失败的请求。(<strong>因为负载高，可能就会存在超时现象</strong>)</p>
+<h2 id="设计误区"><a href="#设计误区" class="headerlink" title="设计误区"></a>设计误区</h2><h3 id="无心跳"><a href="#无心跳" class="headerlink" title="无心跳"></a>无心跳</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 无心跳的设计，也是很常见的，<strong>为了省事，长连接断开，TCP传输层有通知，应用程序只要处理这种通知，一旦发现连接异常，就重连</strong>。但是此类通知可能来的特别晚，比如在机器奔溃，应用程序异常退出，链路不通等情况下。</p>
+<h3 id="被连接方检测心跳"><a href="#被连接方检测心跳" class="headerlink" title="被连接方检测心跳"></a>被连接方检测心跳</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 心跳的实现分为心跳的发送和心跳的检测，心跳由谁来发都可以，也可以双方都发送，但是<strong>检测心跳，必须由发起连接的这端进行，才安全</strong>。<strong>因为只有发起连接的一端检测心跳，知道链路有问题，这时才会去断开连接，进行重连，或者重连到另一台服务器</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 例如，<code>client</code>去连接<code>server</code>，<code>client</code>定时发送心跳到<code>server</code>，<code>server</code>检测心跳，发现一段时间<code>client</code>没有传心跳过来，认为与<code>client</code>的链路已经出了问题或者<code>client</code>自身就已经出了问题。粗看上去貌似没什么问题，但是如果只是<code>client</code>与当前这个<code>server</code>之间的链路出了问题，作为一个高可用的系统，是不是应该还有另一个<code>server</code>作为备选，问题出在短时间内<code>client</code>根本不知道自己和第一个<code>server</code>出了问题，所以也不会主动去连接第二个<code>server</code>。</p>
+<h3 id="第三方心跳"><a href="#第三方心跳" class="headerlink" title="第三方心跳"></a>第三方心跳</h3><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;还有一类心跳，使用第三方保活，也就是除了客户端和服务端之外，还有<strong>另一台机器，定时发送心跳去探测服务端的存活</strong>。<strong>这类探活方法使用在检测系统的存活与否的问题上是没有问题的，但是这类设计是无法用来检测客户端和服务端之间链路的好坏</strong>。</p>
+<h2 id="参考方案"><a href="#参考方案" class="headerlink" title="参考方案"></a>参考方案</h2><h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最简单的策略当然是<strong>客户端定时n秒发送心跳包，服务端收到心跳包后，回复客户端的心跳，如果客户端连续m秒没有收到心跳包，则主动断开连接，然后重连，将正常的业务请求暂时不发送的该台服务器上</strong>。</p>
+<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有人觉得，这样是不是<strong>传送一些无效的数据包有点多</strong>，是不是可以优化下，说实话，个人认为其实一点也不多。当然是可以做些优化的，因为<strong>心跳就是一种探测请求，业务上的正常请求除了做业务处理外，还可以用作探测的功能</strong>，比如此时<strong>有请求需要发送到服务端，这个请求就可以当作是一次心跳，服务端收到请求，处理后回复，只要服务端有回复，就表明链路还是通的，如果客户端请求比较空闲的时候，服务端一直没有数据回复，就使用心跳进行探测，这样就有效利用了正常的请求来作为心跳的功能，减少无效的数据传输</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/网络/" rel="tag"># 网络</a>
+          
+            <a href="/tags/Tcp/" rel="tag"># Tcp</a>
+          
+            <a href="/tags/长连接/" rel="tag"># 长连接</a>
+          
+            <a href="/tags/心跳包/" rel="tag"># 心跳包</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/" rel="next" title="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析">
+                <i class="fa fa-chevron-left"></i> TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/04/kafka时间轮解析/" rel="prev" title="kafka时间轮解析">
+                kafka时间轮解析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#长连接和心跳的那些事儿"><span class="nav-number">1.</span> <span class="nav-text">长连接和心跳的那些事儿</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#介绍"><span class="nav-number">1.1.</span> <span class="nav-text">介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#长连接"><span class="nav-number">1.1.1.</span> <span class="nav-text">长连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#心跳"><span class="nav-number">1.1.2.</span> <span class="nav-text">心跳</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优势"><span class="nav-number">1.2.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#疑问"><span class="nav-number">1.3.</span> <span class="nav-text">疑问</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接到底是什么？"><span class="nav-number">1.3.1.</span> <span class="nav-text">TCP连接到底是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#是不是建立了长连接，就可以高枕无忧了呢？"><span class="nav-number">1.3.2.</span> <span class="nav-text">是不是建立了长连接，就可以高枕无忧了呢？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#长连接怎么保活？"><span class="nav-number">1.3.3.</span> <span class="nav-text">长连接怎么保活？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用层需要做点什么吗？"><span class="nav-number">1.3.4.</span> <span class="nav-text">应用层需要做点什么吗？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计误区"><span class="nav-number">1.4.</span> <span class="nav-text">设计误区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#无心跳"><span class="nav-number">1.4.1.</span> <span class="nav-text">无心跳</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#被连接方检测心跳"><span class="nav-number">1.4.2.</span> <span class="nav-text">被连接方检测心跳</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三方心跳"><span class="nav-number">1.4.3.</span> <span class="nav-text">第三方心跳</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考方案"><span class="nav-number">1.5.</span> <span class="nav-text">参考方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#方案一"><span class="nav-number">1.5.1.</span> <span class="nav-text">方案一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方案二"><span class="nav-number">1.5.2.</span> <span class="nav-text">方案二</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

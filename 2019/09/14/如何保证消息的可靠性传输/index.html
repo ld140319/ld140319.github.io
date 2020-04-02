@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="如何保证消息的可靠性传输 原文地址：https://juejin.im/post/5c9b195c518825702d3be0c8  rabbitmq（1）生产者弄丢了数据&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;生产者将数据发送到rabbitmq的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。 事务功能 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="keywords" content="架构,消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何保证消息的可靠性传输">
+<meta property="og:url" content="http://blog.com/2019/09/14/如何保证消息的可靠性传输/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="如何保证消息的可靠性传输 原文地址：https://juejin.im/post/5c9b195c518825702d3be0c8  rabbitmq（1）生产者弄丢了数据&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;生产者将数据发送到rabbitmq的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。 事务功能 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/09/14/如何保证消息的可靠性传输/169bddbd49150cfe.png">
+<meta property="og:image" content="http://blog.com/2019/09/14/如何保证消息的可靠性传输/v2-83213e2ac79cd8899b09a66a5cf71669_hd.jpg">
+<meta property="og:image" content="http://blog.com/2019/09/14/如何保证消息的可靠性传输/169bddbd49a552e7.png">
+<meta property="og:updated_time" content="2019-09-14T08:54:50.837Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何保证消息的可靠性传输">
+<meta name="twitter:description" content="如何保证消息的可靠性传输 原文地址：https://juejin.im/post/5c9b195c518825702d3be0c8  rabbitmq（1）生产者弄丢了数据&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;生产者将数据发送到rabbitmq的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。 事务功能 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;">
+<meta name="twitter:image" content="http://blog.com/2019/09/14/如何保证消息的可靠性传输/169bddbd49150cfe.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/14/如何保证消息的可靠性传输/">
+
+
+
+
+
+  <title>如何保证消息的可靠性传输 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/14/如何保证消息的可靠性传输/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">如何保证消息的可靠性传输</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-14T12:12:57+08:00">
+                2019-09-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="如何保证消息的可靠性传输"><a href="#如何保证消息的可靠性传输" class="headerlink" title="如何保证消息的可靠性传输"></a>如何保证消息的可靠性传输</h1><blockquote>
+<p>原文地址：<a href="https://juejin.im/post/5c9b195c518825702d3be0c8" target="_blank" rel="noopener">https://juejin.im/post/5c9b195c518825702d3be0c8</a></p>
+</blockquote>
+<h2 id="rabbitmq"><a href="#rabbitmq" class="headerlink" title="rabbitmq"></a>rabbitmq</h2><h3 id="（1）生产者弄丢了数据"><a href="#（1）生产者弄丢了数据" class="headerlink" title="（1）生产者弄丢了数据"></a>（1）生产者弄丢了数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生产者将数据发送到<code>rabbitmq</code>的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。</p>
+<p><strong>事务功能</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时可以选择用<code>rabbitmq</code>提供的<strong>事务功能</strong>，就是生产者发送数据之前开启<code>rabbitmq</code>事务（<code>channel.txSelect</code>），然后发送消息，如果消息没有成功被<code>rabbitmq</code>接收到，那么生产者会收到异常报错，此时就可以回滚事务（<code>channel.txRollback</code>），然后重试发送消息；如果收到了消息，那么可以提交事务（<code>channel.txCommit</code>）。但是问题是，<code>rabbitmq</code>事务机制一搞，基本上吞吐量会下来，因为太耗性能。</p>
+<p><strong><code>confirm</code>模式</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以一般来说，如果你要确保说写<code>rabbitmq</code>的消息别丢，可以开启<strong><code>confirm</code>模式</strong>，在生产者那里<strong>设置开启<code>confirm</code>模式之后，你每次写的消息都会分配一个唯一的<code>id</code>，然后如果写入了<code>rabbitmq</code>中，<code>rabbitmq</code>会给你回传一个<code>ack</code>消息，告诉你说这个消息ok了</strong>。如果<code>rabbitmq</code>没能处理这个消息，会回调你一个<code>nack</code>接口，告诉你这个消息接收失败，你可以重试。而且你可以结合这个机制自己在内存里维护每个消息id的状态，如果超过一定时间还没接收到这个消息的回调，那么你可以重发。</p>
+<p><strong>区别</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事务机制和<code>cnofirm</code>机制最大的不同在于，<strong>事务机制是同步的，你提交一个事务之后会阻塞在那儿，但是<code>confirm</code>机制是异步的，你发送个消息之后就可以发送下一个消息，然后那个消息<code>rabbitmq</code>接收了之后会异步回调你一个接口通知你这个消息接收到了</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以<strong>一般在生产者这块避免数据丢失，都是用<code>confirm</code>机制的</strong>。</p>
+<h3 id="（2）rabbitmq弄丢了数据"><a href="#（2）rabbitmq弄丢了数据" class="headerlink" title="（2）rabbitmq弄丢了数据"></a>（2）rabbitmq弄丢了数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>rabbitmq</code>自己弄丢了数据，这个你必须<strong>开启<code>rabbitmq</code>的持久化，就是消息写入之后会持久化到磁盘</strong>，哪怕是<code>rabbitmq</code>自己挂了，恢复之后会自动读取之前存储的数据，一般数据不会丢。除非极其罕见的是，<code>rabbitmq</code>还没持久化，自己就挂了，可能导致少量数据会丢失的，但是这个概率较小。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;设置持久化有两个步骤，第一个是创建<code>queue</code>的时候将其设置为持久化的，这样就可以保证<code>rabbitmq</code>持久化<code>queue</code>的元数据，但是不会持久化<code>queue</code>里的数据；第二个是发送消息的时候将消息的<code>deliveryMode</code>设置为2，就是将消息设置为持久化的，此时<code>rabbitmq</code>就会将消息持久化到磁盘上去。必须要同时设置这两个持久化才行，<code>rabbitmq</code>哪怕是挂了，再次重启，也会从磁盘上重启恢复<code>queue</code>，恢复这个<code>queue</code>里的数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;持久化可以跟生产者那边的<code>confirm</code>机制配合起来，只有消息被持久化到磁盘之后，才会通知生产者<code>ack</code>了，所以哪怕是在持久化到磁盘之前，<code>rabbitmq</code>挂了，数据丢了，生产者收不到<code>ack</code>，你也是可以自己重发的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;哪怕是你给<code>rabbitmq</code>开启了持久化机制，也有一种可能，就是这个<strong>消息写到了<code>rabbitmq</code>中，但是还没来得及持久化到磁盘上，结果不巧，此时<code>rabbitmq</code>挂了，就会导致内存里的一点点数据会丢失</strong>。</p>
+<h3 id="（3）消费端弄丢了数据"><a href="#（3）消费端弄丢了数据" class="headerlink" title="（3）消费端弄丢了数据"></a>（3）消费端弄丢了数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>rabbitmq</code>如果丢失了数据，主要是因为你消费的时候，刚消费到，还没处理，结果进程挂了，比如重启了，那么就尴尬了，<code>rabbitmq</code>认为你都消费了，这数据就丢了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个时候得用<code>rabbitmq</code>提供的<code>ack</code>机制，简单来说，就是你<strong>关闭<code>rabbitmq</code>自动<code>ack</code></strong>，可以通过一个<code>api</code>来调用就行，然后每次你自己代码里确保处理完的时候，再程序里<code>ack</code>一把。这样的话，如果你还没处理完，不就没有<code>ack</code>？那<code>rabbitmq</code>就认为你还没处理完，这个时候<code>rabbitmq</code>会把这个消费分配给别的<code>consumer</code>去处理，消息是不会丢的。</p>
+<p><img src="//blog.com/2019/09/14/如何保证消息的可靠性传输/169bddbd49150cfe.png" alt="img"></p>
+<p><img src="//blog.com/2019/09/14/如何保证消息的可靠性传输/v2-83213e2ac79cd8899b09a66a5cf71669_hd.jpg" alt=""></p>
+<h2 id="kafka"><a href="#kafka" class="headerlink" title="kafka"></a>kafka</h2><h3 id="（1）消费端弄丢了数据"><a href="#（1）消费端弄丢了数据" class="headerlink" title="（1）消费端弄丢了数据"></a>（1）消费端弄丢了数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;唯一可能导致消费者弄丢数据的情况，就是说，你那个消费到了这个消息，然后消费者那边自动提交了<code>offset</code>，让<code>kafka</code>以为你已经消费好了这个消息，其实你刚准备处理这个消息，你还没处理，你自己就挂了，此时这条消息就丢咯。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这不是一样么，大家都知道<code>kafka</code>会自动提交<code>offset</code>，那么只要<strong>关闭自动提交<code>offset</code></strong>，在处理完之后自己手动提交<code>offset</code>，就可以保证数据不会丢。但是此时确实还是会重复消费，比如你刚处理完，还没提交<code>offset</code>，结果自己挂了，此时肯定会重复消费一次，自己保证幂等性就好了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生产环境碰到的一个问题，就是说我们的<code>kafka</code>消费者消费到了数据之后是写到一个内存的<code>queue</code>里先缓冲一下，结果有的时候，你刚把消息写入内存<code>queue</code>，然后消费者会自动提<code>交offset</code>。然后此时我们重启了系统，就会导致内存<code>queue</code>里还没来得及处理的数据就丢失了</p>
+<p><img src="//blog.com/2019/09/14/如何保证消息的可靠性传输/169bddbd49a552e7.png" alt="img"></p>
+<h3 id="（2）kafka弄丢了数据"><a href="#（2）kafka弄丢了数据" class="headerlink" title="（2）kafka弄丢了数据"></a>（2）kafka弄丢了数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这块比较常见的一个场景，就是<code>kafka</code>某个<code>broker</code>宕机，然后重新选举<code>partiton</code>的<code>leader</code>时。大家想想，要是此时其他的<code>follower</code>刚好还有些数据没有同步，结果此时<code>leader</code>挂了，然后选举某个<code>follower</code>成<code>leader</code>之后，他不就少了一些数据？这就丢了一些数据啊。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生产环境也遇到过，我们也是，之前<strong><code>kafka</code>的<code>leader</code>机器宕机了，将<code>follower</code>切换为<code>leader</code>之后，就会发现说这个数据就丢了</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以此时一般是要求起码设置如下4个参数：</p>
+<ol>
+<li>给这个<code>topic</code>设置<strong><code>replication.factor</code></strong>参数：这个值必须大于1，要求每个<code>partition</code>必须有至少2个副本</li>
+<li>在<code>kafka</code>服务端设置<strong><code>min.insync.replicas</code></strong>参数：这个值必须大于1，这个是要求一个<code>leader</code>至少感知到有至少一个<code>follower</code>还跟自己保持联系，没掉队，这样才能确保<code>leader</code>挂了还有一个<code>follower</code>吧</li>
+<li>在<code>producer</code>端设置<strong><code>acks=all</code></strong>：这个是要求每条数据，必须是写入所有<code>replica</code>之后，才能认为是写成功了</li>
+<li>在<code>producer</code>端设置<strong><code>retries=MAX</code></strong>（很大很大很大的一个值，无限次重试的意思）：这个是要求一旦写入失败，就无限重试，卡在这里了</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们生产环境就是按照上述要求配置的，这样配置之后，至少在<code>kafka broker</code>端就可以保证在<code>leader</code>所在<code>broker</code>发生故障，进行<code>leader</code>切换时，数据不会丢失</p>
+<h3 id="（3）生产者会不会弄丢数据"><a href="#（3）生产者会不会弄丢数据" class="headerlink" title="（3）生产者会不会弄丢数据"></a>（3）生产者会不会弄丢数据</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果按照上述的思路设置了<code>ack=all</code>，一定不会丢，<strong>要求是，你的<code>leader</code>接收到消息，所有的<code>follower</code>都同步到了消息之后，才认为本次写成功了</strong>。如果没满足这个条件，生产者会自动不断的<strong>重试</strong>，重试无限次。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/14/如何保证消息队列的高可用/" rel="next" title="如何保证消息队列的高可用">
+                <i class="fa fa-chevron-left"></i> 如何保证消息队列的高可用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/14/如何保证消息不被重复消费/" rel="prev" title="如何保证消息不被重复消费">
+                如何保证消息不被重复消费 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何保证消息的可靠性传输"><span class="nav-number">1.</span> <span class="nav-text">如何保证消息的可靠性传输</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#rabbitmq"><span class="nav-number">1.1.</span> <span class="nav-text">rabbitmq</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#（1）生产者弄丢了数据"><span class="nav-number">1.1.1.</span> <span class="nav-text">（1）生产者弄丢了数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（2）rabbitmq弄丢了数据"><span class="nav-number">1.1.2.</span> <span class="nav-text">（2）rabbitmq弄丢了数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（3）消费端弄丢了数据"><span class="nav-number">1.1.3.</span> <span class="nav-text">（3）消费端弄丢了数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka"><span class="nav-number">1.2.</span> <span class="nav-text">kafka</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#（1）消费端弄丢了数据"><span class="nav-number">1.2.1.</span> <span class="nav-text">（1）消费端弄丢了数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（2）kafka弄丢了数据"><span class="nav-number">1.2.2.</span> <span class="nav-text">（2）kafka弄丢了数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（3）生产者会不会弄丢数据"><span class="nav-number">1.2.3.</span> <span class="nav-text">（3）生产者会不会弄丢数据</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

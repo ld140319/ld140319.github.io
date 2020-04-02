@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Docker,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="如何构建基于docker的开发环境  原文地址：https://zhuanlan.zhihu.com/p/22008700  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;最近docker发布了Mac版本和Windows版本，使开发者用起来更方便简单了。Docker本来就是虚拟化技术，基于Docker来构建开发环境顺理成章。Gevin这两天也整理了构建开发环境的思路，在M">
+<meta name="keywords" content="Docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何构建基于docker的开发环境">
+<meta property="og:url" content="http://blog.com/2019/07/04/如何构建基于docker的开发环境/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="如何构建基于docker的开发环境  原文地址：https://zhuanlan.zhihu.com/p/22008700  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;最近docker发布了Mac版本和Windows版本，使开发者用起来更方便简单了。Docker本来就是虚拟化技术，基于Docker来构建开发环境顺理成章。Gevin这两天也整理了构建开发环境的思路，在M">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-07-05T14:59:32.827Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何构建基于docker的开发环境">
+<meta name="twitter:description" content="如何构建基于docker的开发环境  原文地址：https://zhuanlan.zhihu.com/p/22008700  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;最近docker发布了Mac版本和Windows版本，使开发者用起来更方便简单了。Docker本来就是虚拟化技术，基于Docker来构建开发环境顺理成章。Gevin这两天也整理了构建开发环境的思路，在M">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/04/如何构建基于docker的开发环境/">
+
+
+
+
+
+  <title>如何构建基于docker的开发环境 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/04/如何构建基于docker的开发环境/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">如何构建基于docker的开发环境</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-04T12:12:57+08:00">
+                2019-07-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Docker/" itemprop="url" rel="index">
+                    <span itemprop="name">Docker</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="如何构建基于docker的开发环境"><a href="#如何构建基于docker的开发环境" class="headerlink" title="如何构建基于docker的开发环境"></a>如何构建基于docker的开发环境</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://zhuanlan.zhihu.com/p/22008700" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/22008700</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最近<code>docker</code>发布了<code>Mac</code>版本和<code>Windows</code>版本，使开发者用起来更方便简单了。<code>Docker</code>本来就是虚拟化技术，基于<code>Docker</code>来构建开发环境顺理成章。<code>Gevin</code>这两天也整理了构建开发环境的思路，在<code>Mac</code>下试验了一下，整体效果还是满意的。今天以<code>django</code>开发环境的构建为例，把构建思路记录下来，和大家分享一下。</p>
+<h2 id="一、基本思路"><a href="#一、基本思路" class="headerlink" title="一、基本思路"></a>一、基本思路</h2><ol>
+<li>创建一个用于开发<code>Django App</code>的目录</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir django-example &amp;&amp; <span class="built_in">cd</span> django-example</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>构建基本开发环境</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">touch Dockerfile</span><br><span class="line">touch pip.conf requirements.txt</span><br></pre></td></tr></table></figure>
+<p><code>pip.conf</code>文件填入以下内容，以便一会用<code>pip</code>安装<code>Python</code>模块时使用阿里云镜像加速：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[global]</span></span><br><span class="line"><span class="attr">index-url</span> = [http://mirrors.aliyun.com/pypi/simple/](http://mirrors.aliyun.com/pypi/simple/)</span><br><span class="line"></span><br><span class="line"><span class="section">[install]</span></span><br><span class="line"><span class="attr">trusted-host</span>=mirrors.aliyun.com</span><br></pre></td></tr></table></figure>
+<p><code>requirements.txt</code>文件中填入要安装的<code>Python</code>模块：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">django</span><br></pre></td></tr></table></figure>
+<p>编写构建开发环境的<code>Dockerfile</code>文件，填入以下内容：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># MAINTAINER        Gevin &lt;flyhigher139@gmail.com&gt;</span></span><br><span class="line"><span class="comment"># DOCKER-VERSION    1.12.0</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Dockerizing Python: Dockerfile for building python applications</span></span><br><span class="line"></span><br><span class="line"><span class="string">FROM</span> <span class="attr">python:2.7.12</span></span><br><span class="line"><span class="string">MAINTAINER</span> <span class="string">Gevin</span> <span class="string">&lt;flyhigher139@gmail.com&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="string">WORKDIR</span> <span class="string">/usr/src/app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用阿里云的pip镜像</span></span><br><span class="line"><span class="string">COPY</span> <span class="string">pip.conf</span> <span class="string">/root/.pip/pip.conf</span> </span><br><span class="line"><span class="string">COPY</span> <span class="string">requirements.txt</span> <span class="string">/usr/src/app/requirements.txt</span></span><br><span class="line"><span class="string">RUN</span> <span class="string">pip</span> <span class="string">install</span> <span class="bullet">-r</span> <span class="string">/usr/src/app/requirements.txt</span></span><br><span class="line"></span><br><span class="line"><span class="string">EXPOSE</span> <span class="number">8000</span></span><br><span class="line"></span><br><span class="line"><span class="string">CMD</span> <span class="string">["bash"]</span></span><br></pre></td></tr></table></figure>
+<p>然后执行下面命令构建镜像：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t gevin/django-example:0.1 .</span><br></pre></td></tr></table></figure>
+<p>构建成功后，执行<code>docker images</code>命令，可以查看到当前构建好的<code>image</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker images</span><br><span class="line"></span><br><span class="line">REPOSITORY             TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">gevin/django-example   0.1                 1855fc3c8062        12 hours ago        698.9 MB</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>使用构建的<code>image</code>拉起开发环境</li>
+</ol>
+<p>执行下面命令，可以以前台形式拉起<code>django-example</code>镜像的一个<code>container</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -v $(<span class="built_in">pwd</span>):/usr/src/app gevin/django-example:0.1</span><br></pre></td></tr></table></figure>
+<p>上面命令使用了<code>data volume</code>，把当前目录挂载到<code>container</code>中的工作目录下，这样当前目录下的所有文件都会映射到<code>container</code>的工作目录下，在工作目录下的所有改动，也都会保存到宿主机的当前目录下。</p>
+<ol start="4">
+<li>创建<code>django</code>项目</li>
+</ol>
+<p>上一步的命令创建了一个安装了<code>django</code>的交互式的<code>container</code>，直接在该<code>container</code>中执行创建<code>django</code>项目的命令即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@7c91f460599f:/usr/src/app<span class="comment"># django-admin startproject dj_example</span></span><br></pre></td></tr></table></figure>
+<p>上述命令，在<code>container</code>中基于<code>django</code>的命令创建了一个<code>django</code>项目，由于上一步操作时把宿主机的当前目录挂载到<code>container</code>的工作目录下，因此，刚刚在<code>container</code>中创建的<code>django</code>项目，在宿主机上也能看到。</p>
+<p><code>container</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@7c91f460599f:/usr/src/app<span class="comment"># ls</span></span><br><span class="line">Dockerfile  dj_example    pip.conf  requirements.txt</span><br></pre></td></tr></table></figure>
+<p>宿主机：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">django-example ls</span><br><span class="line">Dockerfile       dj_example       pip.conf         requirements.txt</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>启动<code>django</code>项目</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -p 8000:8000 -v $(pwd):/usr/src/app gevin/django-example:0.1 python dj_example/manage.py runserver 0.0.0.0:8000</span><br></pre></td></tr></table></figure>
+<h2 id="二、Docker-compose与Django环境的结合"><a href="#二、Docker-compose与Django环境的结合" class="headerlink" title="二、Docker-compose与Django环境的结合"></a>二、Docker-compose与Django环境的结合</h2><p>每次使用上面章节中介绍的冗长命令来使用<code>django</code>环境非常麻烦，<code>docker-compose</code>可以简化操作。</p>
+<p>首先在当前目录下创建<code>docker-compose.yml</code>文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  django-example touch docker-compose.yml</span><br></pre></td></tr></table></figure>
+<p>然后在该文件中写入如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">version: &apos;2&apos;</span><br><span class="line">services:</span><br><span class="line">   django-example:</span><br><span class="line">    image: gevin/django-example:0.1</span><br><span class="line">    volumes: </span><br><span class="line">      - ./dj_example:/usr/src/app</span><br><span class="line">    ports:</span><br><span class="line">      - 8000:8000</span><br><span class="line">    command: python manage.py runserver 0.0.0.0:8000</span><br></pre></td></tr></table></figure>
+<p>执行下面命令即可拉起<code>django</code>服务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  django-example docker-compose up</span><br><span class="line"></span><br><span class="line"># Starting djangoexample_django-example_1</span><br><span class="line"># Attaching to djangoexample_django-example_1</span><br></pre></td></tr></table></figure>
+<p>在浏览器中访问<a href="http://localhost:8000" target="_blank" rel="noopener">http://localhost:8000</a>，即可看到默认的<code>django</code>页面</p>
+<blockquote>
+<p><strong>注：</strong><br>上面的docker-compose文件，把./dj_example目录挂载到/usr/src/app，免去执行django命令时，需要对应到下级目录的麻烦，但这样隐藏了原来container中的requirements.txt文件，需要注意。</p>
+</blockquote>
+<h3 id="基于docker-compose-执行django-命令"><a href="#基于docker-compose-执行django-命令" class="headerlink" title="基于docker-compose 执行django 命令"></a>基于docker-compose 执行django 命令</h3><p>使用<code>docker-compose</code> 的 <code>run</code>命令，可以在容器内执行相应操作，如：</p>
+<p>对<code>django</code>服务的数据库做<code>migrate</code>操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose run django-example python manage.py migrate</span><br></pre></td></tr></table></figure>
+<p>创建超级用户:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker-compose run django-example python manage.py createsuperuser</span><br><span class="line"></span><br><span class="line"># Username (leave blank to use &apos;root&apos;): gevin</span><br><span class="line"># Email address:</span><br><span class="line"># Password:</span><br><span class="line"># Password (again):</span><br><span class="line"># Superuser created successfully.</span><br></pre></td></tr></table></figure>
+<p>创建成功后，访问<a href="http://localhost:8000/admin" target="_blank" rel="noopener">http://localhost:8000/admin</a>，即可使用刚创建的用户(即<code>gevin</code>)，登录数据库管理页面</p>
+<p>由于使用了数据卷，保存在<code>sqlite</code>数据库中的数据会一直有效。</p>
+<h2 id="三、简化方案"><a href="#三、简化方案" class="headerlink" title="三、简化方案"></a>三、简化方案</h2><p>上面方案已经成功构建了<code>django</code>环境，并应用于开发。上面的方案主要是为了阐述实现思路，在实际操作起来至少有两个麻烦：</p>
+<p>（1）需要进入容器里面创建<code>django</code>项目；</p>
+<p>（2）由于<code>django</code>项目是建立在当前目录的子目录下，使用<code>docker-compose</code> 时为了命令简单通用，更换了数据卷。</p>
+<p>在实践中，利用<code>docker-compose</code>的<code>run</code>命令，没必要进入容器创建<code>django</code>项目；只要把<code>django</code>项目建立在当前目录下，也没必要更换数据卷了。</p>
+<p>因此，可以把上面的方案再理一下，按下面步骤构建开发环境，并应用到开发中去。</p>
+<h3 id="Outline"><a href="#Outline" class="headerlink" title="Outline:"></a>Outline:</h3><ol>
+<li><a href="https://zhuanlan.zhihu.com/p/22008700/edit#create-dockefile" target="_blank" rel="noopener">创建Dockerfile文件</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/22008700/edit#build-image" target="_blank" rel="noopener">构建镜像</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/22008700/edit#create-docker-compose" target="_blank" rel="noopener">创建docker-compose文件</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/22008700/edit#create-project" target="_blank" rel="noopener">创建项目</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/22008700/edit#run-project" target="_blank" rel="noopener">拉起项目</a></li>
+</ol>
+<h3 id="1-创建Dockerfile文件"><a href="#1-创建Dockerfile文件" class="headerlink" title="1. 创建Dockerfile文件"></a>1. 创建Dockerfile文件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对<code>Python</code>开发环境而言，最好再创建<code>pip.conf</code>和<code>requirements.txt</code>文件，以便方便安装项目必须的<code>Python</code>依赖，其他语言的开发环境就具体情况而定。</p>
+<p>以<code>Python</code>为例，<code>Dockerfile</code> 内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># MAINTAINER        Gevin &lt;flyhigher139@gmail.com&gt;</span><br><span class="line"># DOCKER-VERSION    1.12.0</span><br><span class="line">#</span><br><span class="line"># Dockerizing Python: Dockerfile for building python applications</span><br><span class="line"></span><br><span class="line">FROM python:2.7.12</span><br><span class="line">MAINTAINER Gevin &lt;flyhigher139@gmail.com&gt;</span><br><span class="line"></span><br><span class="line">WORKDIR /usr/src/app</span><br><span class="line"></span><br><span class="line"># 使用阿里云的pip镜像</span><br><span class="line">COPY pip.conf /root/.pip/pip.conf </span><br><span class="line">COPY requirements.txt /usr/src/app/requirements.txt</span><br><span class="line">RUN pip install -r /usr/src/app/requirements.txt</span><br><span class="line"></span><br><span class="line">EXPOSE 8000</span><br><span class="line"></span><br><span class="line">CMD [&quot;bash&quot;]</span><br></pre></td></tr></table></figure>
+<h3 id="2-构建镜像"><a href="#2-构建镜像" class="headerlink" title="2. 构建镜像"></a>2. 构建镜像</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t gevin/django-example:0.1 .</span><br></pre></td></tr></table></figure>
+<h3 id="3-创建docker-compose文件"><a href="#3-创建docker-compose文件" class="headerlink" title="3. 创建docker-compose文件"></a>3. 创建docker-compose文件</h3><p><code>docker-compose</code>文件内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">version: &apos;2&apos;</span><br><span class="line">services:</span><br><span class="line">   django-example:</span><br><span class="line">    image: gevin/django-example:0.1</span><br><span class="line">    volumes: </span><br><span class="line">      - .:/usr/src/app</span><br><span class="line">    ports:</span><br><span class="line">      - 8000:8000</span><br><span class="line">    command: python manage.py runserver 0.0.0.0:8000</span><br></pre></td></tr></table></figure>
+<h3 id="4-创建项目"><a href="#4-创建项目" class="headerlink" title="4. 创建项目"></a>4. 创建项目</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose run django-example django-admin startproject dj_project .</span><br></pre></td></tr></table></figure>
+<p>果然需要<code>migrate</code>数据库，创建超级用户等，可以在这里一并创建，也可以在后面的开发中再创建：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker-compose run django-example python manage.py migrate</span><br><span class="line"></span><br><span class="line">docker-compose run django-example python manage.py createsuperuser</span><br></pre></td></tr></table></figure>
+<h3 id="5-拉起项目"><a href="#5-拉起项目" class="headerlink" title="5. 拉起项目"></a>5. 拉起项目</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose up</span><br></pre></td></tr></table></figure>
+<h2 id="四、其他"><a href="#四、其他" class="headerlink" title="四、其他"></a>四、其他</h2><p><code>Gevin</code>认为，虽然基于<code>docker</code>可以构建开发环境，但还是<code>vagrant</code>用起来更舒服，<code>docker</code>更加适合做<code>CI</code>，测试和部署。</p>
+<p>实际工作中如何使用<code>docker</code>，就仁者见仁，智者见智了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Docker/" rel="tag"># Docker</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/04/微服务一条龙最佳指南Dockerfile篇/" rel="next" title="微服务一条龙最佳指南Dockerfile篇">
+                <i class="fa fa-chevron-left"></i> 微服务一条龙最佳指南Dockerfile篇
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/04/从搬家到容器技术docker应用场景解析/" rel="prev" title="从搬家到容器技术docker应用场景解析">
+                从搬家到容器技术docker应用场景解析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何构建基于docker的开发环境"><span class="nav-number">1.</span> <span class="nav-text">如何构建基于docker的开发环境</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、基本思路"><span class="nav-number">1.1.</span> <span class="nav-text">一、基本思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Docker-compose与Django环境的结合"><span class="nav-number">1.2.</span> <span class="nav-text">二、Docker-compose与Django环境的结合</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于docker-compose-执行django-命令"><span class="nav-number">1.2.1.</span> <span class="nav-text">基于docker-compose 执行django 命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、简化方案"><span class="nav-number">1.3.</span> <span class="nav-text">三、简化方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Outline"><span class="nav-number">1.3.1.</span> <span class="nav-text">Outline:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-创建Dockerfile文件"><span class="nav-number">1.3.2.</span> <span class="nav-text">1. 创建Dockerfile文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-构建镜像"><span class="nav-number">1.3.3.</span> <span class="nav-text">2. 构建镜像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-创建docker-compose文件"><span class="nav-number">1.3.4.</span> <span class="nav-text">3. 创建docker-compose文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-创建项目"><span class="nav-number">1.3.5.</span> <span class="nav-text">4. 创建项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-拉起项目"><span class="nav-number">1.3.6.</span> <span class="nav-text">5. 拉起项目</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、其他"><span class="nav-number">1.4.</span> <span class="nav-text">四、其他</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

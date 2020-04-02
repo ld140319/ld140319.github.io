@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据一致性问题,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="冗余数据一致性，到底如何保证？ 整理自【架构师之路】  为什么要冗余数据水平切分 =&amp;gt; 降低单库数据量 垂直切分 =&amp;gt; 降低单表数据量 互联网数据量很大的业务场景，往往数据库需要进行水平切分来降低单库数据量。 水平切分会有一个patition key，通过patition key的查询能够直接定位到库，但是非patition key上的查询可能就需要扫描多个库了。 此时常见的架构设计方">
+<meta name="keywords" content="架构,数据一致性问题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="冗余数据一致性，到底如何保证？">
+<meta property="og:url" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="冗余数据一致性，到底如何保证？ 整理自【架构师之路】  为什么要冗余数据水平切分 =&amp;gt; 降低单库数据量 垂直切分 =&amp;gt; 降低单表数据量 互联网数据量很大的业务场景，往往数据库需要进行水平切分来降低单库数据量。 水平切分会有一个patition key，通过patition key的查询能够直接定位到库，但是非patition key上的查询可能就需要扫描多个库了。 此时常见的架构设计方">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/服务同步双写.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/服务异步双写.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下异步双写.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下扫描全量数据法.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下扫描增量数据法.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线上实时检测“消息对”法.webp">
+<meta property="og:updated_time" content="2019-05-11T10:11:54.759Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="冗余数据一致性，到底如何保证？">
+<meta name="twitter:description" content="冗余数据一致性，到底如何保证？ 整理自【架构师之路】  为什么要冗余数据水平切分 =&amp;gt; 降低单库数据量 垂直切分 =&amp;gt; 降低单表数据量 互联网数据量很大的业务场景，往往数据库需要进行水平切分来降低单库数据量。 水平切分会有一个patition key，通过patition key的查询能够直接定位到库，但是非patition key上的查询可能就需要扫描多个库了。 此时常见的架构设计方">
+<meta name="twitter:image" content="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/服务同步双写.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/">
+
+
+
+
+
+  <title>冗余数据一致性，到底如何保证？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/10/冗余数据一致性，到底如何保证？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">冗余数据一致性，到底如何保证？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-10T12:12:57+08:00">
+                2019-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/" itemprop="url" rel="index">
+                    <span itemprop="name">数据一致性问题</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="冗余数据一致性，到底如何保证？"><a href="#冗余数据一致性，到底如何保证？" class="headerlink" title="冗余数据一致性，到底如何保证？"></a>冗余数据一致性，到底如何保证？</h1><blockquote>
+<p>整理自【架构师之路】</p>
+</blockquote>
+<h2 id="为什么要冗余数据"><a href="#为什么要冗余数据" class="headerlink" title="为什么要冗余数据"></a>为什么要冗余数据</h2><p>水平切分 =&gt; 降低单库数据量</p>
+<p>垂直切分 =&gt; 降低单表数据量</p>
+<p>互联网数据量很大的业务场景，往往数据库需要进行水平切分来降低单库数据量。</p>
+<p>水平切分会有一个patition key，通过patition key的查询能够直接定位到库，但是非patition key上的查询可能就需要扫描多个库了。</p>
+<p>此时常见的架构设计方案，是使用数据冗余这种反范式设计来满足分库后不同维度的查询需求。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">例如：订单业务，对用户和商家都有查询需求：</span><br><span class="line"></span><br><span class="line">Order(oid, info_detail);</span><br><span class="line"></span><br><span class="line">T(buyer_id, seller_id, oid);</span><br><span class="line"></span><br><span class="line">如果用buyer_id来分库，seller_id的查询就需要扫描多库。</span><br><span class="line"></span><br><span class="line">如果用seller_id来分库，buyer_id的查询就需要扫描多库。</span><br><span class="line"></span><br><span class="line">此时可以使用数据冗余来分别满足buyer_id和seller_id上的查询需求：</span><br><span class="line"></span><br><span class="line">T1(buyer_id, seller_id, oid)</span><br><span class="line"></span><br><span class="line">T2(seller_id, buyer_id, oid)</span><br><span class="line"></span><br><span class="line">同一个数据，冗余两份，一份以buyer_id来分库，满足买家的查询需求；一份以seller_id来分库，满足卖家的查询需求。</span><br></pre></td></tr></table></figure>
+<h2 id="如何进行数据冗余"><a href="#如何进行数据冗余" class="headerlink" title="如何进行数据冗余"></a>如何进行数据冗余</h2><h3 id="（1）服务同步双写-两次写库"><a href="#（1）服务同步双写-两次写库" class="headerlink" title="（1）服务同步双写(两次写库)"></a>（1）服务同步双写(两次写库)</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;顾名思义，由服务层同步写冗余数据，如下图：</p>
+<p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/服务同步双写.webp" alt="服务同步双写"></p>
+<ul>
+<li>业务方调用服务，新增数据</li>
+<li>服务先插入T1数据</li>
+<li>服务再插入T2数据</li>
+<li>服务返回业务方新增数据成功</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>不复杂，服务层由单次写，变两次写</li>
+<li>数据一致性相对较高（因为双写成功才返回）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>请求的处理时间增加（要插入两次，时间加倍）</li>
+<li>数据仍可能不一致，例如第二步写入T1完成后服务重启，则数据不会写入T2</li>
+</ul>
+<p>如果系统对处理时间比较敏感，引出常用的第二种方案。</p>
+<h3 id="（2）服务异步双写-消息队列解耦"><a href="#（2）服务异步双写-消息队列解耦" class="headerlink" title="（2）服务异步双写(消息队列解耦)"></a>（2）服务异步双写(消息队列解耦)</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;数据的双写并不再由服务来完成，服务层异步发出一个消息，通过消息总线发送给一个专门的数据复制服务来写入冗余数据，如下图：</p>
+<p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/服务异步双写.webp" alt="服务异步双写"></p>
+<ul>
+<li>业务方调用服务，新增数据</li>
+<li>服务先插入T1数据</li>
+<li>服务向消息总线发送一个异步消息（发出即可，不用等返回，通常很快就能完成）</li>
+<li>服务返回业务方新增数据成功</li>
+<li>消息总线将消息投递给数据同步中心</li>
+<li>数据同步中心插入T2数据</li>
+</ul>
+<p><strong>这里的消息总线指的是消息队列, 服务为消息生产者，数据同步中心为消息消费者</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>请求处理时间短（只插入1次）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>系统的复杂性增加了，多引入了一个组件（消息总线）和一个服务（专用的数据复制服务）</li>
+<li>因为返回业务线数据插入成功时，数据还不一定插入到T2中，因此数据有一个不一致时间窗口（这个窗口很短，最终是一致的）</li>
+<li>在消息总线丢失消息时，冗余表数据会不一致</li>
+</ul>
+<p>不管是服务同步双写，还是服务异步双写，服务都需要关注“冗余数据”带来的复杂性。如果想解除“数据冗余”对系统的耦合，引出常用的第三种方案。</p>
+<h3 id="（3）线下异步双写-binlog监听"><a href="#（3）线下异步双写-binlog监听" class="headerlink" title="（3）线下异步双写(binlog监听)"></a>（3）线下异步双写(binlog监听)</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;为了屏蔽“冗余数据”对服务带来的复杂性，数据的双写不再由服务层来完成，而是由线下的一个服务或者任务来完成，如下图所示：</p>
+<p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下异步双写.webp" alt="服务异步双写"></p>
+<ul>
+<li>业务方调用服务，新增数据</li>
+<li>服务先插入T1数据</li>
+<li>服务返回业务方新增数据成功</li>
+<li>数据会被写入到数据库的log中</li>
+<li>线下服务或者任务读取数据库的log</li>
+<li>线下服务或者任务插入T2数据</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>数据双写与业务完全解耦</li>
+<li>请求处理时间短（只插入1次）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>返回业务线数据插入成功时，数据还不一定插入到T2中，因此数据有一个不一致时间窗口（这个窗口很短，最终是一致的）</li>
+<li>数据的一致性依赖于线下服务或者任务的可靠性</li>
+</ul>
+<h3 id="（4）数据冗余方案总结"><a href="#（4）数据冗余方案总结" class="headerlink" title="（4）数据冗余方案总结"></a>（4）数据冗余方案总结</h3><p>不管哪种方案，毕竟不是分布式事务，万一出现数据不一致，怎么办呢？</p>
+<p><strong>高并发的情况下，实时一致性很难，方法论是：最终一致性。</strong></p>
+<p>实现方式是：<strong>异步检测，异步修复。</strong></p>
+<h2 id="如何保证数据的一致性"><a href="#如何保证数据的一致性" class="headerlink" title="如何保证数据的一致性"></a>如何保证数据的一致性</h2><h3 id="（1）线下扫描全量数据法"><a href="#（1）线下扫描全量数据法" class="headerlink" title="（1）线下扫描全量数据法"></a>（1）线下扫描全量数据法</h3><p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下扫描全量数据法.webp" alt="线下扫描全量数据法"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;线下启动一个离线的扫描工具，不停的比对正表T1和反表T2，如果发现数据不一致，就进行补偿修复。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>比较简单，开发代价小</li>
+<li>线上服务无需修改，修复工具与线上服务解耦</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>扫描效率低，会扫描大量的“已经能够保证一致”的数据</li>
+<li>由于扫描的数据量大，扫描一轮的时间比较长，即数据如果不一致，不一致的时间窗口比较长</li>
+</ul>
+<h3 id="（2）线下扫描增量数据法"><a href="#（2）线下扫描增量数据法" class="headerlink" title="（2）线下扫描增量数据法"></a>（2）线下扫描增量数据法</h3><p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线下扫描增量数据法.webp" alt="线下扫描增量数据法"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;每次只扫描增量的日志数据，就能够极大提高效率，缩短数据不一致的时间窗口，如下图所示：</p>
+<ul>
+<li>写入正表T1</li>
+<li>第一步成功后，写入日志log1</li>
+<li>写入反表T2</li>
+<li>第二步成功后，写入日志log2</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当然，我们还是需要一个离线的扫描工具，不停的比对日志log1和日志log2，如果发现数据不一致，就进行补偿修复</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>虽比方法一复杂，但仍然是比较简单的</li>
+<li>数据扫描效率高，只扫描增量数据</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>线上服务略有修改（代价不高，多写了2条日志）</li>
+<li>虽然比方法一更实时，但时效性还是不高，不一致窗口取决于扫描的周期</li>
+</ul>
+<h3 id="（3）线上实时检测“消息对”法"><a href="#（3）线上实时检测“消息对”法" class="headerlink" title="（3）线上实时检测“消息对”法"></a>（3）线上实时检测“消息对”法</h3><p><img src="//blog.com/2019/05/10/冗余数据一致性，到底如何保证？/线上实时检测“消息对”法.webp" alt="线上实时检测“消息对”法"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这次不是写日志了，而是向消息总线发送消息，如下图所示：</p>
+<ul>
+<li>写入正表T1</li>
+<li>第一步成功后，发送消息msg1</li>
+<li>写入反表T2</li>
+<li>第二步成功后，发送消息msg2</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这次不是需要一个周期扫描的离线工具了，而是一个<strong>实时订阅消息的服务不停的收消息。</strong></p>
+<p><strong>假设正常情况下，msg1和msg2的接收时间应该在3s以内，如果检测服务在收到msg1后没有收到msg2，就尝试检测数据的一致性，不一致时进行补偿修复。</strong></p>
+<p>具体实现逻辑:</p>
+<ul>
+<li>1.第一步成功后，发送消息msg1 写入队列queue1</li>
+<li>2.第二步成功后，发送消息msg2写入队列queue2 </li>
+<li>3.queue2的消费程序 将成功的关键数据标识写入success表</li>
+<li>4.queue1的消费程序收到消息后 延迟3秒后 读success表有没有相应记录 没有则异步修复</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;优点：</p>
+<ul>
+<li>效率高</li>
+<li>实时性高</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;缺点：</p>
+<ul>
+<li>方案比较复杂，上线引入了消息总线这个组件</li>
+<li>线下多了一个订阅总线的检测服务</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>互联网数据量大的业务场景，常常:</p>
+<p>使用水平切分来降低单库数据量</p>
+<p>使用数据冗余的反范式设计来满足不同维度的查询需求</p>
+<p><strong>冗余数据三种方案：</strong></p>
+<ul>
+<li>(1)服务同步双写法能够很容易的实现数据冗余</li>
+<li>(2)为了降低时延，可以优化为服务异步双写法</li>
+<li>(3)为了屏蔽“冗余数据”对服务带来的复杂性，可以优化为线下异步双写法</li>
+</ul>
+<p><strong>保证数据一致性的方案：</strong></p>
+<ul>
+<li>(1)最简单的方式，线下脚本扫全量数据比对</li>
+<li>(2)提高效率的方式，线下脚本扫增量数据比对</li>
+<li>(3)最实时的方式，线上检测“消息对”</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据一致性问题/" rel="tag"># 数据一致性问题</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/10/前后端分离实践详解/" rel="next" title="前后端分离实践详解">
+                <i class="fa fa-chevron-left"></i> 前后端分离实践详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/10/6个实例详解如何把 if-else 代码重构成高质量代码/" rel="prev" title="6个实例详解如何把 if-else 代码重构成高质量代码">
+                6个实例详解如何把 if-else 代码重构成高质量代码 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#冗余数据一致性，到底如何保证？"><span class="nav-number">1.</span> <span class="nav-text">冗余数据一致性，到底如何保证？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要冗余数据"><span class="nav-number">1.1.</span> <span class="nav-text">为什么要冗余数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何进行数据冗余"><span class="nav-number">1.2.</span> <span class="nav-text">如何进行数据冗余</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#（1）服务同步双写-两次写库"><span class="nav-number">1.2.1.</span> <span class="nav-text">（1）服务同步双写(两次写库)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（2）服务异步双写-消息队列解耦"><span class="nav-number">1.2.2.</span> <span class="nav-text">（2）服务异步双写(消息队列解耦)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（3）线下异步双写-binlog监听"><span class="nav-number">1.2.3.</span> <span class="nav-text">（3）线下异步双写(binlog监听)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（4）数据冗余方案总结"><span class="nav-number">1.2.4.</span> <span class="nav-text">（4）数据冗余方案总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何保证数据的一致性"><span class="nav-number">1.3.</span> <span class="nav-text">如何保证数据的一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#（1）线下扫描全量数据法"><span class="nav-number">1.3.1.</span> <span class="nav-text">（1）线下扫描全量数据法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（2）线下扫描增量数据法"><span class="nav-number">1.3.2.</span> <span class="nav-text">（2）线下扫描增量数据法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（3）线上实时检测“消息对”法"><span class="nav-number">1.3.3.</span> <span class="nav-text">（3）线上实时检测“消息对”法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

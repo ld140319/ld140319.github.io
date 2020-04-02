@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="消息中间件选型分析  原文地址：https://mp.weixin.qq.com/s/ad7jibTb5nTzh3nDQYKFeg   ​    ——从Kafka与RabbitMQ的对比来看全局  有很多网友留言：公司要做消息中间件选型，该如何选？你觉得哪个比较好？消息选型的确是一个大论题，实则说来话长的事情又如何长话短说。对此笔者专门撰稿一篇内功心法：如何看待消息中间件的选型，不过这篇只表其意未">
+<meta name="keywords" content="架构,消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息中间件选型分析">
+<meta property="og:url" content="http://blog.com/2019/07/18/消息中间件选型分析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="消息中间件选型分析  原文地址：https://mp.weixin.qq.com/s/ad7jibTb5nTzh3nDQYKFeg   ​    ——从Kafka与RabbitMQ的对比来看全局  有很多网友留言：公司要做消息中间件选型，该如何选？你觉得哪个比较好？消息选型的确是一个大论题，实则说来话长的事情又如何长话短说。对此笔者专门撰稿一篇内功心法：如何看待消息中间件的选型，不过这篇只表其意未">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/18/消息中间件选型分析/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/07/18/消息中间件选型分析/2.webp">
+<meta property="og:updated_time" content="2019-07-18T02:02:51.415Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="消息中间件选型分析">
+<meta name="twitter:description" content="消息中间件选型分析  原文地址：https://mp.weixin.qq.com/s/ad7jibTb5nTzh3nDQYKFeg   ​    ——从Kafka与RabbitMQ的对比来看全局  有很多网友留言：公司要做消息中间件选型，该如何选？你觉得哪个比较好？消息选型的确是一个大论题，实则说来话长的事情又如何长话短说。对此笔者专门撰稿一篇内功心法：如何看待消息中间件的选型，不过这篇只表其意未">
+<meta name="twitter:image" content="http://blog.com/2019/07/18/消息中间件选型分析/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/18/消息中间件选型分析/">
+
+
+
+
+
+  <title>消息中间件选型分析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/18/消息中间件选型分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">消息中间件选型分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-18T12:12:57+08:00">
+                2019-07-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="消息中间件选型分析"><a href="#消息中间件选型分析" class="headerlink" title="消息中间件选型分析"></a>消息中间件选型分析</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/ad7jibTb5nTzh3nDQYKFeg" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/ad7jibTb5nTzh3nDQYKFeg</a></p>
+</blockquote>
+<p><br><br><img src="//blog.com/2019/07/18/消息中间件选型分析/1.jpg" alt="img"></p>
+<p>​    ——从Kafka与RabbitMQ的对比来看全局</p>
+<blockquote>
+<p>有很多网友留言：公司要做消息中间件选型，该如何选？你觉得哪个比较好？消息选型的确是一个大论题，实则说来话长的事情又如何长话短说。对此笔者专门撰稿一篇内功心法：<a href="http://mp.weixin.qq.com/s?__biz=MzU0MzQ5MDA0Mw==&amp;mid=2247483866&amp;idx=1&amp;sn=905732d14b1271b2604dddfbec02481c&amp;chksm=fb0beb4ecc7c62585cd5e223c271c45f2a99f5b66c7eb62bec1a6bb493f32ed552457b32b814&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">如何看待消息中间件的选型</a>，不过这篇只表其意未表其行，为了弥补这种缺陷，笔者最近特意重新撰稿一篇，以供参考。温馨提示：本文一万多字，建议先马（关注）后看。</p>
+</blockquote>
+<h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息队列中间件（简称消息中间件）是指利用高效可靠的消息传递机制进行与平台无关的数据交流，并基于数据通信来进行分布式系统的集成。通过提供消息传递和消息排队模型，它可以在分布式环境下提供应用解耦、弹性伸缩、冗余存储、流量削峰、异步通信、数据同步等等功能，其作为分布式系统架构中的一个重要组件，有着举足轻重的地位。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前开源的消息中间件可谓是琳琅满目，能让大家耳熟能详的就有很多，比如<code>ActiveMQ</code>、<code>RabbitMQ</code>、<code>Kafka</code>、<code>RocketMQ</code>、<code>ZeroMQ</code>等。不管选择其中的哪一款，都会有用的不趁手的地方，毕竟不是为你量身定制的。有些大厂在长期的使用过程中积累了一定的经验，其消息队列的使用场景也相对稳定固化，或者目前市面上的消息中间件无法满足自身需求，并且也具备足够的精力和人力而选择自研来为自己量身打造一款消息中间件。但是绝大多数公司还是不会选择重复造轮子，那么选择一款合适自己的消息中间件显得尤为重要。就算是前者，那么在自研出稳定且可靠的相关产品之前还是会经历这样一个选型过程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在整体架构中引入消息中间件，势必要考虑很多因素，比如成本及收益问题，怎么样才能达到最优的性价比？虽然消息中间件种类繁多，但是各自都有各自的侧重点，选择合适自己、扬长避短无疑是最好的方式。如果你对此感到无所适从，本文或许可以参考一二。</p>
+<h2 id="二、各类消息队列简述"><a href="#二、各类消息队列简述" class="headerlink" title="二、各类消息队列简述"></a>二、各类消息队列简述</h2><p><strong>ActiveMQ</strong>是<code>Apache</code>出品的、采用Java语言编写的完全基于<code>JMS1.1</code>规范的面向消息的中间件，为应用程序提供高效的、可扩展的、稳定的和安全的企业级消息通信。不过由于历史原因包袱太重，目前市场份额没有后面三种消息中间件多，其最新架构被命名为<code>Apollo</code>，号称下一代<code>ActiveMQ</code>，有兴趣的同学可行了解。</p>
+<p><strong>RabbitMQ</strong>是采用<code>Erlang</code>语言实现的<code>AMQP</code>协议的消息中间件，最初起源于金融系统，用于在分布式系统中存储转发消息。<code>RabbitMQ</code>发展到今天，被越来越多的人认可，这和它在可靠性、可用性、扩展性、功能丰富等方面的卓越表现是分不开的。</p>
+<p><strong>Kafka</strong>起初是由<code>LinkedIn</code>公司采用<code>Scala</code>语言开发的一个分布式、多分区、多副本且基于<code>zookeeper</code>协调的分布式消息系统，现已捐献给Apache基金会。它是一种高吞吐量的分布式发布订阅消息系统，以可水平扩展和高吞吐率而被广泛使用。目前越来越多的开源分布式处理系统如<code>Cloudera</code>、<code>Apache Storm</code>、<code>Spark</code>、<code>Flink</code>等都支持与<code>Kafka</code>集成。</p>
+<p><strong>RocketMQ</strong>是阿里开源的消息中间件，目前已经捐献个<code>Apache</code>基金会，它是由<code>Java</code>语言开发的，具备高吞吐量、高可用性、适合大规模分布式系统应用等特点，经历过双11的洗礼，实力不容小觑。</p>
+<p><strong>ZeroMQ</strong>号称史上最快的消息队列，基于C语言开发。<code>ZeroMQ</code>是一个消息处理队列库，可在多线程、多内核和主机之间弹性伸缩，虽然大多数时候我们习惯将其归入消息队列家族之中，但是其和前面的几款有着本质的区别，<code>ZeroMQ</code>本身就不是一个消息队列服务器，更像是一组底层网络通讯库，对原有的<code>Socket API</code>上加上一层封装而已。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前市面上的消息中间件还有很多，比如腾讯系的<code>PhxQueue</code>、<code>CMQ</code>、<code>CKafka</code>，又比如基于<code>Go</code>语言的<code>NSQ</code>，有时人们也把类似<code>Redis</code>的产品也看做消息中间件的一种，当然它们都很优秀，但是本文篇幅限制无法穷极所有，下面会针对性的挑选<code>RabbitMQ</code>和<code>Kafka</code>两款典型的消息中间件来做分析，力求站在一个公平公正的立场来阐述消息中间件选型中的各个要点。</p>
+<h2 id="三、选型要点概述"><a href="#三、选型要点概述" class="headerlink" title="三、选型要点概述"></a>三、选型要点概述</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;衡量一款消息中间件是否符合需求需要从多个维度进行考察，首要的就是功能维度，这个直接决定了你能否最大程度上的实现开箱即用，进而缩短项目周期、降低成本等。如果一款消息中间件的功能达不到想要的功能，那么就需要进行二次开发，这样会增加项目的技术难度、复杂度以及增大项目周期等。</p>
+<h3 id="1-功能维度"><a href="#1-功能维度" class="headerlink" title="1. 功能维度"></a>1. 功能维度</h3><p>功能维度又可以划分个多个子维度，大致可以分为以下这些：</p>
+<h4 id="优先级队列"><a href="#优先级队列" class="headerlink" title="优先级队列"></a>优先级队列</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;优先级队列不同于先进先出队列，<strong>优先级高的消息具备优先被消费的特权，这样可以为下游提供不同消息级别的保证</strong>。不过这个优先级也是需要有一个前提的：<strong>如果消费者的消费速度大于生产者的速度，并且消息中间件服务器（一般简单的称之为Broker）中没有消息堆积</strong>，那么对于发送的消息设置优先级也就没有什么实质性的意义了，因为生产者刚发送完一条消息就被消费者消费了，那么就相当于<code>Broker</code>中至多只有一条消息，对于单条消息来说优先级是没有什么意义的。</p>
+<h4 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当你在网上购物的时候是否会遇到这样的提示：“三十分钟之内未付款，订单自动取消”？这个是延迟队列的一种典型应用场景。<strong>延迟队列存储的是对应的延迟消息，所谓“延迟消息”是指当消息被发送以后，并不想让消费者立刻拿到消息，而是等待特定时间后，消费者才能拿到这个消息进行消费</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;延迟队列一般分为两种：基于消息的延迟和基于队列的延迟。<strong>基于消息的延迟是指为每条消息设置不同的延迟时间，那么每当队列中有新消息进入的时候就会重新根据延迟时间排序，当然这也会对性能造成极大的影响</strong>。实际应用中大多采用基于队列的延迟，设置不同延迟级别的队列，比如<code>5s</code>、<code>10s</code>、<code>30s</code>、<code>1min</code>、<code>5mins</code>、<code>10mins</code>等，每个队列中消息的延迟时间都是相同的，这样免去了延迟排序所要承受的性能之苦，通过一定的扫描策略（比如定时）即可投递超时的消息。</p>
+<h4 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>由于某些原因消息无法被正确的投递，为了确保消息不会被无故的丢弃，一般将其置于一个特殊角色的队列，这个队列一般称之为死信队列</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与此对应的还有一个“回退队列”的概念，试想<strong>如果消费者在消费时发生了异常，那么就不会对这一次消费进行确认（<code>Ack</code>）,进而发生回滚消息的操作之后消息始终会放在队列的顶部，然后不断被处理和回滚，导致队列陷入死循环</strong>。为了解决这个问题，可以<strong>为每个队列设置一个回退队列，它和死信队列都是为异常的处理提供的一种机制保障</strong>。实际情况下，回退队列的角色可以由死信队列和重试队列来扮演。</p>
+<h4 id="重试队列"><a href="#重试队列" class="headerlink" title="重试队列"></a>重试队列</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;重试队列其实可以看成是一种回退队列，<strong>具体指消费端消费消息失败时，为防止消息无故丢失而重新将消息回滚到<code>Broker</code>中</strong>。与回退队列不同的是重试队列一般分成多个重试等级，每个重试等级一般也会设置重新投递延时，重试次数越多投递延时就越大。举个例子：消息第一次消费失败入重试队列<code>Q1</code>，<code>Q1</code>的重新投递延迟为5s，在5s过后重新投递该消息；如果消息再次消费失败则入重试队列<code>Q2</code>，<code>Q2</code>的重新投递延迟为10s，在10s过后再次投递该消息。以此类推，<strong>重试越多次重新投递的时间就越久，为此需要设置一个上限，超过投递次数就入死信队列</strong>。重试队列与延迟队列有相同的地方，都是需要设置延迟级别，它们彼此的区别是：<strong>延迟队列动作由内部触发，重试队列动作由外部消费端触发；延迟队列作用一次，而重试队列的作用范围会向后传递</strong>。</p>
+<h4 id="消费模式"><a href="#消费模式" class="headerlink" title="消费模式"></a>消费模式</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消费模式分为推（<code>push</code>）模式和拉（<code>pull</code>）模式。推模式是指由<code>Broker</code>主动推送消息至消费端，实时性较好，不过<strong>需要一定的流制机制来确保服务端推送过来的消息不会压垮消费端</strong>。而拉模式是指消费端主动向Broker端请求拉取（一般是定时或者定量）消息，实时性较推模式差，但是可以根据自身的处理能力而控制拉取的消息量。</p>
+<h4 id="广播消费"><a href="#广播消费" class="headerlink" title="广播消费"></a>广播消费</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息一般有两种传递模式：点对点（<code>P2P，Point-to-Point</code>）模式和发布/订阅（<code>Pub/Sub</code>）模式。<strong>对于点对点的模式而言，消息被消费以后，队列中不会再存储，所以消息消费者不可能消费到已经被消费的消息</strong>。虽然队列可以支持多个消费者，但是一条消息只会被一个消费者消费。发布订阅模式定义了如何向一个内容节点发布和订阅消息，这个内容节点称为主题（<code>topic</code>），<strong>主题可以认为是消息传递的中介，消息发布者将消息发布到某个主题，而消息订阅者则从主题中订阅消息</strong>。<strong>主题使得消息的订阅者与消息的发布者互相保持独立，不需要进行接触即可保证消息的传递，发布/订阅模式在消息的一对多广播时采用</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RabbitMQ</code>是一种典型的点对点模式，而Kafka是一种典型的发布订阅模式。但是<code>RabbitMQ</code>中可以通过设置交换器类型来实现发布订阅模式而达到广播消费的效果。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Kafka</code>中也能以点对点的形式消费，你完全可以把其消费组（<code>consumer group</code>）的概念看成是队列的概念。不过对比来说，<code>Kafka</code>中因为有了消息回溯功能的存在，对于广播消费的力度支持比<code>RabbitMQ</code>的要强。</p>
+<h4 id="消息回溯"><a href="#消息回溯" class="headerlink" title="消息回溯"></a>消息回溯</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般消息在消费完成之后就被处理了，之后再也不能消费到该条消息。消息回溯正好相反，是指消息在消费完成之后，还能消费到之前被消费掉的消息。对于消息而言，经常面临的问题是<strong>“消息丢失”，至于是真正由于消息中间件的缺陷丢失还是由于使用方的误用而丢失一般很难追查，如果消息中间件本身具备消息回溯功能的话，可以通过回溯消费复现“丢失的”消息进而查出问题的源头之所在</strong>。消息回溯的作用远不止与此，比如还有索引恢复、本地缓存重建，有些业务补偿方案也可以采用回溯的方式来实现。</p>
+<h4 id="消息堆积-持久化"><a href="#消息堆积-持久化" class="headerlink" title="消息堆积+持久化"></a>消息堆积+持久化</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;流量削峰是消息中间件的一个非常重要的功能，而这个功能其实得益于其消息堆积能力。从某种意义上来讲，如果一个消息中间件不具备消息堆积的能力，那么就不能把它看做是一个合格的消息中间件。消息堆积分内存式堆积和磁盘式堆积。<code>RabbitMQ</code>是典型的内存式堆积，但这并非绝对，在某些条件触发后会有换页动作来将内存中的消息换页到磁盘（换页动作会影响吞吐），或者直接使用惰性队列来将消息直接持久化至磁盘中。<code>Kafka</code>是一种典型的磁盘式堆积，所有的消息都存储在磁盘中。一般来说，磁盘的容量会比内存的容量要大得多，对于磁盘式的堆积其堆积能力就是整个磁盘的大小。从另外一个角度讲，消息堆积也为消息中间件提供了冗余存储的功能。援引纽约时报的案例（<a href="https://www.confluent.io/blog/publishing-apache-kafka-new-york-times/），其直接将Kafka用作存储系统。" target="_blank" rel="noopener">https://www.confluent.io/blog/publishing-apache-kafka-new-york-times/），其直接将Kafka用作存储系统。</a></p>
+<h4 id="消息追踪"><a href="#消息追踪" class="headerlink" title="消息追踪"></a>消息追踪</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于分布式架构系统中的链路追踪（<code>trace</code>）而言，大家一定不会陌生。对于消息中间件而言，消息的链路追踪（以下简称消息追踪）同样重要。对于消息追踪最通俗的理解就是要知道消息从哪来，存在哪里以及发往哪里去。基于此功能下，我们可以对发送或者消费完的消息进行链路追踪服务，进而可以进行问题的快速定位与排查。</p>
+<h4 id="消息过滤"><a href="#消息过滤" class="headerlink" title="消息过滤"></a>消息过滤</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息过滤是指按照既定的过滤规则为下游用户提供指定类别的消息。就以<code>kafka</code>而言，完全可以将不同类别的消息发送至不同的<code>topic</code>中，由此可以实现某种意义的消息过滤，或者<code>Kafka</code>还可以根据分区对同一个<code>topic</code>中的消息进行分类。不过更加严格意义上的消息过滤应该是对既定的消息采取一定的方式按照一定的过滤规则进行过滤。同样以<code>Kafka</code>为例，可以通过客户端提供的<code>ConsumerInterceptor</code>接口或者<code>Kafka Stream</code>的<code>filter</code>功能进行消息过滤。</p>
+<h4 id="多租户"><a href="#多租户" class="headerlink" title="多租户"></a>多租户</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;也可以称为多重租赁技术，是一种软件架构技术，主要用来实现多用户的环境下公用相同的系统或程序组件，并且仍可以确保各用户间数据的隔离性。<code>RabbitMQ</code>就能够支持多租户技术，每一个租户表示为一个<code>vhost</code>，其本质上是一个独立的小型<code>RabbitMQ</code>服务器，又有自己独立的队列、交换器及绑定关系等，并且它拥有自己独立的权限。<code>vhost</code>就像是物理机中的虚拟机一样，它们在各个实例间提供逻辑上的分离，为不同程序安全保密地允许数据，它既能将同一个<code>RabbitMQ</code>中的众多客户区分开，又可以避免队列和交换器等命名冲突。</p>
+<h4 id="多协议支持"><a href="#多协议支持" class="headerlink" title="多协议支持"></a>多协议支持</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息是信息的载体，为了让生产者和消费者都能理解所承载的信息（生产者需要知道如何构造消息，消费者需要知道如何解析消息），它们就需要按照一种统一的格式描述消息，这种统一的格式称之为消息协议。有效的消息一定具有某种格式，而没有格式的消息是没有意义的。一般消息层面的协议有<code>AMQP、MQTT、STOMP、XMPP</code>等（消息领域中的<code>JMS</code>更多的是一个规范而不是一个协议），支持的协议越多其应用范围就会越广，通用性越强，比如<code>RabbitMQ</code>能够支持<code>MQTT</code>协议就让其在物联网应用中获得一席之地。还有的消息中间件是基于其本身的私有协议运转的，典型的如<code>Kafka</code>。</p>
+<h4 id="跨语言支持"><a href="#跨语言支持" class="headerlink" title="跨语言支持"></a>跨语言支持</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对很多公司而言，其技术栈体系中会有多种编程语言，如<code>C/C++、JAVA、Go、PHP</code>等，消息中间件本身具备应用解耦的特性，如果能够进一步的支持多客户端语言，那么就可以将此特性的效能扩大。跨语言的支持力度也可以从侧面反映出一个消息中间件的流行程度。</p>
+<h4 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;流量控制（<code>flow control</code>）针对的是发送方和接收方速度不匹配的问题，提供一种速度匹配服务抑制发送速率使接收方应用程序的读取速率与之相适应。通常的流控方法有<code>Stop-and-wait</code>、滑动窗口以及令牌桶等。</p>
+<h4 id="消息顺序性"><a href="#消息顺序性" class="headerlink" title="消息顺序性"></a>消息顺序性</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;顾名思义，消息顺序性是指保证消息有序。这个功能有个很常见的应用场景就是<code>CDC（Change Data Chapture）</code>，以<code>MySQL</code>为例，如果其传输的<code>binlog</code>的顺序出错，比如原本是先对一条数据加1，然后再乘以2，发送错序之后就变成了先乘以2后加1了，造成了数据不一致。</p>
+<h4 id="安全机制"><a href="#安全机制" class="headerlink" title="安全机制"></a>安全机制</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>Kafka 0.9</code>版本之后就开始增加了身份认证和权限控制两种安全机制。身份认证是指客户端与服务端连接进行身份认证，包括客户端与<code>Broker</code>之间、<code>Broker</code>与<code>Broker</code>之间、<code>Broker</code>与<code>ZooKeeper</code>之间的连接认证，目前支持<code>SSL</code>、<code>SASL</code>等认证机制。权限控制是指对客户端的读写操作进行权限控制，包括对消息或Kafka集群操作权限控制。权限控制是可插拔的，并支持与外部的授权服务进行集成。对于<code>RabbitMQ</code>而言，其同样提供身份认证（<code>TLS/SSL</code>、<code>SASL</code>）和权限控制（读写操作）的安全机制。</p>
+<h4 id="消息幂等性"><a href="#消息幂等性" class="headerlink" title="消息幂等性"></a>消息幂等性</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于确保消息在生产者和消费者之间进行传输而言一般有三种传输保障（<code>delivery guarantee</code>）：<code>At most once</code>，至多一次，消息可能丢失，但绝不会重复传输；<code>At least once</code>，至少一次，消息绝不会丢，但是可能会重复；<code>Exactly once</code>，精确一次，每条消息肯定会被传输一次且仅一次。对于大多数消息中间件而言，一般只提供<code>At most once</code>和<code>At least once</code>两种传输保障，对于第三种一般很难做到，由此消息幂等性也很难保证。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Kafka</code>自0.11版本开始引入了幂等性和事务，<code>Kafka</code>的幂等性是指单个生产者对于单分区单会话的幂等，而事务可以保证原子性地写入到多个分区，即写入到多个分区的消息要么全部成功，要么全部回滚，这两个功能加起来可以让<code>Kafka</code>具备<code>EOS（Exactly Once Semantic）</code>的能力。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不过如果要考虑全局的幂等，还需要与从上下游方面综合考虑，即关联业务层面，幂等处理本身也是业务层面所需要考虑的重要议题。以下游消费者层面为例，有可能消费者消费完一条消息之后没有来得及确认消息就发生异常，等到恢复之后又得重新消费原来消费过的那条消息，那么这种类型的消息幂等是无法有消息中间件层面来保证的。如果要保证全局的幂等，需要引入更多的外部资源来保证，比如以订单号作为唯一性标识，并且在下游设置一个去重表。</p>
+<h4 id="事务性消息"><a href="#事务性消息" class="headerlink" title="事务性消息"></a>事务性消息</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事务本身是一个并不陌生的词汇，事务是由事务开始（<code>Begin Transaction</code>）和事务结束（<code>End Transaction</code>）之间执行的全体操作组成。支持事务的消息中间件并不在少数，<code>Kafka</code>和<code>RabbitMQ</code>都支持，不过此两者的事务是指生产者发生消息的事务，要么发送成功，要么发送失败。消息中间件可以作为用来实现分布式事务的一种手段，但其本身并不提供全局分布式事务的功能。</p>
+<h4 id="Kafka与RabbitMQ的对比"><a href="#Kafka与RabbitMQ的对比" class="headerlink" title="Kafka与RabbitMQ的对比"></a>Kafka与RabbitMQ的对比</h4><p><img src="//blog.com/2019/07/18/消息中间件选型分析/2.webp" alt=""></p>
+<h3 id="2-性能"><a href="#2-性能" class="headerlink" title="2. 性能"></a>2. 性能</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;功能维度是消息中间件选型中的一个重要的参考维度，但这并不是唯一的维度。有时候性能比功能还要重要，况且性能和功能很多时候是相悖的，鱼和熊掌不可兼得，<code>Kafka</code>在开启幂等、事务功能的时候会使其性能降低，<code>RabbitMQ</code>在开启<code>rabbitmq_tracing</code>插件的时候也会极大的影响其性能。消息中间件的性能一般是指其吞吐量，虽然从功能维度上来说，<code>RabbitMQ</code>的优势要大于<code>Kafka</code>，但是<code>Kafka</code>的吞吐量要比<code>RabbitMQ</code>高出1至2个数量级，一般<code>RabbitMQ</code>的单机<code>QPS</code>在万级别之内，而<code>Kafka</code>的单机<code>QPS</code>可以维持在十万级别，甚至可以达到百万级。</p>
+<blockquote>
+<p> 消息中间件的吞吐量始终会受到硬件层面的限制。就以网卡带宽为例，如果单机单网卡的带宽为1Gbps，如果要达到百万级的吞吐，那么消息体大小不得超过(1Gb/8)/100W，即约等于134B，换句话说如果消息体大小超过134B，那么就不可能达到百万级别的吞吐。这种计算方式同样可以适用于内存和磁盘。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;时延作为性能维度的一个重要指标，却往往在消息中间件领域所被忽视，因为一般使用消息中间件的场景对时效性的要求并不是很高，如果要求时效性完全可以采用<code>RPC</code>的方式实现。消息中间件具备消息堆积的能力，消息堆积越大也就意味着端到端的时延也就越长，与此同时延时队列也是某些消息中间件的一大特色。那么为什么还要关注消息中间件的时延问题呢？消息中间件能够解耦系统，对于一个时延较低的消息中间件而言，它可以让上游生产者发送消息之后可以迅速的返回，也可以让消费者更加快速的获取到消息，在没有堆积的情况下可以让整体上下游的应用之间的级联动作更加高效，虽然不建议在时效性很高的场景下使用消息中间件，但是如果所使用的消息中间件的时延方面比较优秀，那么对于整体系统的性能将会是一个不小的提升。</p>
+<h3 id="3-可靠性-可用性"><a href="#3-可靠性-可用性" class="headerlink" title="3. 可靠性+可用性"></a>3. 可靠性+可用性</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息丢失是使用消息中间件时所不得不面对的一个同点，其背后消息可靠性也是衡量消息中间件好坏的一个关键因素。尤其是在金融支付领域，消息可靠性尤为重要。然而说到可靠性必然要说到可用性，注意这两者之间的区别，消息中间件的可靠性是指对消息不丢失的保障程度；而消息中间件的可用性是指无故障运行的时间百分比，通常用几个9来衡量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从狭义的角度来说，分布式系统架构是一致性协议理论的应用实现，对于消息可靠性和可用性而言也可以追溯到消息中间件背后的一致性协议。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于<code>Kafka</code>而言，其采用的是类似<code>PacificA</code>的<strong>一致性协议</strong>，<strong>通过<code>ISR（In-Sync-Replica）</code>来保证多副本之间的同步，并且支持强一致性语义（通过<code>acks</code>实现）</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对应的<code>RabbitMQ</code>是通过<strong>镜像环形队列实现多副本及强一致性语义</strong>的。多副本可以保证在<code>master</code>节点宕机异常之后可以提升<code>slave</code>作为新的<code>master</code>而继续提供服务来保障可用性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Kafka</code>设计之初是为日志处理而生，给人们留下了数据可靠性要求不要的不良印象，但是随着版本的升级优化，其可靠性得到极大的增强，详细可以参考<code>KIP101</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;就目前而言，在金融支付领域使用<code>RabbitMQ</code>居多，而在日志处理、大数据等方面<code>Kafka</code>使用居多，随着<code>RabbitMQ</code>性能的不断提升和<code>Kafka</code>可靠性的进一步增强，相信彼此都能在以前不擅长的领域分得一杯羹。</p>
+<blockquote>
+<p>同步刷盘是增强一个组件可靠性的有效方式，消息中间件也不例外，Kafka和RabbitMQ都可以支持同步刷盘，但是笔者对同步刷盘有一定的疑问：绝大多数情景下，一个组件的可靠性不应该由同步刷盘这种极其损耗性能的操作来保障，而是采用多副本的机制来保证。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里还要提及的一个方面是扩展能力，这里我狭隘地将此归纳到可用性这一维度，消息中间件的扩展能力能够增强其用可用能力及范围，比如前面提到的<code>RabbitMQ</code>支持多种消息协议，这个就是基于其插件化的扩展实现。还有从集群部署上来讲，归功于<code>Kafka</code>的水平扩展能力，其基本上可以达到线性容量提升的水平，在<code>LinkedIn</code>实践介绍中就提及了有部署超过千台设备的<code>Kafka</code>集群。</p>
+<h3 id="5-运维管理"><a href="#5-运维管理" class="headerlink" title="5. 运维管理"></a>5. 运维管理</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在消息中间件的使用过程中难免会出现各式各样的异常情况，有客户端的，也有服务端的，那么怎样及时有效的进行监测及修复。业务线流量有峰值又低谷，尤其是电商领域，那么怎样前进行有效的容量评估，尤其是大促期间？脚踢电源、网线被挖等事件层出不穷，如何有效的做好异地多活？这些都离不开消息中间件的衍生产品——运维管理。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;运维管理也可以进行进一步的细分，比如：<strong>申请、审核、监控、告警、管理、容灾、部署等</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;申请、审核很好理解，在源头对资源进行管控，既可以进行有效校正应用方的使用规范，配和监控也可以做好流量统计与流量评估工作，一般申请、审核与公司内部系统交融性较大，不适合使用开源类的产品。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;监控、告警也比较好理解，对消息中间件的使用进行全方位的监控，即可以为系统提供基准数据，也可以在检测到异常的情况配合告警，以便运维、开发人员的迅速介入。除了一般的监控项（比如硬件、<code>GC</code>等）之外，对于消息中间件还需要<strong>关注端到端时延、消息审计、消息堆积等方面</strong>。对于<code>RabbitMQ</code>而言，最正统的监控管理工具莫过于<code>rabbitmq_management</code>插件了，但是社区内还有<code>AppDynamics, Collectd, DataDog, Ganglia, Munin, Nagios, New Relic, Prometheus, Zenoss</code>等多种优秀的产品。<code>Kafka</code>在此方面也毫不逊色，比如：<code>Kafka Manager, Kafka Monitor, Kafka Offset Monitor, Burrow, Chaperone, Confluent Control Center</code>等产品，尤其是<code>Cruise</code>还可以提供自动化运维的功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不管是<strong>扩容、降级、版本升级、集群节点部署、还是故障处理</strong>都离不开管理工具的应用，一个配套完备的管理工具集可以在遇到变更时做到事半功倍。故障可大可小，一般是一些应用异常，也可以是机器掉电、网络异常、磁盘损坏等单机故障，这些故障单机房内的多副本足以应付。如果是机房故障就要涉及异地容灾了，关键点在于如何有效的进行数据复制，对于<code>Kafka</code>而言，可以参考<code>MirrorMarker</code>、<code>Replicator</code>等产品，而<code>RabbitMQ</code>可以参考<code>Federation</code>和<code>Shovel</code>。</p>
+<h3 id="6-社区力度及生态发展"><a href="#6-社区力度及生态发展" class="headerlink" title="6. 社区力度及生态发展"></a>6. 社区力度及生态发展</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于目前流行的编程语言而言，如<code>Java</code>、<code>Python</code>，如果你在使用过程中遇到了一些异常，基本上可以通过搜索引擎的帮助来得到解决，因为一个产品用的人越多，踩过的坑也就越多，对应的解决方案也就越多。对于消息中间件也同样适用，如果你选择了一种“生僻”的消息中间件，可能在某些方面运用的得心应手，但是版本更新缓慢、遇到棘手问题也难以得到社区的支持而越陷越深；相反如果你选择了一种“流行”的消息中间件，其更新力度大，不仅可以迅速的弥补之前的不足，而且也能顺应技术的快速发展来变更一些新的功能，这样可以让你以“站在巨人的肩膀上”。在运维管理维度我们提及了<code>Kafka</code>和<code>RabbitMQ</code>都有一系列开源的监控管理产品，这些正是得益于其社区及生态的迅猛发展。</p>
+<h2 id="四、消息中间件选型误区探讨"><a href="#四、消息中间件选型误区探讨" class="headerlink" title="四、消息中间件选型误区探讨"></a>四、消息中间件选型误区探讨</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在进行消息中间件选型之前可以先问自己一个问题：是否真的需要一个消息中间件？在搞清楚这个问题之后，还可以继续问自己一个问题：是否需要自己维护一套消息中间件？很多初创型公司为了节省成本会选择直接购买消息中间件有关的云服务，自己只需要关注收发消息即可，其余的都可以外包出去。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多人面对消息中间件时会有一种自研的冲动，你完全可以对<code>Java</code>中的<code>ArrayBlockingQueue</code>做一个简单的封装，你也可以基于文件、数据库、<code>Redis</code>等底层存储封装而形成一个消息中间件。消息中间件做为一个基础组件并没有想象中的那么简单，其背后还需要配套的管理运维整个生态的产品集。自研还有会交接问题，如果文档不齐全、运作不规范将会带给新人噩梦般的体验。是否真的有自研的必要？如果不是<code>KPI</code>的压迫可以先考虑下这2个问题：1. 目前市面上的消息中间件是否都真的无法满足目前业务需求？ 2. 团队是否有足够的能力、人力、财力、精力来支持自研？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多人在做消息中间件选型时会参考网络上的很多对比类的文章，但是其专业性、严谨性、以及其政治立场问题都有待考证，需要带着怀疑的态度去审视这些文章。比如有些文章会在没有任何限定条件及场景的情况下直接定义某款消息中间件最好，还有些文章没有指明消息中间件版本及测试环境就来做功能和性能对比分析，诸如此类的文章都可以唾弃之。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息中间件犹如小马过河，选择合适的才最重要，这需要贴合自身的业务需求，技术服务于业务，大体上可以根据上一节所提及的功能、性能等6个维度来一一进行筛选。更深层次的抉择在于你能否掌握其魂，笔者鄙见：<strong>RabbitMQ在于routing，而Kafka在于streaming</strong>，了解其根本对于自己能够对症下药选择到合适的消息中间件尤为重要。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息中间件选型切忌一味的追求性能或者功能，性能可以优化，功能可以二次开发。如果要在功能和性能方面做一个抉择的话，那么首选性能，因为总体上来说性能优化的空间没有功能扩展的空间大。然而对于长期发展而言，生态又比性能以及功能都要重要。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很多时候，对于可靠性方面也容易存在一个误区：想要找到一个产品来保证消息的绝对可靠，很不幸的是这世界上没有绝对的东西，只能说尽量趋于完美。想要尽可能的保障消息的可靠性也并非单单只靠消息中间件本身，还要依赖于上下游，需要从生产端、服务端和消费端这3个维度去努力保证，《<a href="http://mp.weixin.qq.com/s?__biz=MzU0MzQ5MDA0Mw==&amp;mid=2247483834&amp;idx=1&amp;sn=1a6b968e6e2624bfdf036cd5c797a238&amp;chksm=fb0beb2ecc7c6238fb849963abcf75e387815d1a92d4b7c283f2cd1a9f36de67765d5ac112bf&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">RabbitMQ消息可靠性分析</a>》这篇文章就从这3个维度去分析了<code>RabbitMQ</code>的可靠性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消息中间件选型还有一个考量标准就是<strong>尽量贴合团队自身的技术栈体系</strong>，虽然说没有蹩脚的消息中间件只有蹩脚的程序员，但是让一个<code>C</code>栈的团队去深挖<code>PhxQueue</code>总比去深挖<code>Scala</code>编写的<code>Kafka</code>要容易的多。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>消息中间件大道至简：一发一存一消费，没有最好的消息中间件，只有最合适的消息中间件。人过留名，雁过留声，路过记得点个赞。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/15/分布式队列编程：模型与实战/" rel="next" title="分布式队列编程：模型与实战">
+                <i class="fa fa-chevron-left"></i> 分布式队列编程：模型与实战
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/22/微服务API设计的实践与思考总结/" rel="prev" title="微服务API设计的实践与思考总结">
+                微服务API设计的实践与思考总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#消息中间件选型分析"><span class="nav-number">1.</span> <span class="nav-text">消息中间件选型分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、前言"><span class="nav-number">1.1.</span> <span class="nav-text">一、前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、各类消息队列简述"><span class="nav-number">1.2.</span> <span class="nav-text">二、各类消息队列简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、选型要点概述"><span class="nav-number">1.3.</span> <span class="nav-text">三、选型要点概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-功能维度"><span class="nav-number">1.3.1.</span> <span class="nav-text">1. 功能维度</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优先级队列"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">优先级队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#延迟队列"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">延迟队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#死信队列"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">死信队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#重试队列"><span class="nav-number">1.3.1.4.</span> <span class="nav-text">重试队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消费模式"><span class="nav-number">1.3.1.5.</span> <span class="nav-text">消费模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#广播消费"><span class="nav-number">1.3.1.6.</span> <span class="nav-text">广播消费</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息回溯"><span class="nav-number">1.3.1.7.</span> <span class="nav-text">消息回溯</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息堆积-持久化"><span class="nav-number">1.3.1.8.</span> <span class="nav-text">消息堆积+持久化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息追踪"><span class="nav-number">1.3.1.9.</span> <span class="nav-text">消息追踪</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息过滤"><span class="nav-number">1.3.1.10.</span> <span class="nav-text">消息过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多租户"><span class="nav-number">1.3.1.11.</span> <span class="nav-text">多租户</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多协议支持"><span class="nav-number">1.3.1.12.</span> <span class="nav-text">多协议支持</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#跨语言支持"><span class="nav-number">1.3.1.13.</span> <span class="nav-text">跨语言支持</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#流量控制"><span class="nav-number">1.3.1.14.</span> <span class="nav-text">流量控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息顺序性"><span class="nav-number">1.3.1.15.</span> <span class="nav-text">消息顺序性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#安全机制"><span class="nav-number">1.3.1.16.</span> <span class="nav-text">安全机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息幂等性"><span class="nav-number">1.3.1.17.</span> <span class="nav-text">消息幂等性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#事务性消息"><span class="nav-number">1.3.1.18.</span> <span class="nav-text">事务性消息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Kafka与RabbitMQ的对比"><span class="nav-number">1.3.1.19.</span> <span class="nav-text">Kafka与RabbitMQ的对比</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-性能"><span class="nav-number">1.3.2.</span> <span class="nav-text">2. 性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-可靠性-可用性"><span class="nav-number">1.3.3.</span> <span class="nav-text">3. 可靠性+可用性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-运维管理"><span class="nav-number">1.3.4.</span> <span class="nav-text">5. 运维管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-社区力度及生态发展"><span class="nav-number">1.3.5.</span> <span class="nav-text">6. 社区力度及生态发展</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、消息中间件选型误区探讨"><span class="nav-number">1.4.</span> <span class="nav-text">四、消息中间件选型误区探讨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、总结"><span class="nav-number">1.5.</span> <span class="nav-text">五、总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据一致性问题,数据库与缓存,缓存,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="MySQL与Redis数据同步一致性问题整理一、什么是一致性。&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们经常谈到的“一致性”有ACID与CAP的C，前者是数据库事务一致性，是解决并发修改导致的修改丢失、脏读、幻读等数据不一致问题；后者是分布式系统一致性，因为光速限制，不同服务器上的同步需要时间，它是用于协调如何使用未同步的数据。 &amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="keywords" content="架构,数据一致性问题,数据库与缓存,缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL与Redis数据同步一致性问题整理">
+<meta property="og:url" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="MySQL与Redis数据同步一致性问题整理一、什么是一致性。&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们经常谈到的“一致性”有ACID与CAP的C，前者是数据库事务一致性，是解决并发修改导致的修改丢失、脏读、幻读等数据不一致问题；后者是分布式系统一致性，因为光速限制，不同服务器上的同步需要时间，它是用于协调如何使用未同步的数据。 &amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/1.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/2.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/3.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/4.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/5.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/6.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/7.png">
+<meta property="og:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/8.png">
+<meta property="og:updated_time" content="2019-08-18T12:44:21.533Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL与Redis数据同步一致性问题整理">
+<meta name="twitter:description" content="MySQL与Redis数据同步一致性问题整理一、什么是一致性。&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;我们经常谈到的“一致性”有ACID与CAP的C，前者是数据库事务一致性，是解决并发修改导致的修改丢失、脏读、幻读等数据不一致问题；后者是分布式系统一致性，因为光速限制，不同服务器上的同步需要时间，它是用于协调如何使用未同步的数据。 &amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="twitter:image" content="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/">
+
+
+
+
+
+  <title>MySQL与Redis数据同步一致性问题整理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MySQL与Redis数据同步一致性问题整理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-10T12:12:57+08:00">
+                2019-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/" itemprop="url" rel="index">
+                    <span itemprop="name">数据一致性问题</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库与缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="MySQL与Redis数据同步一致性问题整理"><a href="#MySQL与Redis数据同步一致性问题整理" class="headerlink" title="MySQL与Redis数据同步一致性问题整理"></a>MySQL与Redis数据同步一致性问题整理</h1><h2 id="一、什么是一致性。"><a href="#一、什么是一致性。" class="headerlink" title="一、什么是一致性。"></a>一、什么是一致性。</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们经常谈到的“一致性”有<code>ACID</code>与<code>CAP</code>的C，前者是数据库事务一致性，是解决并发修改导致的修改丢失、脏读、幻读等数据不一致问题；后者是分布式系统一致性，因为光速限制，不同服务器上的同步需要时间，它是用于协调如何使用未同步的数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在数据库事务中，安全可靠与高性能是矛盾的，事务越强，性能就越低，事务做的就是根据业务需要，找到两者平衡最优点。例如MySQL有四种事务隔离级别。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>CAP</code>理论在分布式系统中，因为P是必需的，所以不能即有完美一致性C又有100%的可用性A，只能在两者中选择一个，而高可用也是很重要，所以很多系统设计选择牺牲一致性，一般是在一致性和延迟性之间权衡。</p>
+<table>
+<thead>
+<tr>
+<th><strong>两种一致性比较</strong></th>
+<th>ACID的一致性</th>
+<th><strong>CAP的一致性</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>服务实例</strong></td>
+<td>一个内部</td>
+<td>多个之间</td>
+</tr>
+<tr>
+<td><strong>解决问题</strong></td>
+<td>并发修改</td>
+<td>服务实例间同步</td>
+</tr>
+<tr>
+<td><strong>协调权衡</strong></td>
+<td>安全可靠性与高性能</td>
+<td>一致性与延迟性</td>
+</tr>
+</tbody>
+</table>
+<p><code>MySQL</code>与<code>Redis</code>的数据一致性问题，因为是两个服务之间的同步。所以它说的一<code>CAP</code>中的C。</p>
+<h2 id="二、常见的Redis数据更新方式。"><a href="#二、常见的Redis数据更新方式。" class="headerlink" title="二、常见的Redis数据更新方式。"></a>二、常见的Redis数据更新方式。</h2><p>现有的缓存更新方式总结一下可分成三类：</p>
+<h3 id="客户端自维护方式"><a href="#客户端自维护方式" class="headerlink" title="客户端自维护方式"></a>客户端自维护方式</h3><p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/1.png" alt="img"></p>
+<p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/2.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由应用程序管理维护缓存和数据库的数据一致性。这种在缓存设计模式里叫<code>Cache Aside Pattern</code>旁路模式。</p>
+<h3 id="缓存代理方式"><a href="#缓存代理方式" class="headerlink" title="缓存代理方式"></a>缓存代理方式</h3><p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/3.png" alt="img"></p>
+<p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/4.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>应用程序读写都是面向缓存代理，缓存内部的同步机制由代理实现，对应用程序是透明的</strong>。代理方式会用到三类缓存设计模式：</p>
+<p><code>Read through</code>： 当缓存失效的时候（过期或<code>LRU</code>换出），<strong>由缓存代理去读取数据库，对应用程序是透明的</strong>。</p>
+<p><code>Write through</code>：当有数据更新的时候，如果没有命中缓存，直接更新数据库，然后返回。<strong>如果命中了缓存，则更新缓存，然后再更新数据库</strong>。</p>
+<p><code>Write behind caching</code>：类似<code>Linux</code>的<code>Page Cache</code>方式，这种方式是<strong>更新时，只更新缓存，然后由缓存代理异步写数据库</strong>。 这种方式性能好，但一致性差，有可能丢失数据。这种流程图比较复杂，这里没有画出。有兴趣可以参考<a href="https://en.wikipedia.org/wiki/Cache_(computing)" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Cache_(computing)</a></p>
+<h3 id="第三方同步方式"><a href="#第三方同步方式" class="headerlink" title="第三方同步方式"></a>第三方同步方式</h3><h4 id="binlog监听"><a href="#binlog监听" class="headerlink" title="binlog监听"></a>binlog监听</h4><p>​       <img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/5.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种方式是把缓存当成数据库的备机，模拟<code>slave</code>的交互协议，伪装自己为<code>slave</code>，解析<code>master</code>传过来的<code>binary log</code>，将数据更新同步到缓存。代表软件为阿里的<code>canal</code> <a href="https://github.com/alibaba/canal" target="_blank" rel="noopener">https://github.com/alibaba/canal</a></p>
+<h4 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种是将更新数据主键扔到消息队列，然后异步去更新缓存。</p>
+<p>与<code>binlog</code>监听相比的缺陷：</p>
+<ol>
+<li><strong>需要消息队列高可用保证，即事务消息，消费者一定能够消费到</strong></li>
+<li><strong>需要再次查库</strong>，而<code>binlog</code>监听可以直接提取数据，减少数据库的压力</li>
+<li><strong>对业务代码侵入较大</strong>，一旦遗漏，就存在不一致了。需要研发统一规范。可以考虑通过观察者模式来实现，如<code>PHP</code>的<code>Laravel</code>框架中的模型事件监听。这样的弊端就是只能够通过操作<code>Model</code>来更新数据，不能够直接使用<code>Db</code>。</li>
+</ol>
+<p>与<code>binlog</code>监听相比的优势：<strong>可以少维护一个中间件</strong></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><table>
+<thead>
+<tr>
+<th><strong>缓存模式对比</strong></th>
+<th><strong>客户端自维护</strong></th>
+<th><strong>缓存代理</strong></th>
+<th><strong>第三方同步</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>管理数据源</strong></td>
+<td>维护数据库与缓存两个数据源</td>
+<td>只读写缓存一个数据源</td>
+<td>数据库与缓存读写分离</td>
+</tr>
+<tr>
+<td><strong>应用程序逻辑</strong></td>
+<td>复杂</td>
+<td>简单</td>
+<td>一般</td>
+</tr>
+<tr>
+<td><strong>实现复杂度</strong></td>
+<td>一般</td>
+<td>复杂</td>
+<td>简单</td>
+</tr>
+<tr>
+<td><strong>数据延时性</strong></td>
+<td>短</td>
+<td>同步：短   异步：长</td>
+<td>短</td>
+</tr>
+<tr>
+<td><strong>缓存设计模式</strong></td>
+<td><code>Cache aside</code> 旁路模式</td>
+<td>同步用到：  <code>Read through</code>透读   <code>Write through</code>透写 <br>  异步用到   <code>Write behind caching</code>后写</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<p> <strong>推荐：</strong>客户端自维护、第三方同步</p>
+<h2 id="三、常见的Redis数据更新方式存在的问题。"><a href="#三、常见的Redis数据更新方式存在的问题。" class="headerlink" title="三、常见的Redis数据更新方式存在的问题。"></a>三、常见的Redis数据更新方式存在的问题。</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们用的最多的是客户端自维护模式，大家有没有疑问，为什么要先更新数据库，然后再把设缓存失效？而不是直接更新缓存？这里我们整理一下缓存更新存在的一些问题。了解后就清楚为什么。</p>
+<ol>
+<li>“先更新数据库，再删除缓存”</li>
+</ol>
+<p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/6.png" alt="img"></p>
+<ol start="2">
+<li>“先更新数据库，再更新缓存”,<strong>并行写引起的脏数据</strong>。</li>
+</ol>
+<p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/7.png" alt="img"></p>
+<ol start="3">
+<li>“先删缓存，再更新数据库”，<strong>并发读写引起的脏数据</strong>。</li>
+</ol>
+<p><img src="//blog.com/2019/05/10/MySQL与Redis数据同步一致性问题整理/8.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;无论那种方式，都会出现脏数据，但我们还是建议用第一种方式 ，因为这种出现概率相对另两种低<strong>，因为一般更新数据库会比读数据库耗时长，而第一种情况出现时，要求读数据库耗时比更新数据库长</strong>。但概率低不代表没有，所以<strong>正确的做法是，给缓存设置一个过期时间，即使缓存数据出现不一致，影响的范围也是一个“过期时间”之内</strong>。</p>
+<h2 id="四、深入理解一致性。"><a href="#四、深入理解一致性。" class="headerlink" title="四、深入理解一致性。"></a>四、深入理解一致性。</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们上面说到牺牲一致性，不是完全不管数据的一致性，否则混乱的数据就没有意义了。牺牲一致性，只是不要求像关系数据库那样达到强一致，而放低要求，达到最终一致即可。也就是数据延迟多久的选择。有三种程度的一致性。</p>
+<p>1、强一致性：系统中的某个数据被成功更新后，<strong>后续任何对该数据的读取操作都将得到更新后的值</strong>；</p>
+<p>2、弱一致性：系统中的某个数据被成功更新后，<strong>后续对该数据的读取操作不承诺可以读到更新后的值，也不承诺多久之后数据能够达到一致</strong>，但会尽可能地保证到某个时间级别（比如秒级别）后，数据能够达到一致状态；</p>
+<p>3、最终一致性：是弱一致性的一个特例，<strong>系统会保证在一定时间内，能够达到一个数据一致的状态</strong>。这里之所以将最终一致性单独提出来，是因为它是弱一致性中非常推崇的一种一致性模型，也是业界在大型分布式系统的数据一致性上比较推崇的模型；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据一致性问题/" rel="tag"># 数据一致性问题</a>
+          
+            <a href="/tags/数据库与缓存/" rel="tag"># 数据库与缓存</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/10/数据库主从同步的3种一致性方案实现，及优劣比较/" rel="next" title="数据库主从同步的3种一致性方案实现，及优劣比较">
+                <i class="fa fa-chevron-left"></i> 数据库主从同步的3种一致性方案实现，及优劣比较
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/10/Microsoft REST API Guidelines/" rel="prev" title="Microsoft REST API Guidelines">
+                Microsoft REST API Guidelines <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL与Redis数据同步一致性问题整理"><span class="nav-number">1.</span> <span class="nav-text">MySQL与Redis数据同步一致性问题整理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、什么是一致性。"><span class="nav-number">1.1.</span> <span class="nav-text">一、什么是一致性。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、常见的Redis数据更新方式。"><span class="nav-number">1.2.</span> <span class="nav-text">二、常见的Redis数据更新方式。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端自维护方式"><span class="nav-number">1.2.1.</span> <span class="nav-text">客户端自维护方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存代理方式"><span class="nav-number">1.2.2.</span> <span class="nav-text">缓存代理方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三方同步方式"><span class="nav-number">1.2.3.</span> <span class="nav-text">第三方同步方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#binlog监听"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">binlog监听</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息队列"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">消息队列</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.2.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、常见的Redis数据更新方式存在的问题。"><span class="nav-number">1.3.</span> <span class="nav-text">三、常见的Redis数据更新方式存在的问题。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、深入理解一致性。"><span class="nav-number">1.4.</span> <span class="nav-text">四、深入理解一致性。</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,一致性协议,Raft,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="raft 一致性算法分布式系统和一致性&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式系统有一个很重要的问题要解决，当一台机器出现问题时，我们希望整个集群还是能够正常运行的，以达到高可用的要求。因为系统的数据是不断变化的，所以要保证集群的数据是同步的，不然会出现数据混论或者丢失的情况。这就是一致性问题。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;n">
+<meta name="keywords" content="架构,一致性协议,Raft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="raft 一致性算法">
+<meta property="og:url" content="http://blog.com/2019/05/06/raft 一致性算法/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="raft 一致性算法分布式系统和一致性&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式系统有一个很重要的问题要解决，当一台机器出现问题时，我们希望整个集群还是能够正常运行的，以达到高可用的要求。因为系统的数据是不断变化的，所以要保证集群的数据是同步的，不然会出现数据混论或者丢失的情况。这就是一致性问题。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;n">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/06/raft%20一致性算法/006tNc79gy1fm3p3e0lnnj30sh09zwhg.jpg">
+<meta property="og:image" content="http://blog.com/2019/05/06/raft%20一致性算法/006tNc79gy1fm40vgcvazj30y20j6tap.jpg">
+<meta property="og:image" content="http://blog.com/2019/05/06/raft%20一致性算法/006tNc79gy1fm40vu4bbij30ya0e9q3f.jpg">
+<meta property="og:image" content="http://blog.com/2019/05/06/raft%20一致性算法/006tNc79gy1fm40wfjblhj30ym0i5dif.jpg">
+<meta property="og:updated_time" content="2019-05-06T12:34:00.461Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="raft 一致性算法">
+<meta name="twitter:description" content="raft 一致性算法分布式系统和一致性&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;分布式系统有一个很重要的问题要解决，当一台机器出现问题时，我们希望整个集群还是能够正常运行的，以达到高可用的要求。因为系统的数据是不断变化的，所以要保证集群的数据是同步的，不然会出现数据混论或者丢失的情况。这就是一致性问题。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;n">
+<meta name="twitter:image" content="http://blog.com/2019/05/06/raft%20一致性算法/006tNc79gy1fm3p3e0lnnj30sh09zwhg.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/06/raft 一致性算法/">
+
+
+
+
+
+  <title>raft 一致性算法 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/06/raft 一致性算法/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">raft 一致性算法</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-06T12:12:57+08:00">
+                2019-05-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/一致性协议/" itemprop="url" rel="index">
+                    <span itemprop="name">一致性协议</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/一致性协议/Raft/" itemprop="url" rel="index">
+                    <span itemprop="name">Raft</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="raft-一致性算法"><a href="#raft-一致性算法" class="headerlink" title="raft 一致性算法"></a>raft 一致性算法</h1><h2 id="分布式系统和一致性"><a href="#分布式系统和一致性" class="headerlink" title="分布式系统和一致性"></a>分布式系统和一致性</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分布式系统有一个很重要的问题要解决，当一台机器出现问题时，我们希望整个集群还是能够正常运行的，以达到高可用的要求。因为系统的数据是不断变化的，所以要保证集群的数据是同步的，不然会出现数据混论或者丢失的情况。这就是<strong>一致性问题。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;换个说法，一致性就是让多台机器对一组给定的操作最终得到的状态一样，也就是所有机器执行命令的顺序是一样的，对客户端来说，它们表现得就要像一个机器一样。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分布式一致性问题可以抽象成下面这张图(分布式状态机 <code>Replicated State Machine</code>)：</p>
+<p><img src="//blog.com/2019/05/06/raft 一致性算法/006tNc79gy1fm3p3e0lnnj30sh09zwhg.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>最终的目的是所有节点上保存的状态机器（文件内容）是一样的，这是通过各个节点上一致性模块之间的通信完成的，它们保证按顺序添加日志，然后把日志执行修改状态机的内容</strong>。<strong>如果机器初始状态相同，而且日志中记录顺序是一样的，那么最终的状态一定也是相同的</strong>。</p>
+<p>一致性算法需要满足以下条件才能在实际系统中工作：</p>
+<ul>
+<li><p>安全（<code>safety</code>）：<strong>不会返回错误的结果，即使网络出现延迟、分割（partitions）、丢包、重复和乱序</strong></p>
+</li>
+<li><p>可用（<code>available</code>）：<strong>只要有一半以上的机器正常工作（能够互相通信并且可以和客户端通信），整个集群就要能正常工作</strong></p>
+</li>
+<li><p><strong>不能通过时间来保证一致性，错误的时钟以及严重的消息延迟最多只能造成集群不可用</strong></p>
+</li>
+<li><p><strong>只要大部分机器完成命令的执行，这个命令就算完成，结果可以返回给客户端</strong>。而不用等到那些执行更慢的少数节点完成，它们的操作可以异步在后台运行</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分布式系统关于一致性最著名的算法是 <code>paxos</code>，它的发布者 Lamport 是图灵奖的获得者。但是 <code>paxos</code>算法非常复杂，很多实现都是它的特殊版。尽管 Lamport 后来还发布过 <code>Paxos Made Simple</code> 的文章，试图用更简单的语言解释 <code>paxos</code>算法，但是这个版本的解释还是过于复杂，这对于理解和实现都带来困难。</p>
+<p><code>paxos</code> 算法在分布式系统中地位很高，<code>Chubby</code>作者有过这样一段话：</p>
+<blockquote>
+<p>There is only one consensus protocol, and that’s Paxos. All other approaches are just broken versions of Paxos.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只有一种一致性算法，那就是<code>Paxos</code>；而其他所有的一致性算法都是 <code>Paxos</code>的特殊版本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>raft</code> 算法是基于<code>paxos</code> 算法提出来的，主要是为了更加易懂，提出 raft 算法的论文是 <code>《In search of an Understandable Consensus Algorithm</code>》，可以在网上很容易搜到原文。</p>
+<h2 id="raft-算法"><a href="#raft-算法" class="headerlink" title="raft 算法"></a>raft 算法</h2><p>为了容易理解，<code>raft</code> 算法主要分成几个可以单独解释的问题：</p>
+<ul>
+<li><code>Leader election</code>：<strong>主节点选举</strong>，从集群中所有节点中选择一个作为主节点</li>
+<li><code>Log replication</code>：<strong>日志复制</strong>，主节点全权负责和客户端的交互，以及日志复制到其他节点，保证日志的一致性</li>
+<li><code>Safety</code>：<strong>安全</strong>，如果一个节点往保存的状态添加一个日志记录，其他节点不会再同一个日志 index 时期添加一个不同的记录</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;它的工作流程是这样的：<strong>集群选择出一个节点作为 leader，leader 节点负责接收客户端的请求（日志），并负责把请求复制给所有的从节点，保证节点之间数据的同步</strong>。<strong>如果 leader 节点出现问题挂掉，那么其他正常节点会重新选择 leader</strong>。</p>
+<h3 id="选主-leader-election"><a href="#选主-leader-election" class="headerlink" title="选主 leader election"></a>选主 leader election</h3><p>每个节点在任意情况下，只能有三种状态可选：</p>
+<ul>
+<li><code>leader</code>：领导节点，或者主节点，<strong>用来处理客户端发来的请求，并保证请求数据在整个集群的同步，需要用心跳和 follower 节点通信，通知它们自己的可用性</strong></li>
+<li><code>follower</code>：负责处理 leader 和 candidate 请求的节点。<strong>如果客户端把请求发送给 follower 节点，它需要把请求转发给 leader，由 leader 统一负责管理</strong></li>
+<li><code>candidate</code>：<strong>leader 的候选人，只是在选举过程中短暂出现的状态</strong>。如果通过选举，则会变成 leader；如果选举失败，还是会回到 follower 状态</li>
+</ul>
+<p><img src="//blog.com/2019/05/06/raft 一致性算法/006tNc79gy1fm40vgcvazj30y20j6tap.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>raft</code>算法还有一个<strong>任期（<code>Term</code>）</strong>的概念，<strong>任期是依次递增的编号，每次选举都是一个新的任期</strong>。<strong>在一个任期内最多只能有一个 leader</strong>，也就是说一个任期可以有一个 leader，表示正常工作；也可以没有 leader，表明选举失败。某个节点选举成功后，就成为当前任期的 leader，负责日志复制工作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>任期的主要目的是保证所有节点逻辑时间上的一致，而不会出现过期的请求导致逻辑混乱的情况</strong>。</p>
+<p><img src="//blog.com/2019/05/06/raft 一致性算法/006tNc79gy1fm40vu4bbij30ya0e9q3f.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>每个节点都会保存一个当前任期的值</strong>，当节点通信时会交互当前任期的值：</p>
+<p><strong>1. 如果节点发现其他节点的当前任期比自己的大，就更新自己当前任期的值</strong>；</p>
+<p><strong>2. 如果 leader 节点发现有比自己大的任期值，则知道自己的任期过期了，集群中有更新的 leader 节点，它立即变成 follower 状态</strong>；</p>
+<p><strong>3. 如果节点接收到历史任期的请求，则直接无视</strong>（这很可能是因为网络延迟或者报文重复导致的）；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当节点刚启动的时候，默认是在 follower 状态</strong>。</p>
+<p><strong>如果它能定时收到 leader 的心跳或者日志复制的请求，则会一直处于该状态</strong>；</p>
+<p><strong>如果在设定的超时时间（<code>election timeout</code>）内没有收到 leader 的消息，则认为当前集群没有 leader，或者 leader 以及失效，立即会发起重新投票</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>投票开始，节点会增加自己的当前任期值，转换成 <code>candidate</code>状态，并向其他节点发送请求投票的消息（表示自己想成为下一个任期的 leader）</strong>。下面的状态分为三种情况：</p>
+<ol>
+<li><p>节点收到大多数节点的投票，成为新任期的 leader。每个节点在每个任期只能投票一次，<strong>采取先到先得的原则，投票给最先收到的选主节点</strong>。大多数原则保证一个任期最多只能有一个节点</p>
+</li>
+<li><p>节点发现已经有另一个节点成为 leader。<strong>在等待选举结果的时候，节点收到了心跳或者日志复制的消息（也就是有 leader 了），如果这个 leader 合法（任期比自己的当前任期高），则当前节点会自动变成 follower 状态；否则会继续等待</strong></p>
+</li>
+<li><p>一段时间过去，并没有任何节点成为 leader。比如有多个节点要选举 leader，而且都投票结果比较分散，没有节点获得过半的票数。<strong>延迟等待发起下一轮选举</strong>。</p>
+</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果不采取任何措施，那么第三种情况一直出现，会导致整个集群一直处于选举的状态，这当然是不可接受的。为此，<strong>raft 采取了随机时间的办法</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先，<strong>选举超时时间（<code>election timeout</code>）是随机的，保证会有一个节点首先超时</strong>，率先选举，其他节点来不及和它竞选，它就会成为新的 leader，发送心跳和日志复制请求。其次，<strong>在开始选举时，每个 candidate 节点重置它的超时计时器，等待计时器结束之后才会开始下一次选举</strong>，从而打乱下次选举的前后顺序，保证有一个节点先开始选举，并成为 leader。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实证明，这两种方式能够保证选举在很短的时间里完成，而不会一直循环。</p>
+<p><strong>NOTE:</strong></p>
+<ol>
+<li><strong>选举过期时间（<code>election timeout</code>）一般设置为 150-300ms</strong>，这是大量实验得到的经验值</li>
+</ol>
+<h3 id="日志复制-Log-replication"><a href="#日志复制-Log-replication" class="headerlink" title="日志复制 Log replication"></a>日志复制 Log replication</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当一个节点成为 leader 之后，它就会负责接收客户端的请求。客户端的每个请求都是一个指令，<code>replicate state machine</code>（复制状态机） 会执行这个指令，修改自己的状态。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>主节点收到请求之后，把它作为新纪录写入到自己的日志中，然后发送请求给所有的follower节点，让它们进行日志复制，等到大部分follower节点日志复制完成，leader 节点进行commit并返回结果给客户端</strong>。如果有从节点失败或者比较慢，主节点会<strong>一直重试</strong>，直到所有的节点保存了所有的日志记录（达到统一的状态）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每个日志记录都要保存一个状态机的指令，同时还保存主节点接受请求时候的任期值，此外还有一个 index 表示它在日志文件中的位置。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当日志记录被状态机执行后，就称它为已提交（commited）。<strong>当主节点知道日志记录已经复制到大多数节点时，会把当前记录提交到本地的状态机</strong>（因为日志已经更新到大多数节点，所有数据是安全的），也就是更改数据的值。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>leader 节点会记录已经提交（commited）的最大日志 index，然后后续的心跳和日志复制请求会带上这个值，这样从节点就能知道哪些记录已经提交了，自己也会让状态机开始执行日志中的记录</strong>。从而达到所有状态机数据的一致性！</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这样的日志机制<strong>保证了如果不同节点的日志文件某个记录的 index 和任期都相同，那么它们的内容也一定相同，而且之前的日志记录也一定是一样的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当主节点发送日志复制的请求时，它会带上前一个日志记录的 index 和 term，如果从节点发现自己的日志中不存在这个记录，则会拒绝这个请求</strong>。</p>
+<p><img src="//blog.com/2019/05/06/raft 一致性算法/006tNc79gy1fm40wfjblhj30ym0i5dif.jpg" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;正常情况下，每次日志复制都能正常完成，而且节点都能保证日志记录都是完全一致的。但如果 leader 节点崩溃掉，可能会出现日志不一致的情况（奔溃的主节点还没有完全把自己日志文件中的记录复制到其他节点，因此有些节点的日志比另外一些节点内容更多）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于日志内容不一致的请求，raft 采取用主节点日志内容覆盖 follower 节点日志的做法，先找到从节点日志和自己日志记录第一个不一致的地方，然后一直覆盖到最后</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;整个过程是这样的：当某个节点当选 leader 之后，会发送日志复制请求到从节点，并带着<strong>nextIndex（主节点要发送的下一个日志记录的 index）</strong>，如果从节点出现日志记录不一致的情况，会拒绝该请求，那么主节点知道发生了不一致，<strong>递减 nextIndex</strong>，然后<strong>重新发送请求，直到日志一致的地方，一切回复正常，然后继续发送日志复制请求，就会把从节点的日志覆盖为主节点的日志内容</strong>。</p>
+<h3 id="安全-safety"><a href="#安全-safety" class="headerlink" title="安全 safety"></a>安全 safety</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面提到的选主和日志复制是 raft 算法的核心，能够保证日志里面记录最终是一致的，但是还不能够保证所有节点的状态机能够按顺序执行命令。raft 对选主做出了限制，从而实现算法的正确性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总的来说，这个限制只有一句话：<strong>只有保存了最新日志的节点才能选举成为 leader</strong>，选举的时候如果节点发现候选节点日志没有自己的新，则拒绝投票给它。因为保存了最新日志，因此新 leader 产生之后，follower 节点和它保持同步就不会出现数据冲突的问题。这样也能保证 leader 节点不会覆盖日志中的记录。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面<strong>最新日志指的是保存了所有的已提交日志记录，因为已提交已经包含了集群中大多数节点都会有对应的日志记录</strong>，因此能保证没有最新记录的候选人选不上（因为大多数节点会拒绝投票给它），而且至少有一个节点符合条件（只要集群节点数超过 3）。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了上述最核心的内容之外，raft 算法还有节点增删时候保证数据一致性的解决方案，以及<strong>利用快照（<code>snapshot</code>）进行日志压缩（<code>log compaction</code>）的内容，而且还要求客户端发送请求时带有一个 id，raft 集群保证请求处理的幂等性</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总的来说，易懂性是 <code>raft</code> 强调的核心，在不损失功能和性能的情况下，保证算法和系统的容易理解非常重要，这也是为什么相比很早就就出现的 <code>paxos</code> 算法，2013 年刚出现的 <code>raft</code> 就成为了很多新的分布式系统核心算法（比如分布式键值数据库 <code>etcd</code>）。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://ramcloud.stanford.edu/raft.pdf" target="_blank" rel="noopener">raft 算法论文</a></li>
+<li><a href="https://raft.github.io/" target="_blank" rel="noopener">raft 算法图解</a></li>
+<li><a href="https://www.cnblogs.com/mindwind/p/5231986.html" target="_blank" rel="noopener">Raft 为什么是更易理解的分布式一致性算法</a></li>
+<li><a href="http://thesecretlivesofdata.com/raft/" target="_blank" rel="noopener">raft 算法动画解析</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/一致性协议/" rel="tag"># 一致性协议</a>
+          
+            <a href="/tags/Raft/" rel="tag"># Raft</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/06/一致性算法Raft详解/" rel="next" title="一致性算法Raft详解">
+                <i class="fa fa-chevron-left"></i> 一致性算法Raft详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/06/Raft协议详解/" rel="prev" title="Raft协议详解">
+                Raft协议详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#raft-一致性算法"><span class="nav-number">1.</span> <span class="nav-text">raft 一致性算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式系统和一致性"><span class="nav-number">1.1.</span> <span class="nav-text">分布式系统和一致性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#raft-算法"><span class="nav-number">1.2.</span> <span class="nav-text">raft 算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#选主-leader-election"><span class="nav-number">1.2.1.</span> <span class="nav-text">选主 leader election</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#日志复制-Log-replication"><span class="nav-number">1.2.2.</span> <span class="nav-text">日志复制 Log replication</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安全-safety"><span class="nav-number">1.2.3.</span> <span class="nav-text">安全 safety</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">1.4.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

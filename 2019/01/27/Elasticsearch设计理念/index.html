@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Elasticsearch,搜索引擎,服务器,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Elasticsearch设计理念  原文地址：https://juejin.im/post/5c49ae25f265da613d7c6635  要了解分布式搜索引擎，先了解一下搜索这个事儿吧，搜索这个技术领域里最入门级别的一个概念就是倒排索引。 我们先简单说一下倒排索引是个什么东西。 假如说你现在不用搜索引擎，单纯使用数据库来存放和搜索一些数据，比如说放了一些论坛的帖子数据吧，那么这个数据的格式">
+<meta name="keywords" content="架构,Elasticsearch,搜索引擎,服务器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elasticsearch设计理念">
+<meta property="og:url" content="http://blog.com/2019/01/27/Elasticsearch设计理念/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Elasticsearch设计理念  原文地址：https://juejin.im/post/5c49ae25f265da613d7c6635  要了解分布式搜索引擎，先了解一下搜索这个事儿吧，搜索这个技术领域里最入门级别的一个概念就是倒排索引。 我们先简单说一下倒排索引是个什么东西。 假如说你现在不用搜索引擎，单纯使用数据库来存放和搜索一些数据，比如说放了一些论坛的帖子数据吧，那么这个数据的格式">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/168805f1477eb5dd.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/168805f8b96dd808.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/168805fc54b3d697.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/168805fe4068f818.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/16880600ee1843cb.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/1688060346bd86b0.png">
+<meta property="og:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/1688060551218035.png">
+<meta property="og:updated_time" content="2019-01-27T03:35:29.948Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Elasticsearch设计理念">
+<meta name="twitter:description" content="Elasticsearch设计理念  原文地址：https://juejin.im/post/5c49ae25f265da613d7c6635  要了解分布式搜索引擎，先了解一下搜索这个事儿吧，搜索这个技术领域里最入门级别的一个概念就是倒排索引。 我们先简单说一下倒排索引是个什么东西。 假如说你现在不用搜索引擎，单纯使用数据库来存放和搜索一些数据，比如说放了一些论坛的帖子数据吧，那么这个数据的格式">
+<meta name="twitter:image" content="http://blog.com/2019/01/27/Elasticsearch设计理念/168805f1477eb5dd.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/27/Elasticsearch设计理念/">
+
+
+
+
+
+  <title>Elasticsearch设计理念 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/27/Elasticsearch设计理念/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Elasticsearch设计理念</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-27T12:12:57+08:00">
+                2019-01-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/" itemprop="url" rel="index">
+                    <span itemprop="name">服务器</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/架构/搜索引擎/" itemprop="url" rel="index">
+                    <span itemprop="name">搜索引擎</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/架构/搜索引擎/Elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">Elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Elasticsearch设计理念"><a href="#Elasticsearch设计理念" class="headerlink" title="Elasticsearch设计理念"></a>Elasticsearch设计理念</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://juejin.im/post/5c49ae25f265da613d7c6635" target="_blank" rel="noopener">https://juejin.im/post/5c49ae25f265da613d7c6635</a></p>
+</blockquote>
+<p>要了解分布式搜索引擎，先了解一下搜索这个事儿吧，搜索这个技术领域里最入门级别的一个概念就是倒排索引。</p>
+<p>我们先简单说一下倒排索引是个什么东西。</p>
+<p>假如说你现在不用搜索引擎，单纯使用数据库来存放和搜索一些数据，比如说放了一些论坛的帖子数据吧，那么这个数据的格式大致如下：</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/168805f1477eb5dd.png" alt="img"></p>
+<p> 很简单吧，假设有一个id字段标识了每个帖子数据，然后title字段是帖子的标题，content字段是帖子的内容。</p>
+<p>那么这个时候，比如我们要是用数据库来进行搜索包含“Java”这个关键字的所有帖子，大致SQL如下：</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/168805f8b96dd808.png" alt="img"></p>
+<p> 咱们姑且不论这个数据库层面也有支持全文检索的一些特殊索引类型，或者数据库层面是怎么执行的，这个不是本文讨论的重点，你就看看数据库的数据格式以及搜索的方式就好了。</p>
+<p>但是如果你通过搜索引擎类的技术来存放帖子的内容，他是可以建立倒排索引的。</p>
+<p>也就是说，你把上述的几行数据放到搜索引擎里，这个倒排索引的数据大致看起来如下：</p>
+<p>关键词    id</p>
+<p>Java      [1, 2, 3]</p>
+<p>语言      [1]</p>
+<p>面试      [3]</p>
+<p>资源      [2]</p>
+<p>所谓的倒排索引，就是把你的数据内容先分词，每句话分成一个一个的关键词，然后记录好每个关键词对应出现在了哪些id标识的数据里。</p>
+<p>那么你要搜索包含“Java”关键词的帖子，直接扫描这个倒排索引，在倒排索引里找到“Java”这个关键词对应的那些数据的id就好了。</p>
+<p>然后你可以从其他地方根据这几个id找到对应的数据就可以了，这个就是倒排索引的数据格式以及搜索的方式，上面这种利用倒排索引查找数据的方式，也被称之为全文检索。</p>
+<h2 id="（2）什么叫做分布式搜索引擎？"><a href="#（2）什么叫做分布式搜索引擎？" class="headerlink" title="（2）什么叫做分布式搜索引擎？"></a>（2）什么叫做分布式搜索引擎？</h2><p>其实要知道什么叫做分布式搜索引擎，你首先得知道，假如我们就用一台机器部署一个搜索引擎系统，然后利用上述的那种倒排索引来存储数据，同时支持一些全文检索之类的搜索功能，那么会有什么问题？</p>
+<p>其实还是很简单，假如说你现在要存储1TB的数据，那么放在一台机器还是可以的。</p>
+<p>但是如果你要存储超过10TB，100TB，甚至1000TB的数据呢？你用一台机器放的下吗？</p>
+<p>当然是放不下的了，你的机器磁盘空间是不够的。</p>
+<p>大家看一下下面的图：</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/168805fc54b3d697.png" alt="img"></p>
+<p>所以这个时候，你就得用分布式搜索引擎了，也就是要使用多台机器来部署搜索引擎集群。</p>
+<p>比如说，假设你用的是Elasticsearch（后面简写为：ES）。</p>
+<p>现在你总共有3TB的数据，那么你搞3台机器，每台机器上部署一个ES进程，管理那台机器上的1TB数据就可以了。</p>
+<p>这样不就可以把3TB的数据分散在3台机器上来存储了？这不就是索引数据的分布式存储吗？</p>
+<p>而且，你在搜索数据的时候，不就可以利用3台机器来对分布式存储后的数据进行搜索了？每台机器上的ES进程不都可以对一部分数据搜索？这不就是分布式的搜索？</p>
+<p>是的，这就是所谓的分布式搜索引擎：把大量的索引数据拆散成多块，每台机器放一部分，然后利用多台机器对分散之后的数据进行搜索，所有操作全部是分布在多台机器上进行，形成了完整的分布式的架构。</p>
+<p>同样，我们来看下面的图，直观的感受一下。</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/168805fe4068f818.png" alt="img"></p>
+<h2 id="（3）Elasticsearch的数据结构"><a href="#（3）Elasticsearch的数据结构" class="headerlink" title="（3）Elasticsearch的数据结构"></a>（3）Elasticsearch的数据结构</h2><p>如果你要是使用Elasticsearch这种分布式搜索引擎，必须要熟悉他的一些专业的技术名词，描述他的一些数据结构。</p>
+<p>比如说“index”这个东西，他是索引的意思，其实他有点类似于数据库里的一张表，大概对应表的那个概念。</p>
+<p>比如你搞一个专门存放帖子的索引，然后他有id、title、content几个field，这个field大致就是他的一个字段。</p>
+<p>然后还有一个概念，就是document，这个就代表了index中的一条数据。</p>
+<p>下面就是一个document，这个document可以写到index里去，算是index里的一条数据。</p>
+<p>而且写到es之后，这条数据的内容就会拆分为倒排索引的数据格式来存储。</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/16880600ee1843cb.png" alt="img"></p>
+<h2 id="（4）Shard数据分片机制"><a href="#（4）Shard数据分片机制" class="headerlink" title="（4）Shard数据分片机制"></a>（4）Shard数据分片机制</h2><p>那么这个时候大家考虑一下，比如说你有一个index，专门存放论坛里的帖子，现在论坛里的帖子有1亿，占用了1TB的磁盘空间，这个还好说。</p>
+<p>如果这个帖子有10亿，100亿，占用了10TB、甚至100TB的磁盘空间呢？</p>
+<p>那你这个index的数据还能在一台机器上存储吗？答案明显是不能的。</p>
+<p>这个时候，你必须得支持这个index的数据分布式存储在多台机器上，利用多台机器的磁盘空间来承载这么大的数据量。</p>
+<p>而且，需要保证每台机器上对这个index存储的数据量不要太大，因为控制单台机器上这个index的数据量，可以保证他的搜索性能更高。</p>
+<p>所以这里就引入了一个概念：Shard数据分片结构。每个index你都可以指定创建多少个shard，每个shard就是一个数据分片，会负责存储这个index的一部分数据。</p>
+<p>比如说index里有3亿帖子，占据3TB数据。然后这个index你设置了3个shard。</p>
+<p>那么每个shard就可以包含一个1TB大小的数据分片，每个shard在集群里的一台机器上，这样就形成了利用3台机器来分布式存储一个index的数据的效果了。</p>
+<p>大家看下面的图：</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/1688060346bd86b0.png" alt="img"></p>
+<p>现在index里的3TB数据分布式存储在了3台机器上，每台机器上有一个shard，每个shard负责管理这个index的其中1TB数据的分片。</p>
+<p>而且，另外一个好处是，假设我们要对这个index的3TB数据运行一个搜索，是不是可以发送请求到3台机器上去？</p>
+<p>3台机器上的shard直接可以分布式的并行对一部分数据进行搜索，起到一个分布式搜索的效果，大幅度提升海量数据的搜索性能和吞吐量。</p>
+<h2 id="（5）Replica多副本数据冗余机制"><a href="#（5）Replica多副本数据冗余机制" class="headerlink" title="（5）Replica多副本数据冗余机制"></a>（5）Replica多副本数据冗余机制</h2><p>但是现在有一个问题，假如说3台机器中的其中一台宕机了，此时怎么办呢？</p>
+<p>是不是这个index的3TB数据的1/3就丢失了？因为上面有1TB的数据分片没了。</p>
+<p>所以说，还需要为了实现高可用使用Replica多副本数据冗余机制。</p>
+<p>在Elasticsearch里，就是支持对每个index设置一个replica数量的，也就是每个shard对应的replica副本的数量。</p>
+<p>比如说你现在一个index有3个shard，你设置对每个shard做1个replica副本，那么此时每个shard都会有一个replica shard。</p>
+<p>这个初始的shard就是primary shard，而且primary shard和replica shard是绝对不会放在一台机器上的，避免一台机器宕机直接一个shard的副本也同时丢失了。</p>
+<p>我们再来看下面的图，感受一下：</p>
+<p><img src="//blog.com/2019/01/27/Elasticsearch设计理念/1688060551218035.png" alt="img"></p>
+<p>在上述的replica机制下，每个primary shard都有一个replica shard在别的机器上，任何一台机器宕机，都可以保证数据不会丢失，分布式搜索引擎继续可用。</p>
+<p>Elasticsearch默认是支持每个index是5个primary shard，每个primary shard有1个replica shard作为副本。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Elasticsearch/" rel="tag"># Elasticsearch</a>
+          
+            <a href="/tags/搜索引擎/" rel="tag"># 搜索引擎</a>
+          
+            <a href="/tags/服务器/" rel="tag"># 服务器</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/27/三次握手与四次挥手详解/" rel="next" title="三次握手与四次挥手详解">
+                <i class="fa fa-chevron-left"></i> 三次握手与四次挥手详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/27/谈谈代码——如何避免写出糟糕if...else语句/" rel="prev" title="谈谈代码——如何避免写出糟糕if...else语句">
+                谈谈代码——如何避免写出糟糕if...else语句 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Elasticsearch设计理念"><span class="nav-number">1.</span> <span class="nav-text">Elasticsearch设计理念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#（2）什么叫做分布式搜索引擎？"><span class="nav-number">1.1.</span> <span class="nav-text">（2）什么叫做分布式搜索引擎？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#（3）Elasticsearch的数据结构"><span class="nav-number">1.2.</span> <span class="nav-text">（3）Elasticsearch的数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#（4）Shard数据分片机制"><span class="nav-number">1.3.</span> <span class="nav-text">（4）Shard数据分片机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#（5）Replica多副本数据冗余机制"><span class="nav-number">1.4.</span> <span class="nav-text">（5）Replica多副本数据冗余机制</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

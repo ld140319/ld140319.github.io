@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,服务器,监控,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="从零开始搭建监控告警平台 转自 58沈剑  架构师之路  集群信息管理一、啥是集群？互联网典型分层架构如下：   web-server层 service层 db层与cache层  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为了保证高可用，每一个站点、服务、数据库、缓存都会冗余多个实例，组成一个分布式的系统，集群则是一个分布式的物理形态。 &amp;nbsp;&amp;nbsp;&amp;nb">
+<meta name="keywords" content="架构,服务器,监控">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从零开始搭建监控告警平台">
+<meta property="og:url" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="从零开始搭建监控告警平台 转自 58沈剑  架构师之路  集群信息管理一、啥是集群？互联网典型分层架构如下：   web-server层 service层 db层与cache层  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为了保证高可用，每一个站点、服务、数据库、缓存都会冗余多个实例，组成一个分布式的系统，集群则是一个分布式的物理形态。 &amp;nbsp;&amp;nbsp;&amp;nb">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/1.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/2.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/3.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/4.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/5.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/6.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/7.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/8.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/9.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/10.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/11.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/12.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/13.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/14.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/15.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/16.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/17.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/18.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/19.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/20.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/21.webp">
+<meta property="og:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/22.webp">
+<meta property="og:updated_time" content="2019-01-26T01:56:28.191Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从零开始搭建监控告警平台">
+<meta name="twitter:description" content="从零开始搭建监控告警平台 转自 58沈剑  架构师之路  集群信息管理一、啥是集群？互联网典型分层架构如下：   web-server层 service层 db层与cache层  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;为了保证高可用，每一个站点、服务、数据库、缓存都会冗余多个实例，组成一个分布式的系统，集群则是一个分布式的物理形态。 &amp;nbsp;&amp;nbsp;&amp;nb">
+<meta name="twitter:image" content="http://blog.com/2019/01/25/从零开始搭建监控告警平台/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/25/从零开始搭建监控告警平台/">
+
+
+
+
+
+  <title>从零开始搭建监控告警平台 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/25/从零开始搭建监控告警平台/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从零开始搭建监控告警平台</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-25T12:12:57+08:00">
+                2019-01-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/" itemprop="url" rel="index">
+                    <span itemprop="name">服务器</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/服务器/架构/监控/" itemprop="url" rel="index">
+                    <span itemprop="name">监控</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="从零开始搭建监控告警平台"><a href="#从零开始搭建监控告警平台" class="headerlink" title="从零开始搭建监控告警平台"></a>从零开始搭建监控告警平台</h1><blockquote>
+<p>转自 58沈剑  架构师之路</p>
+</blockquote>
+<h2 id="集群信息管理"><a href="#集群信息管理" class="headerlink" title="集群信息管理"></a>集群信息管理</h2><h3 id="一、啥是集群？"><a href="#一、啥是集群？" class="headerlink" title="一、啥是集群？"></a>一、啥是集群？</h3><p>互联网典型分层架构如下：</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/1.webp" alt=""></p>
+<ul>
+<li>web-server层</li>
+<li>service层</li>
+<li>db层与cache层</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了保证高可用，每一个站点、服务、数据库、缓存都会冗余多个实例，组成一个分布式的系统，集群则是一个分布式的物理形态。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;额，好拗口，通俗的说，<strong>集群就是一堆机器，上面部署了提供相似功能的站点</strong>，服务，数据库，或者缓存。</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/2.webp" alt=""></p>
+<p>如上图：</p>
+<ul>
+<li>web集群，由web.1和web.2两个实例组成</li>
+<li>service集群，由service.1/service.2/service.3三个实例组成</li>
+<li>db集群，由mysql-M/mysql-S1/mysql-S2三个实例组成</li>
+<li>cache集群，由cache-M/cache-S两个实例组成</li>
+</ul>
+<h3 id="二、集群信息"><a href="#二、集群信息" class="headerlink" title="二、集群信息"></a>二、集群信息</h3><p>什么是集群信息？</p>
+<p>一个集群，会包含若干信息，例如：</p>
+<ul>
+<li><strong>集群名称</strong></li>
+<li><strong>IP列表</strong></li>
+<li><strong>二进制目录</strong></li>
+<li><strong>配置目录</strong></li>
+<li><strong>日志目录</strong></li>
+<li><strong>负责人列表</strong></li>
+</ul>
+<p>画外音：<strong>集群IP列表不建议直接使用IP，而建议使用内网域名</strong></p>
+<h4 id="什么时候会用到集群信息呢？"><a href="#什么时候会用到集群信息呢？" class="headerlink" title="什么时候会用到集群信息呢？"></a>什么时候会用到集群信息呢？</h4><p>很多场景，特别是线上操作，都会使用到各种集群信息，例如：</p>
+<ul>
+<li><strong>自动化上线</strong></li>
+<li><strong>监控</strong></li>
+<li><strong>日志清理</strong></li>
+<li><strong>二进制与配置的备份</strong></li>
+<li><strong>下游的调用</strong></li>
+</ul>
+<p>这些场景，分别都是如何读取集群信息的？</p>
+<p>一般来说，早期会<strong>把集群信息写在配置文件</strong>件里。</p>
+<p>例如，<strong>自动化上线</strong>，有一个配置文件，deploy.user.service.config，其内容是：</p>
+<blockquote>
+<p>name : user.service</p>
+<p>ip.list : ip1, ip2, ip3</p>
+<p>bin.path : /user.service/bin/</p>
+<p>ftp.path : <a href="ftp://192.168.0.1/USER_2_0_1_3/user.exe" target="_blank" rel="noopener">ftp://192.168.0.1/USER_2_0_1_3/user.exe</a></p>
+</blockquote>
+<p> 自动化上线的过程，则是：</p>
+<ol>
+<li>把可执行文件从ftp拉下来</li>
+<li>读取集群IP列表</li>
+<li>读取二进制应该部署的目录</li>
+<li>把二进制部署到线上</li>
+<li>逐台重启</li>
+</ol>
+<p>画外音：啥，还没有实现自动化脚本部署？还处在运维ssh到线上，手动执行命令，<strong>逐台机器人肉部署</strong>的刀耕火种阶段？赶紧照着这个方案，做<strong>自动化改造</strong>吧。</p>
+<p>又例如，web-X调用下游的user服务，又有一个配置文件，web-X.config，其内容配置了：</p>
+<blockquote>
+<p>service.name : user.service</p>
+<p>service.ip.list : ip1, ip2, ip3</p>
+<p>service.port : 8080</p>
+</blockquote>
+<p>web-X调用user服务的过程，则是：</p>
+<ol>
+<li>web-X启动</li>
+<li>web-X读取user服务集群的IP列表与端口</li>
+<li>web-X初始化user服务连接池</li>
+<li>web-X拿取user服务的连接，通过RPC接口调用user服务</li>
+</ol>
+<p><strong>日志清理，服务监控，二进制备份</strong>的过程，也都与上述类似。</p>
+<h4 id="存在什么问题？"><a href="#存在什么问题？" class="headerlink" title="存在什么问题？"></a>存在什么问题？</h4><p>上述业务场景，对于集群信息的使用，有两个最大的特点：</p>
+<p><strong>每个应用场景，所需集群信息都不一样</strong>（A场景需要集群abc信息，B场景需要集群def信息）</p>
+<p><strong>每个应用场景，集群信息都写在“自己”的配置文件里</strong></p>
+<p>一句话总结：<strong>集群信息管理分散化</strong>。</p>
+<p>这里最大的问题，是<strong>耦合，当集群的信息发生变化的时候，有非常多的配置需要修改</strong>：</p>
+<blockquote>
+<p>deploy.user.service.config</p>
+<p>clean.log.user.service.config</p>
+<p>backup.bin.user.service.config</p>
+<p>monitor.config</p>
+<p>web-X.config</p>
+</blockquote>
+<p>这些配置里，user服务集群的信息都需要修改：</p>
+<p><strong>随着研发、测试、运维人员的流动，很多配置放在哪里，逐步就被遗忘了</strong></p>
+<p><strong>随着时间的推移，一些配置就被改漏了</strong></p>
+<p>如何解决上述耦合的问题呢？</p>
+<p>一句话回答：<strong>集群信息管理集中化</strong>。</p>
+<h3 id="三、如何集中化管理集群信息"><a href="#三、如何集中化管理集群信息" class="headerlink" title="三、如何集中化管理集群信息"></a>三、如何集中化管理集群信息</h3><p>如何集中化管理集群配置信息，不同发展阶段的公司，实现的方式不一样。</p>
+<h4 id="早期方案-全局配置写死"><a href="#早期方案-全局配置写死" class="headerlink" title="早期方案-全局配置写死"></a>早期方案-全局配置写死</h4><p>通过<strong>全局配置文件</strong>，实现集群信息集中管理，举例global.config如下：</p>
+<blockquote>
+<p>[user.service]</p>
+<p>ip.list : ip1, ip2, ip3</p>
+<p>port : 8080</p>
+<p>bin.path : /user.service/bin/</p>
+<p>log.path : /user.service/log/</p>
+<p>conf.path : /user.service/conf/</p>
+<p>ftp.path :<a href="ftp://192.168.0.1/USER_2_0_1_3/user.exe" target="_blank" rel="noopener">ftp://192.168.0.1/USER_2_0_1_3/user.exe</a></p>
+<p>owner.list : shenjian, zhangsan, lisi</p>
+<p>[passport.web]</p>
+<p>ip.list : ip11, ip22, ip33</p>
+<p>port : 80</p>
+<p>bin.path : /passport.web/bin/</p>
+<p>log.path : /passport.web/log/</p>
+<p>conf.path : /passport.web/conf/</p>
+<p>ftp.path :<a href="ftp://192.168.0.1/PST_1_2_3_4/passport.jar" target="_blank" rel="noopener">ftp://192.168.0.1/PST_1_2_3_4/passport.jar</a></p>
+<p>owner.list : shenjian, zui, shuaiqi</p>
+</blockquote>
+<p>集中维护集群信息之后：</p>
+<ol>
+<li><strong>任何需要读取集群信息的场景，都从global.config里读取</strong></li>
+<li><strong>任何集群信息的修改，只需要修改global.config一处</strong></li>
+<li><strong>global.config会部署到任何一台线上机器，维护和管理也很方便</strong></li>
+</ol>
+<p>画外音：额，当然，信息太多的话，global.config也要垂直拆分</p>
+<h4 id="中期方案-接口拉取"><a href="#中期方案-接口拉取" class="headerlink" title="中期方案-接口拉取"></a>中期方案-接口拉取</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着公司业务的发展，随着技术团队的扩充，随着技术体系的完善，通过集群信息管理服务，来维护集群信息的诉求原来越强烈。</p>
+<p>画外音：慢慢的，配置太多了，通过global.config来修改配置太容易出错了</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/3.webp" alt=""></p>
+<p>如上图，建立集群信息管理服务：</p>
+<ul>
+<li>info.db ：存储集群信息</li>
+<li>info.cache ：缓存集群信息</li>
+<li>info.service ：提供集群信息访问的RPC接口，以及HTTP接口</li>
+<li>info.web ：集群信息维护后台</li>
+</ul>
+<p><strong>服务的核心接口</strong>：</p>
+<blockquote>
+<p>Info InfoService::getInfo(String ClusterName);</p>
+<p>Bool InfoService::setInfo(String ClusterName, String key, String value);</p>
+</blockquote>
+<p>然后，统一通过服务来获取与修改集群信息：</p>
+<ol>
+<li><strong>所有需要获取集群信息的场景，都通过info.service提供的接口来读取集群信息</strong></li>
+<li><strong>所有需要修改集群信息的场景，都通过info.web来操作</strong></li>
+</ol>
+<h4 id="长期方案-推送"><a href="#长期方案-推送" class="headerlink" title="长期方案-推送"></a>长期方案-推送</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;集群信息服务可以解决大部分的耦合问题，但仍然有一个不足：<strong>集群信息变更时，无法反向实时通知关注方，集群信息发生了改变</strong>。更长远的，要引入<strong>配置中心</strong>来解决。</p>
+<p><strong>可以通过zookeeper来搭建</strong></p>
+<p> <img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/4.webp" alt=""></p>
+<h2 id="分级告警策略"><a href="#分级告警策略" class="headerlink" title="分级告警策略"></a>分级告警策略</h2><h3 id="一、啥是告警？"><a href="#一、啥是告警？" class="headerlink" title="一、啥是告警？"></a>一、啥是告警？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;监控平台发现系统异常，向系统负责人发出<strong>文字</strong>（例如，邮件/短信），<strong>色彩</strong>（有些公司，编译不过，CI平台会亮红灯），<strong>声音</strong>（有些公司，有蜂鸣器嗡嗡响，研发压力大呀）等警示，就是告警。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝大部分公司，<strong>主要是通过文字发出系统异常告警信息</strong>。</p>
+<h4 id="文字告警有哪些常见的方法？"><a href="#文字告警有哪些常见的方法？" class="headerlink" title="文字告警有哪些常见的方法？"></a>文字告警有哪些常见的方法？</h4><p>以58到家为例，目前提供了四种文字告警的方式，其成本，到达率，实时性都不一样：</p>
+<ul>
+<li><strong>短信</strong>：成本高，实时性好，到达率高</li>
+<li><strong>邮件</strong>：成本低，实时性差，到达率高</li>
+<li><strong>钉钉/微信</strong>：成本低，实时性中，到达率中</li>
+</ul>
+<h3 id="二、啥是告警策略？"><a href="#二、啥是告警策略？" class="headerlink" title="二、啥是告警策略？"></a>二、啥是告警策略？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝大部分公司，可能都没有考虑系统监控告警策略，<strong>一旦发生异常，就发邮件/短信通知系统负责人</strong>，这样可能导致这样一些问题：</p>
+<ul>
+<li>同一个集群的不同实例出问题，可能会造成<strong>重复告警</strong>，浪费带宽资源，升高短信成本</li>
+<li>系统负责人短时间内手机被<strong>告警短信刷屏，导致产生麻木感</strong></li>
+<li>系统负责人短时间内手机，邮箱，钉钉，微信同时对一个故障告警，<strong>导致产生巨大压力</strong></li>
+<li>员工不重视告警，无法判断告警的优先级，leader又不知情，导致<strong>事故影响扩大</strong></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了解决上述问题，针对不同的服务，在不同的时间段，不同的员工层级，应该设定不同的告警策略，<strong>有哪些常见的告警策略呢？</strong></p>
+<blockquote>
+<p>不能够一出现异常就报警</p>
+<p>报警分级</p>
+</blockquote>
+<ul>
+<li><strong>模块告警收敛策略</strong>：当一个模块/服务异常时，与其对应的所有接口监控，与其对应集群的多有实例，都会告警，此时，应该收敛为一个模块/服务告警，常见的实现方式是，<strong>模块/服务按照集群名称做告警去重</strong></li>
+<li><strong>接口告警收敛策略</strong>：当一个模块/服务的一个接口异常，与其对应集群的多个实例，都会告警，此时，应该收敛为一个接口告警，常见的实现方式是，<strong>按照接口名称做告警去重</strong></li>
+<li><strong>告警频率收敛策略</strong>：对同一个服务或者接口，应该在固定的时间内，只发送有限的告警，常见的方式是，<strong>按照1分钟1次限制告警次数</strong>，一来降低研发的紧张感与压力感，二来节省成本</li>
+<li><strong>不同时段区分告警方式策略</strong>：<strong>工作日工作时段在公司时</strong>，通过邮件/钉钉/微信发送告警能更加节省成本；<strong>半夜或者周末</strong>发生故障时，通过邮件发送告警能保证实时性</li>
+<li><strong>逐层上报告警策略</strong>：每个模块都应该有负责人，原则上告警会发送给模块的负责人，但如果告警连续1小时未恢复正常，告警会自动发送给系统负责人的<strong>直属leader</strong>，如果告警连续3个小时未恢复正常，告警会自动发送给系统负责人的<strong>二级leader</strong></li>
+<li><strong>黑白跳动策略</strong>：当系统<strong>由正常变为异常，异常恢复正常</strong>，出现正反的变化时，都应该发出告警</li>
+</ul>
+<h3 id="三、监控平台，告警策略依赖的基础模块"><a href="#三、监控平台，告警策略依赖的基础模块" class="headerlink" title="三、监控平台，告警策略依赖的基础模块"></a>三、监控平台，告警策略依赖的基础模块</h3><p>要实现统一监控平台，要实现告警策略化，需要依赖<strong>两个</strong>非常重要的基础模块：</p>
+<ul>
+<li><strong>集群信息管理</strong></li>
+<li><strong>员工信息管理</strong></li>
+</ul>
+<h4 id="什么是集群信息管理？"><a href="#什么是集群信息管理？" class="headerlink" title="什么是集群信息管理？"></a>什么是集群信息管理？</h4><p>额，这个架构设计中最容易忽略的部分，《<a href="http://mp.weixin.qq.com/s?__biz=MjM5ODYxMDA5OQ==&amp;mid=2651960832&amp;idx=1&amp;sn=39fce05ae95bfff243a199d69f0fe018&amp;chksm=bd2d03dc8a5a8aca06e80f7466056beec1cdc3baa669ba1ab6419199843cab6fbe40d753ea42&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">监控平台基础服务，集群信息统一管理</a>》一文已经有过描述，文本不再展开。</p>
+<p>以下是通过全局配置文件，实现集群信息集中管理，一个global.config举例：</p>
+<blockquote>
+<p><em>[user.service]</em></p>
+<p><em>ip.list : ip1, ip2, ip3</em></p>
+<p><em>port : 8080</em></p>
+<p><em>bin.path : /user.service/bin/</em></p>
+<p><em>log.path : /user.service/log/</em></p>
+<p><em>conf.path : /user.service/conf/</em></p>
+<p><em>ftp.path:<a href="ftp://192.168.0.1/USER_2_0_1_3/user.exe" target="_blank" rel="noopener">ftp://192.168.0.1/USER_2_0_1_3/user.exe</a></em></p>
+<p>*owner.list : shenjian, zhangsan, lisi</p>
+</blockquote>
+<p>从这里，监控中心能够知道被监控的是 [user.service] <strong>集群</strong>，有<strong>三个实例</strong>部署在 ip1/ip2/ip3 上，如果发生异常，要将告警发送给 shenjian, zhangsan, lisi 三个<strong>模块直接负责人</strong>。</p>
+<h4 id="什么是员工信息？"><a href="#什么是员工信息？" class="headerlink" title="什么是员工信息？"></a>什么是员工信息？</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;额，顾名思义，是员工基础信息的管理（额，这算什么解释）。和集群信息管理一样，<strong>员工信息的管理一定要集中化，不能分散在各处</strong>（分散的坏处是耦合，在《<a href="http://mp.weixin.qq.com/s?__biz=MjM5ODYxMDA5OQ==&amp;mid=2651960832&amp;idx=1&amp;sn=39fce05ae95bfff243a199d69f0fe018&amp;chksm=bd2d03dc8a5a8aca06e80f7466056beec1cdc3baa669ba1ab6419199843cab6fbe40d753ea42&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">监控平台基础服务，集群信息统一管理</a>》一文里谈得很多了）。</p>
+<p>员工信息管理的实现方式主要有两种：</p>
+<ul>
+<li><strong>员工信息管理服务</strong></li>
+<li><strong>全局员工信息配置</strong></li>
+</ul>
+<p><strong>如何通过员工信息管理服务集中管理员工信息？</strong></p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/5.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，建立员工信息管理服务，绝大部分公司应该都是这么统一管理员工信息的，这个服务和HR系统结合应该是非常紧密的，即使是外采的HR系统，肯定有相关的模块管理员工信息，相关的数据库存储员工信息。</p>
+<p><strong>如何通过全局配置文件集中管理员工信息？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果不考虑和HR系统的打通，而只考虑监控系统，分级告警的需求，完全可以通过配置文件来管理系统负责人信息，例如global.owner.config：</p>
+<blockquote>
+<p><em>[shenjian]</em></p>
+<p><em>department : tech</em></p>
+<p><em>leader : sandy</em></p>
+<p><em>email :</em> <a href="mailto:*XX@OO.com" target="_blank" rel="noopener">*XX@OO.com</a>*</p>
+<p><em>phone :15912345678</em></p>
+<p><em>dingding :</em> <a href="mailto:*15912345678@dingding.com" target="_blank" rel="noopener">*15912345678@dingding.com</a>*</p>
+<p><em>wechat : XXOO</em></p>
+<p><em>…</em></p>
+</blockquote>
+<h3 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h3><p>要开发统一监控平台，至少有两个基础模块：</p>
+<ul>
+<li>集群信息统一管理</li>
+<li>员工信息统一管理</li>
+</ul>
+<p>统一监控平台，<strong>不能一异常就告警</strong>，太不人性化，要实现<strong>统一的分级告警策略</strong>：</p>
+<ul>
+<li><strong>模块告警收敛</strong>策略：按照集群名称做去重</li>
+<li><strong>接口告警收敛</strong>策略：按照接口名称做去重</li>
+<li><strong>告警频率收敛</strong>策略：按照M分钟N次限制告警</li>
+<li><strong>不同时段区分告警</strong>方式策略：工作日/非工作日，白天/夜晚区分</li>
+<li><strong>逐层上报</strong>告警策略：先模块负责人告警，n分钟未恢复升级，m分钟未恢复再升级</li>
+<li><strong>黑白跳动</strong>策略：当系统由正常变为异常，异常恢复正常都通报</li>
+</ul>
+<p>员工信息管理，需要注意：</p>
+<ul>
+<li>避免分散管理，导致耦合</li>
+<li>应当集中管理，有两种常见的实现方式，统一服务/统一全局配置</li>
+</ul>
+<h2 id="多维度立体化监控"><a href="#多维度立体化监控" class="headerlink" title="多维度立体化监控"></a>多维度立体化监控</h2><h3 id="一、什么是多维度立体化监控"><a href="#一、什么是多维度立体化监控" class="headerlink" title="一、什么是多维度立体化监控"></a>一、什么是多维度立体化监控</h3><p>监控的两个最为常见的角度：</p>
+<ul>
+<li>http接口监控</li>
+<li>log关键字监控</li>
+</ul>
+<p>还有很多维度的监控：</p>
+<ul>
+<li><strong>操作系统，进程，端口</strong></li>
+<li><strong>http状态码</strong></li>
+<li><strong>服务存活性</strong></li>
+<li><strong>接口处理时间</strong></li>
+<li><strong>RPC接口监控</strong></li>
+<li><strong>用户层面监控</strong></li>
+</ul>
+<p>如果只监控一个或少数几个维度：</p>
+<ul>
+<li><strong>监控到异常时，基本确信系统出现了问题</strong></li>
+<li><strong>反过来，没有监控到异常，不能确信系统没有问题</strong></li>
+</ul>
+<p> <strong>系统需要监控的八个维度</strong>：</p>
+<blockquote>
+<ol>
+<li>http接口监控</li>
+<li>log关键字监控</li>
+<li>操作系统，进程，端口</li>
+<li>http状态码</li>
+<li>服务存活性</li>
+<li>接口处理时间</li>
+<li>用户层面监控</li>
+<li>RPC接口监控</li>
+</ol>
+</blockquote>
+<p>例如：</p>
+<ul>
+<li>监控到操作系统CPU100%，系统大概率出现了问题，但CPU正常，并不能说明系统正常，例如tomcat挂了，CPU肯定是正常的，但操作系统监控却探测不到，于是需要进程，端口，存活性等其他监控予以辅助</li>
+<li>进程，端口监控到异常，系统大概率出现了问题，但进程在运行，端口在监听，并不能说明系统正常，例如程序死锁，进程和端口是正常的，于是需要接口处理时间等其他监控予以辅助</li>
+<li>接口处理时间监控到超时，系统大概率出现了问题，但接口处理时间不超时，并不能说明系统正常，例如数据库挂了，数据库连接拿不到，服务层每个接口都很快返回，并不超时</li>
+<li>…</li>
+</ul>
+<p>这里的<strong>观点</strong>是：<strong>单维度监控易漏报，多维度立体化监控才是监控平台的根本之道</strong>。</p>
+<p>“<strong>通用</strong>”“<strong>非侵入性</strong>”，即被监控的站点和服务无需任何埋点，无需任何修改，被监控模块的负责人无需配合做任何事情，就能全方位cover住。</p>
+<h3 id="二、操作系统，进程，端口监控"><a href="#二、操作系统，进程，端口监控" class="headerlink" title="二、操作系统，进程，端口监控"></a>二、操作系统，进程，端口监控</h3><p><strong>监控需求</strong>：</p>
+<ul>
+<li>系统的<strong>网络</strong>是否被打满，<strong>磁盘</strong>是否有空间，<strong>CPU</strong>是否繁忙，<strong>内存</strong>是否用完，<strong>负载</strong>值是否过高，<strong>JVM</strong>是否正常</li>
+<li>服务进程是否运行</li>
+<li>监听端口是否正常</li>
+<li>机器间是否联通</li>
+</ul>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/6.webp" alt="img"></p>
+<h4 id="常见方案一：zabbix"><a href="#常见方案一：zabbix" class="headerlink" title="常见方案一：zabbix"></a>常见方案一：zabbix</h4><h4 id="常见方案二：shell"><a href="#常见方案二：shell" class="headerlink" title="常见方案二：shell"></a>常见方案二：shell</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;写一些非常简单的脚本，就能够获取到网络、磁盘、CPU、内存、load、JVM的信息，在配合一些阈值的配置，就能实现超出阈值告警的功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果配合集群信息管理服务，通过ps, netstat, telnet等命令，也能快速实现进程，端口，连通性的简易监控。</p>
+<p><strong>实现要点</strong>：</p>
+<ul>
+<li>重点考虑扩展性，可配置性，非侵入性</li>
+<li>集群信息管理服务（如果没有服务，有集群信息配置文件也行）</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于集群信息管理服务，详见《<a href="http://mp.weixin.qq.com/s?__biz=MjM5ODYxMDA5OQ==&amp;mid=2651960832&amp;idx=1&amp;sn=39fce05ae95bfff243a199d69f0fe018&amp;chksm=bd2d03dc8a5a8aca06e80f7466056beec1cdc3baa669ba1ab6419199843cab6fbe40d753ea42&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">集群信息管理，架构设计中最容易遗漏的一环</a>》。</p>
+<h3 id="三、404状态码监控"><a href="#三、404状态码监控" class="headerlink" title="三、404状态码监控"></a>三、404状态码监控</h3><p><strong>监控需求</strong>：监控http异常状态码。</p>
+<p><strong>监控方案</strong>：<strong>nginx日志统一监控</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果实现了http接口统一监控，404监控的必要性并不是这么强，但毕竟实现简单，整一个通用的花不了多少时间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在聊存活性监控，接口处理时间监控之前，多说几句系统架构，如果实现了框架与组件的统一，统一监控会省非常多的力气。</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/7.webp" alt="img"></p>
+<p>上图是一个典型的互联网分层架构图：</p>
+<ul>
+<li>最上游是APP和browser</li>
+<li><strong>反向代理层</strong>是nginx，统一http404状态码监控就实现在这一层</li>
+<li><strong>web层</strong>，假设自研了web-framework</li>
+<li><strong>service层</strong>，假设自研了service-framework，web层会通过RPC-client调用service</li>
+<li><strong>数据层db</strong>，假设自研了Daojia-DAO组件调用db</li>
+<li><strong>缓存层cache</strong>，假设自研了Daojia-KV组件调用cache</li>
+</ul>
+<h3 id="四、服务存活性监控"><a href="#四、服务存活性监控" class="headerlink" title="四、服务存活性监控"></a>四、服务存活性监控</h3><p><strong>监控需求</strong>：进程和端口的监控，只能保证进程在，端口在，但并不能确定服务是否能响应请求，需要确定服务“活着”。</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/8.webp" alt="img"></p>
+<p><strong>监控方案</strong>：ping-pong式监控，在站点框架，服务框架层面统一实现，提供keepalive接口：</p>
+<ul>
+<li>在框架层面就可以实现ping-pong接口</li>
+<li>监控中心通过集群信息管理服务（或者是配置文件）获取集群类型（web/service），集群IP列表</li>
+<li>监控中心统一往集群发送内置的ping-pong请求</li>
+</ul>
+<p><strong>强调两点</strong>：</p>
+<ul>
+<li>如果开源框架不提供ping-pong接口，可以二次开发（要慎重，任何开源框架的二次开发，都是大坑的开始）</li>
+<li>统一集群信息管理服务，或者，统一集群信息管理配置文件，真的很重要，是技术体系统一的基石</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于集群信息管理服务，详见《<a href="http://mp.weixin.qq.com/s?__biz=MjM5ODYxMDA5OQ==&amp;mid=2651960832&amp;idx=1&amp;sn=39fce05ae95bfff243a199d69f0fe018&amp;chksm=bd2d03dc8a5a8aca06e80f7466056beec1cdc3baa669ba1ab6419199843cab6fbe40d753ea42&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">集群信息管理，架构设计中最容易遗漏的一环</a>》。</p>
+<h3 id="五、接口执行时间监控"><a href="#五、接口执行时间监控" class="headerlink" title="五、接口执行时间监控"></a>五、接口执行时间监控</h3><p><strong>监控需求</strong>：</p>
+<ul>
+<li>http站点接口有没有超时</li>
+<li>RPC服务接口有没有超时</li>
+<li>db访问有没有超时</li>
+<li>cache访问有没有超时</li>
+<li>除了超时，还要监控同一个接口的执行时间有没有同比、环比的大幅度波动</li>
+</ul>
+<p>例如：一个接口平均响应时间是100ms，突然有一天增加到300ms，即使没有超时，也有理由怀疑接口出现了问题:</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/9.webp" alt="img"></p>
+<p><strong>监控方案</strong>：框架组件统一上报（如上图1,2,3,4）</p>
+<ul>
+<li>在web-framework里，对所有http接口进行数据上报，可以上报<strong>url，参数，执行时间</strong>等核心数据</li>
+<li>在service-framework里，对所有RPC接口进行数据上报，可以上报<strong>接口，参数，执行时间</strong>等核心数据</li>
+<li>在DAO里，对所有数据库SQL访问进行数据上报，可以上报<strong>sql，参数，执行时间</strong>等核心数据</li>
+<li>早KV-client里，对所有cache访问进行数据上报，可以上报<strong>key，执行时间</strong>等核心数据</li>
+</ul>
+<p><strong>统一上报是思路</strong>，具体上报细节，是通过flume刷日志，还是storm/spark实时流处理，都可以。</p>
+<h2 id="用户视角的监控"><a href="#用户视角的监控" class="headerlink" title="用户视角的监控"></a>用户视角的监控</h2><h3 id="一、为什么要进行用户视角的监控"><a href="#一、为什么要进行用户视角的监控" class="headerlink" title="一、为什么要进行用户视角的监控"></a>一、为什么要进行用户视角的监控</h3><h5 id="什么是用户视角的监控？"><a href="#什么是用户视角的监控？" class="headerlink" title="什么是用户视角的监控？"></a>什么是用户视角的监控？</h5><p>把系统内部当作黑盒：</p>
+<ul>
+<li>用户怎么访问系统，用户视角的监控就怎么访问系统</li>
+<li>用户调用哪些接口，用户视角的监控就调用哪些接口</li>
+</ul>
+<p>此类监控的粒度较粗，并不直接监控web-server, service, db, cache…</p>
+<h5 id="为什么要有用户视角的监控，非用户视角进行的监控有什么不足？"><a href="#为什么要有用户视角的监控，非用户视角进行的监控有什么不足？" class="headerlink" title="为什么要有用户视角的监控，非用户视角进行的监控有什么不足？"></a>为什么要有用户视角的监控，非用户视角进行的监控有什么不足？</h5><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/10.webp" alt="img"></p>
+<p>如上图所示，立体化监控的八大维度，除了用户视角的监控，另外七大维度，不管是机器监控，日志监控，接口监控，都是系统内部发起的，当系统外部与系统之间出现问题的时候，例如“某个省的光纤被挖断”或者“某条网络链路出现丢包”或者<strong>“某个地域供应商往页面里又插入小广告了”</strong>，是检测不出来的，只有站在用户视角的监控，才能检测出类似的问题。</p>
+<h5 id="凌晨三点，告警短信响了，到底要不要起床检查系统？"><a href="#凌晨三点，告警短信响了，到底要不要起床检查系统？" class="headerlink" title="凌晨三点，告警短信响了，到底要不要起床检查系统？"></a>凌晨三点，告警短信响了，到底要不要起床检查系统？</h5><p>这个问题，是和技术人密切相关的问题。如何系统设计的合理，不管是任何一台 nginx, tomcat, service, cache, db 挂了，由于系统的高可用架构设计，理论上都不应该影响一线用户的访问。</p>
+<p>于是乎，只要用户视角的监控不告警，是可以第二天再起床处理其他监控的告警的。</p>
+<p><em>画外音：这帮不靠谱的架构师，每次都说能高可用，任何一个地方挂了，用户就受影响了。</em></p>
+<h5 id="如何进行用户视角的监控？"><a href="#如何进行用户视角的监控？" class="headerlink" title="如何进行用户视角的监控？"></a>如何进行用户视角的监控？</h5><p>主要有三类方法：</p>
+<ul>
+<li>用户所在的地方，租机房布点监控</li>
+<li>端（APP/browser）上布点监控</li>
+<li>使用第三方监控平台</li>
+</ul>
+<h6 id="一、租机房布点监控"><a href="#一、租机房布点监控" class="headerlink" title="一、租机房布点监控"></a>一、租机房布点监控</h6><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/11.webp" alt="img"></p>
+<p>如上图所示，在用户所在城市租赁机房（只需要一台服务器），部署监控小程序，对系统进行外网访问监控，就能够检测网络链路，路由延时。</p>
+<p><strong>缺点</strong>：额，各个城市租赁一台服务器，成本有点高（不止费用，管理成本也高）。</p>
+<h6 id="二、端上布点监控"><a href="#二、端上布点监控" class="headerlink" title="二、端上布点监控"></a>二、端上布点监控</h6><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/12.webp" alt="img"></p>
+<p>如上图所示，假设用户使用的是APP产品，可以在APP上部署一个小的监控sdk，<strong>定期上报一些数据</strong>，根据地域IP访问的同比环比“趋势”判定某个地域用户的网络情况。</p>
+<p><strong>缺点</strong>：会损耗用户一些流量。另外，既然是“趋势判定”，没有在自己机房内布点那么精确。</p>
+<h6 id="三、第三方监控平台"><a href="#三、第三方监控平台" class="headerlink" title="三、第三方监控平台"></a>三、第三方监控平台</h6><p>既然是每个公司都有的痛点，实施起来又这么麻烦，自然有创业公司做这个事情。</p>
+<p>可以购买第三方监控平台的服务，在配置后台配置</p>
+<ul>
+<li>待监控的页面，或者http接口</li>
+<li>频率，阈值</li>
+<li>告警接收人</li>
+</ul>
+<p>等信息，就能够快速实时全国各城市，甚至全世界各个国家的用户视角监控了，非常帅气。</p>
+<p><strong>第三方监控平台是怎么实现全国，全世界布点监控的？</strong></p>
+<p>额，他们租了机房。</p>
+<p><strong>缺点</strong>：有点贵，是按照调用次数来收费的。</p>
+<p><strong>五、总结</strong></p>
+<p><strong>用户视角监控</strong>，把系统当作黑盒的一种粗粒度监控。</p>
+<p><strong>用户视角监控</strong>，能检测出局部地域的用户访问异常。</p>
+<p><strong>用户视角监控</strong>，有自主租赁机房布点，端上布点趋势检测，使用第三方服务三种方式。</p>
+<h2 id="100行代码，搞定http监控框架"><a href="#100行代码，搞定http监控框架" class="headerlink" title="100行代码，搞定http监控框架"></a>100行代码，搞定http监控框架</h2><h3 id="一、常见的http监控玩法"><a href="#一、常见的http监控玩法" class="headerlink" title="一、常见的http监控玩法"></a>一、常见的http监控玩法</h3><h4 id="提问：有哪些常见http监控需求？"><a href="#提问：有哪些常见http监控需求？" class="headerlink" title="提问：有哪些常见http监控需求？"></a>提问：有哪些常见http监控需求？</h4><p><strong>回答</strong>：常见的http监控需求有两类：</p>
+<ul>
+<li><strong>html页面监控</strong></li>
+<li><strong>返回json数据的http接口</strong></li>
+</ul>
+<h4 id="提问：常见的http监控怎么玩？"><a href="#提问：常见的http监控怎么玩？" class="headerlink" title="提问：常见的http监控怎么玩？"></a>提问：常见的http监控怎么玩？</h4><p><strong>回答</strong>：一般access日志，通过观测以下两个参数来实施告警：</p>
+<ul>
+<li><strong>http非200状态码</strong></li>
+<li><strong>http请求响应时间</strong></li>
+</ul>
+<h3 id="二、常见的http监控存在什么问题？"><a href="#二、常见的http监控存在什么问题？" class="headerlink" title="二、常见的http监控存在什么问题？"></a>二、常见的http监控存在什么问题？</h3><p><strong>提问：常见的http非200状态码，以及响应时间监控有什么弊端？</strong></p>
+<p><strong>回答</strong>：每个公司都有自己的404页面，例如58到家的404页面大概长这样：</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/13.webp" alt="img"></p>
+<p>这个页面的http状态码是200，且返回速度极快，根本不能代表html页面的真实运行情况，很难起到真正的监控作用。</p>
+<p><em>画外音：不是说http状态码监控没用，相反，http状态码的监控是很有必要的，http状态码404说明系统一定有问题，但http状态码200不能说明系统没有问题。</em></p>
+<h4 id="提问：http状态码不能说明问题，那什么才能代表http没有问题呢？"><a href="#提问：http状态码不能说明问题，那什么才能代表http没有问题呢？" class="headerlink" title="提问：http状态码不能说明问题，那什么才能代表http没有问题呢？"></a>提问：http状态码不能说明问题，那什么才能代表http没有问题呢？</h4><p><strong>回答</strong>：每个http都有自己的业务特性。</p>
+<p>特性一：<strong>需要返回特定的页面内容</strong></p>
+<p>例如，58到家的官网大概长成这样：</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/14.webp" alt="img"></p>
+<p>即，访问<a href="http://daojia.com/" target="_blank" rel="noopener">http://daojia.com/</a> ，一定要返回一个含“家政”字眼的html页面，才是正确的。</p>
+<p>特性二：<strong>需要返回特定的接口内容</strong></p>
+<p>例如，RESTful的获取用户信息接口，假设传入uid=123，会传回：</p>
+<p>{“RET”:”SUCCESS”, “name”:”shenjian”, “uid”:”123”}</p>
+<p>即，<a href="http://daojia.com/userinfo/get/?uid=123，一定要返回一个含“shenjian”的字符串，才是正确的。" target="_blank" rel="noopener">http://daojia.com/userinfo/get/?uid=123，一定要返回一个含“shenjian”的字符串，才是正确的。</a></p>
+<p>于是乎，得到了可扩展通用<strong>http监控平台（框架）的思路</strong>：不仅仅要监控http状态码，更重要的是，要监控http返回内容的业务特性。</p>
+<h3 id="三、可扩展通用http监控平台架构细节"><a href="#三、可扩展通用http监控平台架构细节" class="headerlink" title="三、可扩展通用http监控平台架构细节"></a>三、可扩展通用http监控平台架构细节</h3><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/15.webp" alt="img"></p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="img"></p>
+<p>整个http监控平台的架构如上，分为<strong>监控平台层，信息管理层，基础服务层</strong></p>
+<h4 id="监控平台层"><a href="#监控平台层" class="headerlink" title="监控平台层"></a>监控平台层</h4><ul>
+<li><strong>http监控中心：实施监控的主程序</strong></li>
+<li><strong>http监控配置：可扩展的监控项信息管理</strong></li>
+</ul>
+<p>监控项核心信息包含：</p>
+<ul>
+<li><strong>被监控的html页面/RESTful接口属于哪个集群</strong></li>
+<li><strong>被监控的URL</strong></li>
+<li><strong>被监控的URL需要传入的数据，包含GET/POST/COOKIE等数据</strong></li>
+<li><strong>被监控的http返回的数据中必须包含什么业务特性字符串</strong></li>
+</ul>
+<p>以58到家官网html为例，监控项核心信息为：</p>
+<blockquote>
+<p><em>[http.monitor.item]</em></p>
+<p><em>cluster.name : daojia_main</em></p>
+<p><em>url :</em> <em><a href="http://daojia.com/" target="_blank" rel="noopener">http://daojia.com/</a></em></p>
+<p><em>result : 家政</em></p>
+</blockquote>
+<p>即，访问<a href="http://daojia.com/，返回结果必须包含“家政”。" target="_blank" rel="noopener">http://daojia.com/，返回结果必须包含“家政”。</a></p>
+<p>以获取用户信息RESTful接口为例，监控项核心信息为：</p>
+<blockquote>
+<p><em>[http.monitor.item]</em></p>
+<p><em>cluster.name : daojia_user</em></p>
+<p><em>url :</em> <em><a href="http://daojia.com/userinfo/get/" target="_blank" rel="noopener">http://daojia.com/userinfo/get/</a></em></p>
+<p><em>get.data : uid=123</em></p>
+<p><em>post.data : NULL</em></p>
+<p><em>cookie.data : NULL</em></p>
+<p><em>result : shenjian</em></p>
+</blockquote>
+<p>即，访问<a href="http://daojia.com/userinfo/get/?uid=123，返回结果必须包含“shenjian”。" target="_blank" rel="noopener">http://daojia.com/userinfo/get/?uid=123，返回结果必须包含“shenjian”。</a></p>
+<p>如果要做成<strong>平台</strong>，需要有一个<strong>监控项管理后台</strong>，来新增/修改/管理监控项。</p>
+<p><strong>监控中心，会遍历所有监控项，并发对各个http监控项实施监控</strong></p>
+<h4 id="信息管理层"><a href="#信息管理层" class="headerlink" title="信息管理层"></a>信息管理层</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;信息管理层又分为：<strong>集群信息管理服务，员工信息管理服务，告警策略管理服务</strong></p>
+<h5 id="（1）集群信息管理服务"><a href="#（1）集群信息管理服务" class="headerlink" title="（1）集群信息管理服务"></a>（1）集群信息管理服务</h5><p>集群信息管理服务，主要提供这个接口：</p>
+<blockquote>
+<p> Info Service::getClusterInfo(String clusterName)</p>
+</blockquote>
+<p>即，<strong>通过集群名，获取集群信息</strong></p>
+<p>集群信息有很多，和监控相关的主要有这么几个信息：</p>
+<ul>
+<li><strong>集群ip列表，每个web-server都应该被监控到</strong></li>
+<li><strong>集群负责人，如果监控异常，要将告警发给谁</strong></li>
+</ul>
+<h5 id="（2）用户信息管理服务"><a href="#（2）用户信息管理服务" class="headerlink" title="（2）用户信息管理服务"></a>（2）用户信息管理服务</h5><p>用户信息管理服务，主要提供这个接口：</p>
+<p>Info Service::getYuanGongInfo(String name)</p>
+<p>即，<strong>通过员工名，获取员工信息</strong>。</p>
+<p>员工信息有很多，和监控相关的主要有这么几个信息：</p>
+<ul>
+<li>员工手机号，邮箱，微信号，钉钉号等<strong>通讯信息</strong></li>
+<li>如果要实现多级告警策略，还需要获取<strong>员工部门及leader的相关信息</strong></li>
+</ul>
+<h5 id="（3）告警策略管理服务"><a href="#（3）告警策略管理服务" class="headerlink" title="（3）告警策略管理服务"></a>（3）告警策略管理服务</h5><p>告警策略管理服务，主要提供这个接口：</p>
+<blockquote>
+<p>Bool Service::trySendAlarm(</p>
+<p>​         String clusterName,</p>
+<p>​         String yuangongName,</p>
+<p>​         String ip,</p>
+<p>​         String url,</p>
+<p>​         …</p>
+<p>)</p>
+</blockquote>
+<p>即，<strong>一旦发现接口有异常，尝试发送告警</strong>。</p>
+<p>这个尝试发送告警，并不意味着一定会发送短信或者邮件，因为需要实现一系列人性化的告警策略：</p>
+<ul>
+<li>集群收敛策略，可以通过clusterName去重</li>
+<li>接口收敛策略，可以通过url去重</li>
+<li>定时定频策略，可以通过yuangongName去重</li>
+<li>白天黑夜策略，可以通过告警发送时间实施</li>
+<li>…</li>
+</ul>
+<h4 id="基础服务层"><a href="#基础服务层" class="headerlink" title="基础服务层"></a>基础服务层</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;进行完<strong>告警策略过滤</strong>后，如果真实需要<strong>发送告警</strong>，调用基础服务层的服务发出。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发送邮件，发送短信这些<strong>基础服务</strong>，相信每个公司都有，这里就不展开叙述了。</p>
+<h3 id="四、可扩展通用http监控框架细节"><a href="#四、可扩展通用http监控框架细节" class="headerlink" title="四、可扩展通用http监控框架细节"></a>四、可扩展通用http监控框架细节</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;楼主，你在搞笑？我在一个创业型公司，你上面说的http监控配置服务，集群信息管理服务，员工信息管理服务，告警策略管理服务，我们公司都没有！只有一个能发短信的接口，能整出个http监控框架不？还要通用可扩展哟。楼主你个骗子，说好的100行代码实现呢？</p>
+<p>额，别急，上面的所有服务即使都没有，只要能发短信告警，就能整：</p>
+<ul>
+<li>http监控项信息：通过配置文件搞</li>
+<li>集群信息：通过配置文件搞</li>
+<li>员工信息：通过配置文件搞</li>
+<li>告警策略信息：不搞告警策略了，异常就发短信</li>
+</ul>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/16.webp" alt="img"></p>
+<p>于是乎，http监控框架变成了这个样子，服务都用配置文件代替了：</p>
+<p>http监控项配置，monitor-item.config</p>
+<blockquote>
+<p><em>[http.monitor.item]</em></p>
+<p><em>cluster.name : daojia_main</em></p>
+<p><em>url :</em> <em><a href="http://daojia.com/" target="_blank" rel="noopener">http://daojia.com/</a></em></p>
+<p><em>result : 家政</em></p>
+</blockquote>
+<blockquote>
+<p><em>[http.monitor.item]</em></p>
+<p><em>cluster.name : daojia_user</em></p>
+<p><em>url :</em> <em><a href="http://daojia.com/userinfo/get/" target="_blank" rel="noopener">http://daojia.com/userinfo/get/</a></em></p>
+<p><em>get.data : uid=123</em></p>
+<p><em>post.data : NULL</em></p>
+<p><em>cookie.data : NULL</em></p>
+<p><em>result : shenjian</em></p>
+</blockquote>
+<p>集群信息配置，cluster-info.config：</p>
+<blockquote>
+<p><em>[daojia_main]</em></p>
+<p><em>ip.list : ip1, ip2, ip3</em></p>
+<p><em>port : 80</em></p>
+<p><em>owner.list: shenjian, zhangsan, lisi</em></p>
+</blockquote>
+<blockquote>
+<p><em>[daojia_user]</em></p>
+<p><em>ip.list : ip11, ip22, ip33</em></p>
+<p><em>port : 8080</em></p>
+<p><em>owner.list: shenjian</em></p>
+</blockquote>
+<p>员工信息配置，owner-info.config</p>
+<blockquote>
+<p><em>[shenjian]</em></p>
+<p><em>email :</em> <a href="mailto:*XX@XX.com" target="_blank" rel="noopener">*XX@XX.com</a>*</p>
+<p><em>phone :15912345678</em></p>
+</blockquote>
+<blockquote>
+<p><em>[zhangsan]</em></p>
+<p><em>email :</em> <a href="mailto:*YY@YY.com" target="_blank" rel="noopener">*YY@YY.com</a>*</p>
+<p><em>phone :18611220099</em></p>
+</blockquote>
+<h3 id="五、http监控框架伪代码"><a href="#五、http监控框架伪代码" class="headerlink" title="五、http监控框架伪代码"></a>五、http监控框架伪代码</h3><blockquote>
+<p><em>// 解析配置文件，取出监控项、集群、员工等信息</em></p>
+<p>Array[monitor-item] A1=Parse(monitor-item.config);</p>
+<p>Array[cluster-info] A2= Parse(cluster-info.config);</p>
+<p>Array[owner-info] A3=Parse(owner-info.config);</p>
+<p><em>// 遍历所有监控项</em></p>
+<p>for(each item in A1)  {</p>
+<p> <em>// 取出监控项的集群名，URL，http数据，结果等信息</em></p>
+<p> <em>clusterName= item.clusterName;</em></p>
+<p> <em>url= item.url;</em></p>
+<p> <em>getData= item.getData;</em></p>
+<p> <em>postData= item.postData;</em></p>
+<p> <em>cookieData= item.cookieData;</em></p>
+<p> <em>result= item.result</em></p>
+<p> // 由集群名，获取集群信息</p>
+<p> <em>clusterInfo= A2[clusterName];</em></p>
+<p> <em>// 由集群信息，获取集群ip列表，集群负责人列表</em></p>
+<p> <em>List<string>ips = clusterInfo.ip;</string></em></p>
+<p> <em>List<string>owners = clusterinfo.owner;</string></em></p>
+<p> <em>// 集群内的每一个ip实例web-server，都需要监控</em></p>
+<p> <em>for(each ip in ips){</em></p>
+<p>  <em>// 根据ip，url，http数据构造请求</em></p>
+<p>  <em>httpClient client = new httpClient(ip, url, getData, postData, cookieData);</em></p>
+<p>  <em>// 获取http请求执行结果</em></p>
+<p>  <em>httpResponse resp = client.execute();</em></p>
+<p>  <em>// 如果返回为200，并且包含监控项里的业务特性结果</em></p>
+<p>  <em>if(resp.code==200&amp;&amp; resp.contain(result)){</em></p>
+<p>​    <em>//正常，继续监控</em></p>
+<p>​    <em>continue;</em></p>
+<p>  <em>}</em></p>
+<p>  <em>// 否则，对所有集群负责人发送告警</em></p>
+<p>  <em>for(each owner in owners){</em></p>
+<p>   <em>// 取出负责人邮箱和手机号</em></p>
+<p>   <em>email =A3[owner].email;</em></p>
+<p>   <em>phone =A3[owner].phone;</em></p>
+<p>   <em>// 发送邮件与短信告警</em></p>
+<p>   <em>sendEmail(email, ip,url, owner);</em></p>
+<p>   <em>snedSM(phone, ip, url,owner);</em></p>
+<p>  <em>}</em></p>
+<p> <em>}</em></p>
+<p>}</p>
+</blockquote>
+<blockquote>
+<p>monitor-item.config，监控项扩展性</p>
+<ul>
+<li>新增html页面监控，或者json的RESTful接口监控，只需要在配置中增加一个item</li>
+<li>配置支持url，get，post，cookie等参数拼装任意http监控请求</li>
+<li>配置支持不同业务逻辑返回不同的result的业务特性检查</li>
+</ul>
+<p>cluster-info.config，集群信息扩展性</p>
+<ul>
+<li>新增集群，只需在配置中增加一个item</li>
+<li>集群加了一个实例，只需增加一个ip</li>
+<li>集群加了一个负责人，只需增加一个owner</li>
+</ul>
+<p>owner-info.config，负责人信息扩展性</p>
+<ul>
+<li>新增负责人，只需要在配置中增加一个item</li>
+<li>换了手机号/邮箱，只需修改相应配置</li>
+</ul>
+</blockquote>
+<h2 id="90行代码，搞定日志监控框架"><a href="#90行代码，搞定日志监控框架" class="headerlink" title="90行代码，搞定日志监控框架"></a>90行代码，搞定日志监控框架</h2><h3 id="一、什么是日志监控"><a href="#一、什么是日志监控" class="headerlink" title="一、什么是日志监控"></a>一、什么是日志监控</h3><p>关于日志，不同公司，情况不同：</p>
+<ul>
+<li>A类公司：没有日志</li>
+<li>B类公司：有日志，只有用户说系统挂了，或者有bug的时候，才会登录到系统看看日志，大部分日志打印得对心所欲，缺乏组织性和系统性</li>
+</ul>
+<p><em>画外音：额，很多时候，追查bug发现日志信息不全，要先上线一个有日志的版本，以帮助定位bug，你遇到过么？</em></p>
+<ul>
+<li>C类公司：有日志，有日志规范，系统性的组织和收集了日志</li>
+</ul>
+<p>对日志进行监控，先于用户发现系统的故障，实时告警，就是今天要讨论的日志监控问题。</p>
+<h3 id="二、日志监控需求分析"><a href="#二、日志监控需求分析" class="headerlink" title="二、日志监控需求分析"></a>二、日志监控需求分析</h3><p>对于日志的监控，一般有这么几类需求：</p>
+<ul>
+<li><strong>某种级别的日志</strong>（例如FATAL级别，或者ERROR级别的日志）一旦出现，或者超过一定频率，就告警</li>
+<li>包含某些特殊含义关键字（例如OutOfMemory，或者Exception）的<strong>异常日志</strong>，一旦出现，或者超过一定频率，就告警</li>
+<li>包含某些特殊含义关键字（例如Login，或者Click）的<strong>正常日志</strong>，一旦一定时间周期没有出现，就告警</li>
+</ul>
+<p>其中，前两类需求，属于异常日志监控范畴，出现异常，实施告警。</p>
+<p>第三类需求，属于正常日志监控范畴，一定的时间没有出现“正常”，就默认异常，实施告警。</p>
+<p><strong>为什么不是一出现异常日志就告警呢？</strong></p>
+<p>避免抖动引起的误报，一般到达一定频率才会告警，这属于告警策略的一部分。</p>
+<h3 id="三、目录与日志的规范化"><a href="#三、目录与日志的规范化" class="headerlink" title="三、目录与日志的规范化"></a>三、目录与日志的规范化</h3><p><strong><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/17.webp" alt="img"></strong></p>
+<p>这是一个线上模块的目录示例：</p>
+<ul>
+<li>有<strong>源代码</strong>：hello.c</li>
+<li>有<strong>可执行文件</strong>：a.out</li>
+<li>有<strong>配置文件</strong>：hello.conf</li>
+<li>有<strong>备份日志</strong>：hello.log.2018012812</li>
+<li>有<strong>日志</strong>：hello.log</li>
+<li>有<strong>临时文件</strong>：tmp</li>
+</ul>
+<p>体会一下，运维同学看到这样的线上文件部署，是什么感受？</p>
+<p><em>画外音：没见过源代码直接部署到线上的？</em></p>
+<h4 id="目录规范"><a href="#目录规范" class="headerlink" title="目录规范"></a>目录规范</h4><p>目录规范化不但对日志监控，对自动化运维都极为重要，要是线上目录都瞎搞，几乎没有办法实现自动化运维。</p>
+<p>常见的目录规范有两类：<strong>模块优先类目录规范</strong>，<strong>功能优先类目录规范</strong>。</p>
+<p><strong>什么是模块优先的目录规范？</strong></p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/18.webp" alt="img"></p>
+<p>如上图，以模块名为优先组织目录：</p>
+<ul>
+<li>根目录下，有das，entry，logic三个模块目录</li>
+<li>在模块目录下，又分别有存放可执行文件，配置文件，日志文件的bin目录，conf目录，以及log目录</li>
+</ul>
+<p><strong>什么是功能优先的目录规范？</strong></p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/19.webp" alt="img"></p>
+<p>如上图，以功能为优先组织目录：</p>
+<ul>
+<li>根目录下，二进制目录bin，配置文件目录conf，日志目录log</li>
+<li>功能目录下，有das，entry，logic等不同模块的目录</li>
+</ul>
+<p>建议<strong>推荐第二种</strong>，功能优先的目录规范，对二进制备份，配置备份，日志清理都非常方便。</p>
+<h4 id="分级规范"><a href="#分级规范" class="headerlink" title="分级规范"></a>分级规范</h4><p>日志规范化不但对日志监控，对大数据体系建设都极为重要，需要考虑规范：</p>
+<ul>
+<li><strong>日志分级规范</strong>：不同级别的日志理应打到不同的文件中，例如FATAL级，ERROR级，WARM级，LOG级，INFO级，DEBUG级</li>
+</ul>
+<blockquote>
+<p><em>fatal.log</em></p>
+<p><em>error.log</em></p>
+<p><em>info.log</em></p>
+<p><em>debug.log</em></p>
+<p><em>…</em></p>
+</blockquote>
+<ul>
+<li><strong>日志切分规范</strong>：运维应该提供自动化的日志切分工具，支持小时级别，或者天级别的日志切分，曾经看过一个120G的access日志，从日志中grep出某个uid的日志，是极其低效的</li>
+</ul>
+<blockquote>
+<p><em>daojia.log.2018012800</em></p>
+<p><em>daojia.log.2018012801</em></p>
+<p><em>…</em></p>
+<p><em>daojia.log.2018012823</em></p>
+</blockquote>
+<h3 id="四、通用可扩展日志监控平台-框架思路"><a href="#四、通用可扩展日志监控平台-框架思路" class="headerlink" title="四、通用可扩展日志监控平台/框架思路"></a>四、通用可扩展日志监控平台/框架思路</h3><p>制订了目录规范，日志规范之后，要建立日志监控平台/框架，实施异常与正常的日志监控，就简单多了，主要有<strong>集中式监控，分散式监控</strong>两类思路。</p>
+<h4 id="集中式"><a href="#集中式" class="headerlink" title="集中式"></a>集中式</h4><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/20.webp" alt="img"></p>
+<p>集中式的日志监控，最流行的莫过于<strong>ELK</strong>：</p>
+<ul>
+<li>各个机器节点上部署logstash，收集日志</li>
+<li>收集的日志汇总到ES</li>
+<li>通过Kibana做统一分析和展现</li>
+</ul>
+<h4 id="分散式"><a href="#分散式" class="headerlink" title="分散式"></a>分散式</h4><p>ELK有点重，三套系统搭建与运维起来比较麻烦，如果只是为了实现ERROR日志的监控，异常关键字监控，正常关键字监控，有点杀鸡用牛刀了。</p>
+<p>与集中式的日志监控相比，分散式的日志监控，就显得轻量级许多，非常适用与早期的创业型公司，其思路为：</p>
+<p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/21.webp" alt="img"></p>
+<ul>
+<li>通过<strong>日志监控后台</strong>，对不同集群，进行ERROR日志阈值设置，进行异常关键字设置，正常关键字设置</li>
+<li><strong>日志监控中心</strong>，进行统一调度，将配置分发到不同机器的agent节点上</li>
+<li><strong>agent节点</strong>，并不统一收集日志，而是接收到监控中心分发的log监控配置，在各个机器上实施日志监控，如果触发日志监控策略，立刻发起告警</li>
+</ul>
+<p>与ELK相比，这个日志平台会简单的多，而且扩展性非常好。</p>
+<p>额，创业型公司没有时间和人员研发agent，没有资源研发日志监控中心服务，没有人力研发日志监控后台，还有没有更简洁但可扩展的方案呢？</p>
+<p>和《<a href="http://mp.weixin.qq.com/s?__biz=MjM5ODYxMDA5OQ==&amp;mid=2651960853&amp;idx=1&amp;sn=9f6c1ff24e1770eb1ca232f45cf1c2c2&amp;chksm=bd2d03c98a5a8adf73905a0827ad970587658f0aa43aabceef7d177217c636cf526bc5ef2105&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">100行代码，搞定http监控框架</a>》的思路一样，没有服务，没有后台，没有agent，初期完全可以用配置文件来替代。</p>
+<h3 id="100行搞定日志监控平台"><a href="#100行搞定日志监控平台" class="headerlink" title="100行搞定日志监控平台"></a>100行搞定日志监控平台</h3><p><img src="//blog.com/2019/01/25/从零开始搭建监控告警平台/22.webp" alt="img"></p>
+<p>整个框架设计如上，大致分为三个部分：</p>
+<ul>
+<li><strong>被监控集群</strong></li>
+<li><strong>基础信息与服务</strong></li>
+</ul>
+<p>​         cluster.info.xml：存储集群信息</p>
+<p>​         owner.info.xml：存储集群责任人信息</p>
+<p>​         mail.service/SM.service：发邮件，发短信的基础服务</p>
+<ul>
+<li><strong>日志监控框架</strong></li>
+</ul>
+<p>集群信息与负责人信息，与前文描述的一样。</p>
+<p><strong>集群配置</strong>cluster.info.conf</p>
+<blockquote>
+<p><em>[daojia_main]</em></p>
+<p><em>ip.list : ip1, ip2, ip3</em></p>
+<p><em>log.path : /home/work/log/daojia_main/</em></p>
+<p><em>owner.list : shenjian, zhangsan</em></p>
+<p><em>[daojia_user]</em></p>
+<p><em>ip.list : ip4, ip5, ip6</em></p>
+<p><em>log.path : /home/work/log/daojia_user/</em></p>
+<p><em>owner.list : shenjian</em></p>
+</blockquote>
+<p><strong>责任人配置</strong>owner.info.conf</p>
+<blockquote>
+<p><em>[shenjian]</em></p>
+<p><em>email :</em> <a href="mailto:*XX@XX.com" target="_blank" rel="noopener">*XX@XX.com</a>*</p>
+<p><em>phone :15912345678</em></p>
+<p><em>[zhangsan]</em></p>
+<p><em>email :</em> <a href="mailto:*YY@YY.com" target="_blank" rel="noopener">*YY@YY.com</a>*</p>
+<p><em>phone :18611220099</em></p>
+</blockquote>
+<p>日志监控框架又分为两个模块：</p>
+<ul>
+<li><strong>可扩展监控配置文件</strong>log.monitor.conf</li>
+</ul>
+<blockquote>
+<p>[log.monitor.item]</p>
+<p>cluster.name : daojia_main</p>
+<p><em># error日志监控，每分钟超过此阈值就告警</em></p>
+<p><em>error.log. threshold : 10</em></p>
+<p><em># 异常关键字监控，日志出现这些关键字就告警</em></p>
+<p><em>bad.key : exeption | timeout | coredump</em></p>
+<p><em># 正常关键字监控，日志每分钟不出现这些关键字就告警</em></p>
+<p><em>good.key : login | user | click</em></p>
+<p><em>[log.monitor.item]</em></p>
+<p><em>cluster.name : daojia_user</em></p>
+<p><em>error.log.threshold : 10</em></p>
+</blockquote>
+<p><strong>日志监控调度框架</strong>，这里需要编码啦，100行的伪代码如下：</p>
+<blockquote>
+<p><em>Array[log-monitor] A1= Parse(log.monitor.config);</em></p>
+<p><em>Array[cluster-info] A2= Parse(cluster.info.config);</em></p>
+<p><em>Array[owner-info] A3= Parse(owner.info.config);</em></p>
+<p><em>// 遍历所有监控项</em></p>
+<p><em>for(each item in A1){</em></p>
+<p>​         <em>//取出监控项的集群名，阈值，异常/正常关键词</em></p>
+<p>​         <em>clusterName= item.clusterName;</em></p>
+<p>​         <em>threshold= item.threshold;</em></p>
+<p>​         <em>badKey= item.badkey;</em></p>
+<p>​         <em>goodKey= item.goodkey;</em></p>
+<p>​         <em>//由集群名，获取集群信息</em></p>
+<p>​         <em>clusterInfo= A2[clusterName];</em></p>
+<p>​         <em>//获取日志目录，集群ip列表，集群负责人列表</em></p>
+<p>​         <em>logPath= clusterInfo.path;</em></p>
+<p>​         <em>List<string>ips = clusterInfo.ip;</string></em></p>
+<p>​         <em>List<string>owners = clusterinfo.owner;</string></em></p>
+<p>​        </p>
+<p>​         <em>//集群内的每一个ip实例，都需要日志监控</em></p>
+<p>​         <em>for(eachip in ips){</em></p>
+<p>​                   <em>//登录到这一台机器</em></p>
+<p>​                   <em>ssh $ip</em></p>
+<p>​                   <em>//跳到相关的目录下</em></p>
+<p>​                   <em>cd $logPath</em></p>
+<p>​                   <em>//查看近一分钟error日志数量</em></p>
+<p>​                   <em>$count= <code>grep $time error.log | wc -l</code></em></p>
+<p>​                   <em>//查看badkey与goodkey</em></p>
+<p>​                   <em>$boolBad= `grep $badkey \</em>`*</p>
+<p>​                   <em>$boolGood= `grep $goodkey \</em>`*</p>
+<p>​                   <em>if($count&lt; threshold &amp;&amp;</em> </p>
+<p>​                        <em>$boolBad==NO &amp;&amp;</em></p>
+<p>​                         <em>$boolGood==YES){</em></p>
+<p>​                            <em>//正常，继续监控</em></p>
+<p>​                            <em>continue;</em></p>
+<p>​                  <em>}</em></p>
+<p>​                  <em>// 否则，对所有集群负责人发送告警</em></p>
+<p>​                  <em>for(each owner in owners){</em></p>
+<p>​                           <em>// 略…</em></p>
+<p>​                  <em>}</em></p>
+<p>​         <em>}</em></p>
+<p><em>}</em></p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/服务器/" rel="tag"># 服务器</a>
+          
+            <a href="/tags/监控/" rel="tag"># 监控</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/24/InnoDB并发支持的原理/" rel="next" title="InnoDB并发支持的原理">
+                <i class="fa fa-chevron-left"></i> InnoDB并发支持的原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/25/理解分布式事务/" rel="prev" title="理解分布式事务">
+                理解分布式事务 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#从零开始搭建监控告警平台"><span class="nav-number">1.</span> <span class="nav-text">从零开始搭建监控告警平台</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#集群信息管理"><span class="nav-number">1.1.</span> <span class="nav-text">集群信息管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、啥是集群？"><span class="nav-number">1.1.1.</span> <span class="nav-text">一、啥是集群？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、集群信息"><span class="nav-number">1.1.2.</span> <span class="nav-text">二、集群信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么时候会用到集群信息呢？"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">什么时候会用到集群信息呢？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#存在什么问题？"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">存在什么问题？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、如何集中化管理集群信息"><span class="nav-number">1.1.3.</span> <span class="nav-text">三、如何集中化管理集群信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#早期方案-全局配置写死"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">早期方案-全局配置写死</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#中期方案-接口拉取"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">中期方案-接口拉取</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#长期方案-推送"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">长期方案-推送</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分级告警策略"><span class="nav-number">1.2.</span> <span class="nav-text">分级告警策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、啥是告警？"><span class="nav-number">1.2.1.</span> <span class="nav-text">一、啥是告警？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#文字告警有哪些常见的方法？"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">文字告警有哪些常见的方法？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、啥是告警策略？"><span class="nav-number">1.2.2.</span> <span class="nav-text">二、啥是告警策略？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、监控平台，告警策略依赖的基础模块"><span class="nav-number">1.2.3.</span> <span class="nav-text">三、监控平台，告警策略依赖的基础模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是集群信息管理？"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">什么是集群信息管理？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是员工信息？"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">什么是员工信息？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四、总结"><span class="nav-number">1.2.4.</span> <span class="nav-text">四、总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多维度立体化监控"><span class="nav-number">1.3.</span> <span class="nav-text">多维度立体化监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、什么是多维度立体化监控"><span class="nav-number">1.3.1.</span> <span class="nav-text">一、什么是多维度立体化监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、操作系统，进程，端口监控"><span class="nav-number">1.3.2.</span> <span class="nav-text">二、操作系统，进程，端口监控</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#常见方案一：zabbix"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">常见方案一：zabbix</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#常见方案二：shell"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">常见方案二：shell</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、404状态码监控"><span class="nav-number">1.3.3.</span> <span class="nav-text">三、404状态码监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四、服务存活性监控"><span class="nav-number">1.3.4.</span> <span class="nav-text">四、服务存活性监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#五、接口执行时间监控"><span class="nav-number">1.3.5.</span> <span class="nav-text">五、接口执行时间监控</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用户视角的监控"><span class="nav-number">1.4.</span> <span class="nav-text">用户视角的监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、为什么要进行用户视角的监控"><span class="nav-number">1.4.1.</span> <span class="nav-text">一、为什么要进行用户视角的监控</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#什么是用户视角的监控？"><span class="nav-number">1.4.1.0.1.</span> <span class="nav-text">什么是用户视角的监控？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#为什么要有用户视角的监控，非用户视角进行的监控有什么不足？"><span class="nav-number">1.4.1.0.2.</span> <span class="nav-text">为什么要有用户视角的监控，非用户视角进行的监控有什么不足？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#凌晨三点，告警短信响了，到底要不要起床检查系统？"><span class="nav-number">1.4.1.0.3.</span> <span class="nav-text">凌晨三点，告警短信响了，到底要不要起床检查系统？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#如何进行用户视角的监控？"><span class="nav-number">1.4.1.0.4.</span> <span class="nav-text">如何进行用户视角的监控？</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#一、租机房布点监控"><span class="nav-number">1.4.1.0.4.1.</span> <span class="nav-text">一、租机房布点监控</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#二、端上布点监控"><span class="nav-number">1.4.1.0.4.2.</span> <span class="nav-text">二、端上布点监控</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#三、第三方监控平台"><span class="nav-number">1.4.1.0.4.3.</span> <span class="nav-text">三、第三方监控平台</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#100行代码，搞定http监控框架"><span class="nav-number">1.5.</span> <span class="nav-text">100行代码，搞定http监控框架</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、常见的http监控玩法"><span class="nav-number">1.5.1.</span> <span class="nav-text">一、常见的http监控玩法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#提问：有哪些常见http监控需求？"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">提问：有哪些常见http监控需求？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提问：常见的http监控怎么玩？"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">提问：常见的http监控怎么玩？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、常见的http监控存在什么问题？"><span class="nav-number">1.5.2.</span> <span class="nav-text">二、常见的http监控存在什么问题？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#提问：http状态码不能说明问题，那什么才能代表http没有问题呢？"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">提问：http状态码不能说明问题，那什么才能代表http没有问题呢？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、可扩展通用http监控平台架构细节"><span class="nav-number">1.5.3.</span> <span class="nav-text">三、可扩展通用http监控平台架构细节</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#监控平台层"><span class="nav-number">1.5.3.1.</span> <span class="nav-text">监控平台层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#信息管理层"><span class="nav-number">1.5.3.2.</span> <span class="nav-text">信息管理层</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#（1）集群信息管理服务"><span class="nav-number">1.5.3.2.1.</span> <span class="nav-text">（1）集群信息管理服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#（2）用户信息管理服务"><span class="nav-number">1.5.3.2.2.</span> <span class="nav-text">（2）用户信息管理服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#（3）告警策略管理服务"><span class="nav-number">1.5.3.2.3.</span> <span class="nav-text">（3）告警策略管理服务</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基础服务层"><span class="nav-number">1.5.3.3.</span> <span class="nav-text">基础服务层</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四、可扩展通用http监控框架细节"><span class="nav-number">1.5.4.</span> <span class="nav-text">四、可扩展通用http监控框架细节</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#五、http监控框架伪代码"><span class="nav-number">1.5.5.</span> <span class="nav-text">五、http监控框架伪代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#90行代码，搞定日志监控框架"><span class="nav-number">1.6.</span> <span class="nav-text">90行代码，搞定日志监控框架</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、什么是日志监控"><span class="nav-number">1.6.1.</span> <span class="nav-text">一、什么是日志监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、日志监控需求分析"><span class="nav-number">1.6.2.</span> <span class="nav-text">二、日志监控需求分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、目录与日志的规范化"><span class="nav-number">1.6.3.</span> <span class="nav-text">三、目录与日志的规范化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目录规范"><span class="nav-number">1.6.3.1.</span> <span class="nav-text">目录规范</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分级规范"><span class="nav-number">1.6.3.2.</span> <span class="nav-text">分级规范</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四、通用可扩展日志监控平台-框架思路"><span class="nav-number">1.6.4.</span> <span class="nav-text">四、通用可扩展日志监控平台/框架思路</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#集中式"><span class="nav-number">1.6.4.1.</span> <span class="nav-text">集中式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分散式"><span class="nav-number">1.6.4.2.</span> <span class="nav-text">分散式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#100行搞定日志监控平台"><span class="nav-number">1.6.5.</span> <span class="nav-text">100行搞定日志监控平台</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

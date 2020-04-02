@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="select和epoll的对比  原文地址：https://www.zhihu.com/question/20122137/answer/146866418   第一部分：select和epoll的任务关键词：应用程序 文件句柄 用户态 内核态  监控者要比较epoll相比较select高效在什么地方，就需要比较二者做相同事情的方法。 要完成对I/O流的复用需要完成如下几个事情： 1.用户态怎么将">
+<meta name="keywords" content="架构,异步与同步,IO,Reactor,事件模型,网络编程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="select和epoll的对比">
+<meta property="og:url" content="http://blog.com/2019/06/23/select和epoll的对比/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="select和epoll的对比  原文地址：https://www.zhihu.com/question/20122137/answer/146866418   第一部分：select和epoll的任务关键词：应用程序 文件句柄 用户态 内核态  监控者要比较epoll相比较select高效在什么地方，就需要比较二者做相同事情的方法。 要完成对I/O流的复用需要完成如下几个事情： 1.用户态怎么将">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-23T16:46:28.498Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="select和epoll的对比">
+<meta name="twitter:description" content="select和epoll的对比  原文地址：https://www.zhihu.com/question/20122137/answer/146866418   第一部分：select和epoll的任务关键词：应用程序 文件句柄 用户态 内核态  监控者要比较epoll相比较select高效在什么地方，就需要比较二者做相同事情的方法。 要完成对I/O流的复用需要完成如下几个事情： 1.用户态怎么将">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/23/select和epoll的对比/">
+
+
+
+
+
+  <title>select和epoll的对比 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/23/select和epoll的对比/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">select和epoll的对比</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-23T12:12:57+08:00">
+                2019-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/" itemprop="url" rel="index">
+                    <span itemprop="name">异步与同步</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/" itemprop="url" rel="index">
+                    <span itemprop="name">IO</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/" itemprop="url" rel="index">
+                    <span itemprop="name">Reactor</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/" itemprop="url" rel="index">
+                    <span itemprop="name">事件模型</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/异步与同步/IO/Reactor/事件模型/网络编程/" itemprop="url" rel="index">
+                    <span itemprop="name">网络编程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="select和epoll的对比"><a href="#select和epoll的对比" class="headerlink" title="select和epoll的对比"></a>select和epoll的对比</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://www.zhihu.com/question/20122137/answer/146866418" target="_blank" rel="noopener">https://www.zhihu.com/question/20122137/answer/146866418</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="第一部分：select和epoll的任务"><a href="#第一部分：select和epoll的任务" class="headerlink" title="第一部分：select和epoll的任务"></a>第一部分：select和epoll的任务</h2><h3 id="关键词：应用程序-文件句柄-用户态-内核态-监控者"><a href="#关键词：应用程序-文件句柄-用户态-内核态-监控者" class="headerlink" title="关键词：应用程序 文件句柄 用户态 内核态  监控者"></a>关键词：应用程序 文件句柄 用户态 内核态  监控者</h3><p>要比较<code>epoll</code>相比较<code>select</code>高效在什么地方，就需要比较二者做相同事情的方法。</p>
+<p>要完成对<code>I/O</code>流的复用需要完成如下几个事情：</p>
+<p>1.用户态怎么将文件句柄传递到内核态？</p>
+<p>2.内核态怎么判断<code>I/O</code>流可读可写？</p>
+<p>3.内核怎么通知监控者有<code>I/O</code>流可读可写？</p>
+<p>4.监控者如何找到可读可写的<code>I/O</code>流并传递给用户态应用程序？</p>
+<p>5.继续循环时监控者怎样重复上述步骤？</p>
+<p>搞清楚上述的步骤也就能解开<code>epoll</code>高效的原因了。</p>
+<h3 id="select的做法"><a href="#select的做法" class="headerlink" title="select的做法"></a>select的做法</h3><p>步骤1的解法：<code>select</code>创建3个文件描述符集，并将这些文件描述符拷贝到内核中，这里限制了文件描述符的最大的数量为1024，原因是出于对性能的考虑—轮询遍历（注意是全部传入—第一次拷贝）；</p>
+<p>步骤2的解法：内核针对读缓冲区和写缓冲区来判断是否可读可写,这个动作和<code>select</code>无关；</p>
+<p>步骤3的解法：内核在检测到文件句柄可读/可写时就产生中断通知监控者<code>select</code>，<code>select</code>被内核触发之后，就返回可读可写的文件句柄的总数；</p>
+<p>步骤4的解法：<code>select</code>会将之前传递给内核的文件句柄再次从内核传到用户态（第2次拷贝），<code>select</code>返回给用户态的只是可读可写的文件句柄总数，再使用<code>FD_ISSET</code>宏函数来检测哪些文件<code>I/O</code>可读可写（遍历）；</p>
+<p>步骤5的解法：<code>select</code>对于事件的监控是建立在内核的修改之上的，也就是说经过一次监控之后，内核会修改位，因此再次监控时需要再次从用户态向内核态进行拷贝（第N次拷贝）</p>
+<h3 id="epoll的做法"><a href="#epoll的做法" class="headerlink" title="epoll的做法"></a>epoll的做法</h3><p>步骤1的解法：首先执行<code>epoll_create</code>在内核专属于<code>epoll</code>的高速<code>cache</code>区，并在该缓冲区建立红黑树和就绪链表，用户态传入的文件句柄将被放到红黑树中（第一次拷贝）。</p>
+<p>步骤2的解法：内核针对读缓冲区和写缓冲区来判断是否可读可写，这个动作与<code>epoll</code>无关；</p>
+<p>步骤3的解法：<code>epoll_ctl</code>执行<code>add</code>动作时除了将文件句柄放到红黑树上之外，还向内核注册了该文件句柄的回调函数，内核在检测到某句柄可读可写时则调用该回调函数，回调函数将文件句柄放到就绪链表。</p>
+<p>步骤4的解法：<code>epoll_wait</code>只监控就绪链表就可以如果就绪链表有文件句柄，则表示该文件句柄可读可写，并返回到用户态（少量的拷贝）；</p>
+<p>步骤5的解法：由于内核不修改文件句柄的位，因此只需要在第一次传入就可以重复监控，直到使用<code>epoll_ctl</code>删除，否则不需要重新传入，因此无多次拷贝。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;简单说：<code>epoll</code>是继承了<code>select/poll</code>的<code>I/O</code>复用的思想，并在二者的基础上从监控<code>IO</code>流、查找<code>I/O</code>事件等角度来提高效率，具体地说就是内核句柄列表、红黑树、就绪<code>list</code>链表来实现的。</p>
+<h2 id="第二部分：epoll详解"><a href="#第二部分：epoll详解" class="headerlink" title="第二部分：epoll详解"></a>第二部分：epoll详解</h2><h3 id="epoll函数调用"><a href="#epoll函数调用" class="headerlink" title="epoll函数调用"></a>epoll函数调用</h3><p>先简单回顾下如何使用C库封装的3个<code>epoll</code>系统调用吧。</p>
+<ol>
+<li><strong>int</strong> <code>epoll_create</code>(<strong>int</strong> size);  </li>
+<li><strong>int</strong> <code>epoll_ctl</code>(<strong>int</strong> epfd, <strong>int</strong> op, <strong>int</strong> fd, <strong>struct</strong> epoll_event *event);  </li>
+<li><strong>int</strong> <code>epoll_wait</code>(<strong>int</strong> epfd, <strong>struct</strong> epoll_event *events,<strong>int</strong> maxevents, <strong>int</strong> timeout);  </li>
+</ol>
+<p>使用起来很清晰：</p>
+<p>A.<code>epoll_create</code>建立一个<code>epoll</code>对象。参数<code>size</code>是内核保证能够正确处理的最大句柄数，多于这个最大数时内核可不保证效果。</p>
+<p>B.<code>epoll_ctl</code>可以操作上面建立的<code>epoll</code>，例如，将刚建立的<code>socket</code>加入到<code>epoll</code>中让其监控，或者把 <code>epoll</code>正在监控的某个<code>socket</code>句柄移出<code>epoll</code>，不再监控它等等(<strong>也就是将I/O流放到内核</strong>)。</p>
+<p>C.<code>epoll_wait</code>在调用时，在给定的<code>timeout</code>时间内，当在监控的所有句柄中有事件发生时，就返回用户态的进程（<strong>也就是在内核层面捕获可读写的I/O事件</strong>）。</p>
+<p>从上面的调用方式就可以看到<code>epoll</code>比<code>select/poll</code>的优越之处：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为后者<strong>每次调用时都要传递你所要监控的所有socket给select/poll系统调用，这意味着需要将用户态的socket列表copy到内核态</strong>，如果以万计的句柄会导致每次都要copy几十几百KB的内存到内核态，非常低效。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而我们调用<code>epoll_wait</code>时就相当于以往调用<code>select/poll</code>，但是这时却不用传递<code>socket</code>句柄给内核，因为内核已经在<code>epoll_ctl</code>中拿到了要监控的句柄列表。</p>
+<p>====&gt;<em>select监控的句柄列表在用户态，每次调用都需要从用户态将句柄列表拷贝到内核态，但是epoll中句柄就是建立在内核中的，这样就减少了内核和用户态的拷贝，高效的原因之一。</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以，实际上在你调用<code>epoll_create</code>后，内核就已经在内核态开始准备帮你存储要监控的句柄了，每次调用<code>epoll_ctl</code>只是在往内核的<strong>数据结构</strong>里塞入新的<code>socket</code>句柄。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在内核里，一切皆文件。所以，<code>epoll</code>向内核注册了一个文件系统，用于存储上述的被监控<code>socket</code>。当你调用<code>epoll_create</code>时，就会在这个虚拟的<code>epoll</code>文件系统里创建一个file结点。当然这个<code>file</code>不是普通文件，它只服务于<code>epoll</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>epoll</code>在被内核初始化时（<strong>操作系统</strong>启动），同时会开辟出<code>epoll</code>自己的内核高速<code>cache</code>区，用于安置每一个我们想监控的<code>socket</code>，这些<code>socket</code>会以红黑树的形式保存在内核<code>cache</code>里，以支持快速的查找、插入、删除。这个内核高速<code>cache</code>区，就是建立连续的物理内存页，然后在之上建立<code>slab</code>层，简单的说，就是物理上分配好你想要的<code>size</code>的内存对象，每次使用时都是使用空闲的已分配好的对象。</p>
+<h3 id="epoll高效的原因"><a href="#epoll高效的原因" class="headerlink" title="epoll高效的原因"></a>epoll高效的原因</h3><p><strong>epoll高效的原因：</strong> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这是由于<strong>我们在调用epoll_create时，内核除了帮我们在epoll文件系统里建了个file结点，在内核cache里建了个红黑树用于存储以后epoll_ctl传来的socket外，还会再建立一个list链表，用于存储准备就绪的事件.</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当<strong>epoll_wait调用时，仅仅观察这个list链表里有没有数据即可。有数据就返回，没有数据就sleep，等到timeout时间到后即使链表没数据也返回。所以，epoll_wait非常高效</strong>。而且，通常情况下即使我们要监控百万计的句柄，大多一次也只返回很少量的准备就绪句柄而已，所以，<strong><code>epoll_wait</code>仅需要从内核态copy少量的句柄到用户态而已</strong>.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，这个准备就绪<code>list</code>链表是怎么维护的呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当我们执行<code>epoll_ctl</code>时，除了把<code>socket</code>放到<code>epoll</code>文件系统里<code>file</code>对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪<code>list</code>链表里。所以，<strong>当一个<code>socket</code>上有数据到了，内核在把网卡上的数据copy到内核中后就来把<code>socket</code>插入到准备就绪链表里了</strong>。</p>
+<h3 id="epoll综合的执行过程"><a href="#epoll综合的执行过程" class="headerlink" title="epoll综合的执行过程"></a>epoll综合的执行过程</h3><p><strong>epoll综合的执行过程：</strong> </p>
+<p>​      如此，一棵红黑树，一张准备就绪句柄链表，少量的内核<code>cache</code>，就帮我们解决了大并发下的<code>socket</code>处理问题。执行<code>epoll_create</code>时，创建了红黑树和就绪链表，执行<code>epoll_ctl</code>时，如果增加socket句柄，则检查在红黑树中是否存在，存在立即返回，不存在则添加到树干上，然后向内核注册回调函数，用于当中断事件来临时向准备就绪链表中插入数据。执行<code>epoll_wait</code>时立刻返回准备就绪链表里的数据即可。</p>
+<h3 id="epoll水平触发和边缘触发的实现"><a href="#epoll水平触发和边缘触发的实现" class="headerlink" title="epoll水平触发和边缘触发的实现"></a>epoll水平触发和边缘触发的实现</h3><p><strong>epoll水平触发和边缘触发的实现：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当一个<code>socket</code>句柄上有事件时，内核会把该句柄插入上面所说的准备就绪<code>list</code>链表，这时我们调用<code>epoll_wait</code>，会把准备就绪的<code>socket</code>拷贝到用户态内存，然后清空准备就绪<code>list</code>链表， 最后，<code>epoll_wait</code>干了件事，就是检查这些<code>socket</code>，如果不是ET模式（就是LT模式的句柄了），并且这些<code>socket</code>上确实有未处理的事件时，又把该句柄放回到刚刚清空的准备就绪链表了，所以，<strong>非ET的句柄，只要它上面还有事件，<code>epoll_wait</code>每次都会返回</strong>。<strong>而ET模式的句柄，除非有新中断到，即使<code>socket</code>上的事件没有处理完，也是不会次次从<code>epoll_wait</code>返回的</strong>。</p>
+<p><em>====&gt;区别就在于epoll_wait将socket返回到用户态时是否情况就绪链表。</em>  </p>
+<h2 id="第三部分：epoll高效的本质"><a href="#第三部分：epoll高效的本质" class="headerlink" title="第三部分：epoll高效的本质"></a>第三部分：epoll高效的本质</h2><p><strong>1.减少用户态和内核态之间的文件句柄拷贝；</strong></p>
+<p><strong>2.减少对可读可写文件句柄的遍历；</strong></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/异步与同步/" rel="tag"># 异步与同步</a>
+          
+            <a href="/tags/IO/" rel="tag"># IO</a>
+          
+            <a href="/tags/Reactor/" rel="tag"># Reactor</a>
+          
+            <a href="/tags/事件模型/" rel="tag"># 事件模型</a>
+          
+            <a href="/tags/网络编程/" rel="tag"># 网络编程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/23/epoll的原理是什么/" rel="next" title="epoll的原理是什么">
+                <i class="fa fa-chevron-left"></i> epoll的原理是什么
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/23/epoll使用详解（精髓）/" rel="prev" title="epoll使用详解（精髓）">
+                epoll使用详解（精髓） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#select和epoll的对比"><span class="nav-number">1.</span> <span class="nav-text">select和epoll的对比</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第一部分：select和epoll的任务"><span class="nav-number">1.1.</span> <span class="nav-text">第一部分：select和epoll的任务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关键词：应用程序-文件句柄-用户态-内核态-监控者"><span class="nav-number">1.1.1.</span> <span class="nav-text">关键词：应用程序 文件句柄 用户态 内核态  监控者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#select的做法"><span class="nav-number">1.1.2.</span> <span class="nav-text">select的做法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll的做法"><span class="nav-number">1.1.3.</span> <span class="nav-text">epoll的做法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.1.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第二部分：epoll详解"><span class="nav-number">1.2.</span> <span class="nav-text">第二部分：epoll详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll函数调用"><span class="nav-number">1.2.1.</span> <span class="nav-text">epoll函数调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll高效的原因"><span class="nav-number">1.2.2.</span> <span class="nav-text">epoll高效的原因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll综合的执行过程"><span class="nav-number">1.2.3.</span> <span class="nav-text">epoll综合的执行过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll水平触发和边缘触发的实现"><span class="nav-number">1.2.4.</span> <span class="nav-text">epoll水平触发和边缘触发的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第三部分：epoll高效的本质"><span class="nav-number">1.3.</span> <span class="nav-text">第三部分：epoll高效的本质</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

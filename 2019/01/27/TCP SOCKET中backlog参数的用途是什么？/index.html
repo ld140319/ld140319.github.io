@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,网络,Tcp,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="TCP SOCKET中backlog参数的用途是什么？ 原文地址：https://www.cnxct.com/something-about-phpfpm-s-backlog/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在前年时，业务中遇到好多次因为PHP-FPM的backlog参数引发的性能问题，一直想去详细研究一番，还特意在2013年总结里提到这事《为何PHP5.5.6中fpm bac">
+<meta name="keywords" content="Linux,网络,Tcp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP SOCKET中backlog参数的用途是什么？">
+<meta property="og:url" content="http://blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="TCP SOCKET中backlog参数的用途是什么？ 原文地址：https://www.cnxct.com/something-about-phpfpm-s-backlog/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在前年时，业务中遇到好多次因为PHP-FPM的backlog参数引发的性能问题，一直想去详细研究一番，还特意在2013年总结里提到这事《为何PHP5.5.6中fpm bac">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/tcp-sync-queue-and-accept-queue-small.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/tcp.connection.rst-271.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/tcp-sync-queue-overflow.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/Dev/PHP/phpStudy/WWW/Blog_ReConstruct/计算机网络/TCP%20SOCKET中backlog参数的用途是什么？/tcp-accept-queue-overflow-1024x638.jpg">
+<meta property="og:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/tcp-ack-rto.jpg">
+<meta property="og:updated_time" content="2019-03-30T15:19:52.530Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP SOCKET中backlog参数的用途是什么？">
+<meta name="twitter:description" content="TCP SOCKET中backlog参数的用途是什么？ 原文地址：https://www.cnxct.com/something-about-phpfpm-s-backlog/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在前年时，业务中遇到好多次因为PHP-FPM的backlog参数引发的性能问题，一直想去详细研究一番，还特意在2013年总结里提到这事《为何PHP5.5.6中fpm bac">
+<meta name="twitter:image" content="http://blog.com/2019/01/27/TCP%20SOCKET中backlog参数的用途是什么？/tcp-sync-queue-and-accept-queue-small.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/">
+
+
+
+
+
+  <title>TCP SOCKET中backlog参数的用途是什么？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">TCP SOCKET中backlog参数的用途是什么？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-27T12:12:57+08:00">
+                2019-01-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/Linux/Tcp/" itemprop="url" rel="index">
+                    <span itemprop="name">Tcp</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="TCP-SOCKET中backlog参数的用途是什么？"><a href="#TCP-SOCKET中backlog参数的用途是什么？" class="headerlink" title="TCP SOCKET中backlog参数的用途是什么？"></a>TCP SOCKET中backlog参数的用途是什么？</h1><blockquote>
+<p>原文地址：<a href="https://www.cnxct.com/something-about-phpfpm-s-backlog/" target="_blank" rel="noopener">https://www.cnxct.com/something-about-phpfpm-s-backlog/</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在前年时，业务中遇到好多次因为PHP-FPM的backlog参数引发的性能问题，一直想去详细研究一番，还特意在2013年总结里提到这事《<a href="http://www.cnxct.com/summary-of-2013-by-cfc4n/" target="_blank" rel="noopener">为何PHP5.5.6中fpm backlog Changed default listen() backlog to 65535</a>》，然而，我稍于懒惰，一拖再拖，直至今日，才动脑去想，动笔去写。</p>
+<p>2013年12月14发布的PHP5.5.6中，<a href="http://php.net/ChangeLog-5.php#5.5.6" target="_blank" rel="noopener">changelog</a>中有一条变更，</p>
+<blockquote>
+<p>FPM:<br>Changed default listen() backlog to 65535.</p>
+</blockquote>
+<p>这条改动，是在10月28日改的，见<a href="https://github.com/php/php-src/commit/9765763413526d641b98c0a1e40d57b5ba1cceb3#diff-5ac2fd3d4cd3a2c00daf25fe39aeb142" target="_blank" rel="noopener">increase backlog to the highest value everywhere</a></p>
+<blockquote>
+<p>It makes no sense to use -1 for *BSD (which is the highest value there)<br>and still use 128 for Linux.<br>Lets raise it right to up the limit and let the people lower it if they<br>think that 3.5Mb is too much for a process.<br>IMO this is better than silently dropping connections.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;patch提交者认为，提高backlog数量，哪怕出现timeout之类错误，也比因为backlog满了之后，悄悄的忽略TCP SYN的请求要好。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当我最近开始想好好了解一下backlog的细节问题时，发现fpm的默认backlog已经不是65535了，现在是511了。（没写在changelog中，你没注意到，这不怪你。）我翻阅了github提交记录，找到这次改动，是在2014年7月22日，<a href="https://github.com/php/php-src/commit/ebf4ffc9354f316f19c839a114b26a564033708a" target="_blank" rel="noopener">Set FPM_BACKLOG_DEFAULT to 511</a></p>
+<blockquote>
+<p>It is too large for php-fpm to set the listen backlog to 65535.<br>It is realy NOT a good idea to clog the accept queue especially<br>when the client or nginx has a timeout for this connection.</p>
+<p>Assume that the php-fpm qps is 5000. It will take 13s to completely<br>consume the 65535 backloged connections. The connection maybe already<br>have been closed cause of timeout of nginx or clients. So when we accept<br>the 65535th socket, we get a broken pipe.</p>
+<p>Even worse, if hundreds of php-fpm processes get a closed connection<br>they are just wasting time and resouces to run a heavy task and finally<br>get error when writing to the closed connection(error: Broken Pipe).</p>
+<p>The really max accept queue size will be backlog+1(ie, 512 here).<br>We take 511 which is the same as nginx and redis.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;shafreeck其中理由是“backlog值为65535太大了。会导致前面的nginx（或者其他客户端）超时”，而且提交者举例计算了一下，假设FPM的QPS为5000，那么65535个请求全部处理完需要13s的样子。但前端的nginx（或其他客户端）已经等待超时，关闭了这个连接。当FPM处理完之后，再往这个SOCKET ID 写数据时，却发现连接已关闭，得到的是“error: Broken Pipe”，在nginx、redis、apache里，默认的backlog值兜是511。故这里也建议改为511。（后来发现，此patch提交者，是360团队「基础架构快报」中《TCP三次握手之backlog》的作者shafreeck</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于backlog的参数的含义，在linux kernel手册中也给了注释说明listen – listen for connections on a socket</p>
+<blockquote>
+<p>#include /<em> See NOTES </em>/<br>#include<br>int listen(int sockfd, int backlog);<br>Description</p>
+<p>listen() marks the socket referred to by sockfd as a passive socket, that is, as a socket that will be used to accept incoming connection requests using accept(2).<br>The sockfd argument is a file descriptor that refers to a socket of type SOCK_STREAM or SOCK_SEQPACKET.</p>
+<p>The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow. If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSED or, if the underlying protocol supports retransmission, the request may be ignored so that a later reattempt at connection succeeds.</p>
+<p>Notes</p>
+<p>The behavior of the backlog argument on TCP sockets changed with Linux 2.2. Now it specifies the queue length for completely established sockets waiting to be accepted, instead of the number of incomplete connection requests. The maximum length of the queue for incomplete sockets can be set using /proc/sys/net/ipv4/tcp_max_syn_backlog. When syncookies are enabled there is no logical maximum length and this setting is ignored. See tcp(7) for more information.</p>
+<p>If the backlog argument is greater than the value in /proc/sys/net/core/somaxconn, then it is silently truncated to that value; the default value in this file is 128. In kernels before 2.4.25, this limit was a hard coded value, SOMAXCONN, with the value 128.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>backlog的定义是已连接但未进行accept处理的SOCKET队列大小，已是（并非syn的SOCKET队列）。如果这个队列满了，将会发送一个ECONNREFUSED错误信息给到客户端</strong>,即 linux 头文件 /usr/include/asm-generic/errno.h中定义的“Connection refused”，（如果协议不支持重传，该请求会被忽略）如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//...</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENETDOWN    100 <span class="comment">/* Network is down */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENETUNREACH 101 <span class="comment">/* Network is unreachable */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENETRESET   102 <span class="comment">/* Network dropped connection because of reset */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ECONNABORTED    103 <span class="comment">/* Software caused connection abort */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ECONNRESET  104 <span class="comment">/* Connection reset by peer */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENOBUFS     105 <span class="comment">/* No buffer space available */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EISCONN     106 <span class="comment">/* Transport endpoint is already connected */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENOTCONN    107 <span class="comment">/* Transport endpoint is not connected */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ESHUTDOWN   108 <span class="comment">/* Cannot send after transport endpoint shutdown */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ETOOMANYREFS    109 <span class="comment">/* Too many references: cannot splice */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ETIMEDOUT   110 <span class="comment">/* Connection timed out */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ECONNREFUSED    111 <span class="comment">/* Connection refused */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EHOSTDOWN   112 <span class="comment">/* Host is down */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EHOSTUNREACH    113 <span class="comment">/* No route to host */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EALREADY    114 <span class="comment">/* Operation already in progress */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EINPROGRESS 115 <span class="comment">/* Operation now in progress */</span></span></span><br><span class="line"><span class="comment">//...</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在linux 2.2以前，backlog大小包括了半连接状态和全连接状态两种队列大小。<strong>linux 2.2以后，分离为两个backlog来分别限制半连接SYN_RCVD状态的未完成连接队列大小跟全连接ESTABLISHED状态的已完成连接队列大小</strong>。互联网上常见的TCP SYN FLOOD恶意DOS攻击方式就是用/proc/sys/net/ipv4/tcp_max_syn_backlog来控制的，可参见《<a href="http://tech.uc.cn/?p=1790" target="_blank" rel="noopener">TCP洪水攻击（SYN Flood）的诊断和处理</a>》。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>在使用listen函数时，内核会根据传入参数的backlog跟系统配置参数/proc/sys/net/core/somaxconn中，二者取最小值，作为“ESTABLISHED状态之后，完成TCP连接，等待服务程序ACCEPT”的队列大小</strong>。在kernel 2.4.25之前，是写死在代码常量SOMAXCONN，默认值是128。<strong>在kernel 2.4.25之后，在配置文件/proc/sys/net/core/somaxconn (即 /etc/sysctl.conf 之类 )中可以修改</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我稍微整理了流程图，如下：<br><img src="//blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/tcp-sync-queue-and-accept-queue-small.jpg" alt="tcp-sync-queue-and-accept-queue-small"><br>&nbsp;&nbsp;&nbsp;&nbsp;如图，<strong>服务端收到客户端的syn请求后，将这个请求放入syns queue中，然后服务器端回复syn+ack给客户端，等收到客户端的ack后，将此连接放入accept queue</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;大约了解其参数代表意义之后，我稍微测试了一番，并抓去了部分数据，首先确认系统默认参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root@vmware-cnxct:/home/cfc4n# cat /proc/sys/net/core/somaxconn</span><br><span class="line">128</span><br><span class="line">root@vmware-cnxct:/home/cfc4n# ss -lt</span><br><span class="line">State      Recv-Q Send-Q         Local Address:Port                    Peer Address:Port</span><br><span class="line">LISTEN     0      128                        *:ssh                           *:*</span><br><span class="line">LISTEN     0      128                 0.0.0.0:9000                           *:*</span><br><span class="line">LISTEN     0      128                       *:http                           *:*</span><br><span class="line">LISTEN     0      128                       :::ssh                           :::*</span><br><span class="line">LISTEN     0      128                      :::http                           :::*</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在FPM的配置中，listen.backlog值默认为511，而如上结果中看到的Send-Q却是128，可见确实是<strong>以/proc/sys/net/core/somaxconn跟listen参数的最小值作为backlog的值</strong>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">cfc4n@cnxct:~$ ab -n 10000 -c 300 http://172.16.218.128/3.php</span><br><span class="line">This is ApacheBench, Version 2.3 &lt;$Revision: 1604373 $&gt;</span><br><span class="line">Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/</span><br><span class="line">Licensed to The Apache Software Foundation, http://www.apache.org/</span><br><span class="line"> </span><br><span class="line">Benchmarking 172.16.218.128 (be patient)</span><br><span class="line">Completed 1000 requests</span><br><span class="line">Completed 2000 requests</span><br><span class="line">Completed 3000 requests</span><br><span class="line">Completed 4000 requests</span><br><span class="line">Completed 5000 requests</span><br><span class="line">Completed 6000 requests</span><br><span class="line">Completed 7000 requests</span><br><span class="line">Completed 8000 requests</span><br><span class="line">Completed 9000 requests</span><br><span class="line">Completed 10000 requests</span><br><span class="line">Finished 10000 requests</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">Server Software:        nginx/1.4.6</span><br><span class="line">Server Hostname:        172.16.218.128</span><br><span class="line">Server Port:            80</span><br><span class="line"> </span><br><span class="line">Document Path:          /3.php</span><br><span class="line">Document Length:        55757 bytes</span><br><span class="line"> </span><br><span class="line">Concurrency Level:      300</span><br><span class="line">Time taken for tests:   96.503 seconds</span><br><span class="line">Complete requests:      10000</span><br><span class="line">Failed requests:        7405</span><br><span class="line">   (Connect: 0, Receive: 0, Length: 7405, Exceptions: 0)</span><br><span class="line">Non-2xx responses:      271</span><br><span class="line">Total transferred:      544236003 bytes</span><br><span class="line">HTML transferred:       542499372 bytes</span><br><span class="line">Requests per second:    103.62 [#/sec] (mean)</span><br><span class="line">Time per request:       2895.097 [ms] (mean)</span><br><span class="line">Time per request:       9.650 [ms] (mean, across all concurrent requests)</span><br><span class="line">Transfer rate:          5507.38 [Kbytes/sec] received</span><br><span class="line"> </span><br><span class="line">Connection Times (ms)</span><br><span class="line">              min  mean[+/-sd] median   max</span><br><span class="line">Connect:        0    9  96.7      0    1147</span><br><span class="line">Processing:     8 2147 6139.2    981   60363</span><br><span class="line">Waiting:        8 2137 6140.1    970   60363</span><br><span class="line">Total:          8 2156 6162.8    981   61179</span><br><span class="line"> </span><br><span class="line">Percentage of the requests served within a certain time (ms)</span><br><span class="line"><span class="meta">  50%</span><span class="bash">    981</span></span><br><span class="line"><span class="meta">  66%</span><span class="bash">   1074</span></span><br><span class="line"><span class="meta">  75%</span><span class="bash">   1192</span></span><br><span class="line"><span class="meta">  80%</span><span class="bash">   1283</span></span><br><span class="line"><span class="meta">  90%</span><span class="bash">   2578</span></span><br><span class="line"><span class="meta">  95%</span><span class="bash">   5352</span></span><br><span class="line"><span class="meta">  98%</span><span class="bash">  13534</span></span><br><span class="line"><span class="meta">  99%</span><span class="bash">  42346</span></span><br><span class="line"><span class="meta"> 100%</span><span class="bash">  61179 (longest request)</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;apache ab这边的结果中，非2xx的http响应有271个，在NGINX日志数据如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@vmware-cnxct:/var/log/nginx# cat grep.error.log |wc -l</span><br><span class="line">271</span><br><span class="line">root@vmware-cnxct:/var/log/nginx# cat grep.access.log |wc -l</span><br><span class="line">10000</span><br><span class="line">root@vmware-cnxct:/var/log/nginx# cat grep.access.log |awk '&#123;print $9&#125;'|sort|uniq -c</span><br><span class="line">   9729 200</span><br><span class="line">    186 502</span><br><span class="line">     85 504</span><br><span class="line">root@vmware-cnxct:/var/log/nginx# cat grep.error.log |awk '&#123;print $8  $9  $10 $11&#125;'|sort |uniq -c</span><br><span class="line">    186 (111: Connection refused) while</span><br><span class="line">     85 out (110: Connection timed</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从nginx结果中看出，本次压测总请求数为10000。http 200响应数量9729个；http 502 响应数量186个；http 504响应数量未85个；即非2xx响应总数为502+504总数，为271个。同时，也跟error.log中数据吻合。同时，也跟TCP数据包中的RST包数量吻合。<br><img src="//blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/tcp.connection.rst-271.jpg" alt="tcp.connection.rst-271"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在nginx error中，错误号为111，错误信息为“Connection refused”的有186条，对应着所有http 502响应错误的请求；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在nginx error中，错误号为110，错误信息为“Connection timed out”的有85条,对应着所有http 504响应错误的请求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在linux errno.h头文件定义中，错误号111对应着ECONNREFUSED；错误号110对应着ETIMEDOUT。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;linux man手册里，对listen参数的说明中，也提到，若client连不上server时，会报告ECONNREFUSED的错。</p>
+<p>Nginx error日志中的详细错误如下:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//backlog  过大,fpm处理不过来，导致队列等待时间超过NGINX的proxy</span><br><span class="line">54414#0: *24135 upstream timed out (110: Connection timed out) while connecting to upstream, client: 172.16.218.1, server: localhost, request: "GET /3.php HTTP/1.0", upstream: "fastcgi://192.168.122.66:9999", host: "172.16.218.128"</span><br><span class="line"> </span><br><span class="line">//backlog 过小</span><br><span class="line">[error] 54416#0: *38728 connect() failed (111: Connection refused) while connecting to upstream, client: 172.16.218.1, server: localhost, request: "GET /3.php HTTP/1.0", upstream: "fastcgi://192.168.122.66:9999", host: "172.16.218.128"</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在压测的时候，我用tcpdump抓了通讯包，配合通信包的数据，也可以看出，当backlog为某128时，accept queue队列塞满后，TCP建立的三次握手完成，连接进入ESTABLISHED状态，客户端（nginx）发送给PHP-FPM的数据，FPM处理不过来，没有调用accept将其从accept quque队列取出时，那么就没有ACK包返回给客户端nginx，nginx那边根据TCP 重传机制会再次发从尝试…报了“111: Connection refused”错。当SYNS QUEUE满了时，TCPDUMP的结果如下，不停重传SYN包。<br><img src="//blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/tcp-sync-queue-overflow.jpg" alt="tcp-sync-queue-overflow"><br>&nbsp;&nbsp;&nbsp;&nbsp;对于已经调用accept函数，从accept queue取出，读取其数据的TCP连接，由于FPM本身处理较慢，以至于NGINX等待时间过久，直接终止了该fastcgi请求，返回“110: Connection timed out”。当FPM处理完成后，往FD里写数据时，发现前端的nginx已经断开连接了，就报了“Write broken pipe”。当ACCEPT QUEUE满了时，TCPDUMP的结果如下，不停重传PSH SCK包。（别问我TCP RTO重传的机制，太复杂了，太深奥了 、<a href="http://blog.csdn.net/zhangskd/article/details/35281345" target="_blank" rel="noopener">TCP的定时器系列 — 超时重传定时器</a>）<br><img src="//blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/Dev\PHP\phpStudy\WWW\Blog_ReConstruct\计算机网络\TCP SOCKET中backlog参数的用途是什么？\tcp-accept-queue-overflow-1024x638.jpg" alt="tcp-accept-queue-overflow"><br>&nbsp;&nbsp;&nbsp;&nbsp;对于这些结论，我尝试搜了很多资料，后来在360公司的「基础架构快报」中也看到了他们的研究资料《<a href="http://mp.weixin.qq.com/s?__biz=MjM5NzUwNDA5MA==&amp;mid=201005717&amp;idx=1&amp;sn=74036633114ee6212e57ee4576dbfcbc&amp;3rd=MzA3MDU4NTYzMw==&amp;scene=6#rd" target="_blank" rel="noopener">TCP三次握手之backlog</a>》，也验证了我的结论。</p>
+<p>关于ACCEPT QUEUE满了之后的表现问题，早上<a href="http://phporz.com/" target="_blank" rel="noopener">IM鑫爷</a>给我指出几个错误，感谢批评及指导，在这里，我把这个问题再详细描述一下。如上图所示</p>
+<ul>
+<li>NO.515 client发SYN到server，我的seq是0，消息包内容长度为0. （这里的seq并非真正的0，而是wireshark为了显示更好阅读，使用了Relative SeqNum相对序号）</li>
+<li>NO.516 server回SYN ACK给client，我的seq是0，消息包内容长度是0，已经收到你发的seq 1 之前的TCP包。(请发后面的)</li>
+<li>NO.641 client发ACK给server，我是seq 1 ，消息包内容长度是0，已经收到你发的seq 1 之前的TCP包。</li>
+<li>NO.992 client发PSH给server，我是seq 1 ，消息包内容长度是496，已经收到你发的seq 1 之前的TCP包。</li>
+<li>………..等了一段时间之后（这里约0.2s左右）</li>
+<li>NO.4796 client没等到对方的ACK包，开始TCP retransmission这个包，我是seq 1，消息包长度496，已经收到你发的seq 1 之前的TCP包。</li>
+<li>……….又…等了一段时间</li>
+<li>NO.9669 client还是没等到对方的ACK包，又开始TCP retransmission这个包，我是seq 1，消息包长度496，已经收到你发的seq 1 之前的TCP包。</li>
+<li>NO.13434 server发了SYN ACK给client，这里是tcp spurious retransmission 伪重传，我的seq是0，消息包内容长度是0，已经收到你发的seq 1 之前的TCP包。距离其上次发包给client是NO.516 已1秒左右了，因为没有收到NO.641 包ACK。这时，client收到过server的SYN,ACK包，将此TCP 连接状态改为ESTABLISHED,而server那边没有收到client的ACK包，则其TCP连接状态是SYN_RCVD状态。（感谢IM鑫爷指正）也可能是因为accept queue满了，暂时不能将此TCP连接从syns queue拉到accept queue，导致这情况，这需要翻阅内核源码才能确认。</li>
+<li>NO.13467 client发TCP DUP ACK包给server，其实是重发了N0.641 ,只是seq变化了，因为要包括它之前发送过的seq的序列号总和。即..我的seq 497 ，消息包内容长度是0，已经收到你发的seq 1 之前的TCP包。</li>
+<li>NO.16573 client继续重新发消息数据给server，包的内容还是NO.992的内容，因为之前发的几次，都没收到确认。</li>
+<li>NO.25813 client继续重新发消息数据给server，包的内容还还是NO.992的内容，仍没收到确认。（参见下图中绿色框内标识）</li>
+<li>NO.29733 server又重复了NO.13434包的流程，原因也一样，参见NO.13434包注释</li>
+<li>NO.29765 client只好跟NO.13467一样，重发ACK包给server。</li>
+<li>NO.44507 重复NO.16573的步骤</li>
+<li>NO.79195 继续重复NO.16573的步骤</li>
+<li>NO.79195 server立刻直接回了RST包，结束会话</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;详细的包内容备注在后面，需要关注的不光是包发送顺序，包的seq重传之类，还有一个重要的，TCP retransmission timeout，即TCP超时重传。对于这里已经抓到的数据包，wireshark可以看下每次超时重传的时间间隔，如下图：<br><img src="//blog.com/2019/01/27/TCP SOCKET中backlog参数的用途是什么？/tcp-ack-rto.jpg" alt="tcp ack rto 重传数据包"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;RTO的重传次数是系统可配置的，见/proc/sys/net/ipv4/tcp_retries1 ，而重传时间间隔，间隔增长频率等，是比较复杂的方式计算出来的，见《<a href="http://www.orczhou.com/index.php/2011/10/tcpip-protocol-start-rto/" target="_blank" rel="noopener">TCP/IP重传超时–RTO</a>》。</p>
+<p>backlog大小设置为多少合适？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从上面的结论中可以看出，这跟<strong>FPM的处理能力</strong>有关。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>backlog太大了，导致FPM处理不过来，nginx那边等待超时，断开连接，报504 gateway timeout错</strong>。<strong>同时FPM处理完准备write 数据给nginx时，发现TCP连接断开了，报“Broken pipe”</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>backlog太小的话，NGINX之类client，根本进入不了FPM的accept queue，报“502 Bad Gateway”错。所以，这还得去根据FPM的QPS来决定backlog的大小</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>计算方式最好为QPS=backlog</strong>。对了这里的QPS是正常业务下的QPS，千万别用echo hello world这种结果的QPS去欺骗自己。当然，<strong>backlog的数值，如果指定在FPM中的话，记得把操作系统的net.core.somaxconn设置的起码比它大</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;另外，ubuntu server 1404上/proc/sys/net/core/somaxconn 跟/proc/sys/net/ipv4/tcp_max_syn_backlog 默认值都是128，这个问题，我为了抓数据，测了好几遍才发现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于测试时，<strong>TCP数据包已经drop掉的未进入syns queue，以及未进入accept queue的数据包</strong>，可以用netstat -s来查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root@vmware-cnxct:/# netstat -s</span><br><span class="line">TcpExt:</span><br><span class="line">    //...</span><br><span class="line">    91855 times the listen queue of a socket overflowed</span><br><span class="line">    102324 SYNs to LISTEN sockets dropped   //未进入syns queue的数据包数量</span><br><span class="line">    444 packets directly queued to recvmsg prequeue.</span><br><span class="line">    30408 bytes directly in process context from backlog</span><br><span class="line">    //...</span><br><span class="line">    TCPSackShiftFallback: 27</span><br><span class="line">    TCPBacklogDrop: 2334    //未进入accept queue的数据包数量</span><br><span class="line">    TCPTimeWaitOverflow: 229347</span><br><span class="line">    TCPReqQFullDoCookies: 11591</span><br><span class="line">    TCPRcvCoalesce: 29062</span><br><span class="line">    //...</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> 参考资料</p>
+</blockquote>
+<ul>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MjM5NzUwNDA5MA==&amp;mid=201005717&amp;idx=1&amp;sn=74036633114ee6212e57ee4576dbfcbc&amp;3rd=MzA3MDU4NTYzMw==&amp;scene=6#rd" target="_blank" rel="noopener">TCP三次握手之backlog</a></li>
+<li><a href="http://blog.csdn.net/raintungli/article/details/37913765" target="_blank" rel="noopener">linux里的backlog详解</a></li>
+<li><a href="http://jaseywang.me/2014/07/20/tcp-queue-%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98/" target="_blank" rel="noopener">tcp-queue-的一些问题</a></li>
+<li><a href="https://utcc.utoronto.ca/~cks/space/blog/unix/ListenBacklogMeaning" target="_blank" rel="noopener">The meaning of listen(2)’s backlog parameter</a></li>
+<li><a href="http://coolshell.cn/articles/11564.html" target="_blank" rel="noopener">TCP 的那些事儿（上）</a></li>
+<li><a href="http://www.orczhou.com/index.php/2011/10/tcpip-protocol-start-rto/" target="_blank" rel="noopener">TCP/IP重传超时–RTO</a></li>
+<li><a href="http://blog.csdn.net/zhangskd/article/details/35281345" target="_blank" rel="noopener">TCP的定时器系列—超时重传定时器</a></li>
+<li><a href="http://vincent.bernat.im/en/blog/2014-tcp-time-wait-state-linux.html" target="_blank" rel="noopener">Coping with the TCP TIME-WAIT state on busy Linux servers</a></li>
+<li>2018年10月22日新增<a href="https://veithen.github.io/2014/01/01/how-tcp-backlog-works-in-linux.html" target="_blank" rel="noopener">How TCP backlog works in Linux</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/网络/" rel="tag"># 网络</a>
+          
+            <a href="/tags/Tcp/" rel="tag"># Tcp</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/27/TCP三次握手之backlog/" rel="next" title="TCP三次握手之backlog">
+                <i class="fa fa-chevron-left"></i> TCP三次握手之backlog
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/27/Lucene-全文检索的基本原理/" rel="prev" title="Lucene-全文检索的基本原理">
+                Lucene-全文检索的基本原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TCP-SOCKET中backlog参数的用途是什么？"><span class="nav-number">1.</span> <span class="nav-text">TCP SOCKET中backlog参数的用途是什么？</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

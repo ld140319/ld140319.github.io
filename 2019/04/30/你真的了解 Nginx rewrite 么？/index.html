@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,服务器,Nginx,Nginx Rewrite,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="你真的了解 Nginx rewrite 么？ 原文地址：https://mp.weixin.qq.com/s/_NyI39uHmaOIIket1t3kyg  重定向&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;网站在使用 Nginx 时都会进行个性化配置满足自己的业务需要，而 URL 重写几乎是每个网站都必做的事情，Nginx 的 URL 重写规则不像 Apache 那样">
+<meta name="keywords" content="Linux,服务器,Nginx,Nginx Rewrite">
+<meta property="og:type" content="article">
+<meta property="og:title" content="你真的了解 Nginx rewrite 么？">
+<meta property="og:url" content="http://blog.com/2019/04/30/你真的了解 Nginx rewrite 么？/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="你真的了解 Nginx rewrite 么？ 原文地址：https://mp.weixin.qq.com/s/_NyI39uHmaOIIket1t3kyg  重定向&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;网站在使用 Nginx 时都会进行个性化配置满足自己的业务需要，而 URL 重写几乎是每个网站都必做的事情，Nginx 的 URL 重写规则不像 Apache 那样">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/30/你真的了解%20Nginx%20rewrite%20么？/1.webp">
+<meta property="og:updated_time" content="2019-04-30T04:25:46.485Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="你真的了解 Nginx rewrite 么？">
+<meta name="twitter:description" content="你真的了解 Nginx rewrite 么？ 原文地址：https://mp.weixin.qq.com/s/_NyI39uHmaOIIket1t3kyg  重定向&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;网站在使用 Nginx 时都会进行个性化配置满足自己的业务需要，而 URL 重写几乎是每个网站都必做的事情，Nginx 的 URL 重写规则不像 Apache 那样">
+<meta name="twitter:image" content="http://blog.com/2019/04/30/你真的了解%20Nginx%20rewrite%20么？/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/30/你真的了解 Nginx rewrite 么？/">
+
+
+
+
+
+  <title>你真的了解 Nginx rewrite 么？ | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/30/你真的了解 Nginx rewrite 么？/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">你真的了解 Nginx rewrite 么？</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-30T12:12:57+08:00">
+                2019-04-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/服务器/" itemprop="url" rel="index">
+                    <span itemprop="name">服务器</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/服务器/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/服务器/Linux/Nginx-Rewrite/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx Rewrite</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="你真的了解-Nginx-rewrite-么？"><a href="#你真的了解-Nginx-rewrite-么？" class="headerlink" title="你真的了解 Nginx rewrite 么？"></a>你真的了解 Nginx rewrite 么？</h1><blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/_NyI39uHmaOIIket1t3kyg" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/_NyI39uHmaOIIket1t3kyg</a></p>
+</blockquote>
+<h2 id="重定向"><a href="#重定向" class="headerlink" title="重定向"></a>重定向</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;网站在使用 Nginx 时都会进行个性化配置满足自己的业务需要，而 URL 重写几乎是每个网站都必做的事情，Nginx 的 URL 重写规则不像 Apache 那样简单直接，逻辑相对要复杂一些，本文将通过例子的方式帮助大家理解 Nginx rewrite 原理，希望能对您有些启发。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nginx 中重定向有多种方式：</p>
+<h3 id="外部重定向"><a href="#外部重定向" class="headerlink" title="外部重定向"></a><strong>外部重定向</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>return 指令返回 301 或 302（return 也可以返回其他状态码），可以放在 server 或 location 块中</strong>。例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">return</span> <span class="number">301</span> https://www.mi.com;</span><br><span class="line">or</span><br><span class="line"><span class="attribute">return</span> <span class="number">302</span> https://www.mi.com;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;还可以使用 rewrite 指令，例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span>   http://www.mi.com/<span class="variable">$1</span>;</span><br><span class="line">or</span><br><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span>   http://www.mi.com/ <span class="literal">redirect</span>;</span><br></pre></td></tr></table></figure>
+<p><strong>内部重定向</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>return + error_page 指令的组合，或 try_files 指令和 rewrite 指令，非常灵活</strong>。</p>
+<h2 id="rewrite-语法"><a href="#rewrite-语法" class="headerlink" title="rewrite 语法"></a>rewrite 语法</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文主要讲解 rewrite 的工作原理，其他指令的使用方法大家可以自行查阅 Nginx 官网。在使用 Nginx 的 rewrite 指令时，flag 可以设置为 last 和 break，这两个 flag 很容易混淆，后面我们会比较这两个 flag 的区别，下面通过示例我们来认识一下 rewrite 指令。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Syntax:    rewrite regex replacement [flag];</span><br><span class="line">Context:   server, location, if</span><br></pre></td></tr></table></figure>
+<ul>
+<li>regex： 对请求的 URI 做正则匹配</li>
+<li>replacement：目标 uri 匹配成功后替换的 url</li>
+<li>可以使用的 flag 有以下 4 个（flag 也可以为空）:</li>
+<li>redirect：返回 302 临时重定向，客户端地址栏会显示跳转后的地址；</li>
+<li>permanent：返回 301 永久重定向，客户端地址栏会显示跳转后的地址；</li>
+<li>last：内部重定向，停止处理后续 rewrite 模块中的指令（客户端无感知）；</li>
+<li>break：内部重定向，停止处理后续 rewrite 模块中的指令（客户端无感知)。</li>
+</ul>
+<p><strong>NOTE：</strong></p>
+<ol>
+<li>regex 匹配的是 uri，不包含 hostname 和 query string，<strong>默认 query string 是被追加到 replacement 末尾，如果不希望在末尾追加请求的 query string，可以在 replacement 的末尾加一个 “?”</strong>。</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">server_name</span> nginx_study_rewrite.com <span class="number">80</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/mi_one/(.*)$</span>  /mi/<span class="variable">$1</span>;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/mi_two/(.*)$</span>  /mi/<span class="variable">$1</span>?x=<span class="number">0</span>&amp;y=<span class="number">1</span>?;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="variable">$uri</span><span class="variable">$is_args</span><span class="variable">$args</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl "http://nginx_study_rewrite.com/mi_one/hello?a=1&amp;b=2"</span><br><span class="line">output: /mi/hello?a=1&amp;b=2</span><br><span class="line"></span><br><span class="line">$ curl "http://nginx_study_rewrite.com/mi_two/hello?a=1&amp;b=2"</span><br><span class="line">output: /mi/hello?x=0&amp;y=1</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p><strong>如果 replacement 是以 “http://“，”https://“ 或 $scheme” 开始的字符串，那么 rewrite 指令停止后面的处理，直接返回给客户端，没有指定 flag 时，与 redirect 效果相同</strong>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">server_name</span> nginx_study_rewrite.com <span class="number">80</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="attribute">location</span> /test_rewrite_absolute_url &#123;        </span><br><span class="line">       <span class="attribute">rewrite</span> /(.*)$  https://www.baidu.com/;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -I -L nginx_study_rewrite.com/test_rewrite_absolute_url</span></span><br><span class="line">HTTP/1.1 302 Moved Temporarily</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Mon, 29 Apr 2019 15:22:52 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Content-Length: 154</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Location: https://www.baidu.com/</span><br><span class="line"></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Accept-Ranges: bytes</span><br><span class="line">Cache-Control: private, no-cache, no-store, proxy-revalidate, no-transform</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">Content-Length: 277</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Date: Mon, 29 Apr 2019 15:23:01 GMT</span><br><span class="line">Etag: <span class="string">"575e1f60-115"</span></span><br><span class="line">Last-Modified: Mon, 13 Jun 2016 02:50:08 GMT</span><br><span class="line">Pragma: no-cache</span><br><span class="line">Server: bfe/1.0.8.18</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/29 23:22:52 [notice] 23294#0: *153 &quot;/(.*)$&quot; matches &quot;/test_rewrite_absolute_url&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;HEAD /test_rewrite_absolute_url HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:22:52 [notice] 23294#0: *153 rewritten redirect: &quot;https://www.baidu.com/&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;HEAD /test_rewrite_absolute_url HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li><p><strong>没有 flag 的 rewrite 指令根据出现的顺序执行</strong>，flag 可以控制指令的执行顺序。</p>
+</li>
+<li><p><strong>在配置中开启 rewrite_log 指令，日志文件中会记录 rewrite 的匹配过程，有助于调试 rewrite 问题，开启后会将重写过程记录到error_log指定的文件中</strong>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">error_log</span>  /var/log/nginx/error.log  <span class="literal">notice</span>;</span><br><span class="line"><span class="attribute">rewrite_log</span> <span class="literal">on</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="Nginx-请求处理流程"><a href="#Nginx-请求处理流程" class="headerlink" title="Nginx 请求处理流程"></a>Nginx 请求处理流程</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在讲 rewrite 前我们先来简单了解下 Nginx 请求处理流程，为什么需要了解请求处理流程呢？因为 rewrite 操作与其中几个 phase 关系很密切，熟悉了请求处理流程，理解 rewrite 执行逻辑就会很容易。在 Nginx 内部将请求处理划分为 11 个 phase，每个 phase 会执行对应的 handler，这里我们不打算逐个进行讲解。在 11 个 phase 中与 rewrite 指令逻辑有关的只有 4 个，所以在本文我们主要关注 SERVER_REWRITE、FIND_CONFIG、REWRITE 和 POST_REWRITE 这四个 phase。</p>
+<p><img src="//blog.com/2019/04/30/你真的了解 Nginx rewrite 么？/1.webp" alt="img"></p>
+<p>首先我们要清楚的是：</p>
+<ul>
+<li>server 块中的 rewrite 模块指令在 SERVER_REWRITE 阶段解析；</li>
+<li>location 块中的 rewrite 模块指令在 REWRITE 阶段解析；</li>
+<li><strong>SERVER_REWRITE - 请求到达后首先处理这个阶段的 rewrite 指令操作</strong></li>
+<li><strong>FIND_CONFIG - 根据 SERVER_REWRITE 阶段得到的 uri 查找 location</strong></li>
+<li><strong>REWRITE - 确定 location 后执行 locaton 中 rewrite 操作</strong></li>
+<li><strong>POST_REWRITE - 根据上一阶段的 uri 重写结果做决策，可能跳回 FIND_CONFIG 阶段重新查找 location，也可能继续执行后边的 phase</strong>。例如：在 location 中配置了 rewrite 指令并且指定 flag=break，执行完本条 rewrite 终止后边的 rewrite 匹配，然后执行 PREACCESS 阶段中的 handler。同样的场景下 flag=last，执行完本条 rewrite 终止后边的 rewrite 匹配，然后跳到 FIND_CONFIG 阶段再次查找 location。<strong>未指定 flag 的情况与 flag=last 类似，唯一区别是在同一层级中未指定 flag 的 rewrite 语句不会终止后续的 rewrite 匹配</strong>。</li>
+</ul>
+<h2 id="rewrite-指令实例"><a href="#rewrite-指令实例" class="headerlink" title="rewrite 指令实例"></a>rewrite 指令实例</h2><h3 id="未指定-flag"><a href="#未指定-flag" class="headerlink" title="未指定 flag"></a>未指定 flag</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;未指定 flag 的 rewrite 会按照出现顺序进行匹配，server 块中 rewrite 匹配完以后根据改写的 uri 查找 location，然后再匹配 location 中的 rewrite，location 中的 rewrite 指令匹配成功后会再次查找 location。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">	<span class="attribute">server_name</span> nginx_study_rewrite.com <span class="number">80</span>;</span><br><span class="line">	</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span>         /mi_one/<span class="variable">$1</span>;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/mi_one/(.*)$</span>  /mi_two/<span class="variable">$1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> / &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is default location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_one/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_one location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_two/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_two location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/mi_zero/hello</span><br><span class="line"><span class="attribute">This</span> is mi_two location</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配第一条 rewrite 成功，uri 被改写为 / mi_one/mi_zero/hello，没有指定 flag 的 rewrite 继续匹配后面的 rewrite</li>
+<li>匹配第二条 rewrite 成功，此时 uri 被改写为 / mi_two/mi_zero/hello</li>
+<li>查找 location，mi_two 被确定为最终的 location</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L nginx_study_rewrite.com/mi_zero/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Mon, 29 Apr 2019 15:33:13 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2019/04/29 23:33:13 [notice] 23504#0: *155 &quot;^/(.*)$&quot; matches &quot;/mi_zero/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /mi_zero/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:33:13 [notice] 23504#0: *155 rewritten data: &quot;/mi_one/mi_zero/hello&quot;, args: &quot;&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /mi_zero/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:33:13 [notice] 23504#0: *155 &quot;^/mi_one/(.*)$&quot; matches &quot;/mi_one/mi_zero/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /mi_zero/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:33:13 [notice] 23504#0: *155 rewritten data: &quot;/mi_two/mi_zero/hello&quot;, args: &quot;&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /mi_zero/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">	<span class="attribute">server_name</span> nginx_study_rewrite.com <span class="number">80</span>;</span><br><span class="line">	</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span>         /mi_one/<span class="variable">$1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> / &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is default location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_one/ &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^/mi_one/(.*)$</span>  /mi_two/<span class="variable">$1</span>;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_one location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_two/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_two location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/hello</span><br><span class="line"><span class="attribute">This</span> is mi_two location</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配 server 块中的 rewrite 成功，uri 被改写为 / mi_one/hello</li>
+<li>server 块中只有一条 rewrite 指令，开始查找 location</li>
+<li>location mi_one 被找到，开始匹配 location 中 rewrite</li>
+<li>location 中的 rewrite 匹配成功，uri 被改写为 / mi_two/hello</li>
+<li><strong>再次查找 location，mi_two 被确定为最终使用的 location</strong></li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@php5# 2019/04/29 23:38:32 [notice] 23655#0: *156 &quot;^/(.*)$&quot; matches &quot;/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:38:32 [notice] 23655#0: *156 rewritten data: &quot;/mi_one/hello&quot;, args: &quot;&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:38:32 [notice] 23655#0: *156 &quot;^/mi_one/(.*)$&quot; matches &quot;/mi_one/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:38:32 [notice] 23655#0: *156 rewritten data: &quot;/mi_two/hello&quot;, args: &quot;&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;GET /hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L nginx_study_rewrite.com/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Mon, 29 Apr 2019 15:38:32 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<p><strong>再来看一个例子：</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">	<span class="attribute">server_name</span> nginx_study_rewrite.com <span class="number">80</span>;</span><br><span class="line">	</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span>         http://www.mi.com/<span class="variable">$1</span>;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/mi_one/(.*)$</span>  /mi_two/<span class="variable">$1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> / &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is default location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_one/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_one location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /mi_two/ &#123;        </span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"This is mi_two location"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_one/hello</span><br><span class="line"><span class="attribute">http</span> code: <span class="number">302</span></span><br><span class="line">Location: http://www.mi.com/mi_one/hello</span><br><span class="line">说明：</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>匹配第一条 rewrite 成功，由于 replacement 是以 http:// 开始的字符串，所以 rewrite 指令直接返回给客户端 302，并且停止匹配后续的 rewrite</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/29 23:46:12 [notice] 23822#0: *159 &quot;^/(.*)$&quot; matches &quot;/mi_one/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;HEAD /mi_one/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br><span class="line"></span><br><span class="line">2019/04/29 23:46:12 [notice] 23822#0: *159 rewritten redirect: &quot;http://www.mi.com/mi_one/hello&quot;, client: 127.0.0.1, server: nginx_study_rewrite.com, request: &quot;HEAD /mi_one/hello HTTP/1.1&quot;, host: &quot;nginx_study_rewrite.com&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -I -L nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 302 Moved Temporarily</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Mon, 29 Apr 2019 15:46:12 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Content-Length: 154</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Location: http://www.mi.com/mi_one/hello</span><br><span class="line"></span><br><span class="line">HTTP/1.1 404 Not Found</span><br><span class="line">Date: Mon, 29 Apr 2019 15:46:23 GMT</span><br><span class="line">Content-Type: text/html; charset=utf-8</span><br><span class="line">Content-Length: 3674</span><br><span class="line">ETag: <span class="string">"58b63af7-e5a"</span></span><br><span class="line">Cache-Control: </span><br><span class="line">X-Cacheable: MI-WWW-Cacheable</span><br><span class="line">Server: MIFE/3.0</span><br><span class="line">Cache_state: 2</span><br><span class="line">X-Via: 1.1 ong250:6 (Cdn Cache Server V2.0), 1.1 changk20:6 (Cdn Cache Server V2.0)</span><br><span class="line">Connection: close</span><br></pre></td></tr></table></figure>
+<h3 id="flag-指定为-redirect"><a href="#flag-指定为-redirect" class="headerlink" title="flag 指定为 redirect"></a>flag 指定为 redirect</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>指定 flag 为 redirect 时，rewrite 匹配成功后直接返回给客户端 302，不会继续匹配后续的 rewrite</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1 redirect;</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_zero/hello</span><br><span class="line">http code: 302</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_one/mi_zero/hello</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_one/hello</span><br><span class="line">http code: 302</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_one/mi_one/hello</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_two/hello</span><br><span class="line">http code: 302</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_one/mi_two/hello</span><br></pre></td></tr></table></figure>
+<p><strong>你会发现一个问题：这里的rewrite陷入了死循环</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">curl -I -L nginx_study_rewrite.com/mi_zero/hello</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">curl: (47) Maximum (50) redirects followed</span><br><span class="line"></span><br><span class="line">原因在于：</span><br><span class="line">	nginx在server rewrite阶段在顺序匹配的，一个匹配不成功才会继续寻找下一个，不会像location匹配一样按照最长匹配</span><br><span class="line"></span><br><span class="line">1. 第一次匹配^/(.*)$  改写成了/mi_one/mi_zero/hello</span><br><span class="line">2. 请求/mi_one/mi_zero/hello，，改写成了/mi_one/mi_one/mi_zero/hello</span><br><span class="line">3. 请求/mi_one/mi_one/mi_zero/hello，改写成了/mi_one/mi_one/mi_one/mi_zero/hello</span><br><span class="line">4. 一直这样循环下去……</span><br></pre></td></tr></table></figure>
+<p>再来看一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1 redirect;</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_one/hello</span><br><span class="line">http code: 302</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_three/hello</span><br><span class="line"></span><br><span class="line">$ curl -I http://nginx_study_rewrite.com/mi_two/hello</span><br><span class="line">http code: 302</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_three/hello</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/mi_zero/hello</span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 302 Moved Temporarily</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:11:14 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Content-Length: 154</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_three/hello</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line"></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:11:14 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 "^/mi_one/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 rewritten data: "/mi_two/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 "^/mi_two/(.*)$" matches "/mi_two/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 rewritten redirect: "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 "^/mi_one/(.*)$" does not match "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 "^/mi_two/(.*)$" does not match "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 "^/(.*)$" matches "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:11:14 [notice] 6816#0: *5 rewritten data: "/mi_one/mi_three/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># </span></span><br><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_two/hello</span></span><br><span class="line">HTTP/1.1 302 Moved Temporarily</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:28:12 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Content-Length: 154</span><br><span class="line">Location: http://nginx_study_rewrite.com/mi_three/hello</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line"></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:28:12 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 "^/mi_one/(.*)$" does not match "/mi_two/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_two/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 "^/mi_two/(.*)$" matches "/mi_two/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_two/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 rewritten redirect: "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_two/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 "^/mi_one/(.*)$" does not match "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 "^/mi_two/(.*)$" does not match "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 "^/(.*)$" matches "/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:28:12 [notice] 7219#0: *7 rewritten data: "/mi_one/mi_three/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_zero/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:49:02 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 10:49:02 [notice] 7219#0: *9 "^/mi_one/(.*)$" does not match "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:49:02 [notice] 7219#0: *9 "^/mi_two/(.*)$" does not match "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:49:02 [notice] 7219#0: *9 "^/(.*)$" matches "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:49:02 [notice] 7219#0: *9 rewritten data: "/mi_one/mi_zero/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1 redirect;</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1   redirect;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line"></span><br><span class="line">curl: (47) Maximum (50) redirects followed</span><br><span class="line"></span><br><span class="line">    nginx rewrite死循环的原因在于 【rewrite ^/(.*)$         /mi_one/<span class="variable">$1</span>   redirect;】重写为/mi_one/<span class="variable">$1</span>后，redirect会重新走一遍server rewrite</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 10:18:34 [notice] 7011#0: *6 rewritten redirect: "/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/mi_three/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<h3 id="flag-指定为-permanent"><a href="#flag-指定为-permanent" class="headerlink" title="flag 指定为 permanent"></a>flag 指定为 permanent</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;指定 flag=permanent 时，与 redirect 效果相同，<strong>唯一的区别 http code 返回 301</strong>。</p>
+<h3 id="flag-指定为-last"><a href="#flag-指定为-last" class="headerlink" title="flag 指定为 last"></a>flag 指定为 last</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewrite 的 last 和 break 这两个 flag 使用场景很多并且也很容易混淆，他们的共同点都会停止当前层级后续的 rewrite 匹配，区别需要分两种情况：<strong>第一种使用在 server block 中，last 和 break 没有区别</strong>。<strong>第二种使用在 location block 中，last 会根据改写的 uri 重新查找 location，break 不会重新查找 location，而是在当前 location 中执行后续的指令</strong>。（注：<strong>last 和 break 不仅停止 rewrite 的匹配，同时还会停止 Nginx rewrite 模块中其他指令的执行，例如：set、return 指令</strong>)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1 last;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/mi_one/hello</span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 02:54:16 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 10:54:16 [notice] 7794#0: *10 "^/mi_one/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 10:54:16 [notice] 7794#0: *10 rewritten data: "/mi_two/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配第一条 rewrite 成功，uri 被改写为 / mi_two/hello，由于 flag 指定为 last 会停止后续的 rewrite 的匹配（仅停止 server block 中的 rewrite 匹配），所以会根据改写的 uri 查找 location</li>
+</ol>
+<p><strong>再来看一个 last 在 location block 中使用的例子：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/(.*)$  /mi_one/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;</span><br><span class="line">        rewrite ^/(.*)$             /mi_three/$1 last;</span><br><span class="line">        rewrite ^/mi_three/(.*)$    /;        </span><br><span class="line">        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/hello</span><br><span class="line">This is mi_three location</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 03:08:13 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_three location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 11:08:13 [notice] 8248#0: *11 "^/(.*)$" matches "/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:08:13 [notice] 8248#0: *11 rewritten data: "/mi_one/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:08:13 [notice] 8248#0: *11 "^/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:08:13 [notice] 8248#0: *11 rewritten data: "/mi_three/mi_one/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配 server block 中第一条 rewrite 成功，uri 被改写为 / mi_one/hello</li>
+<li>查找 location，mi_one 被确定为使用的 location</li>
+<li>匹配 location block 中的 rewrite，location 中的第一条 rewrite 匹配成功，uri 被改写为 / mi_three/mi_one/hello，由于 flag 指定为 last，所以停止 location 中后续的 rewrite 匹配，此时再根据 uri=/mi_three/mi_one/hello 查找 location，最终 mi_three 被确定为使用的 location</li>
+</ol>
+<h3 id="flag-指定为-break"><a href="#flag-指定为-break" class="headerlink" title="flag 指定为 break"></a>flag 指定为 break</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1 break;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/mi_one/hello</span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 03:11:56 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 11:11:56 [notice] 8338#0: *12 "^/mi_one/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:11:56 [notice] 8338#0: *12 rewritten data: "/mi_two/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配 server block 中第一条 rewrite 成功，uri 被改写为 / mi_two/hello，由于 flag 指定为 break 所以会停止 server block 中后续的 rewrite 匹配，根据 uri=/mi_two/hello 查找 location，最终 mi_two 被确定为使用的 location</li>
+</ol>
+<p><strong>再来看一个 break 在 location block 中使用的例子：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/(.*)$  /mi_one/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;</span><br><span class="line">        rewrite ^/(.*)$         /mi_three/$1 break;</span><br><span class="line">        rewrite ^/mi_two/(.*)$  /;        </span><br><span class="line">        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;        </span><br><span class="line">        echo &quot;uri: $&#123;uri&#125;&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ curl http://nginx_study_rewrite.com/hello</span><br><span class="line">This is mi_one location</span><br><span class="line">uri: /mi_three/mi_one/hello</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L http://nginx_study_rewrite.com/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 03:17:07 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br><span class="line">uri: /mi_three/mi_one/hello</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 11:17:07 [notice] 8447#0: *13 "^/(.*)$" matches "/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:17:07 [notice] 8447#0: *13 rewritten data: "/mi_one/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:17:07 [notice] 8447#0: *13 "^/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 11:17:07 [notice] 8447#0: *13 rewritten data: "/mi_three/mi_one/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>匹配 server block 中第一条 rewrite 成功，uri 被改写为 / mi_one/hello</li>
+<li>根据 uri=/mi_one/hello 查找 location，mi_one 被确定为使用的 location</li>
+<li>匹配 location block 中的 rewrite，location 中的第一条 rewrite 匹配成功，uri 被改写为 / mi_three/mi_one/hello，由于 flag 指定为 break，所以停止 location 中后续的 rewrite 匹配，并且把当前 location 作为最终使用的 location，不会重新查找 location（last 会继续查找 location）</li>
+</ol>
+<h2 id="server-rewrite的坑"><a href="#server-rewrite的坑" class="headerlink" title="server rewrite的坑"></a>server rewrite的坑</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>nginx在server rewrite阶段在顺序匹配的，一个匹配不成功才会继续寻找下一个，不会像location匹配一样按照最长匹配</strong></p>
+<h3 id="测试1"><a href="#测试1" class="headerlink" title="测试1"></a>测试1</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1 redirect;</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">curl -I -L nginx_study_rewrite.com/mi_zero/hello</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">curl: (47) Maximum (50) redirects followed</span><br><span class="line"></span><br><span class="line">原因在于：</span><br><span class="line">	nginx在server rewrite阶段在顺序匹配的，一个匹配不成功才会继续寻找下一个</span><br><span class="line"></span><br><span class="line">1. 第一次匹配^/(.*)$  改写成了/mi_one/mi_zero/hello</span><br><span class="line">2. 请求/mi_one/mi_zero/hello，，改写成了/mi_one/mi_one/mi_zero/hello</span><br><span class="line">3. 请求/mi_one/mi_one/mi_zero/hello，改写成了/mi_one/mi_one/mi_one/mi_zero/hello</span><br><span class="line">4. 一直这样循环下去……</span><br></pre></td></tr></table></figure>
+<h3 id="测试2"><a href="#测试2" class="headerlink" title="测试2"></a>测试2</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1 break;</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1 break;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1 break;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -i -L nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 04:20:00 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 12:20:00 [notice] 9901#0: *36 "^/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:20:00 [notice] 9901#0: *36 rewritten data: "/mi_one/mi_one/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<p><strong>调整一下顺序</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">	rewrite ^/mi_one/(.*)$  /mi_two/$1 break;</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1 break;</span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1 break;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -I -L nginx_study_rewrite.com/mi_zero/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 04:23:17 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># curl -i -L nginx_study_rewrite.com/mi_one/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 04:23:19 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_two location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 12:23:59 [notice] 10002#0: *39 "^/mi_one/(.*)$" matches "/mi_one/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:23:59 [notice] 10002#0: *39 rewritten data: "/mi_two/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_one/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<h3 id="测试3"><a href="#测试3" class="headerlink" title="测试3"></a>测试3</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	server_name nginx_study_rewrite.com 80;</span><br><span class="line">	</span><br><span class="line">    rewrite ^/mi_one/(.*)$  /mi_two/$1 redirect; </span><br><span class="line">    rewrite ^/mi_two/(.*)$  /mi_three/$1;</span><br><span class="line">    rewrite ^/(.*)$         /mi_one/$1;</span><br><span class="line"></span><br><span class="line">    location / &#123;        </span><br><span class="line">        echo &quot;This is default location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_one/ &#123;        </span><br><span class="line">        echo &quot;This is mi_one location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_two/ &#123;        </span><br><span class="line">        echo &quot;This is mi_two location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location /mi_three/ &#123;        </span><br><span class="line">        echo &quot;This is mi_three location&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@php5<span class="comment"># curl -I -L nginx_study_rewrite.com/mi_zero/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 04:15:38 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">root@php5<span class="comment"># curl -i -L nginx_study_rewrite.com/mi_zero/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: nginx</span><br><span class="line">Date: Tue, 30 Apr 2019 04:16:03 GMT</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Keep-Alive: timeout=1200</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line"></span><br><span class="line">This is mi_one location</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">2019/04/30 12:15:38 [notice] 9810#0: *34 "^/(.*)$" matches "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "HEAD /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:15:38 [notice] 9810#0: *34 rewritten data: "/mi_one/mi_zero/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "HEAD /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:16:03 [notice] 9808#0: *35 "^/mi_one/(.*)$" does not match "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:16:03 [notice] 9808#0: *35 "^/mi_two/(.*)$" does not match "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:16:03 [notice] 9808#0: *35 "^/(.*)$" matches "/mi_zero/hello", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br><span class="line"></span><br><span class="line">2019/04/30 12:16:03 [notice] 9808#0: *35 rewritten data: "/mi_one/mi_zero/hello", args: "", client: 127.0.0.1, server: nginx_study_rewrite.com, request: "GET /mi_zero/hello HTTP/1.1", host: "nginx_study_rewrite.com"</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在 Nginx 的配置中可以实现简单的编程，理解起来相对有点难度，通过阅读此文希望能对你有些启发，能够根据项目需求可以配置更复杂的 rewrite 规则。想要更深入的理解 rewrite，还需要大家自己动手实践。</p>
+<h2 id="FYI"><a href="#FYI" class="headerlink" title="FYI"></a>FYI</h2><p><a href="https://github.com/agile6v/awesome-nginx" target="_blank" rel="noopener">https://github.com/agile6v/awesome-nginx</a></p>
+<p><a href="http://nginx.org/en/docs/http/ngx_http_rewrite_module.html" target="_blank" rel="noopener">http://nginx.org/en/docs/http/ngx_http_rewrite_module.html</a></p>
+<p><a href="https://www.nginx.com/blog/creating-nginx-rewrite-rules/" target="_blank" rel="noopener">https://www.nginx.com/blog/creating-nginx-rewrite-rules/</a></p>
+<p><a href="https://www.nginx.com/blog/converting-apache-to-nginx-rewrite-rules" target="_blank" rel="noopener">https://www.nginx.com/blog/converting-apache-to-nginx-rewrite-rules</a></p>
+<p><a href="http://www.thegeekstuff.com/2017/08/nginx-rewrite-examples/" target="_blank" rel="noopener">http://www.thegeekstuff.com/2017/08/nginx-rewrite-examples/</a></p>
+<p><a href="http://winginx.com/en/htaccess" target="_blank" rel="noopener">http://winginx.com/en/htaccess</a></p>
+<p><a href="https://w3techs.com/technologies/overview/web_server/all" target="_blank" rel="noopener">https://w3techs.com/technologies/overview/web_server/all</a></p>
+<p><a href="http://nginx.org/en/docs/dev/development_guide.html#httpphases" target="_blank" rel="noopener">http://nginx.org/en/docs/dev/development_guide.html#httpphases</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/服务器/" rel="tag"># 服务器</a>
+          
+            <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+          
+            <a href="/tags/Nginx-Rewrite/" rel="tag"># Nginx Rewrite</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/30/优秀日志实践准则/" rel="next" title="优秀日志实践准则">
+                <i class="fa fa-chevron-left"></i> 优秀日志实践准则
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/30/基于责任链的活动模板引擎/" rel="prev" title="基于责任链的活动模板引擎">
+                基于责任链的活动模板引擎 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#你真的了解-Nginx-rewrite-么？"><span class="nav-number">1.</span> <span class="nav-text">你真的了解 Nginx rewrite 么？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#重定向"><span class="nav-number">1.1.</span> <span class="nav-text">重定向</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#外部重定向"><span class="nav-number">1.1.1.</span> <span class="nav-text">外部重定向</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rewrite-语法"><span class="nav-number">1.2.</span> <span class="nav-text">rewrite 语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx-请求处理流程"><span class="nav-number">1.3.</span> <span class="nav-text">Nginx 请求处理流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rewrite-指令实例"><span class="nav-number">1.4.</span> <span class="nav-text">rewrite 指令实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#未指定-flag"><span class="nav-number">1.4.1.</span> <span class="nav-text">未指定 flag</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flag-指定为-redirect"><span class="nav-number">1.4.2.</span> <span class="nav-text">flag 指定为 redirect</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flag-指定为-permanent"><span class="nav-number">1.4.3.</span> <span class="nav-text">flag 指定为 permanent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flag-指定为-last"><span class="nav-number">1.4.4.</span> <span class="nav-text">flag 指定为 last</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flag-指定为-break"><span class="nav-number">1.4.5.</span> <span class="nav-text">flag 指定为 break</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#server-rewrite的坑"><span class="nav-number">1.5.</span> <span class="nav-text">server rewrite的坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试1"><span class="nav-number">1.5.1.</span> <span class="nav-text">测试1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试2"><span class="nav-number">1.5.2.</span> <span class="nav-text">测试2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试3"><span class="nav-number">1.5.3.</span> <span class="nav-text">测试3</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FYI"><span class="nav-number">1.7.</span> <span class="nav-text">FYI</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

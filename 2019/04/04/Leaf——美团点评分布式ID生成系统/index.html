@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,分布式ID生成,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Leaf——美团点评分布式ID生成系统&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在美团点评的金融、支付、餐饮、酒店、猫眼电影等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系">
+<meta name="keywords" content="架构,分布式ID生成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leaf——美团点评分布式ID生成系统">
+<meta property="og:url" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Leaf——美团点评分布式ID生成系统&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在美团点评的金融、支付、餐饮、酒店、猫眼电影等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/eee18df9.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/8a4de8e8.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/6d2c9ec8.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/5e4ff128.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/f2625fac.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/0de883dd.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/721ceeff.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/a3f985a8.png">
+<meta property="og:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/1453b4e9.png">
+<meta property="og:updated_time" content="2019-04-12T15:55:31.144Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leaf——美团点评分布式ID生成系统">
+<meta name="twitter:description" content="Leaf——美团点评分布式ID生成系统&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在美团点评的金融、支付、餐饮、酒店、猫眼电影等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系">
+<meta name="twitter:image" content="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/eee18df9.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/">
+
+
+
+
+
+  <title>Leaf——美团点评分布式ID生成系统 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Leaf——美团点评分布式ID生成系统</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-04T12:12:57+08:00">
+                2019-04-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式ID生成/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式ID生成</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Leaf——美团点评分布式ID生成系统"><a href="#Leaf——美团点评分布式ID生成系统" class="headerlink" title="Leaf——美团点评分布式ID生成系统"></a>Leaf——美团点评分布式ID生成系统</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在美团点评的金融、支付、餐饮、酒店、猫眼电影等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系统是非常必要的。概括下来，那业务系统对ID号的要求有哪些呢？</p>
+<ol>
+<li><strong>全局唯一性</strong>：不能出现重复的ID号，既然是唯一标识，这是最基本的要求。</li>
+<li><strong>趋势递增</strong>：在MySQL InnoDB引擎中使用的是聚集索引，由于多数RDBMS使用B-tree的数据结构来存储索引数据，在主键的选择上面我们应该尽量使用有序的主键保证写入性能。</li>
+<li><strong>单调递增</strong>：保证下一个ID一定大于上一个ID，例如事务版本号、IM增量消息、排序等特殊需求。</li>
+<li><strong>信息安全</strong>：如果ID是连续的，恶意用户的扒取工作就非常容易做了，直接按照顺序下载指定URL即可；如果是订单号就更危险了，竞对可以直接知道我们一天的单量。所以在一些应用场景下，会需要ID无规则、不规则。</li>
+</ol>
+<p>上述123对应三类不同的场景，<strong>3和4需求还是互斥的，无法使用同一个方案满足</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;同时除了对ID号码自身的要求，业务还对ID号生成系统的可用性要求极高，想象一下，如果ID生成系统瘫痪，整个美团点评支付、优惠券发券、骑手派单等关键动作都无法执行，这就会带来一场灾难。</p>
+<p>由此总结下一个ID生成系统应该做到如下几点：</p>
+<ol>
+<li><strong>平均延迟和TP999延迟都要尽可能低</strong>；</li>
+<li>可用性5个9；</li>
+<li>高QPS。</li>
+</ol>
+<h3 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<code>UUID(Universally Unique Identifier)</code>的标准型式包含32个16进制数字，以连字号分为五段，形式为8-4-4-4-12的36个字符，示例：<code>550e8400-e29b-41d4-a716-446655440000</code>，到目前为止业界一共有5种方式生成UUID，详情见IETF发布的UUID规范 <a href="http://www.ietf.org/rfc/rfc4122.txt" target="_blank" rel="noopener">A Universally Unique IDentifier (UUID) URN Namespace</a>。</p>
+<p>优点：</p>
+<ul>
+<li><strong>性能非常高</strong>：本地生成，没有网络消耗。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li><p><strong>不易于存储</strong>：UUID太长，16字节128位，通常以36长度的字符串表示，很多场景不适用。</p>
+</li>
+<li><p>信息不安全：基于MAC地址生成UUID的算法可能会造成MAC地址泄露，这个漏洞曾被用于寻找梅丽莎病毒的制作者位置。</p>
+</li>
+<li><p><strong>ID作为主键时在特定的环境会存在一些问题</strong>，比如做DB主键的场景下，UUID就非常不适用：</p>
+<p>① MySQL官方有明确的建议主键要尽量越短越好[4]，36个字符长度的UUID不符合要求。</p>
+</li>
+</ul>
+<blockquote>
+<p>All indexes other than the clustered index are known as secondary indexes. In InnoDB, each record in a secondary index contains the primary key columns for the row, as well as the columns specified for the secondary index. InnoDB uses this primary key value to search for the row in the clustered index.<strong><em> If the primary key is long, the secondary indexes use more space, so it is advantageous to have a short primary key</em></strong>.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;② 对MySQL索引不利：如果作为数据库主键，在InnoDB引擎下，UUID的无序性可能会引起数据位置频繁变动，严重影响性能。</p>
+<h3 id="类snowflake方案"><a href="#类snowflake方案" class="headerlink" title="类snowflake方案"></a>类snowflake方案</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;这种方案大致来说是一种以划分命名空间（UUID也算，由于比较常见，所以单独分析）来生成ID的一种算法，这种方案把64-bit分别划分成多段，分开来标示机器、时间等，比如在snowflake中的64-bit分别表示如下图（图片来自网络）所示：</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/eee18df9.png" alt="image"></p>
+<blockquote>
+<p>41-bit的时间可以表示（1L&lt;&lt;41）/(1000L<em>3600</em>24*365)=69年的时间</p>
+<p>10-bit机器可以分别表示1024台机器。如果我们对IDC划分有需求，还可以将10-bit分5-bit给IDC，分5-bit给工作机器。这样就可以表示32个IDC，每个IDC下可以有32台机器，可以根据自身需求定义。</p>
+<p>12个自增序列号可以表示2^12个ID</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;理论上snowflake方案的<code>QPS</code>约为409.6w/s，这种分配方式可以保证在任何一个IDC的任何一台机器在任意毫秒内生成的ID都是不同的。</p>
+<p>这种方式的优缺点是：</p>
+<p>优点：</p>
+<ul>
+<li>毫秒数在高位，自增序列在低位，整个ID都是趋势递增的。</li>
+<li>不依赖数据库等第三方系统，以服务的方式部署，稳定性更高，生成ID的性能也是非常高的。</li>
+<li>可以根据自身业务特性分配bit位，非常灵活。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li><strong>强依赖机器时钟</strong>，如果机器上时钟回拨，会导致发号重复或者服务会处于不可用状态。</li>
+</ul>
+<h4 id="应用举例Mongdb-objectID"><a href="#应用举例Mongdb-objectID" class="headerlink" title="应用举例Mongdb objectID"></a>应用举例Mongdb objectID</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://docs.mongodb.com/manual/reference/method/ObjectId/#description" target="_blank" rel="noopener">MongoDB官方文档 ObjectID</a>可以算作是和snowflake类似方法，通过“时间+机器码+pid+inc”共12个字节，通过4+3+2+3的方式最终标识成一个24长度的十六进制字符。</p>
+<h3 id="数据库生成"><a href="#数据库生成" class="headerlink" title="数据库生成"></a>数据库生成</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;以MySQL举例，利用给字段设置<code>auto_increment_increment</code>和<code>auto_increment_offset</code>来保证ID自增，每次业务使用下列SQL读写MySQL得到ID号。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">begin</span>;</span><br><span class="line"><span class="keyword">REPLACE</span> <span class="keyword">INTO</span> Tickets64 (stub) <span class="keyword">VALUES</span> (<span class="string">'a'</span>);</span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">LAST_INSERT_ID</span>();</span><br><span class="line"><span class="keyword">commit</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/8a4de8e8.png" alt="image"></p>
+<p>image</p>
+<p>这种方案的优缺点如下：</p>
+<p>优点：</p>
+<ul>
+<li>非常简单，利用现有数据库系统的功能实现，成本小，有DBA专业维护。</li>
+<li>ID号单调自增，可以实现一些对ID有特殊要求的业务。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li><strong>强依赖DB</strong>，当DB异常时整个系统不可用，属于致命问题。配置主从复制可以尽可能的增加可用性，但是数据一致性在特殊情况下难以保证。主从切换时的不一致可能会导致重复发号。</li>
+<li><strong>ID发号性能瓶颈限制在单台MySQL的读写性能</strong>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于MySQL性能问题，可用如下方案解决：<strong>在分布式系统中我们可以多部署几台机器，每台机器设置不同的初始值，且步长和机器数相等</strong>。比如有两台机器。设置步长step为2，TicketServer1的初始值为1（1，3，5，7，9，11…）、TicketServer2的初始值为2（2，4，6，8，10…）。这是Flickr团队在2010年撰文介绍的一种主键生成策略（<a href="http://code.flickr.net/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/" target="_blank" rel="noopener">Ticket Servers: Distributed Unique Primary Keys on the Cheap </a>）。如下所示，为了实现上述方案分别设置两台机器对应的参数，TicketServer1从1开始发号，TicketServer2从2开始发号，两台机器每次发号之后都递增2。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">TicketServer1:</span><br><span class="line">auto-increment-increment = 2</span><br><span class="line">auto-increment-offset = 1</span><br><span class="line"></span><br><span class="line">TicketServer2:</span><br><span class="line">auto-increment-increment = 2</span><br><span class="line">auto-increment-offset = 2</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;假设我们要部署N台机器，步长需设置为N，每台的初始值依次为0,1,2…N-1那么整个架构就变成了如下图所示：</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/6d2c9ec8.png" alt="image"></p>
+<p>image</p>
+<p>这种架构貌似能够满足性能的需求，但有以下几个缺点：</p>
+<ul>
+<li><strong>系统水平扩展比较困难</strong>，比如定义好了步长和机器台数之后，如果要添加机器该怎么做？假设现在只有一台机器发号是1,2,3,4,5（步长是1），这个时候需要扩容机器一台。可以这样做：把第二台机器的初始值设置得比第一台超过很多，比如14（假设在扩容时间之内第一台不可能发到14），同时设置步长为2，那么这台机器下发的号码都是14以后的偶数。然后摘掉第一台，把ID值保留为奇数，比如7，然后修改第一台的步长为2。让它符合我们定义的号段标准，对于这个例子来说就是让第一台以后只能产生奇数。扩容方案看起来复杂吗？貌似还好，现在想象一下如果我们线上有100台机器，这个时候要扩容该怎么做？简直是噩梦。所以系统水平扩展方案复杂难以实现。</li>
+<li><strong>ID没有了单调递增的特性，只能趋势递增</strong>，这个缺点对于一般业务需求不是很重要，可以容忍。</li>
+<li><strong>数据库压力还是很大</strong>，每次获取ID都得读写一次数据库，只能靠堆机器来提高性能。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Leaf这个名字是来自德国哲学家、数学家莱布尼茨的一句话： &gt;There are no two identical leaves in the world &gt; “世界上没有两片相同的树叶”</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;综合对比上述几种方案，每种方案都不完全符合我们的要求。所以Leaf分别在上述第二种和第三种方案上做了相应的优化，实现了Leaf-segment和Leaf-snowflake方案。</p>
+<h3 id="Leaf-segment数据库方案"><a href="#Leaf-segment数据库方案" class="headerlink" title="Leaf-segment数据库方案"></a>Leaf-segment数据库方案</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;第一种Leaf-segment方案，在使用数据库的方案上，做了如下改变： - 原方案每次获取ID都得读写一次数据库，造成数据库压力大。改为<strong>利用proxy server批量获取，每次获取一个segment(step决定大小)号段的值</strong>。<strong>用完之后再去数据库获取新的号段，可以大大的减轻数据库的压力</strong>。 <strong>各个业务不同的发号需求用biz_tag字段来区分，每个biz-tag的ID获取相互隔离，互不影响</strong>。如果以后有性能需求需要对数据库扩容，不需要上述描述的复杂的扩容操作，只需要对biz_tag分库分表就行。</p>
+<p>数据库表设计如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-------------+--------------+------+-----+-------------------+-----------------------------+</span></span><br><span class="line">| Field       | Type         | Null | Key | Default           | Extra                       |</span><br><span class="line">+<span class="comment">-------------+--------------+------+-----+-------------------+-----------------------------+</span></span><br><span class="line">| biz_tag     | varchar(128) | NO   | PRI |                   |                             |</span><br><span class="line">| max_id      | bigint(20)   | NO   |     | 1                 |                             |</span><br><span class="line">| step        | int(11)      | NO   |     | NULL              |                             |</span><br><span class="line">| desc        | varchar(256) | YES  |     | NULL              |                             |</span><br><span class="line">| update_time | timestamp    | NO   |     | CURRENT_TIMESTAMP | on <span class="keyword">update</span> <span class="keyword">CURRENT_TIMESTAMP</span> |</span><br><span class="line">+<span class="comment">-------------+--------------+------+-----+-------------------+-----------------------------+</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;重要字段说明：<strong>biz_tag用来区分业务，max_id表示该biz_tag目前所被分配的ID号段的最大值，step表示每次分配的号段长度</strong>。原来获取ID每次都需要写数据库，现在只需要把step设置得足够大，比如1000。那么只有当1000个号被消耗完了之后才会去重新读写一次数据库。读写数据库的频率从1减小到了1/step，大致架构如下图所示：</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/5e4ff128.png" alt="image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;test_tag在第一台Leaf机器上是1~1000的号段，当这个号段用完时，会去加载另一个长度为step=1000的号段，假设另外两台号段都没有更新，这个时候第一台机器新加载的号段就应该是3001~4000。同时数据库对应的biz_tag这条数据的max_id会从3000被更新成4000，更新号段的SQL语句如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Begin</span></span><br><span class="line"><span class="keyword">UPDATE</span> <span class="keyword">table</span> <span class="keyword">SET</span> max_id=max_id+step <span class="keyword">WHERE</span> biz_tag=xxx</span><br><span class="line"><span class="keyword">SELECT</span> tag, max_id, step <span class="keyword">FROM</span> <span class="keyword">table</span> <span class="keyword">WHERE</span> biz_tag=xxx</span><br><span class="line"><span class="keyword">Commit</span></span><br></pre></td></tr></table></figure>
+<p>这种模式有以下优缺点：</p>
+<p>优点：</p>
+<ul>
+<li>Leaf服务可以很方便的线性扩展，性能完全能够支撑大多数业务场景。</li>
+<li>ID号码是趋势递增的8byte的64位数字，满足上述数据库存储的主键要求。</li>
+<li>容灾性高：Leaf服务内部有号段缓存，即使DB宕机，短时间内Leaf仍能正常对外提供服务。</li>
+<li>可以自定义max_id的大小，非常方便业务从原有的ID方式上迁移过来。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>ID号码不够随机，能够泄露发号数量的信息，不太安全。</li>
+<li>TP999数据波动大，当号段使用完之后还是会hang在更新数据库的I/O上，tg999数据会出现偶尔的尖刺。</li>
+<li>DB宕机会造成整个系统不可用。</li>
+</ul>
+<h3 id="双buffer优化"><a href="#双buffer优化" class="headerlink" title="双buffer优化"></a>双buffer优化</h3><p>对于第二个缺点，Leaf-segment做了一些优化，简单的说就是：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Leaf 取号段的时机是在号段消耗完的时候进行的，也就意味着号段临界点的ID下发时间取决于下一次从DB取回号段的时间，并且在这期间<strong>进来的请求也会因为DB号段没有取回来，导致线程阻塞</strong>。如果请求DB的网络和DB的性能稳定，这种情况对系统的影响是不大的，但是假如取DB的时候网络发生抖动，或者DB发生慢查询就会导致整个系统的响应时间变慢。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为此，我们希望DB取号段的过程能够做到无阻塞，不需要在DB取号段的时候阻塞请求线程，即<strong>当号段消费到某个点时就异步的把下一个号段加载到内存中</strong>。<strong>而不需要等到号段用尽的时候才去更新号段</strong>。这样做就可以很大程度上的降低系统的TP999指标。详细实现如下图所示：</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/f2625fac.png" alt="image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;采用双buffer的方式，<strong>Leaf服务内部有两个号段缓存区segment。当前号段已下发10%时，如果下一个号段未更新，则另启一个更新线程去更新下一个号段</strong>。<strong>当前号段全部下发完后，如果下个号段准备好了则切换到下个号段为当前segment接着下发，循环往复</strong>。</p>
+<ul>
+<li>每个biz-tag都有消费速度监控，<strong>通常推荐segment长度设置为服务高峰期发号QPS的600倍（10分钟）</strong>，这样即使DB宕机，Leaf仍能持续发号10-20分钟不受影响。</li>
+<li>每次请求来临时都会判断下个号段的状态，从而更新此号段，所以偶尔的网络抖动不会影响下个号段的更新。</li>
+</ul>
+<h3 id="Leaf高可用容灾"><a href="#Leaf高可用容灾" class="headerlink" title="Leaf高可用容灾"></a>Leaf高可用容灾</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;对于第三点“DB可用性”问题，我们目前采用一主两从的方式，同时分机房部署，Master和Slave之间采用<strong>半同步方式[5]</strong>同步数据。同时使用公司Atlas数据库中间件(已开源，改名为<a href="http://tech.meituan.com/dbproxy-introduction.html" target="_blank" rel="noopener">DBProxy</a>)做主从切换。当然这种方案在一些情况会退化成异步模式，甚至在<strong>非常极端</strong>情况下仍然会造成数据不一致的情况，但是出现的概率非常小。如果你的系统要保证100%的数据强一致，可以选择使用“类Paxos算法”实现的强一致MySQL方案，如MySQL 5.7前段时间刚刚GA的<a href="https://dev.mysql.com/doc/refman/5.7/en/group-replication.html" target="_blank" rel="noopener">MySQL Group Replication</a>。但是运维成本和精力都会相应的增加，根据实际情况选型即可。</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/0de883dd.png" alt="image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;同时Leaf服务分IDC部署，内部的服务化框架是“MTthrift RPC”。服务调用的时候，根据负载均衡算法会优先调用同机房的Leaf服务。在该IDC内Leaf服务不可用的时候才会选择其他机房的Leaf服务。同时服务治理平台OCTO还提供了针对服务的过载保护、一键截流、动态流量分配等对服务的保护措施。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Leaf-segment方案可以生成趋势递增的ID，同时ID号是可计算的，不适用于订单ID生成场景，比如竞对在两天中午12点分别下单，通过订单id号相减就能大致计算出公司一天的订单量，这个是不能忍受的</strong>。面对这一问题，我们提供了 Leaf-snowflake方案。</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/721ceeff.png" alt="image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Leaf-snowflake方案完全沿用snowflake方案的bit位设计，即是<strong>“1+41+10+12”</strong>的方式组装ID号。对于workerID的分配，当服务集群数量较小的情况下，完全可以手动配置。Leaf服务规模较大，动手配置成本太高。所以使用Zookeeper持久顺序节点的特性自动对snowflake节点配置wokerID。Leaf-snowflake是按照下面几个步骤启动的：</p>
+<ol>
+<li>启动Leaf-snowflake服务，连接Zookeeper，在leaf_forever父节点下检查自己是否已经注册过（是否有该顺序子节点）。</li>
+<li>如果有注册过直接取回自己的workerID（<strong>zk顺序节点生成的int类型ID号</strong>），启动服务。</li>
+<li>如果没有注册过，就在该父节点下面创建一个<strong>持久顺序节点</strong>，创建成功后取回顺序号当做自己的workerID号，启动服务。</li>
+</ol>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/a3f985a8.png" alt="image"></p>
+<h3 id="弱依赖ZooKeeper"><a href="#弱依赖ZooKeeper" class="headerlink" title="弱依赖ZooKeeper"></a>弱依赖ZooKeeper</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;除了每次会去ZK拿数据以外，也会<strong>在本机文件系统上缓存一个workerID文件</strong>。当ZooKeeper出现问题，恰好机器出现问题需要重启时，能保证服务能够正常启动。这样做到了对三方组件的弱依赖。一定程度上提高了SLA</p>
+<h3 id="解决时钟问题"><a href="#解决时钟问题" class="headerlink" title="解决时钟问题"></a>解决时钟问题</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;因为这种方案依赖时间，如果机器的时钟发生了回拨，那么就会有可能生成重复的ID号，需要解决时钟回退的问题。</p>
+<p><img src="//blog.com/2019/04/04/Leaf——美团点评分布式ID生成系统/1453b4e9.png" alt="image"></p>
+<p>参见上图整个启动流程图，服务启动时首先检查自己是否写过ZooKeeper leaf_forever节点：</p>
+<ol>
+<li>若写过，则用自身系统时间与leaf_forever/${self}节点记录时间做比较，若小于leaf_forever/${self}时间则认为机器时间发生了大步长回拨，服务启动失败并报警。</li>
+<li>若未写过，证明是新服务节点，直接创建持久节点leaf_forever/${self}并写入自身系统时间，接下来综合对比其余Leaf节点的系统时间来判断自身系统时间是否准确，具体做法是取leaf_temporary下的所有临时节点(所有运行中的Leaf-snowflake节点)的服务IP：Port，然后通过RPC请求得到所有节点的系统时间，计算sum(time)/nodeSize。</li>
+<li>若abs( 系统时间-sum(time)/nodeSize ) &lt; 阈值，认为当前系统时间准确，正常启动服务，同时写临时节点leaf_temporary/${self} 维持租约。</li>
+<li>否则认为本机系统时间发生大步长偏移，启动失败并报警。</li>
+<li>每隔一段时间(3s)上报自身系统时间写入leaf_forever/${self}。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于强依赖时钟，对时间的要求比较敏感，在机器工作时NTP同步也会造成秒级别的回退，建议可以直接关闭NTP同步。要么在时钟回拨的时候直接不提供服务直接返回ERROR_CODE，等时钟追上即可。<strong>或者做一层重试，然后上报报警系统，更或者是发现有时钟回拨之后自动摘除本身节点并报警</strong>，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发生了回拨，此刻时间小于上次发号时间</span></span><br><span class="line"><span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line"> 			  </span><br><span class="line">           <span class="keyword">long</span> offset = lastTimestamp - timestamp;</span><br><span class="line">           <span class="keyword">if</span> (offset &lt;= <span class="number">5</span>) &#123;</span><br><span class="line">               <span class="keyword">try</span> &#123;</span><br><span class="line">               	<span class="comment">//时间偏差大小小于5ms，则等待两倍时间</span></span><br><span class="line">                   wait(offset &lt;&lt; <span class="number">1</span>);<span class="comment">//wait</span></span><br><span class="line">                   timestamp = timeGen();</span><br><span class="line">                   <span class="keyword">if</span> (timestamp &lt; lastTimestamp) &#123;</span><br><span class="line">                      <span class="comment">//还是小于，抛异常并上报</span></span><br><span class="line">                       throwClockBackwardsEx(timestamp);</span><br><span class="line">                     &#125;    </span><br><span class="line">               &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;  </span><br><span class="line">                  <span class="keyword">throw</span>  e;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">               <span class="comment">//throw</span></span><br><span class="line">               throwClockBackwardsEx(timestamp);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"><span class="comment">//分配ID</span></span><br></pre></td></tr></table></figure>
+<p><strong>从上线情况来看，在2017年闰秒出现那一次出现过部分机器回拨，由于Leaf-snowflake的策略保证，成功避免了对业务造成的影响。</strong></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/分布式ID生成/" rel="tag"># 分布式ID生成</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/04/Tinyid——滴滴分布式ID生成系统/" rel="next" title="Tinyid——滴滴分布式ID生成系统">
+                <i class="fa fa-chevron-left"></i> Tinyid——滴滴分布式ID生成系统
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/04/万亿级调用系统：微信序列号生成器架构设计及演变/" rel="prev" title="万亿级调用系统：微信序列号生成器架构设计及演变">
+                万亿级调用系统：微信序列号生成器架构设计及演变 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Leaf——美团点评分布式ID生成系统"><span class="nav-number">1.</span> <span class="nav-text">Leaf——美团点评分布式ID生成系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UUID"><span class="nav-number">1.0.1.</span> <span class="nav-text">UUID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类snowflake方案"><span class="nav-number">1.0.2.</span> <span class="nav-text">类snowflake方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#应用举例Mongdb-objectID"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">应用举例Mongdb objectID</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库生成"><span class="nav-number">1.0.3.</span> <span class="nav-text">数据库生成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leaf-segment数据库方案"><span class="nav-number">1.0.4.</span> <span class="nav-text">Leaf-segment数据库方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#双buffer优化"><span class="nav-number">1.0.5.</span> <span class="nav-text">双buffer优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leaf高可用容灾"><span class="nav-number">1.0.6.</span> <span class="nav-text">Leaf高可用容灾</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#弱依赖ZooKeeper"><span class="nav-number">1.0.7.</span> <span class="nav-text">弱依赖ZooKeeper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解决时钟问题"><span class="nav-number">1.0.8.</span> <span class="nav-text">解决时钟问题</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

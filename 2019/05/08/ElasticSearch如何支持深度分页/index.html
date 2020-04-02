@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="ElasticSearch如何支持深度分页分布式环境下的分页ES本身是支持分页查询的，使用方式跟MySQL非常类似：  from: Indicates the number of initial results that should be skipped, defaults to 0 size: Indicates the number of results that should be ret">
+<meta name="keywords" content="架构,Elasticsearch,搜索引擎,Lucene">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ElasticSearch如何支持深度分页">
+<meta property="og:url" content="http://blog.com/2019/05/08/ElasticSearch如何支持深度分页/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="ElasticSearch如何支持深度分页分布式环境下的分页ES本身是支持分页查询的，使用方式跟MySQL非常类似：  from: Indicates the number of initial results that should be skipped, defaults to 0 size: Indicates the number of results that should be ret">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-08T09:42:40.581Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ElasticSearch如何支持深度分页">
+<meta name="twitter:description" content="ElasticSearch如何支持深度分页分布式环境下的分页ES本身是支持分页查询的，使用方式跟MySQL非常类似：  from: Indicates the number of initial results that should be skipped, defaults to 0 size: Indicates the number of results that should be ret">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/08/ElasticSearch如何支持深度分页/">
+
+
+
+
+
+  <title>ElasticSearch如何支持深度分页 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/08/ElasticSearch如何支持深度分页/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ElasticSearch如何支持深度分页</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-08T12:12:57+08:00">
+                2019-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">Elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/" itemprop="url" rel="index">
+                    <span itemprop="name">搜索引擎</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/Elasticsearch/搜索引擎/Lucene/" itemprop="url" rel="index">
+                    <span itemprop="name">Lucene</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="ElasticSearch如何支持深度分页"><a href="#ElasticSearch如何支持深度分页" class="headerlink" title="ElasticSearch如何支持深度分页"></a>ElasticSearch如何支持深度分页</h1><h2 id="分布式环境下的分页"><a href="#分布式环境下的分页" class="headerlink" title="分布式环境下的分页"></a>分布式环境下的分页</h2><p>ES本身是支持分页查询的，使用方式跟MySQL非常类似：</p>
+<ul>
+<li>from: Indicates the number of initial results that should be skipped, defaults to 0</li>
+<li>size: Indicates the number of results that should be returned, defaults to 10</li>
+</ul>
+<p>如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /_search?size=5&amp;from=10</span><br></pre></td></tr></table></figure>
+<p>但是跟MySQL不同，ES是分布式存储的，查询结果一般都是跨多个分片的(spans multiple shards)，每个shard产生自己的排序结果，最后协调节点(coordinating node)对所有分片返回结果进行汇总排序截断返回给客户端。所以深度分页（分页深度）或者一次请求很多结果（分页大小）都会极大降低ES的查询性能。所以ES就默认限制最多只能访问前1w个文档。这是通过<code>index.max_result_window</code>控制的。</p>
+<p>之前在使用Aerospike实现图数据库的时候就遇到这个问题（<a href="http://arganzheng.life/aerospike-udf.html" target="_blank" rel="noopener">Aerospike UDF学习笔记</a>） ，Aerospike本身不支持排序分页（包括简单的截断也不支持。。），但是它有一个Stream UDFs机制，可以实现这个功能：简单来说就是先在所有的node节点进行排序和截断(map)，最后在client端汇总做最后的排序和截断(reduce)，其实就是一个分布式的归并排序Merge Sort算法。</p>
+<p>这个实现方式跟ES分页的实现方式是一样的。只不过ES是内建的，不需要你自己实现。但是两者都有一个巨大的性能问题，就是深度分页。假设某个index有 5 个primary shard。我们要获取第1000页的内容，页面大小是10，那么需要排序的文档数是 10001~10010 (pageSize <em> pageNumber)。那么每个分片需要本地排序产生前10010条记录，然后协调节点/聚合层(Coordinating node/Aggregator)需要对5个主分片返回的 10010 </em> 5 = 50050 （docs * Shards）条记录进行排序，最后只返回10条数据给客户端。其他的50040条全部都扔掉了。</p>
+<p>也就是说为了返回第 pageNumber 页的数据，一共需要对 <code>pageSize * pageNumber * shardNumber</code> 个文档进行排序。最后只返回 pageSize 条数据，性价比真心不高。</p>
+<p>但是现实中确实有需要深度遍历(scan)某个index的场景，那么怎么解决呢？</p>
+<h2 id="解决方案1：服务端缓存——Scan-and-scroll-API"><a href="#解决方案1：服务端缓存——Scan-and-scroll-API" class="headerlink" title="解决方案1：服务端缓存——Scan and scroll API"></a>解决方案1：服务端缓存——Scan and scroll API</h2><p>从上面的分析我们可以看出，为了返回某一页记录，其实我们抛弃了其他的大部分已经排好序的结果。那么简单点就是把这个结果缓存起来，下次就可以用上了。根据这个思路，ES提供了<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html" target="_blank" rel="noopener">Scroll</a> API。它概念上有点像传统数据库的游标(cursor)。</p>
+<p>scroll调用本质上是实时创建了一个快照(snapshot)，然后保持这个快照一个指定的时间，这样，下次请求的时候就不需要重新排序了。从这个方面上来说，scroll就是一个服务端的缓存。既然是缓存，就会有下面两个问题：</p>
+<ol>
+<li>一致性问题。ES的快照就是产生时刻的样子了，在过期之前的所有修改它都视而不见。</li>
+<li>服务端开销。ES这里会为每一个scroll操作保留一个查询上下文(Search context)。ES默认会合并多个小的索引段(segment)成大的索引段来提供索引速度，在这个时候小的索引段就会被删除。但是在scroll的时候，如果ES发现有索引段正处于使用中，那么就不会对它们进行合并。这意味着需要更多的文件描述符以及比较慢的索引速度。</li>
+</ol>
+<p>其实这里还有第三个问题，但是它不是缓存的问题，而是因为ES采用的游标机制导致的。就是你只能顺序的扫描，不能随意的跳页。而且还要求客户每次请求都要带上”游标”。</p>
+<p>可以使用 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html" target="_blank" rel="noopener">nodes stats API</a> 查看有多少个查询上下文:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /_nodes/stats/indices/search</span><br></pre></td></tr></table></figure>
+<p>scroll接口使用方式如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">GET /old_index/_search?scroll=1m  // =&gt; 1. Keep the scroll window open for 1 minute.</span><br><span class="line">&#123;</span><br><span class="line">    &quot;query&quot;: &#123; &quot;match_all&quot;: &#123;&#125;&#125;,</span><br><span class="line">    &quot;sort&quot; : [&quot;_doc&quot;],  // =&gt; 2. _doc is the most efficient sort order.</span><br><span class="line">    &quot;size&quot;:  1000 // =&gt; 3. Although we specified a size of 1,000, we get back many more documents. </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>说明</strong></p>
+<ol>
+<li><code>scroll=1m</code>表示保持这个快照的存活时间，这里是1分钟。</li>
+<li>深度分页其实最大的开销还是排序，<code>_doc</code>字段排序其实就是自然顺序。</li>
+<li>虽然这里我们指定了<code>size=1000</code>，但是实际上这个请求是分发给每一个分片的，所以我们每次获取 <code>n &lt;= size * number_of_primary_shards</code>个文档。</li>
+</ol>
+<p>服务端会返回一个<code>_scroll_id</code>字段，这是一个Base-64编码的字符串。下一次请求就可以把这个 <code>_scroll_id</code> 带上请求 <code>_search/scroll</code>来获取下一个批次的数据：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_search/scroll // =&gt; 1. should not include the index or type name — these are specified in the original search request instead.</span><br><span class="line">&#123;</span><br><span class="line">    &quot;scroll&quot;: &quot;1m&quot;, // =&gt; 2. The scroll parameter tells Elasticsearch to keep the search context open for another 1m.</span><br><span class="line">    &quot;scroll_id&quot; : &quot;cXVlcnlUaGVuRmV0Y2g7NTsxMDk5NDpkUmpiR2FjOFNhNnlCM1ZDMWpWYnRROzEwOTk1OmRSamJHYWM4U2E2eUIzVkMxalZidFE7MTA5OTM6ZFJqYkdhYzhTYTZ5QjNWQzFqVmJ0UTsxMTE5MDpBVUtwN2lxc1FLZV8yRGVjWlI2QUVBOzEwOTk2OmRSamJHYWM4U2E2eUIzVkMxalZidFE7MDs=&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>说明</strong></p>
+<ol>
+<li>服务端将返回下一个批次数据，并且会返回一个新的<code>_score_id</code>，下次请求把新的<code>_score_id</code>带上就可以请求下一个批次了。</li>
+<li><code>scroll=1m</code> 只要确保 &gt;= 每一个批次的消费时间即可，因为每一次scroll请求都会设置下一个过期时间。</li>
+</ol>
+<p>当scroll过期后，查询上下文(Search Context)会自动被删除。因为保持查询上下文是很昂贵的，所以如果已经处理完某个scroll返回的数据，可以使用 clear-scroll API显式删除它:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DELETE /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    &quot;scroll_id&quot; : &quot;DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAAD4WYm9laVYtZndUQlNsdDcwakFMNjU1QQ==&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以支持批量删除:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">DELETE /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    &quot;scroll_id&quot; : [</span><br><span class="line">      &quot;DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAAD4WYm9laVYtZndUQlNsdDcwakFMNjU1QQ==&quot;,</span><br><span class="line">      &quot;DnF1ZXJ5VGhlbkZldGNoBQAAAAAAAAABFmtSWWRRWUJrU2o2ZExpSGJCVmQxYUEAAAAAAAAAAxZrUllkUVlCa1NqNmRMaUhiQlZkMWFBAAAAAAAAAAIWa1JZZFFZQmtTajZkTGlIYkJWZDFhQQAAAAAAAAAFFmtSWWRRWUJrU2o2ZExpSGJCVmQxYUEAAAAAAAAABBZrUllkUVlCa1NqNmRMaUhiQlZkMWFB&quot;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也可以一次性删除所有:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DELETE /_search/scroll/_all</span><br></pre></td></tr></table></figure>
+<h3 id="Sliced-Scroll"><a href="#Sliced-Scroll" class="headerlink" title="Sliced Scroll"></a>Sliced Scroll</h3><p>Scoll每次会返回一个批次，如果你觉得这个批次还太大，那么你可以对这个批次进行分片——称之为<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html#scroll-scan" target="_blank" rel="noopener">Sliced Scroll</a>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">GET /twitter/tweet/_search?scroll=1m</span><br><span class="line">&#123;</span><br><span class="line">    &quot;slice&quot;: &#123;</span><br><span class="line">        &quot;id&quot;: 0,  	// 1. =&gt; The id of the slice</span><br><span class="line">        &quot;max&quot;: 2 	// 2. =&gt; The maximum number of slices</span><br><span class="line"></span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;title&quot; : &quot;elasticsearch&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">GET /twitter/tweet/_search?scroll=1m</span><br><span class="line">&#123;</span><br><span class="line">    &quot;slice&quot;: &#123;</span><br><span class="line">        &quot;id&quot;: 1, 	// 1. =&gt; The id of the slice</span><br><span class="line">        &quot;max&quot;: 2	// 2. =&gt; The maximum number of slices</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;title&quot; : &quot;elasticsearch&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>说明: the maximum number of slices allowed per scroll is limited to 1024 and can be updated using the <code>index.max_slices_per_scroll</code> index setting to bypass this limit.</p>
+<p><strong>TIPS</strong></p>
+<p>scroll特别适合做全表扫描，ES的reindex接口内部就是使用scroll机制实现的。</p>
+<h2 id="解决方案2：Search-After"><a href="#解决方案2：Search-After" class="headerlink" title="解决方案2：Search After"></a>解决方案2：Search After</h2><p>Scroll API相对于from+size方式当然是性能好很多，但是也有如下问题：</p>
+<ol>
+<li>Search context开销不小。</li>
+<li>是一个临时快照，并不是实时的分页结果。</li>
+</ol>
+<p>针对这些问题，ES 5.0 开始推出了 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.1/search-request-search-after.html" target="_blank" rel="noopener">Search After</a> 机制可以提供了更实时的游标(live cursor)。它的思想是利用上一页的分页结果来提高下一页的分页请求。</p>
+<p>假设请求第一页的请求如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET twitter/tweet/_search</span><br><span class="line">&#123;</span><br><span class="line">    &quot;size&quot;: 10,</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;title&quot; : &quot;elasticsearch&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;sort&quot;: [</span><br><span class="line">        &#123;&quot;date&quot;: &quot;asc&quot;&#125;,</span><br><span class="line">        &#123;&quot;_id&quot;: &quot;desc&quot;&#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，这里为了避免sort字段相同值的导致排序不确定，这里增加了 <code>_id</code> 字段。</p>
+<p>返回的结果会包含每个文档的sort字段的sort value。这个就是上面所说的 “live cursor”。</p>
+<p>使用最后一个文档的sort value作为search after请求值，我们就可以这样子请求下一页结果了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">GET twitter/tweet/_search</span><br><span class="line">&#123;</span><br><span class="line">    &quot;size&quot;: 10,</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;title&quot; : &quot;elasticsearch&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;search_after&quot;: [1463538857, &quot;654323&quot;],</span><br><span class="line">    &quot;sort&quot;: [</span><br><span class="line">        &#123;&quot;date&quot;: &quot;asc&quot;&#125;,</span><br><span class="line">        &#123;&quot;_id&quot;: &quot;desc&quot;&#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意到from变成了search_after了。现在是通过search_after来确定分页的开始位置。</p>
+<p>search_after使用方式上跟scroll很像，但是相对于scroll它是无状态的(stateless)，没有search context开销；而且它是每次请求都实时计算的，所以也没有一致性问题（相反，有索引变化的话，每次排序顺序会变化呢）。但是比起from+size方式，还是有同样的问题没法解决：就是只能顺序的翻页，不能随意跳页。</p>
+<p>这个排序分页方案其实在app分页中大量使用。</p>
+<p>由于app端的分页比较特殊，比如后台数据会近实时的发生变化，所以采用常规的分页算法 <code>[(totalRecord + pageSize - 1) / pageSize]</code> 是会有问题的。如果仍采用这种算法，当上推刷新时，就有可能加载到上一页已经看过的数据，比如用户当前正在看第2页的历史数据，如果此时后台数据源新增了一条数据，那么当用户继续上推操作查看第3页的历史数据时，就会把第2页的最后一条数据获取，并且会把该条数据作为第3页的第一条数据进行展示，这样是有问题的。所以在数据表设计时，需要在表中增加一个自增的orderId字段参与分页，然后分页时，需要将第一页的最后一条数据的orderId回传到后台，后台拿着这个orderId进行条件判断查询并且集合上面的分页算法就可以避免上面的问题（在新闻类的app中，经常使用createdTime作为orderId）。另一方便，app的滑动翻页其实就是顺序翻页，所以特别适合这种分页方式。</p>
+<p>在redis中可以使用<a href="https://redis.io/topics/data-types-intro#redis-sorted-sets" target="_blank" rel="noopener">Sorted Set</a>来实现。具体的分页命令是 <a href="http://redisdoc.com/sorted_set/zrevrangebyscore.html" target="_blank" rel="noopener">ZREVRANGEBYSCORE</a>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]</span><br><span class="line"></span><br><span class="line">返回有序集 key 中， score 值介于 max 和 min 之间(默认包括等于 max 或 min )的所有的成员。有序集成员按 score 值递减(从大到小)的次序排列。</span><br><span class="line"></span><br><span class="line">具有相同 score 值的成员按字典序的逆序(reverse lexicographical order )排列。</span><br><span class="line"></span><br><span class="line">除了成员按 score 值递减的次序排列这一点外， ZREVRANGEBYSCORE 命令的其他方面和 ZRANGEBYSCORE 命令一样。</span><br><span class="line"></span><br><span class="line">可用版本：</span><br><span class="line">&gt;= 2.2.0</span><br><span class="line">时间复杂度:</span><br><span class="line">O(log(N)+M)， N 为有序集的基数， M 为结果集的基数。</span><br><span class="line">返回值:</span><br><span class="line">指定区间内，带有 score 值(可选)的有序集成员的列表。</span><br></pre></td></tr></table></figure>
+<h2 id="终极解决方案"><a href="#终极解决方案" class="headerlink" title="终极解决方案?"></a>终极解决方案?</h2><p>这篇文章: <a href="https://tech.shutterstock.com/2017/05/09/efficiently-handling-deep-pagination-in-a-distributed-search-engine/" target="_blank" rel="noopener">Efficiently Handling Deep Pagination In A Distributed Search Engine</a> 介绍了一种方式，可以以牺牲一定的分页准确性来大幅度的提高分页性能，有点意思。 这里简单介绍</p>
+<p>首先引入一个 Shard Factor 的概念：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Shard Factor = shards.rows / (start + rows)</span><br></pre></td></tr></table></figure>
+<p>其中shards.rows就是每个分片需要返回的排序数据。start和rows就是ES的from和size。</p>
+<p>根据一个<a href="https://tech.shutterstock.com/wp-content/uploads/2017/05/estimate_shard_rows.py_.zip" target="_blank" rel="noopener">计算公式</a>，可以得出如下结论：</p>
+<blockquote>
+<p>With 4 shards, we found that for results [0-1,000], we needed a shard factor or 38% to guarantee 99% accuracy, but for results above 1,000, 28% was sufficient. With 100 shards, we found that for results 0-1,000, we needed a shard factor or 6% to guarantee 99% accuracy, but for results above 1,000, 2% was sufficient. … This means we were able to get very near 100% accuracy, while still achieving effectively linear speedup as we distributed our search engine across more shards.</p>
+</blockquote>
+<p>思路非常简单，效果非常明显，有机会的话可以试试。不过前提是底层存储引擎支持指定返回排序数据的大小。Solr是支持的（<a href="https://lucene.apache.org/solr/4_2_1/solr-solrj/org/apache/solr/common/params/ShardParams.html#SHARDS_ROWS" target="_blank" rel="noopener">shards.rows</a>）这篇文章也是基于Solr实现的，但是ES目前并不支持。</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html" target="_blank" rel="noopener">Elasticsearch Reference [6.1] » Search APIs » Request Body Search » Scroll</a></li>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/scroll.html" target="_blank" rel="noopener">Elasticsearch: The Definitive Guide [2.x] » Getting Started » Distributed Search Execution » Scroll</a></li>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.1/search-request-search-after.html" target="_blank" rel="noopener">Elasticsearch Reference [6.1] » Search APIs » Request Body Search » Search After</a></li>
+<li><a href="https://tech.shutterstock.com/2017/05/09/efficiently-handling-deep-pagination-in-a-distributed-search-engine/" target="_blank" rel="noopener">Efficiently Handling Deep Pagination In A Distributed Search Engine</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Elasticsearch/" rel="tag"># Elasticsearch</a>
+          
+            <a href="/tags/搜索引擎/" rel="tag"># 搜索引擎</a>
+          
+            <a href="/tags/Lucene/" rel="tag"># Lucene</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/08/掌握它才说明你真正懂Elasticsearch/" rel="next" title="掌握它才说明你真正懂Elasticsearch">
+                <i class="fa fa-chevron-left"></i> 掌握它才说明你真正懂Elasticsearch
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/08/如何查看和设置文件句柄数/" rel="prev" title="如何查看和设置文件句柄数">
+                如何查看和设置文件句柄数 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ElasticSearch如何支持深度分页"><span class="nav-number">1.</span> <span class="nav-text">ElasticSearch如何支持深度分页</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式环境下的分页"><span class="nav-number">1.1.</span> <span class="nav-text">分布式环境下的分页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方案1：服务端缓存——Scan-and-scroll-API"><span class="nav-number">1.2.</span> <span class="nav-text">解决方案1：服务端缓存——Scan and scroll API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Sliced-Scroll"><span class="nav-number">1.2.1.</span> <span class="nav-text">Sliced Scroll</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方案2：Search-After"><span class="nav-number">1.3.</span> <span class="nav-text">解决方案2：Search After</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#终极解决方案"><span class="nav-number">1.4.</span> <span class="nav-text">终极解决方案?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">1.5.</span> <span class="nav-text">参考文档</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

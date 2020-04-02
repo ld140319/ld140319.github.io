@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Go,channel,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Go Channel 应用模式 原文地址：https://colobu.com/2018/03/26/channel-patterns/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Channel是Go中的一种类型，和goroutine一起为Go提供了并发技术， 它在开发中得到了广泛的应用。Go鼓励人们通过Channel在goroutine之间传递数据的引用(就像把数据的owner从一个go">
+<meta name="keywords" content="Go,channel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go Channel 应用模式">
+<meta property="og:url" content="http://blog.com/2019/09/03/Go Channel 应用模式/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Go Channel 应用模式 原文地址：https://colobu.com/2018/03/26/channel-patterns/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Channel是Go中的一种类型，和goroutine一起为Go提供了并发技术， 它在开发中得到了广泛的应用。Go鼓励人们通过Channel在goroutine之间传递数据的引用(就像把数据的owner从一个go">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-09-03T06:47:35.637Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go Channel 应用模式">
+<meta name="twitter:description" content="Go Channel 应用模式 原文地址：https://colobu.com/2018/03/26/channel-patterns/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Channel是Go中的一种类型，和goroutine一起为Go提供了并发技术， 它在开发中得到了广泛的应用。Go鼓励人们通过Channel在goroutine之间传递数据的引用(就像把数据的owner从一个go">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/09/03/Go Channel 应用模式/">
+
+
+
+
+
+  <title>Go Channel 应用模式 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/09/03/Go Channel 应用模式/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Go Channel 应用模式</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-03T12:12:57+08:00">
+                2019-09-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index">
+                    <span itemprop="name">Go</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/channel/" itemprop="url" rel="index">
+                    <span itemprop="name">channel</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Go-Channel-应用模式"><a href="#Go-Channel-应用模式" class="headerlink" title="Go Channel 应用模式"></a>Go Channel 应用模式</h1><blockquote>
+<p>原文地址：<a href="https://colobu.com/2018/03/26/channel-patterns/" target="_blank" rel="noopener">https://colobu.com/2018/03/26/channel-patterns/</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<code>Channel</code>是<code>Go</code>中的一种类型，和<code>goroutine</code>一起为<code>Go</code>提供了并发技术， 它在开发中得到了广泛的应用。<code>Go</code>鼓励人们通过<code>Channel</code>在<code>goroutine</code>之间传递数据的引用(就像把数据的<code>owner</code>从一个<code>goroutine</code>传递给另外一个<code>goroutine</code>), <a href="http://golang.org/doc/effective_go.html" target="_blank" rel="noopener">Effective Go</a>总结了这么一句话：</p>
+<blockquote>
+<p>Do not communicate by sharing memory; instead, share memory by communicating.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 <a href="https://golang.org/ref/mem" target="_blank" rel="noopener">Go内存模型</a>指出了<code>channel</code>作为并发控制的一个特性：</p>
+<blockquote>
+<p>A send on a channel happens before the corresponding receive from that channel completes. (Golang Spec)</p>
+</blockquote>
+<h2 id="Lock-TryLock-模式"><a href="#Lock-TryLock-模式" class="headerlink" title="Lock/TryLock 模式"></a>Lock/TryLock 模式</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;我们知道， Go的标准库<code>sync</code>有<code>Mutex</code>,可以用来作为锁，但是<code>Mutex</code>却没有实现<code>TryLock</code>方法。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们对于<code>TryLock</code>的定义是当前<code>goroutine</code><strong>尝试获得锁， 如果成功，则获得了锁，返回<code>true</code>, 否则返回<code>false</code></strong>。我们可以使用这个方法避免在获取锁的时候当前<code>goroutine</code>被阻塞住。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本来，这是一个常用的功能，在一些其它编程语言中都有实现，为什么<code>Go</code>中没有实现的？<a href="https://github.com/golang/go/issues/6123" target="_blank" rel="noopener">issue#6123</a>有详细的讨论，在我看来，<code>Go</code>核心组成员本身对这个特性没有积极性，并且认为通过<code>channel</code>可以实现相同的方式。</p>
+<h3 id="Hacked-Lock-TryLock-模式"><a href="#Hacked-Lock-TryLock-模式" class="headerlink" title="Hacked Lock/TryLock 模式"></a>Hacked Lock/TryLock 模式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;其实，对于标准库的<code>sync.Mutex</code>要增加这个功能很简单，下面的方式就是通过<code>hack</code>的方式为<code>Mutex</code>实现了<code>TryLock</code>的功能。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> mutexLocked = <span class="number">1</span> &lt;&lt; <span class="literal">iota</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	mu sync.Mutex</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Lock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	m.mu.Lock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Unlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	m.mu.Unlock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">TryLock</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> atomic.CompareAndSwapInt32((*<span class="keyword">int32</span>)(unsafe.Pointer(&amp;m.mu)), <span class="number">0</span>, mutexLocked)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">IsLocked</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> atomic.LoadInt32((*<span class="keyword">int32</span>)(unsafe.Pointer(&amp;m.mu))) == mutexLocked</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如果你看一下<code>Mutex</code>实现的源代码，就很容易理解上面的这段代码了，因为<code>mutex</code>实现锁主要利用<code>CAS</code>对它的一个<code>int32</code>字段做操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上面的代码还额外增加了一个<code>IsLocked</code>方法，不过这个方法一般不常用，因为查询和加锁这两个方法执行的时候不是一个原子的操作，素以这个方法一般在调试和打日志的时候可能有用。</p>
+<h3 id="TryLock-By-Channel"><a href="#TryLock-By-Channel" class="headerlink" title="TryLock By Channel"></a>TryLock By Channel</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;既然标准库中不准备在<code>Mutex</code>上增加这个方法，而是推荐使用<code>channel</code>来实现，那么就让我们看看如何使用 <code>channel</code>来实现。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	ch <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewMutex</span><span class="params">()</span> *<span class="title">Mutex</span></span> &#123;</span><br><span class="line">	mu := &amp;Mutex&#123;<span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, <span class="number">1</span>)&#125;</span><br><span class="line">	mu.ch &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	<span class="keyword">return</span> mu</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Lock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	&lt;-m.ch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Unlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> m.ch &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;:</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">"unlock of unlocked mutex"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">TryLock</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> &lt;-m.ch:</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">IsLocked</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(m.ch) == <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;主要是利用<code>channel</code>边界情况下的阻塞特性实现的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;你还可以将缓存的大小从1改为n,用来处理n个锁(资源)。</p>
+<h3 id="TryLock-with-Timeout"><a href="#TryLock-with-Timeout" class="headerlink" title="TryLock with Timeout"></a>TryLock with Timeout</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;有时候，我们在获取一把锁的时候，由于有竞争的关系，在锁被别的<code>goroutine</code>拥有的时候，当前<code>goroutine</code>没有办法立即获得锁，只能阻塞等待。标准库并没有提供等待超时的功能，我们尝试实现它。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	ch <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewMutex</span><span class="params">()</span> *<span class="title">Mutex</span></span> &#123;</span><br><span class="line">	mu := &amp;Mutex&#123;<span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, <span class="number">1</span>)&#125;</span><br><span class="line">	mu.ch &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	<span class="keyword">return</span> mu</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Lock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	&lt;-m.ch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">Unlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> m.ch &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;:</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">panic</span>(<span class="string">"unlock of unlocked mutex"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">TryLock</span><span class="params">(timeout time.Duration)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	timer := time.NewTimer(timeout)</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-m.ch:</span><br><span class="line">			timer.Stop()</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">		<span class="keyword">case</span> &lt;-time.After(timeout):</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">IsLocked</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(m.ch) == <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;你也可以把它用<code>Context</code>来改造，不是利用超时，而是利用<code>Context</code>来取消/超时获得锁的操作，这个作业留给读者来实现。</p>
+<h2 id="Or-Channel-模式"><a href="#Or-Channel-模式" class="headerlink" title="Or Channel 模式"></a>Or Channel 模式</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>当你等待多个信号的时候，如果收到任意一个信号， 就执行业务逻辑，忽略其它的还未收到的信号</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;举个例子， 我们往提供相同服务的n个节点发送请求，只要任意一个服务节点返回结果，我们就可以执行下面的业务逻辑，其它n-1的节点的请求可以被取消或者忽略。当n=2的时候，这就是<code>back request</code>模式。 这样可以用资源来换取<code>latency</code>的提升。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;需要注意的是，当收到任意一个信号的时候，<strong>其它信号都被忽略</strong>。如果用<code>channel</code>来实现，只要从任意一个<code>channel</code>中接收到一个数据，那么所有的<code>channel</code>都可以被关闭了(依照你的实现，但是输出的<code>channel</code>肯定会被关闭)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有三种实现的方式: <code>goroutine</code>、<code>reflect</code>和递归。</p>
+<h3 id="Goroutine方式"><a href="#Goroutine方式" class="headerlink" title="Goroutine方式"></a>Goroutine方式</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">or</span><span class="params">(chans ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	out := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">var</span> once sync.Once</span><br><span class="line">		<span class="keyword">for</span> _, c := <span class="keyword">range</span> chans &#123;</span><br><span class="line">			<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(c &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">					<span class="keyword">case</span> &lt;-c:</span><br><span class="line">						once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; <span class="built_in">close</span>(out) &#125;)</span><br><span class="line">					<span class="keyword">case</span> &lt;-out:</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;(c)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> out</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<code>or</code>函数可以处理n个<code>channel</code>,它<strong>为每个<code>channel</code>启动一个<code>goroutine</code>，只要任意一个<code>goroutine</code>从<code>channel</code>读取到数据，输出的<code>channel</code>就被关闭掉了</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了避免并发关闭输出<code>channel</code>的问题，关闭操作只执行一次。</p>
+<h3 id="Reflect方式"><a href="#Reflect方式" class="headerlink" title="Reflect方式"></a>Reflect方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<code>Go</code>的反射库针对<code>select</code>语句有专门的数据(<code>reflect.SelectCase</code>)和函数(<code>reflect.Select</code>)处理。<br>所以我们可以利用反射“随机”地从一组可选的<code>channel</code>中接收数据，并关闭输出<code>channel</code>。</p>
+<p>这种方式看起来更简洁。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">or</span><span class="params">(channels ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">switch</span> <span class="built_in">len</span>(channels) &#123;</span><br><span class="line">		<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            <span class="keyword">return</span> channels[<span class="number">0</span>]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	orDone := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(orDone)</span><br><span class="line">		<span class="keyword">var</span> cases []reflect.SelectCase</span><br><span class="line">		<span class="keyword">for</span> _, c := <span class="keyword">range</span> channels &#123;</span><br><span class="line">			cases = <span class="built_in">append</span>(cases, reflect.SelectCase&#123;</span><br><span class="line">				Dir:  reflect.SelectRecv,</span><br><span class="line">				Chan: reflect.ValueOf(c),</span><br><span class="line">			&#125;)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		reflect.Select(cases)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> orDone</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="递归方式"><a href="#递归方式" class="headerlink" title="递归方式"></a>递归方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;递归方式一向是比较开脑洞的实现，下面的方式就是分而治之的方式，逐步合并<code>channel</code>，最终返回一个<code>channel</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">or</span><span class="params">(channels ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">switch</span> <span class="built_in">len</span>(channels) &#123;</span><br><span class="line">		<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">			<span class="keyword">return</span> channels[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	orDone := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(orDone)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">switch</span> <span class="built_in">len</span>(channels) &#123;</span><br><span class="line">		<span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-channels[<span class="number">0</span>]:</span><br><span class="line">			<span class="keyword">case</span> &lt;-channels[<span class="number">1</span>]:</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			m := <span class="built_in">len</span>(channels) / <span class="number">2</span></span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-or(channels[:m]...):</span><br><span class="line">			<span class="keyword">case</span> &lt;-or(channels[m:]...):</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> orDone</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在后面的扇入(合并)模式中，我们还是会使用相同样的递归模式来合并多个输入<code>channel</code>，根据 justforfun 的测试结果，这种递归的方式要比<code>goroutine</code>、<code>Reflect</code>更有效。</p>
+<h2 id="Or-Done-Channel模式"><a href="#Or-Done-Channel模式" class="headerlink" title="Or-Done-Channel模式"></a>Or-Done-Channel模式</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;这种模式是我们经常使用的一种模式，通过一个信号<code>channel(done)</code>来控制(取消)输入<code>channel</code>的处理。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;一旦从<code>done channel</code>中读取到一个信号，或者<code>done channel</code>被关闭， 输入<code>channel</code>的处理则被取消。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这个模式提供一个简便的方法，把<code>done channel</code> 和 输入 <code>channel</code>融合成一个输出<code>channel</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">orDone</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, c &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	valStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(valStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v, ok := &lt;-c:</span><br><span class="line">				<span class="keyword">if</span> ok == <span class="literal">false</span> &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">					<span class="keyword">case</span> valStream &lt;- v:</span><br><span class="line">					<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> valStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="扇入模式"><a href="#扇入模式" class="headerlink" title="扇入模式"></a>扇入模式</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;扇入模式(<code>FanIn</code>)是将多个同样类型的输入<code>channel</code>合并成一个同样类型的输出<code>channel</code>，也就是<code>channel</code>的合并。</p>
+<h3 id="Goroutine方式-1"><a href="#Goroutine方式-1" class="headerlink" title="Goroutine方式"></a>Goroutine方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;每个<code>channel</code>起一个<code>goroutine</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanIn</span><span class="params">(chans ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	out := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">		wg.Add(<span class="built_in">len</span>(chans))</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> _, c := <span class="keyword">range</span> chans &#123;</span><br><span class="line">			<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(c &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">				<span class="keyword">for</span> v := <span class="keyword">range</span> c &#123;</span><br><span class="line">					out &lt;- v</span><br><span class="line">				&#125;</span><br><span class="line">				wg.Done()</span><br><span class="line">			&#125;(c)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		wg.Wait()</span><br><span class="line">		<span class="built_in">close</span>(out)</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> out</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Reflect"><a href="#Reflect" class="headerlink" title="Reflect"></a>Reflect</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;利用反射库针对<code>select</code>语句的处理合并输入<code>channel</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;下面这种实现方式其实还是有些问题的， 在输入<code>channel</code>读取比较均匀的时候比较有效，否则性能比较低下。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanInReflect</span><span class="params">(chans ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	out := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(out)</span><br><span class="line">		<span class="keyword">var</span> cases []reflect.SelectCase</span><br><span class="line">		<span class="keyword">for</span> _, c := <span class="keyword">range</span> chans &#123;</span><br><span class="line">			cases = <span class="built_in">append</span>(cases, reflect.SelectCase&#123;</span><br><span class="line">				Dir:  reflect.SelectRecv,</span><br><span class="line">				Chan: reflect.ValueOf(c),</span><br><span class="line">			&#125;)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> <span class="built_in">len</span>(cases) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			i, v, ok := reflect.Select(cases)</span><br><span class="line">			<span class="keyword">if</span> !ok &#123; <span class="comment">//remove this case</span></span><br><span class="line">				cases = <span class="built_in">append</span>(cases[:i], cases[i+<span class="number">1</span>:]...)</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			out &lt;- v.Interface()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="递归方式-1"><a href="#递归方式-1" class="headerlink" title="递归方式"></a>递归方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;这种方式虽然理解起来不直观，但是性能还是不错的(输入<code>channel</code>不是很多的情况下递归层级不会很高，不会成为瓶颈)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanInRec</span><span class="params">(chans ...&lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">switch</span> <span class="built_in">len</span>(chans) &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">		c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">		<span class="built_in">close</span>(c)</span><br><span class="line">		<span class="keyword">return</span> c</span><br><span class="line">	<span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">		<span class="keyword">return</span> chans[<span class="number">0</span>]</span><br><span class="line">	<span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">		<span class="keyword">return</span> mergeTwo(chans[<span class="number">0</span>], chans[<span class="number">1</span>])</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		m := <span class="built_in">len</span>(chans) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">return</span> mergeTwo(</span><br><span class="line">			fanInRec(chans[:m]...),</span><br><span class="line">			fanInRec(chans[m:]...))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mergeTwo</span><span class="params">(a, b &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(c)</span><br><span class="line">		<span class="keyword">for</span> a != <span class="literal">nil</span> || b != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> v, ok := &lt;-a:</span><br><span class="line">				<span class="keyword">if</span> !ok &#123;</span><br><span class="line">					a = <span class="literal">nil</span></span><br><span class="line">					<span class="keyword">continue</span></span><br><span class="line">				&#125;</span><br><span class="line">				c &lt;- v</span><br><span class="line">			<span class="keyword">case</span> v, ok := &lt;-b:</span><br><span class="line">				<span class="keyword">if</span> !ok &#123;</span><br><span class="line">					b = <span class="literal">nil</span></span><br><span class="line">					<span class="keyword">continue</span></span><br><span class="line">				&#125;</span><br><span class="line">				c &lt;- v</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Tee模式"><a href="#Tee模式" class="headerlink" title="Tee模式"></a>Tee模式</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;扇出模式(<code>FanOut</code>)是将一个输入<code>channel</code>扇出为多个<code>channel</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;扇出行为至少可以分为两种：</p>
+<ol>
+<li>从输入<code>channel中</code>读取一个数据，发送给每个输入<code>channel</code>，这种模式称之为<code>Tee</code>模式</li>
+<li>从输入<code>channel</code>中读取一个数据，在输出<code>channel</code>中选择一个<code>channel</code>发送</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本节只介绍第一种情况，下一节介绍第二种情况</p>
+<h3 id="Goroutine方式-2"><a href="#Goroutine方式-2" class="headerlink" title="Goroutine方式"></a>Goroutine方式</h3><p>将读取的值发送给每个输出<code>channel</code>， 异步模式可能会产生很多的<code>goroutine</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanOut</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, out []<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, async <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(out); i++ &#123;</span><br><span class="line">				<span class="built_in">close</span>(out[i])</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">			v := v</span><br><span class="line">			<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(out); i++ &#123;</span><br><span class="line">				i := i</span><br><span class="line">				<span class="keyword">if</span> async &#123;</span><br><span class="line">					<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">						out[i] &lt;- v</span><br><span class="line">					&#125;()</span><br><span class="line">				&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">					out[i] &lt;- v</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Reflect方式-1"><a href="#Reflect方式-1" class="headerlink" title="Reflect方式"></a>Reflect方式</h3><p>这种模式一旦一个输出<code>channel</code>被阻塞，可能会导致后续的处理延迟。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanOutReflect</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, out []<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(out); i++ &#123;</span><br><span class="line">				<span class="built_in">close</span>(out[i])</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line"></span><br><span class="line">		cases := <span class="built_in">make</span>([]reflect.SelectCase, <span class="built_in">len</span>(out))</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">range</span> cases &#123;</span><br><span class="line">			cases[i].Dir = reflect.SelectSend</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">			v := v</span><br><span class="line">			<span class="keyword">for</span> i := <span class="keyword">range</span> cases &#123;</span><br><span class="line">				cases[i].Chan = reflect.ValueOf(out[i])</span><br><span class="line">				cases[i].Send = reflect.ValueOf(v)</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">for</span> _ = <span class="keyword">range</span> cases &#123; <span class="comment">// for each channel</span></span><br><span class="line">				chosen, _, _ := reflect.Select(cases)</span><br><span class="line">				cases[chosen].Chan = reflect.ValueOf(<span class="literal">nil</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="分布模式"><a href="#分布模式" class="headerlink" title="分布模式"></a>分布模式</h2><p>分布模式将从输入<code>channel</code>中读取的值往输出<code>channel</code>中的其中一个发送。</p>
+<h3 id="Goroutine方式-3"><a href="#Goroutine方式-3" class="headerlink" title="Goroutine方式"></a>Goroutine方式</h3><p><code>roundrobin</code>的方式选择输出<code>channel</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanOut</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, out []<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(out); i++ &#123;</span><br><span class="line">				<span class="built_in">close</span>(out[i])</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line"></span><br><span class="line">		<span class="comment">// roundrobin</span></span><br><span class="line">		<span class="keyword">var</span> i = <span class="number">0</span></span><br><span class="line">		<span class="keyword">var</span> n = <span class="built_in">len</span>(out)</span><br><span class="line">		<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">			v := v</span><br><span class="line">			out[i] &lt;- v</span><br><span class="line">			i = (i + <span class="number">1</span>) % n</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Reflect方式-2"><a href="#Reflect方式-2" class="headerlink" title="Reflect方式"></a>Reflect方式</h3><p>利用发射随机的选择。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fanOutReflect</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, out []<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(out); i++ &#123;</span><br><span class="line">				<span class="built_in">close</span>(out[i])</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line"></span><br><span class="line">		cases := <span class="built_in">make</span>([]reflect.SelectCase, <span class="built_in">len</span>(out))</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">range</span> cases &#123;</span><br><span class="line">			cases[i].Dir = reflect.SelectSend</span><br><span class="line">			cases[i].Chan = reflect.ValueOf(out[i])</span><br><span class="line"></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">			v := v</span><br><span class="line">			<span class="keyword">for</span> i := <span class="keyword">range</span> cases &#123;</span><br><span class="line">				cases[i].Send = reflect.ValueOf(v)</span><br><span class="line">			&#125;</span><br><span class="line">			_, _, _ = reflect.Select(cases)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="eapache"><a href="#eapache" class="headerlink" title="eapache"></a>eapache</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/eapache/channels" target="_blank" rel="noopener">eapache/channels</a>提供了一些channel应用模式的方法，比如上面的扇入扇出模式等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;因为<code>go</code>本身的<code>channel</code>无法再进行扩展， <code>eapache/channels</code>库定义了自己的<code>channel</code>接口，并提供了与<code>channel</code>方便的转换。</p>
+<p><code>eapache/channels</code> 提供了四个方法:</p>
+<ul>
+<li><code>Distribute</code>： 从输入<code>channel</code>读取值，发送到其中一个输出<code>channel</code>中。当输入<code>channel</code>关闭后，输出<code>channel</code>都被关闭</li>
+<li><code>Tee</code>: 从输入<code>channel</code>读取值，发送到所有的输出<code>channel</code>中。当输入<code>channel</code>关闭后，输出<code>channel</code>都被关闭</li>
+<li><code>Multiplex</code>: 合并输入<code>channel</code>为一个输出<code>channel</code>， 当所有的输入都关闭后，输出才关闭</li>
+<li><code>Pipe</code>: 将两个<code>channel</code>串起来</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;同时对上面的四个函数还提供了<code>WeakXXX</code>的函数，输入关闭后不会关闭输出。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;下面看看对应的函数的例子。</p>
+<h3 id="Distribute"><a href="#Distribute" class="headerlink" title="Distribute"></a>Distribute</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testDist</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">"dist:"</span>)</span><br><span class="line">	a := channels.NewNativeChannel(channels.None)</span><br><span class="line">	outputs := []channels.Channel&#123;</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	channels.Distribute(a, outputs[<span class="number">0</span>], outputs[<span class="number">1</span>], outputs[<span class="number">2</span>], outputs[<span class="number">3</span>])</span><br><span class="line">	<span class="comment">//channels.WeakDistribute(a, outputs[0], outputs[1], outputs[2], outputs[3])</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">			a.In() &lt;- i</span><br><span class="line">		&#125;</span><br><span class="line">		a.Close()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">6</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">var</span> v <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">		<span class="keyword">var</span> j <span class="keyword">int</span></span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">0</span>].Out():</span><br><span class="line">			j = <span class="number">0</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">1</span>].Out():</span><br><span class="line">			j = <span class="number">1</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">2</span>].Out():</span><br><span class="line">			j = <span class="number">2</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">3</span>].Out():</span><br><span class="line">			j = <span class="number">3</span></span><br><span class="line">		&#125;</span><br><span class="line">		fmt.Printf(<span class="string">"channel#%d: %d\n"</span>, j, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Tee"><a href="#Tee" class="headerlink" title="Tee"></a>Tee</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testTee</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">"tee:"</span>)</span><br><span class="line">	a := channels.NewNativeChannel(channels.None)</span><br><span class="line">	outputs := []channels.Channel&#123;</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	channels.Tee(a, outputs[<span class="number">0</span>], outputs[<span class="number">1</span>], outputs[<span class="number">2</span>], outputs[<span class="number">3</span>])</span><br><span class="line">	<span class="comment">//channels.WeakTee(a, outputs[0], outputs[1], outputs[2], outputs[3])</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">			a.In() &lt;- i</span><br><span class="line">		&#125;</span><br><span class="line">		a.Close()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">20</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">var</span> v <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">		<span class="keyword">var</span> j <span class="keyword">int</span></span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">0</span>].Out():</span><br><span class="line">			j = <span class="number">0</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">1</span>].Out():</span><br><span class="line">			j = <span class="number">1</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">2</span>].Out():</span><br><span class="line">			j = <span class="number">2</span></span><br><span class="line">		<span class="keyword">case</span> v = &lt;-outputs[<span class="number">3</span>].Out():</span><br><span class="line">			j = <span class="number">3</span></span><br><span class="line">		&#125;</span><br><span class="line">		fmt.Printf(<span class="string">"channel#%d: %d\n"</span>, j, v)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Multiplex"><a href="#Multiplex" class="headerlink" title="Multiplex"></a>Multiplex</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testMulti</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">"multi:"</span>)</span><br><span class="line">	a := channels.NewNativeChannel(channels.None)</span><br><span class="line">	inputs := []channels.Channel&#123;</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">		channels.NewNativeChannel(channels.None),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	channels.Multiplex(a, inputs[<span class="number">0</span>], inputs[<span class="number">1</span>], inputs[<span class="number">2</span>], inputs[<span class="number">3</span>])</span><br><span class="line">	<span class="comment">//channels.WeakMultiplex(a, inputs[0], inputs[1], inputs[2], inputs[3])</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">			<span class="keyword">for</span> j := <span class="keyword">range</span> inputs &#123;</span><br><span class="line">				inputs[j].In() &lt;- i</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">range</span> inputs &#123;</span><br><span class="line">			inputs[i].Close()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> a.Out() &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"%d "</span>, v)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Pipe"><a href="#Pipe" class="headerlink" title="Pipe"></a>Pipe</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testPipe</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">"pipe:"</span>)</span><br><span class="line">	a := channels.NewNativeChannel(channels.None)</span><br><span class="line">	b := channels.NewNativeChannel(channels.None)</span><br><span class="line"></span><br><span class="line">	channels.Pipe(a, b)</span><br><span class="line">	<span class="comment">// channels.WeakPipe(a, b)</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">			a.In() &lt;- i</span><br><span class="line">		&#125;</span><br><span class="line">		a.Close()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> b.Out() &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"%d "</span>, v)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="集合操作"><a href="#集合操作" class="headerlink" title="集合操作"></a>集合操作</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;从<code>channel</code>的行为来看，它看起来很像一个数据流，所以我们可以实现一些类似<code>Scala</code>集合的操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<code>Scala</code>的集合类提供了丰富的操作(方法)， 当然其它的一些编程语言或者框架也提供了类似的方法， 比如<code>Apache Spark</code>、<code>Java Stream</code>、<code>ReactiveX</code>等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;下面列出了一些方法的实现，我相信经过一些人的挖掘，相关的方法可以变成一个很好的类库，但是目前我们先看一些例子。</p>
+<h3 id="skip"><a href="#skip" class="headerlink" title="skip"></a>skip</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<code>skip</code>函数是从一个<code>channel</code>中跳过开一些数据，然后才开始读取。</p>
+<h4 id="skipN"><a href="#skipN" class="headerlink" title="skipN"></a>skipN</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;<code>skipN</code>跳过开始的N个数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">skipN</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, valueStream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, num <span class="keyword">int</span>)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	takeStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(takeStream)</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; num; i++ &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> &lt;-valueStream:</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> takeStream &lt;- &lt;-valueStream:</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="skipFn"><a href="#skipFn" class="headerlink" title="skipFn"></a>skipFn</h4><p><code>skipFn</code> 提供<code>Fn</code>函数为<code>true</code>的数据，比如跳过偶数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">skipFn</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, valueStream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span>) &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	takeStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(takeStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v := &lt;-valueStream:</span><br><span class="line">				<span class="keyword">if</span> !fn(v) &#123;</span><br><span class="line">					takeStream &lt;- v</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="skipWhile"><a href="#skipWhile" class="headerlink" title="skipWhile"></a>skipWhile</h4><p>跳过开头函数<code>fn</code>为<code>true</code>的数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">skipWhile</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, valueStream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span>) &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	takeStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(takeStream)</span><br><span class="line">		take := <span class="literal">false</span></span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v := &lt;-valueStream:</span><br><span class="line">				<span class="keyword">if</span> !take &#123;</span><br><span class="line">					take = !fn(v)</span><br><span class="line">					<span class="keyword">if</span> !take &#123;</span><br><span class="line">						<span class="keyword">continue</span></span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				takeStream &lt;- v</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="take"><a href="#take" class="headerlink" title="take"></a>take</h3><p><code>skip</code>的反向操作，读取一部分数据。</p>
+<h4 id="takeN"><a href="#takeN" class="headerlink" title="takeN"></a>takeN</h4><p><code>takeN</code>读取开头N个数据。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">func takeN(done &lt;-chan struct&#123;&#125;, valueStream &lt;-chan interface&#123;&#125;, num int) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">	takeStream := make(chan interface&#123;&#125;)</span><br><span class="line">	go func() &#123;</span><br><span class="line">		defer close(takeStream)</span><br><span class="line">		for i := 0; i &lt; num; i++ &#123;</span><br><span class="line">			select &#123;</span><br><span class="line">			case &lt;-done:</span><br><span class="line">				return</span><br><span class="line">			case takeStream &lt;- &lt;-valueStream:</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	return takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="takeFn"><a href="#takeFn" class="headerlink" title="takeFn"></a>takeFn</h4><p><code>takeFn</code>只筛选满足<code>fn</code>的数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takeFn</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, valueStream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span>) &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	takeStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(takeStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v := &lt;-valueStream:</span><br><span class="line">				<span class="keyword">if</span> fn(v) &#123;</span><br><span class="line">					takeStream &lt;- v</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="takeWhile"><a href="#takeWhile" class="headerlink" title="takeWhile"></a>takeWhile</h4><p><code>takeWhile</code>只挑选开头满足<code>fn</code>的数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takeWhile</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, valueStream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span>) &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	takeStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(takeStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v := &lt;-valueStream:</span><br><span class="line">				<span class="keyword">if</span> !fn(v) &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">				takeStream &lt;- v</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> takeStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="flat"><a href="#flat" class="headerlink" title="flat"></a>flat</h3><p>平展<code>(flat)</code>操作是一个有趣的操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如果输入是一个<code>channel</code>,<code>channel</code>中的数据还是相同类型的<code>channel</code>， 那么<code>flat</code>将返回一个输出<code>channel</code>,输出<code>channel</code>中的数据是输入的各个<code>channel</code>中的数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;它与扇入不同，扇入的输入<code>channel</code>在调用的时候就是固定的，并且以数组的方式提供，而<code>flat</code>的输入是一个<code>channel</code>，可以运行时随时的加入<code>channel</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">orDone</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, c &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	valStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(valStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			<span class="keyword">case</span> v, ok := &lt;-c:</span><br><span class="line">				<span class="keyword">if</span> ok == <span class="literal">false</span> &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">				<span class="keyword">case</span> valStream &lt;- v:</span><br><span class="line">				<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> valStream</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flat</span><span class="params">(done &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, chanStream &lt;-<span class="keyword">chan</span> &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span> &lt;-<span class="title">chan</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	valStream := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(valStream)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">var</span> stream &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> maybeStream, ok := &lt;-chanStream:</span><br><span class="line">				<span class="keyword">if</span> ok == <span class="literal">false</span> &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">				stream = maybeStream</span><br><span class="line">			<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">for</span> val := <span class="keyword">range</span> orDone(done, stream) &#123;</span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">				<span class="keyword">case</span> valStream &lt;- val:</span><br><span class="line">				<span class="keyword">case</span> &lt;-done:</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> valStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="map"><a href="#map" class="headerlink" title="map"></a>map</h3><p><code>map</code>和<code>reduce</code>是一组常用的操作。</p>
+<p><code>map</code>将一个<code>channel</code>映射成另外一个<code>channel</code>， <code>channel</code>的类型可以不同。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapChan</span><span class="params">(in &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">interface</span></span>&#123;&#125;) &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">	out := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> in == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">close</span>(out)</span><br><span class="line">		<span class="keyword">return</span> out</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">close</span>(out)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> v := <span class="keyword">range</span> in &#123;</span><br><span class="line">			out &lt;- fn(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> out</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为<code>map</code>是go的关键字，所以我们不能命名函数类型为<code>map</code>,这里用<code>mapChan</code>代替。</p>
+<p>比如你可以处理一个公司员工工资的<code>channel</code>， 输出一个扣税之后的员工工资的<code>channel</code>。</p>
+<h3 id="reduce"><a href="#reduce" class="headerlink" title="reduce"></a>reduce</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reduce</span><span class="params">(in &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, fn <span class="keyword">func</span>(r, v <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">interface</span></span>&#123;&#125;) <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">if</span> in == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	out := &lt;-in</span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> in &#123;</span><br><span class="line">		out = fn(out, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> out</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">你可以用<span class="string">`reduce`</span>实现<span class="string">`sum`</span>、<span class="string">`max`</span>、<span class="string">`min`</span>等聚合操作。</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;本文列出了<code>channel</code>的一些深入应用的模式，相信通过阅读本文，你可以更加深入的了解<code>Go</code>的<code>channel</code>类型，并在开发中灵活的应用<code>channel</code>。也欢迎你在评论中提出更多的 <code>channel</code>的应用模式。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;所有的代码可以在<code>github</code>上找到: <a href="https://github.com/smallnest/channels" target="_blank" rel="noopener">smallnest/channels</a>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li><a href="https://github.com/kat-co/concurrency-in-go-src" target="_blank" rel="noopener">https://github.com/kat-co/concurrency-in-go-src</a></li>
+<li><a href="https://github.com/campoy/justforfunc/tree/master/27-merging-chans" target="_blank" rel="noopener">https://github.com/campoy/justforfunc/tree/master/27-merging-chans</a></li>
+<li><a href="https://github.com/eapache/channels" target="_blank" rel="noopener">https://github.com/eapache/channels</a></li>
+<li><a href="https://github.com/LK4D4/trylock" target="_blank" rel="noopener">https://github.com/LK4D4/trylock</a></li>
+<li><a href="https://stackoverflow.com/questions/36391421/explain-dont-communicate-by-sharing-memory-share-memory-by-communicating" target="_blank" rel="noopener">https://stackoverflow.com/questions/36391421/explain-dont-communicate-by-sharing-memory-share-memory-by-communicating</a></li>
+<li><a href="https://github.com/lrita/gosync" target="_blank" rel="noopener">https://github.com/lrita/gosync</a></li>
+<li><a href="https://www.ardanlabs.com/blog/2017/10/the-behavior-of-channels.html" target="_blank" rel="noopener">https://www.ardanlabs.com/blog/2017/10/the-behavior-of-channels.html</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag"># Go</a>
+          
+            <a href="/tags/channel/" rel="tag"># channel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/03/分布式消息系统设计要点/" rel="next" title="分布式消息系统设计要点">
+                <i class="fa fa-chevron-left"></i> 分布式消息系统设计要点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/04/数据库之互联网常用架构方案/" rel="prev" title="数据库之互联网常用架构方案">
+                数据库之互联网常用架构方案 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Go-Channel-应用模式"><span class="nav-number">1.</span> <span class="nav-text">Go Channel 应用模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Lock-TryLock-模式"><span class="nav-number">1.1.</span> <span class="nav-text">Lock/TryLock 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Hacked-Lock-TryLock-模式"><span class="nav-number">1.1.1.</span> <span class="nav-text">Hacked Lock/TryLock 模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TryLock-By-Channel"><span class="nav-number">1.1.2.</span> <span class="nav-text">TryLock By Channel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TryLock-with-Timeout"><span class="nav-number">1.1.3.</span> <span class="nav-text">TryLock with Timeout</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Or-Channel-模式"><span class="nav-number">1.2.</span> <span class="nav-text">Or Channel 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Goroutine方式"><span class="nav-number">1.2.1.</span> <span class="nav-text">Goroutine方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflect方式"><span class="nav-number">1.2.2.</span> <span class="nav-text">Reflect方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#递归方式"><span class="nav-number">1.2.3.</span> <span class="nav-text">递归方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Or-Done-Channel模式"><span class="nav-number">1.3.</span> <span class="nav-text">Or-Done-Channel模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扇入模式"><span class="nav-number">1.4.</span> <span class="nav-text">扇入模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Goroutine方式-1"><span class="nav-number">1.4.1.</span> <span class="nav-text">Goroutine方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflect"><span class="nav-number">1.4.2.</span> <span class="nav-text">Reflect</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#递归方式-1"><span class="nav-number">1.4.3.</span> <span class="nav-text">递归方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tee模式"><span class="nav-number">1.5.</span> <span class="nav-text">Tee模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Goroutine方式-2"><span class="nav-number">1.5.1.</span> <span class="nav-text">Goroutine方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflect方式-1"><span class="nav-number">1.5.2.</span> <span class="nav-text">Reflect方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布模式"><span class="nav-number">1.6.</span> <span class="nav-text">分布模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Goroutine方式-3"><span class="nav-number">1.6.1.</span> <span class="nav-text">Goroutine方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflect方式-2"><span class="nav-number">1.6.2.</span> <span class="nav-text">Reflect方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eapache"><span class="nav-number">1.7.</span> <span class="nav-text">eapache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Distribute"><span class="nav-number">1.7.1.</span> <span class="nav-text">Distribute</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tee"><span class="nav-number">1.7.2.</span> <span class="nav-text">Tee</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Multiplex"><span class="nav-number">1.7.3.</span> <span class="nav-text">Multiplex</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pipe"><span class="nav-number">1.7.4.</span> <span class="nav-text">Pipe</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#集合操作"><span class="nav-number">1.8.</span> <span class="nav-text">集合操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#skip"><span class="nav-number">1.8.1.</span> <span class="nav-text">skip</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#skipN"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">skipN</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skipFn"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">skipFn</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skipWhile"><span class="nav-number">1.8.1.3.</span> <span class="nav-text">skipWhile</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#take"><span class="nav-number">1.8.2.</span> <span class="nav-text">take</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#takeN"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">takeN</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#takeFn"><span class="nav-number">1.8.2.2.</span> <span class="nav-text">takeFn</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#takeWhile"><span class="nav-number">1.8.2.3.</span> <span class="nav-text">takeWhile</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flat"><span class="nav-number">1.8.3.</span> <span class="nav-text">flat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#map"><span class="nav-number">1.8.4.</span> <span class="nav-text">map</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#reduce"><span class="nav-number">1.8.5.</span> <span class="nav-text">reduce</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.9.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">1.10.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

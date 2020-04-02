@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,延时队列,消息队列,延时任务处理,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="有赞延迟队列设计 原文地址：https://tech.youzan.com/queuing_delay/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;延迟队列，顾名思义它是一种带有延迟功能的消息队列。 那么，是在什么场景下我才需要这样的队列呢？ 背景我们先看看以下业务场景：  当订单一直处于未支付状态时，如何及时的关闭订单，并退还库存？ 如何定期检查处于退款状态的订单">
+<meta name="keywords" content="架构,延时队列,消息队列,延时任务处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="有赞延迟队列设计">
+<meta property="og:url" content="http://blog.com/2019/04/30/有赞延迟队列设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="有赞延迟队列设计 原文地址：https://tech.youzan.com/queuing_delay/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;延迟队列，顾名思义它是一种带有延迟功能的消息队列。 那么，是在什么场景下我才需要这样的队列呢？ 背景我们先看看以下业务场景：  当订单一直处于未支付状态时，如何及时的关闭订单，并退还库存？ 如何定期检查处于退款状态的订单">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/04/30/有赞延迟队列设计/all-1.png">
+<meta property="og:image" content="http://blog.com/2019/04/30/有赞延迟队列设计/job.png">
+<meta property="og:image" content="http://blog.com/2019/04/30/有赞延迟队列设计/job-state.png">
+<meta property="og:image" content="http://blog.com/2019/04/30/有赞延迟队列设计/deploy.png">
+<meta property="og:updated_time" content="2019-04-30T12:23:02.172Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="有赞延迟队列设计">
+<meta name="twitter:description" content="有赞延迟队列设计 原文地址：https://tech.youzan.com/queuing_delay/  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;延迟队列，顾名思义它是一种带有延迟功能的消息队列。 那么，是在什么场景下我才需要这样的队列呢？ 背景我们先看看以下业务场景：  当订单一直处于未支付状态时，如何及时的关闭订单，并退还库存？ 如何定期检查处于退款状态的订单">
+<meta name="twitter:image" content="http://blog.com/2019/04/30/有赞延迟队列设计/all-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/30/有赞延迟队列设计/">
+
+
+
+
+
+  <title>有赞延迟队列设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/30/有赞延迟队列设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">有赞延迟队列设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-30T12:12:57+08:00">
+                2019-04-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/" itemprop="url" rel="index">
+                    <span itemprop="name">延时队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/延时任务处理/" itemprop="url" rel="index">
+                    <span itemprop="name">延时任务处理</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="有赞延迟队列设计"><a href="#有赞延迟队列设计" class="headerlink" title="有赞延迟队列设计"></a>有赞延迟队列设计</h1><blockquote>
+<p>原文地址：<a href="https://tech.youzan.com/queuing_delay/" target="_blank" rel="noopener">https://tech.youzan.com/queuing_delay/</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>延迟队列，顾名思义它是一种带有延迟功能的消息队列</strong>。 那么，是在什么场景下我才需要这样的队列呢？</p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们先看看以下业务场景：</p>
+<ul>
+<li>当订单一直处于未支付状态时，如何及时的关闭订单，并退还库存？</li>
+<li>如何定期检查处于退款状态的订单是否已经退款成功？</li>
+<li>新创建店铺，N天内没有上传商品，系统如何知道该信息，并发送激活短信？等等</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了解决以上问题，<strong>最简单直接的办法就是定时去扫表</strong>。<strong>每个业务都要维护一个自己的扫表逻辑</strong>。 <strong>当业务越来越多时，我们会发现扫表部分的逻辑会非常类似</strong>。我们可以考虑将这部分逻辑从具体的业务逻辑里面抽出来，变成一个公共的部分。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么开源界是否已有现成的方案呢？答案是肯定的。<code>Beanstalkd</code>（<a href="http://kr.github.io/beanstalkd/），" target="_blank" rel="noopener">http://kr.github.io/beanstalkd/），</a> 它基本上已经满足以上需求。但是，在删除消息的时候不是特别方便，需要更多的成本。而且，它是基于C语言开发的，当时我们团队主流是<code>PHP</code>和<code>Java</code>，没法做二次开发。于是我们借鉴了它的设计思路，用<code>Java</code>重新实现了一个延迟队列。</p>
+<h2 id="设计目标"><a href="#设计目标" class="headerlink" title="设计目标"></a>设计目标</h2><ul>
+<li>消息传输可靠性：消息进入到延迟队列后，保证至少被消费一次。</li>
+<li><code>Client</code>支持丰富：由于业务上的需求，至少支持<code>PHP</code>和<code>Python</code>。</li>
+<li>高可用性：至少得支持多实例部署。挂掉一个实例后，还有后备实例继续提供服务。</li>
+<li>实时性：允许存在一定的时间误差。</li>
+<li>支持消息删除：业务使用方，可以随时删除指定消息。</li>
+</ul>
+<h2 id="整体结构"><a href="#整体结构" class="headerlink" title="整体结构"></a>整体结构</h2><p>整个延迟队列由4个部分组成：</p>
+<ul>
+<li><code>Job Pool</code>用来存放所有Job的元信息。</li>
+<li><code>Delay Bucket</code>是一组以时间为维度的有序队列，用来存放所有需要延迟的／已经被<code>reserve</code>的<code>Job</code>（这里只存放<code>Job Id</code>）。</li>
+<li><code>Timer</code>负责实时扫描各个<code>Bucket</code>，并将delay时间大于等于当前时间的<code>Job</code>放入到对应的<code>Ready Queue</code>。</li>
+<li><code>Ready Queue</code>存放处于<code>Ready</code>状态的<code>Job</code>（这里只存放<code>Job Id</code>），以供消费程序消费。</li>
+</ul>
+<p>如下图表述：</p>
+<p><img src="//blog.com/2019/04/30/有赞延迟队列设计/all-1.png" alt="Delay Queue"></p>
+<h2 id="设计要点"><a href="#设计要点" class="headerlink" title="设计要点"></a>设计要点</h2><h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h3><ul>
+<li><code>Job</code>：需要异步处理的任务，是延迟队列里的基本单元。与具体的<code>Topic</code>关联在一起。</li>
+<li><code>Topic</code>：一组相同类型<code>Job</code>的集合（队列）。供消费者来订阅。</li>
+</ul>
+<h3 id="消息结构"><a href="#消息结构" class="headerlink" title="消息结构"></a>消息结构</h3><p>每个<code>Job</code>必须包含一下几个属性：</p>
+<ul>
+<li><code>Topic</code>：<code>Job</code>类型。可以理解成<strong>具体的业务名称</strong>。</li>
+<li><code>Id</code>：<code>Job</code>的唯一标识。用来检索和删除指定的Job信息。<strong>一般为业务上的主键</strong>，如：订单<code>id</code>、商品<code>id</code>……</li>
+<li><code>Delay</code>：<code>Job</code>需要<strong>延迟的时间</strong>。单位：秒。（服务端会将其转换为绝对时间）</li>
+<li><code>TTR（time-to-run)</code>：<code>Job</code><strong>执行超时时间</strong>。单位：秒。</li>
+<li><code>Body</code>：<code>Job</code>的内容，供消费者做具体的业务处理，以<code>json</code>格式存储。<strong>我认为<code>Body</code>并不是一个必须的内容，可以用来存储一些扩展信息</strong>，如：消息者<code>ip</code>、消费时间、异常信息、失败原因……</li>
+</ul>
+<p>具体结构如下图表示：</p>
+<p><img src="//blog.com/2019/04/30/有赞延迟队列设计/job.png" alt="Job Struct"></p>
+<p><code>TTR</code>的设计目的是为了保证消息传输的可靠性。</p>
+<h3 id="消息状态转换"><a href="#消息状态转换" class="headerlink" title="消息状态转换"></a>消息状态转换</h3><p>每个<code>Job</code>只会处于某一个状态下：</p>
+<ul>
+<li><code>ready</code>：可执行状态，等待消费。</li>
+<li><code>delay</code>：不可执行状态，等待时钟周期。</li>
+<li><code>reserved</code>：已被消费者读取，但还未得到消费者的响应（<code>delete</code>、<code>finish</code>）。</li>
+<li><code>deleted</code>：已被消费完成或者已被删除。</li>
+</ul>
+<p>下面是四个状态的转换示意图：</p>
+<p><img src="//blog.com/2019/04/30/有赞延迟队列设计/job-state.png" alt="Job State Flow"></p>
+<h3 id="消息存储"><a href="#消息存储" class="headerlink" title="消息存储"></a>消息存储</h3><p>在选择存储介质之前，先来确定下具体的数据结构：</p>
+<ul>
+<li><code>Job Poll</code>存放的<code>Job</code>元信息，只需要<code>K/V</code>形式的结构即可。<code>key</code>为<code>job id</code>，<code>value</code>为<code>job struct</code>。</li>
+<li><code>Delay Bucket</code>是一个有序队列。</li>
+<li><code>Ready Queue</code>是一个普通<code>list</code>或者队列都行。</li>
+</ul>
+<p>能够同时满足以上需求的，非<code>redis</code>莫属了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>bucket</code>的数据结构就是<code>redis</code>的<code>zset</code>，将其分为多个<code>bucket</code>是为了提高扫描速度，降低消息延迟</strong>。</p>
+<h3 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h3><p>为了满足多语言Client的支持，我们选择Http通信方式，通过文本协议（json）来实现与Client端的交互。 目前支持以下协议：</p>
+<ul>
+<li>添加：<code>{‘command’:’add’, ’topic’:’xxx’, ‘id’: ‘xxx’, ‘delay’: 30, ’TTR’: 60, ‘body’:‘xxx&#39;}</code></li>
+<li>获取：<code>{‘command’:’pop’, ’topic’:’xxx&#39;}</code></li>
+<li>完成：<code>{‘command’:’finish’, ‘id’:’xxx&#39;}</code></li>
+<li>删除：<code>{‘command’:’delete’, ‘id’:’xxx&#39;}</code></li>
+</ul>
+<p><code>body</code>也是一个<code>json</code>串。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Response</code>结构：<code>{’success’:true/false, ‘error’:’error reason’, ‘id’:’xxx’, ‘value’:’job body&#39;}</code></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;强调一下：<strong><code>job id</code>是由业务使用方决定的，一定要保证全局唯一性</strong>。<strong>这里建议采用<code>topic＋业务唯一id</code>的组合</strong>。</p>
+<h2 id="举例说明一个Job的生命周期"><a href="#举例说明一个Job的生命周期" class="headerlink" title="举例说明一个Job的生命周期"></a>举例说明一个Job的生命周期</h2><ul>
+<li><p>用户对某个商品下单，系统创建订单成功，同时往延迟队列里put一个job。</p>
+<blockquote>
+<p>job结构为：<code>{‘topic&#39;:&#39;order*close’, ‘id&#39;:&#39;order*close*order*NoXXX’, ‘delay’:1800 ,’TTR&#39;:60 , ‘body&#39;:’XXXXXXX’}</code></p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p>延迟队列收到该<code>job</code>后，先往<code>job pool</code>中存入<code>job</code>信息，然后根据<code>delay</code>计算出绝对执行时间，将<code>job id</code>放入某个<code>bucket</code>。</p>
+<blockquote>
+<p>计算绝对执行时间的原因：要根据这个时间来进行排序，从bucket中取出需要最先执行的任务即zset的score</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><code>timer</code>每时每刻都在轮询各个<code>bucket</code>，检查到上面的job的执行时间到了，取得<code>job id</code>从<code>job pool</code>中获取元信息。</li>
+</ul>
+<p>  如果这时该<code>job</code>处于<code>deleted</code>状态，则<code>pass</code>，继续做轮询；</p>
+<p>  如果<code>job</code>处于非<code>deleted</code>状态，首先再次确认元信息中<code>delay</code>是否大于等于当前时间</p>
+<p>  （1） 如果满足则根据<code>topic</code>将<code>job id</code>放入对应的<code>ready queue</code>，然后从<code>bucket</code>中移除；</p>
+<p>  （2） 如果不满足则重新计算<code>delay</code>时间，再次放入<code>bucket</code>，并将之前的<code>job id</code>从<code>bucket</code>中移除；</p>
+<ul>
+<li>消费端轮询对应的<code>topic</code>的<code>ready queue</code>（这里仍然要判断该<code>job</code>的合理性），获取<code>job</code>后做自己的业务逻辑。与此同时，服务端将已经被消费端获取的<code>job</code>按照其设定的<code>TTR</code>，重新计算执行时间，并将其放入<code>bucket</code>。</li>
+</ul>
+<ul>
+<li>消费端处理完业务后向服务端响应<code>finish</code>，服务端根据<code>job id</code>删除对应的元信息。</li>
+</ul>
+<h2 id="现有物理拓扑"><a href="#现有物理拓扑" class="headerlink" title="现有物理拓扑"></a>现有物理拓扑</h2><p><img src="//blog.com/2019/04/30/有赞延迟队列设计/deploy.png" alt="deploy"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前采用的是集中存储机制，<strong>在多实例部署时<code>Timer</code>程序可能会并发执行，导致<code>job</code>被重复放入<code>ready queue</code></strong>。<strong>为了解决这个问题，我们使用了<code>redis</code>的<code>setnx</code>命令实现了简单的分布式锁，以保证每个<code>bucket</code>每次只有一个<code>timer thread</code>来扫描</strong>。</p>
+<h3 id="设计不足的地方"><a href="#设计不足的地方" class="headerlink" title="设计不足的地方"></a>设计不足的地方</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. <strong><code>timer</code>是通过独立线程的无限循环来实现，在没有<code>ready job</code>的时候会对<code>CPU</code>造成一定的浪费</strong>。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. <strong>消费端在<code>reserve job</code>的时候，采用的是<code>http短轮询</code>的方式，且每次只能取的一个job。如果<code>ready job</code>较多的时候会加大<code>网络I/O</code>的消耗</strong>。</p>
+<blockquote>
+<p>这样的弊端是：在并发量足够大的情况下，<code>ready queue</code>的消费速度是个瓶颈</p>
+</blockquote>
+<blockquote>
+<p>解决方案：因为采用的是<code>redis</code>的<code>list</code>来作为<code>ready queue</code>的存储载体，不会存在重复消费，可以横向快照消费者进程，加快消费速度【<strong>这里的考验就是redis的并发能力，如果redis并发承载不了，这个方案不可行</strong>】</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. <strong>数据存储使用的<code>redis</code>，消息在持久化上受限于<code>redis</code>的特性</strong>。</p>
+<blockquote>
+<ol>
+<li><p>可以将<code>job</code>的元数据信息同时存在<code>MySQ</code>L，在<code>Redis</code>出问题的时候可以通过脚本快速重建队列数据</p>
+</li>
+<li><p>打开<code>redis</code>的持久化机制</p>
+</li>
+</ol>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. <strong><code>scale-out</code>的时候依赖第三方（<code>nginx</code>）</strong>。</p>
+<h2 id="未来架构方向"><a href="#未来架构方向" class="headerlink" title="未来架构方向"></a>未来架构方向</h2><ol>
+<li>基于<code>wait／notify</code>方式的<code>Timer</code>实现。</li>
+<li>提供<code>TCP长连</code>的<code>API</code>，实现<code>push</code>或者<code>long-polling</code>的消息<code>reserve</code>方法。</li>
+<li>拥有自己的存储方案（内嵌数据库、自定义数据结构写文件），确保消息的持久化。</li>
+<li>实现自己的<code>name-server</code>。</li>
+<li>考虑提供周期性任务的直接支持。</li>
+</ol>
+<h2 id="一个基于go的完整实现"><a href="#一个基于go的完整实现" class="headerlink" title="一个基于go的完整实现"></a>一个基于go的完整实现</h2><p><a href="https://github.com/ld140319/delay-queue" target="_blank" rel="noopener">delay-queue</a></p>
+<blockquote>
+<p>优化方案：</p>
+<ol>
+<li>新增一个缓存<code>topic</code>的信息的<code>set</code></li>
+</ol>
+<p>​                 <code>topic</code>包含了名称、消费者的<code>http</code>回调接口</p>
+<p>​                 <code>job</code>中存储<code>topic id</code></p>
+<ol start="2">
+<li>新增一个消费<code>ready queue</code>任务数据的消费者   请求<code>topic</code>对应消费者的<code>http</code>回调接口  对<code>job</code>进行处理<br>为什么不把topic的名称以及job的回调地址单独存放到job的两个属性中呢<br>原因一方面是节约存储空间，比较内存是有限的。另外一方面是为了统一管理，方便后续修改。</li>
+</ol>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/延时队列/" rel="tag"># 延时队列</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+            <a href="/tags/延时任务处理/" rel="tag"># 延时任务处理</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/30/模板方法模式/" rel="next" title="模板方法模式">
+                <i class="fa fa-chevron-left"></i> 模板方法模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/30/单例模式/" rel="prev" title="单例模式">
+                单例模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#有赞延迟队列设计"><span class="nav-number">1.</span> <span class="nav-text">有赞延迟队列设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计目标"><span class="nav-number">1.2.</span> <span class="nav-text">设计目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整体结构"><span class="nav-number">1.3.</span> <span class="nav-text">整体结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计要点"><span class="nav-number">1.4.</span> <span class="nav-text">设计要点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本概念"><span class="nav-number">1.4.1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息结构"><span class="nav-number">1.4.2.</span> <span class="nav-text">消息结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息状态转换"><span class="nav-number">1.4.3.</span> <span class="nav-text">消息状态转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息存储"><span class="nav-number">1.4.4.</span> <span class="nav-text">消息存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通信协议"><span class="nav-number">1.4.5.</span> <span class="nav-text">通信协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#举例说明一个Job的生命周期"><span class="nav-number">1.5.</span> <span class="nav-text">举例说明一个Job的生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#现有物理拓扑"><span class="nav-number">1.6.</span> <span class="nav-text">现有物理拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设计不足的地方"><span class="nav-number">1.6.1.</span> <span class="nav-text">设计不足的地方</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#未来架构方向"><span class="nav-number">1.7.</span> <span class="nav-text">未来架构方向</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个基于go的完整实现"><span class="nav-number">1.8.</span> <span class="nav-text">一个基于go的完整实现</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

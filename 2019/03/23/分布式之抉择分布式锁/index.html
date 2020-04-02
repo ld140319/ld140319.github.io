@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,Redis,分布式锁,zookeeper,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分布式之抉择分布式锁 原文地址：https://www.cnblogs.com/rjzheng/p/9310976.html  引言为什么写这篇文章？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;目前网上大部分的基于zookeeper，和redis的分布式锁的文章都不够全面。要么就是特意避开集群的情况，要么就是考虑不全，读者看着还是一脸迷茫。坦白说，这种老题材，很难写出新创意，博主内心战战兢兢，">
+<meta name="keywords" content="架构,Redis,分布式锁,zookeeper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式之抉择分布式锁">
+<meta property="og:url" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="分布式之抉择分布式锁 原文地址：https://www.cnblogs.com/rjzheng/p/9310976.html  引言为什么写这篇文章？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;目前网上大部分的基于zookeeper，和redis的分布式锁的文章都不够全面。要么就是特意避开集群的情况，要么就是考虑不全，读者看着还是一脸迷茫。坦白说，这种老题材，很难写出新创意，博主内心战战兢兢，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/1.png">
+<meta property="og:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/2.png">
+<meta property="og:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/3.png">
+<meta property="og:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/4.png">
+<meta property="og:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/5.png">
+<meta property="og:updated_time" content="2019-03-23T08:04:21.144Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式之抉择分布式锁">
+<meta name="twitter:description" content="分布式之抉择分布式锁 原文地址：https://www.cnblogs.com/rjzheng/p/9310976.html  引言为什么写这篇文章？&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;目前网上大部分的基于zookeeper，和redis的分布式锁的文章都不够全面。要么就是特意避开集群的情况，要么就是考虑不全，读者看着还是一脸迷茫。坦白说，这种老题材，很难写出新创意，博主内心战战兢兢，">
+<meta name="twitter:image" content="http://blog.com/2019/03/23/分布式之抉择分布式锁/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/23/分布式之抉择分布式锁/">
+
+
+
+
+
+  <title>分布式之抉择分布式锁 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/23/分布式之抉择分布式锁/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">分布式之抉择分布式锁</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-23T12:12:57+08:00">
+                2019-03-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式锁/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式锁</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式锁/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/分布式锁/Redis/zookeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">zookeeper</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="分布式之抉择分布式锁"><a href="#分布式之抉择分布式锁" class="headerlink" title="分布式之抉择分布式锁"></a>分布式之抉择分布式锁</h1><blockquote>
+<p>原文地址：<a href="https://www.cnblogs.com/rjzheng/p/9310976.html" target="_blank" rel="noopener">https://www.cnblogs.com/rjzheng/p/9310976.html</a></p>
+</blockquote>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><h3 id="为什么写这篇文章？"><a href="#为什么写这篇文章？" class="headerlink" title="为什么写这篇文章？"></a>为什么写这篇文章？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;目前网上大部分的基于zookeeper，和redis的分布式锁的文章都不够全面。要么就是特意避开集群的情况，要么就是考虑不全，读者看着还是一脸迷茫。坦白说，这种老题材，很难写出新创意，博主内心战战兢兢，如履薄冰，文中有什么不严谨之处，欢迎批评。</p>
+<p>博主的这篇文章，<strong>不上代码，只讲分析</strong>。</p>
+<p>(1)在redis方面，有开源redisson的jar包供你使用。</p>
+<p>(2)在zookeeper方面，有开源的curator的jar包供你使用</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;因为已经有开源jar包供你使用，没有必要再去自己封装一个，大家出门百度一个api即可，不需要再罗列一堆实现代码。</p>
+<h3 id="文章结构"><a href="#文章结构" class="headerlink" title="文章结构"></a>文章结构</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;本文借鉴了两篇国外大神的文章，redis的作者antirez的<a href="http://antirez.com/news/101" target="_blank" rel="noopener">《Is Redlock safe?》</a>以及分布式系统专家Martin的<a href="https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html" target="_blank" rel="noopener">《How to do distributed locking》</a>，再加上自己微薄的见解从而形成这篇文章，文章的目录结构如下:</p>
+<p>(1)为什么使用分布式锁<br>(2)单机情形比较<br>(3)集群情形比较<br>(4)锁的其他特性比较</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>zookeeper可靠性比redis强太多，只是效率低了点，如果并发量不是特别大，追求可靠性，首选zookeeper。为了效率，则首选redis实现</strong>。</p>
+<h3 id="为什么使用分布式锁？"><a href="#为什么使用分布式锁？" class="headerlink" title="为什么使用分布式锁？"></a>为什么使用分布式锁？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;使用分布式锁的目的，无外乎就是<strong>保证同一时间只有一个客户端可以对共享资源进行操作</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;根据锁的用途还可以细分为以下两类：</p>
+<p><strong>(1)允许多个客户端操作共享资源</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这种情况下，对共享资源的操作<strong>一定是</strong>幂等性操作，无论你操作多少次都不会出现不同结果。在这里使用锁，无外乎就是为了避免重复操作共享资源从而提高效率。</p>
+<p><strong>(2)只允许一个客户端操作共享资源</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这种情况下，对共享资源的操作<strong>一般是</strong>非幂等性操作。在这种情况下，如果出现多个客户端操作共享资源，就可能意味着数据不一致，数据丢失。</p>
+<h3 id="第一回合，单机情形比较"><a href="#第一回合，单机情形比较" class="headerlink" title="第一回合，单机情形比较"></a>第一回合，单机情形比较</h3><p><strong>(1) redis</strong></p>
+<p>先说加锁，根据redis官网文档的描述，使用下面的命令加锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET resource_name my_random_value NX PX 30000</span><br></pre></td></tr></table></figure>
+<ul>
+<li>my_random_value是由客户端生成的一个随机字符串，相当于是客户端持有锁的标志</li>
+<li>NX表示只有当resource_name对应的key值不存在的时候才能SET成功，相当于只有第一个请求的客户端才能获得锁</li>
+<li>PX 30000表示这个锁有一个30秒的自动过期时间。</li>
+</ul>
+<p>至于解锁，为了防止客户端1获得的锁，被客户端2给释放,采用下面的Lua脚本来释放锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then</span><br><span class="line">    return redis.call(&quot;del&quot;,KEYS[1])</span><br><span class="line">else</span><br><span class="line">    return 0</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在执行这段LUA脚本的时候，KEYS[1]的值为resource_name，ARGV[1]的值为my_random_value。原理就是先获取锁对应的value值，保证和客户端穿进去的my_random_value值相等，这样就能避免自己的锁被其他人释放。另外，采取Lua脚本操作保证了原子性.如果不是原子性操作，则有了下述情况出现<br><img src="//blog.com/2019/03/23/分布式之抉择分布式锁/1.png" alt="image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>分析:</strong>这套redis加解锁机制看起来很完美，然而有一个无法避免的硬伤，就是<strong>过期时间如何设置</strong>。如果客户端在操作共享资源的过程中，因为长期阻塞的原因，导致锁过期，那么接下来访问共享资源就不安全。<br>可是，有的人会说</p>
+<blockquote>
+<p><strong>那可以在客户端操作完共享资源后，判断锁是否依然归该客户端所有，如果依然归客户端所有，则提交资源，释放锁。若不归客户端所有，则不提交资源啊</strong>.</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;OK,这么做，<strong>只能降低多个客户端操作共享资源发生的概率，并不能解决问题</strong>。</p>
+<p>为了方便读者理解，博主举一个业务场景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>业务场景:</strong>我们有一个内容修改页面，为了避免出现多个客户端修改同一个页面的请求，采用分布式锁。只有获得锁的客户端，才能修改页面。那么正常修改一次页面的流程如下图所示<br><img src="//blog.com/2019/03/23/分布式之抉择分布式锁/2.png" alt="image"><br>&nbsp;&nbsp;&nbsp;&nbsp;注意看，上面的步骤(3)–&gt;步骤(4.1)并不是原子性操作。也就说，你可能出现在步骤(3)的时候返回的是有效这个标志位，但是<strong>在传输过程中，因为延时等原因，在步骤(4.1)的时候，锁已经超时失效了。那么，这个时候锁就会被另一个客户端锁获得</strong>。就<strong>出现了两个客户端共同操作共享资源的情况</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;大家可以思考一下，<strong>无论你如何采用任何补偿手段，你都只能降低多个客户端操作共享资源的概率，而无法避免</strong>。例如，你在步骤(4.1)的时候也可能发生长时间GC停顿，然后在停顿的时候，锁超时失效，从而锁也有可能被其他客户端获得。</p>
+<p><strong>(2) zookeeper</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;先简单说下原理，根据网上文档描述，<strong>zookeeper的分布式锁原理是利用了临时节点(EPHEMERAL)的特性</strong>。</p>
+<ul>
+<li><p>当znode被声明为EPHEMERAL的后，<strong>如果创建znode的那个客户端崩溃了，那么相应的znode会被自动删除</strong>。<strong>这样就避免了设置过期时间的问题</strong>。</p>
+</li>
+<li><p>客户端尝试创建一个znode节点，比如/lock。那么<strong>第一个客户端就创建成功了，相当于拿到了锁</strong>；而其它的客户端会创建失败（znode已存在），获取锁失败。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>分析:</strong>这种情况下，虽然避免了设置了有效时间问题，然而还是有可能出现多个客户端操作共享资源的。<br>大家应该知道，<strong>zookeeper如果长时间检测不到客户端的心跳的时候(Session时间)，就会认为Session过期了，那么这个Session所创建的所有的ephemeral类型的znode节点都会被自动删除</strong>。</p>
+<p>这种时候会有如下情形出现<br><img src="//blog.com/2019/03/23/分布式之抉择分布式锁/3.png" alt="image"><br>&nbsp;&nbsp;&nbsp;&nbsp;如上图所示，客户端1<strong>发生GC停顿的时候，zookeeper检测不到心跳，也是有可能出现多个客户端同时操作共享资源的情形</strong>。当然，你可以说，我们可以通过JVM调优，避免GC停顿出现。但是注意了，我们所做的一切，只能尽可能避免多个客户端操作共享资源，无法完全消除。</p>
+<h3 id="第二回合，集群情形比较"><a href="#第二回合，集群情形比较" class="headerlink" title="第二回合，集群情形比较"></a>第二回合，集群情形比较</h3><p><strong>(1) redis</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了redis的高可用，一般都会给redis的节点挂一个slave,然后采用哨兵模式进行主备切换。但由于Redis的主从复制（replication）是异步的，这可能会出现在数据同步过程中，<strong>master宕机，slave来不及同步数据就被选为master，从而数据丢失</strong>。具体流程如下所示:</p>
+<ul>
+<li><p>(1) 客户端1从Master获取了锁。</p>
+</li>
+<li><p>(2) Master宕机了，存储锁的key还没有来得及同步到Slave上。</p>
+</li>
+<li><p>(3) Slave升级为Master。</p>
+</li>
+<li><p>(4) 客户端2从新的Master获取到了对应同一个资源的锁。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了应对这个情形， redis的作者antirez提出了<strong>RedLock算法</strong>，步骤如下(该流程出自官方文档)，假设我们有N个master节点(官方文档里将N设置成5，其实大等于3就行)</p>
+<ul>
+<li>(1)获取当前时间（单位是毫秒）。</li>
+<li>(2)轮流用相同的key和随机值在N个节点上请求锁，在这一步里，客户端在每个master上请求锁时，会有一个和总的锁释放时间相比小的多的超时时间。比如如果锁自动释放时间是10秒钟，那每个节点锁请求的超时时间可能是5-50毫秒的范围，这个可以防止一个客户端在某个宕掉的master节点上阻塞过长时间，如果一个master节点不可用了，我们应该尽快尝试下一个master节点。</li>
+<li>(3)客户端计算第二步中获取锁所花的时间，只有当客户端在大多数master节点上成功获取了锁（在这里是3个），而且总共消耗的时间不超过锁释放时间，这个锁就认为是获取成功了。</li>
+<li>(4)如果锁获取成功了，那现在锁自动释放时间就是最初的锁释放时间减去之前获取锁所消耗的时间。</li>
+<li>(5)如果锁获取失败了，不管是因为获取成功的锁不超过一半（N/2+1)还是因为总消耗时间超过了锁释放时间，客户端都会到每个master节点上释放锁，即便是那些他认为没有获取成功的锁。</li>
+</ul>
+<p><strong>分析:</strong></p>
+<p><strong>节点崩溃重启，会出现多个客户端持有锁</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;假设一共有5个Redis节点：A, B, C, D, E。设想发生了如下的事件序列：</p>
+<p>(1) 客户端1成功锁住了A, B, C，获取锁成功（但D和E没有锁住）。</p>
+<p>(2) 节点C崩溃重启了，但客户端1在C上加的锁没有持久化下来，丢失了。</p>
+<p>(3) 节点C重启后，客户端2锁住了C, D, E，获取锁成功。</p>
+<p>这样，客户端1和客户端2同时获得了锁（针对同一资源）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了应对节点重启引发的锁失效问题，redis的作者antirez提出了<strong>延迟重启</strong>的概念，即一个节点崩溃后，先不立即重启它，而是等待一段时间再重启，<strong>等待的时间大于锁的有效时间</strong>。采用这种方式，这个节点在重启前所参与的锁都会过期，它在重启后就不会对现有的锁造成影响。这其实也是通过人为补偿措施，降低不一致发生的概率。</p>
+<p><strong>时间跳跃问题</strong></p>
+<p>(1) 假设一共有5个Redis节点：A, B, C, D, E。设想发生了如下的事件序列：</p>
+<p>(2) 客户端1从Redis节点A, B, C成功获取了锁（多数节点）。由于网络问题，与D和E通信失败。</p>
+<p>(3) <strong>节点C上的时钟发生了向前跳跃，导致它上面维护的锁快速过期</strong>。</p>
+<p>客户端2从Redis节点C, D, E成功获取了同一个资源的锁（多数节点）。<br>客户端1和客户端2现在都认为自己持有了锁。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了应对始终跳跃引发的锁失效问题，redis的作者antirez提出了应该<strong>禁止人为修改系统时间</strong>，使用一个不会进行“跳跃”式调整系统时钟的ntpd程序。这也是通过人为补偿措施，降低不一致发生的概率。</p>
+<p><strong>超时导致锁失效问题</strong><br>RedLock算法并没有解决，操作共享资源超时，导致锁失效的问题。回忆一下RedLock算法的过程，如下图所示<br><img src="//blog.com/2019/03/23/分布式之抉择分布式锁/4.png" alt="image"><br>&nbsp;&nbsp;&nbsp;&nbsp;如图所示，我们将其分为上下两个部分。</p>
+<ol>
+<li>对于上半部分框图里的步骤来说，无论因为什么原因发生了延迟，RedLock算法都能处理，客户端不会拿到一个它认为有效，实际却失效的锁。</li>
+<li><strong>对于下半部分框图里的步骤来说，如果发生了延迟导致锁失效，都有可能使得客户端2拿到锁。因此，RedLock算法并没有解决该问题</strong>。</li>
+</ol>
+<p><strong>(2)zookeeper</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;zookeeper在集群部署中，zookeeper节点数量一般是奇数，且一定大等于3。我们先回忆一下，zookeeper的写数据的原理</p>
+<p><img src="//blog.com/2019/03/23/分布式之抉择分布式锁/5.png" alt="img"></p>
+<p>那么写数据流程步骤如下：</p>
+<p>1.在Client向Follwer发出一个写的请求</p>
+<p>2.Follwer把请求发送给Leader</p>
+<p>3.Leader接收到以后开始发起投票并通知Follwer进行投票</p>
+<p>4.Follwer把投票结果发送给Leader，<strong>只要半数以上返回了ACK信息，就认为通过</strong></p>
+<p>5.Leader将结果汇总后如果需要写入，则开始写入同时把写入操作通知给Leader，然后commit;</p>
+<p>6.Follwer把请求结果返回给Client</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;zookeeper采取的是<strong>全局串行化操作</strong></p>
+<p><strong>集群同步</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;client给Follwer写数据，可是Follwer却宕机了，会出现数据不一致问题么？不可能，这种时候，client建立节点失败，根本获取不到锁。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;client给Follwer写数据，Follwer将请求转发给Leader,Leader宕机了，会出现不一致的问题么？不可能，这种时候，zookeeper会选取新的leader,继续上面的提到的写流程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;总之，<strong>采用zookeeper作为分布式锁，你要么就获取不到锁，一旦获取到了，必定节点的数据是一致的，不会出现redis那种异步同步导致数据丢失的问题</strong>。</p>
+<p><strong>时间跳跃问题</strong></p>
+<p>不依赖全局时间，怎么会存在这种问题</p>
+<p><strong>超时导致锁失效问题</strong><br>不依赖有效时间，怎么会存在这种问题</p>
+<h3 id="第三回合，锁的其他特性比较"><a href="#第三回合，锁的其他特性比较" class="headerlink" title="第三回合，锁的其他特性比较"></a>第三回合，锁的其他特性比较</h3><p>(1) <strong>redis的读写性能比zookeeper强太多</strong>，如果在高并发场景中，使用zookeeper作为分布式锁，那么会出现获取锁失败的情况，存在性能瓶颈。</p>
+<p>(2) <strong>zookeeper可以实现读写锁</strong>，redis不行。</p>
+<p>(3) zookeeper的<strong>watch机制</strong>,客户端试图创建znode的时候，发现它已经存在了，这时候创建失败,那么进入一种等待状态，当znode节点被删除的时候，zookeeper通过watch机制通知它，这样它就可以继续完成创建操作（获取锁）。这<strong>可以让分布式锁在客户端用起来就像一个本地的锁一样：加锁失败就阻塞住，直到获取到锁为止</strong>。这套机制，redis无法实现</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/分布式锁/" rel="tag"># 分布式锁</a>
+          
+            <a href="/tags/zookeeper/" rel="tag"># zookeeper</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/23/Innodb中mysql如何快速删除2T的大表/" rel="next" title="Innodb中mysql如何快速删除2T的大表">
+                <i class="fa fa-chevron-left"></i> Innodb中mysql如何快速删除2T的大表
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/23/关于Redis作为分布式锁的可靠性分析/" rel="prev" title="关于Redis作为分布式锁的可靠性分析">
+                关于Redis作为分布式锁的可靠性分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#分布式之抉择分布式锁"><span class="nav-number">1.</span> <span class="nav-text">分布式之抉择分布式锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#引言"><span class="nav-number">1.1.</span> <span class="nav-text">引言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么写这篇文章？"><span class="nav-number">1.1.1.</span> <span class="nav-text">为什么写这篇文章？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章结构"><span class="nav-number">1.1.2.</span> <span class="nav-text">文章结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正文"><span class="nav-number">1.2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么使用分布式锁？"><span class="nav-number">1.2.1.</span> <span class="nav-text">为什么使用分布式锁？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第一回合，单机情形比较"><span class="nav-number">1.2.2.</span> <span class="nav-text">第一回合，单机情形比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二回合，集群情形比较"><span class="nav-number">1.2.3.</span> <span class="nav-text">第二回合，集群情形比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三回合，锁的其他特性比较"><span class="nav-number">1.2.4.</span> <span class="nav-text">第三回合，锁的其他特性比较</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

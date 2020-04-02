@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,MySql字符集,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析 原文地址：http://mysql.taobao.org/monthly/2018/01/07/?from=singlemessage  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;MySQL支持多种字符集（character set）提供用户存储数据，同时允许用不同排序规则（collation）做比较。">
+<meta name="keywords" content="数据库,MySql,MySql字符集">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析">
+<meta property="og:url" content="http://blog.com/2019/04/20/MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析 原文地址：http://mysql.taobao.org/monthly/2018/01/07/?from=singlemessage  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;MySQL支持多种字符集（character set）提供用户存储数据，同时允许用不同排序规则（collation）做比较。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-04-19T17:10:52.247Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析">
+<meta name="twitter:description" content="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析 原文地址：http://mysql.taobao.org/monthly/2018/01/07/?from=singlemessage  &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;MySQL支持多种字符集（character set）提供用户存储数据，同时允许用不同排序规则（collation）做比较。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/04/20/MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析/">
+
+
+
+
+
+  <title>MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/04/20/MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-20T12:12:57+08:00">
+                2019-04-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/MySql字符集/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql字符集</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析"><a href="#MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析" class="headerlink" title="MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析"></a>MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析</h1><blockquote>
+<p>原文地址：<a href="http://mysql.taobao.org/monthly/2018/01/07/?from=singlemessage" target="_blank" rel="noopener">http://mysql.taobao.org/monthly/2018/01/07/?from=singlemessage</a></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MySQL支持多种字符集（character set）提供用户存储数据，同时允许用不同排序规则（collation）做比较。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文基于MySQL5.7介绍了字符集相关变量的使用，通过例子描述了这些变量具体意义。分析了MySQL binlog中字符集相关处理的缺陷，这些缺陷会导致复制中断或者主备不一致。最后给出了修复上述缺陷的建议。</p>
+<h2 id="MySQL字符集相关基础知识介绍"><a href="#MySQL字符集相关基础知识介绍" class="headerlink" title="MySQL字符集相关基础知识介绍"></a>MySQL字符集相关基础知识介绍</h2><h3 id="character-set-system"><a href="#character-set-system" class="headerlink" title="character_set_system"></a>character_set_system</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>character_set_system</code>为元数据的字符集，即所有的元数据都使用同一个字符集</strong>。试想如果元数据采用不同字符集，INFORMATION_SCHEMA中的相关信息在不同行之间就很难展示。同时该字符集要能够支持多种语言，方便不同语言人群使用自己的语言命名database、table、column。MySQL选择UTF-8作为元数据编码，用源码固定。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">sql/mysqld.cc</span><br><span class="line">int mysqld_main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  system_charset_info= &amp;my_charset_utf8_general_ci;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&gt; select @@global.character_set_system;</span><br><span class="line">+-------------------------------+</span><br><span class="line">| @@global.character_set_system |</span><br><span class="line">+-------------------------------+</span><br><span class="line">| utf8                          |</span><br><span class="line">+-------------------------------+</span><br></pre></td></tr></table></figure>
+<p>MySQL会将identifier转换为system_charset_info(utf8)。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">sql/sql_lex.cc</span><br><span class="line">static int lex_one_token(YYSTYPE *yylval, THD *thd)</span><br><span class="line">&#123;</span><br><span class="line"> case MY_LEX_IDENT:</span><br><span class="line">   ...</span><br><span class="line"> lip-&gt;body_utf8_append_literal</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void Lex_input_stream::body_utf8_append_literal(THD *thd,</span><br><span class="line">                                                const LEX_STRING *txt,</span><br><span class="line">                                                const CHARSET_INFO *txt_cs,</span><br><span class="line">                                                const char *end_ptr)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  if (!my_charset_same(txt_cs, &amp;my_charset_utf8_general_ci))</span><br><span class="line">  &#123;</span><br><span class="line">    thd-&gt;convert_string(&amp;utf_txt,</span><br><span class="line">                       &amp;my_charset_utf8_general_ci,</span><br><span class="line">                       txt-&gt;str, txt-&gt;length,</span><br><span class="line">                       txt_cs);</span><br><span class="line">  &#125;</span><br><span class="line">  else</span><br><span class="line">  &#123;</span><br><span class="line">    utf_txt.str= txt-&gt;str;</span><br><span class="line">    utf_txt.length= txt-&gt;length;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">sql/sql_yacc.yy</span><br><span class="line"></span><br><span class="line">IDENT_sys:</span><br><span class="line">IDENT &#123; $$= $1; &#125;</span><br><span class="line">| IDENT_QUOTED</span><br><span class="line">&#123;</span><br><span class="line">  THD *thd= YYTHD;</span><br><span class="line"></span><br><span class="line">  if (thd-&gt;charset_is_system_charset)</span><br><span class="line">  &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">  else</span><br><span class="line">  &#123;</span><br><span class="line">    if (thd-&gt;convert_string(&amp;$$, system_charset_info,</span><br><span class="line">                        $1.str, $1.length, thd-&gt;charset()))</span><br><span class="line">      MYSQL_YYABORT;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<h3 id="character-set-server-collation-server"><a href="#character-set-server-collation-server" class="headerlink" title="character_set_server/collation_server"></a>character_set_server/collation_server</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当create database没有指定charset/collation就会用character_set_server/collation_server，这两个变量可以动态设置，有session/global级别</strong>。</p>
+<blockquote>
+<p>mysql&gt; select @@global.character_set_server;<br>+—————————–+<br>| @@global.character_set_server |<br>+—————————–+<br>| utf8                        |<br>+—————————–+<br>1 row in set (0.04 sec)</p>
+<p>mysql&gt; select @@global.collation_server;<br>+————————+<br>| @@global.collation_server |<br>+————————+<br>| utf8_general_ci          |<br>+————————+<br>1 row in set (0.04 sec)</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在源码中character_set_server/collation_server实际对应一个变量，因为一个collation对应着一个charset</strong>，所以源码中只记录CHARSET_INFO结构的collation_server即可。当修改character_set_server，会选择对应charset的默认collation。对于其他同时有charset和collation的变量，源码记录也都是记录collation。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static Sys_var_struct Sys_character_set_server(</span><br><span class="line">       &quot;character_set_server&quot;, &quot;The default character set&quot;,</span><br><span class="line">       SESSION_VAR(collation_server), NO_CMD_LINE,</span><br><span class="line">       offsetof(CHARSET_INFO, csname), DEFAULT(&amp;default_charset_info),</span><br><span class="line">       NO_MUTEX_GUARD, IN_BINLOG, ON_CHECK(check_charset_not_null));</span><br><span class="line"></span><br><span class="line">static Sys_var_struct Sys_collation_server(</span><br><span class="line">       &quot;collation_server&quot;, &quot;The server default collation&quot;,</span><br><span class="line">       SESSION_VAR(collation_server), NO_CMD_LINE,</span><br><span class="line">       offsetof(CHARSET_INFO, name), DEFAULT(&amp;default_charset_info),</span><br><span class="line">       NO_MUTEX_GUARD, IN_BINLOG, ON_CHECK(check_collation_not_null));</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过下面case可以看到通过设置session中不同的character_set_server使创建database的默认charset和collation不同。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">&gt; set character_set_server=&apos;utf8&apos;;</span><br><span class="line"></span><br><span class="line">&gt; create database cs_test1;</span><br><span class="line"></span><br><span class="line">&gt; select * from information_schema.SCHEMATA where SCHEMA_NAME=&apos;cs_test1&apos;;</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br><span class="line">| CATALOG_NAME | SCHEMA_NAME | DEFAULT_CHARACTER_SET_NAME | DEFAULT_COLLATION_NAME | SQL_PATH |</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br><span class="line">| def          | cs_test1    | utf8                       | utf8_general_ci        | NULL     |</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br><span class="line"></span><br><span class="line">&gt; set character_set_server=&apos;latin1&apos;;</span><br><span class="line"></span><br><span class="line">&gt; create database cs_test2;</span><br><span class="line"></span><br><span class="line">&gt; select * from information_schema.SCHEMATA where SCHEMA_NAME=&apos;cs_test2&apos;;</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br><span class="line">| CATALOG_NAME | SCHEMA_NAME | DEFAULT_CHARACTER_SET_NAME | DEFAULT_COLLATION_NAME | SQL_PATH |</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br><span class="line">| def          | cs_test2    | latin1                     | latin1_swedish_ci      | NULL     |</span><br><span class="line">+--------------+-------------+----------------------------+------------------------+----------+</span><br></pre></td></tr></table></figure>
+<h3 id="character-set-database-collation-database"><a href="#character-set-database-collation-database" class="headerlink" title="character_set_database/collation_database"></a>character_set_database/collation_database</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>该变量值session级别表示当前database的charset/collation</strong>，在后面的源码版本中该变量可能修正为只读，不建议修改该值。其global级别变量后面也会移除。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&gt; use cs_test1;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> @@character_set_database;</span><br><span class="line">+--------------------------+</span><br><span class="line">| @@character_set_database |</span><br><span class="line">+--------------------------+</span><br><span class="line">| utf8                     |</span><br><span class="line">+--------------------------+</span><br><span class="line"></span><br><span class="line">&gt; use cs_test2;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> @@character_set_database;</span><br><span class="line">+--------------------------+</span><br><span class="line">| @@character_set_database |</span><br><span class="line">+--------------------------+</span><br><span class="line">| latin1                   |</span><br><span class="line">+--------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="character-set-client"><a href="#character-set-client" class="headerlink" title="character_set_client"></a>character_set_client</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>客户端发送到server的字符串使用的字符集，server会按照该变量值来解析客户端发来的语句。如果指定值和语句实际编码字符集不符就会解析出错，报语法错误或者得到非预期结果</strong>，例如下面的两个case。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">case1:实际使用utf8编码且包含中文字符，但设置character_set_client为latin1。</span><br><span class="line"></span><br><span class="line">&gt; set character_set_client=<span class="string">'latin1'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table 字符集(c1 varchar(<span class="number">10</span>));</span><br><span class="line">ERROR <span class="number">1064</span> (<span class="number">42000</span>): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version <span class="keyword">for</span> the right syntax to use near <span class="string">'­—ç¬¦é›†(c1 varchar(10))'</span> at line <span class="number">1</span></span><br><span class="line"></span><br><span class="line">&gt; set character_set_client=<span class="string">'utf8'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table 字符集(c1 varchar(<span class="number">10</span>));</span><br><span class="line">Query OK, <span class="number">0</span> rows affected (<span class="number">0.14</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">case2:实际使用utf8编码且包含中文字符，但设置character_set_client为gbk。</span><br><span class="line"></span><br><span class="line">&gt; create database cs_test;</span><br><span class="line"></span><br><span class="line">&gt; use cs_test;</span><br><span class="line"></span><br><span class="line">&gt; set character_set_client=<span class="string">'gbk'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table 收费(c1 varchar(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">&gt; show tables;</span><br><span class="line">+-------------------+</span><br><span class="line">| Tables_in_cs_test |</span><br><span class="line">+-------------------+</span><br><span class="line">| 鏀惰垂            |</span><br><span class="line">+-------------------+</span><br><span class="line"></span><br><span class="line">&gt; set character_set_client=<span class="string">'utf8'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table 收费(c1 varchar(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">&gt; show tables;</span><br><span class="line">+-------------------+</span><br><span class="line">| Tables_in_cs_test |</span><br><span class="line">+-------------------+</span><br><span class="line">| 收费              |</span><br><span class="line">| 鏀惰垂            |</span><br><span class="line">+-------------------+</span><br><span class="line"><span class="number">2</span> rows in set (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h3 id="character-set-connection-collation-connection"><a href="#character-set-connection-collation-connection" class="headerlink" title="character_set_connection/collation_connection"></a>character_set_connection/collation_connection</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>没有指定字符集的常量字符串使用时的字符集</strong>，例如下面两个case。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>case1中当设置为utf8_general_ci比较时候忽略大小写，导致’a’=’A’结果为1，如果设置为utf8_bin不忽略大小写，’a’ = ‘A’的结果就是0</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case2中当设置character_set_connection为’latin1’的时候，’你好’ = ‘我好’返回结果为1，如果设置为’utf8’，返回结果就是0。设置为’latin1’返回结果为1的原因是utf8编码的中文字符是无法转换为latin1字符的。这里MySQL就把’你好’和’我好’都转换成了’??’。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case3中character_set_connection的不同导致create table语句中column的实际default value不同。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">case1:设置collation_connection是否忽略大小写导致结果不一致。</span><br><span class="line"></span><br><span class="line">&gt; set collation_connection=utf8_general_ci;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'a'</span> = <span class="string">'A'</span>;</span><br><span class="line">+-----------+</span><br><span class="line">| <span class="string">'a'</span> = <span class="string">'A'</span> |</span><br><span class="line">+-----------+</span><br><span class="line">|         <span class="number">1</span> |</span><br><span class="line">+-----------+</span><br><span class="line"></span><br><span class="line">&gt; set collation_connection=utf8_bin;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'a'</span> = <span class="string">'A'</span>;</span><br><span class="line">+-----------+</span><br><span class="line">| <span class="string">'a'</span> = <span class="string">'A'</span> |</span><br><span class="line">+-----------+</span><br><span class="line">|         <span class="number">0</span> |</span><br><span class="line">+-----------+</span><br><span class="line"></span><br><span class="line">case2:设置character_set_connection不同导致结果不一致。</span><br><span class="line"></span><br><span class="line">&gt; set character_set_connection=<span class="string">'latin1'</span>;</span><br><span class="line">Query OK, <span class="number">0</span> rows affected (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'你好'</span> = <span class="string">'我好'</span>;</span><br><span class="line">+---------------------+</span><br><span class="line">| <span class="string">'你好'</span> = <span class="string">'我好'</span>     |</span><br><span class="line">+---------------------+</span><br><span class="line">|                   <span class="number">1</span> |</span><br><span class="line">+---------------------+</span><br><span class="line"><span class="number">1</span> row in set, <span class="number">2</span> warnings (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">&gt; set character_set_connection=<span class="string">'utf8'</span>;</span><br><span class="line">Query OK, <span class="number">0</span> rows affected (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'你好'</span> = <span class="string">'我好'</span>;</span><br><span class="line">+---------------------+</span><br><span class="line">| <span class="string">'你好'</span> = <span class="string">'我好'</span>     |</span><br><span class="line">+---------------------+</span><br><span class="line">|                   <span class="number">0</span> |</span><br><span class="line">+---------------------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; set character_set_connection=<span class="string">'latin1'</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'你好'</span>;</span><br><span class="line">+----+</span><br><span class="line">| ?? |</span><br><span class="line">+----+</span><br><span class="line">| ?? |</span><br><span class="line">+----+</span><br><span class="line"></span><br><span class="line">case3:设置character_set_connection导致实际<span class="keyword">default</span> value不同。</span><br><span class="line"></span><br><span class="line">&gt; set character_set_connection=<span class="string">'utf8'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table cs_t(c1 varchar(<span class="number">10</span>) <span class="keyword">default</span> <span class="string">'你好'</span>)charset=utf8;</span><br><span class="line"></span><br><span class="line">&gt; insert into cs_t values();</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> * from cs_t;</span><br><span class="line">+--------+</span><br><span class="line">| c1     |</span><br><span class="line">+--------+</span><br><span class="line">| 你好   |</span><br><span class="line">+--------+</span><br><span class="line"></span><br><span class="line">&gt; set character_set_connection=<span class="string">'latin1'</span>;</span><br><span class="line"></span><br><span class="line">&gt; create table cs_t1(c1 varchar(<span class="number">10</span>) <span class="keyword">default</span> <span class="string">'你好'</span>)charset=utf8;</span><br><span class="line"></span><br><span class="line">&gt; insert into cs_t1 values();</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> * from cs_t1;</span><br><span class="line">+------+</span><br><span class="line">| c1   |</span><br><span class="line">+------+</span><br><span class="line">| ??   |</span><br><span class="line">+------+</span><br></pre></td></tr></table></figure>
+<h3 id="character-set-results"><a href="#character-set-results" class="headerlink" title="character_set_results"></a>character_set_results</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>查询结果和错误信息的字符集，server会把返回给客户端的结果转换为对应字符集</strong>。例如下面case，当设置character_set_results为’latin1’的时候，会导致返回的中文变成’?’。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">&gt; set character_set_results=<span class="string">'utf8'</span>;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'你好'</span>;</span><br><span class="line">+--------+</span><br><span class="line">| 你好   |</span><br><span class="line">+--------+</span><br><span class="line">| 你好   |</span><br><span class="line">+--------+</span><br><span class="line"></span><br><span class="line">&gt; set character_set_results=<span class="string">'latin1'</span>;</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> <span class="string">'你好'</span>;</span><br><span class="line">+----+</span><br><span class="line">| ?? |</span><br><span class="line">+----+</span><br><span class="line">| ?? |</span><br><span class="line">+----+</span><br><span class="line"></span><br><span class="line">&gt; create table cs_test(c1 varchar(<span class="number">10</span>)) charset=utf8;</span><br><span class="line"></span><br><span class="line">&gt; insert into cs_test values(<span class="string">'你好'</span>),(<span class="string">'我好'</span>);</span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> * from cs_test;</span><br><span class="line">+------+</span><br><span class="line">| c1   |</span><br><span class="line">+------+</span><br><span class="line">| ??   |</span><br><span class="line">| ??   |</span><br><span class="line">+------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; set character_set_results=<span class="string">'utf8'</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">select</span> * from cs_test;</span><br><span class="line">+--------+</span><br><span class="line">| c1     |</span><br><span class="line">+--------+</span><br><span class="line">| 你好   |</span><br><span class="line">| 我好   |</span><br><span class="line">+--------+</span><br></pre></td></tr></table></figure>
+<h2 id="binlog-中字符集相关缺陷"><a href="#binlog-中字符集相关缺陷" class="headerlink" title="binlog 中字符集相关缺陷"></a>binlog 中字符集相关缺陷</h2><h3 id="binlog当前字符集相关实现"><a href="#binlog当前字符集相关实现" class="headerlink" title="binlog当前字符集相关实现"></a>binlog当前字符集相关实现</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于很多DDL语句，binlog都是直接记录客户端发来的字符串，对于这些语句只要记录语句执行时候的环境变量就可以在备库正确执行。binlog中Query_log_event记录了character_set_client、collation_connection和collation_server，代码如下。记录这三个变量的原因读者可以参考前面各个变量的介绍和case。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">int THD::binlog_query(THD::enum_binlog_query_type qtype, const char *query_arg,</span><br><span class="line">                      size_t query_len, bool is_trans, bool direct,</span><br><span class="line">                      bool suppress_use, int errcode)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  case THD::STMT_QUERY_TYPE:</span><br><span class="line">  /*</span><br><span class="line">    The MYSQL_BIN_LOG::write() function will set the STMT_END_F flag and</span><br><span class="line">    flush the pending rows event if necessary.</span><br><span class="line">  */</span><br><span class="line">  &#123;</span><br><span class="line">    Query_log_event qinfo(this, query_arg, query_len, is_trans, direct,</span><br><span class="line">                          suppress_use, errcode);</span><br><span class="line">    /*</span><br><span class="line">      Binlog table maps will be irrelevant after a Query_log_event</span><br><span class="line">      (they are just removed on the slave side) so after the query</span><br><span class="line">      log event is written to the binary log, we pretend that no</span><br><span class="line">      table maps were written.</span><br><span class="line">     */</span><br><span class="line">    int error= mysql_bin_log.write_event(&amp;qinfo);</span><br><span class="line">    binlog_table_maps= 0;</span><br><span class="line">    DBUG_RETURN(error);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Query_log_event::Query_log_event(THD* thd_arg, const char* query_arg,</span><br><span class="line">         size_t query_length, bool using_trans,</span><br><span class="line">         bool immediate, bool suppress_use,</span><br><span class="line">                                 int errcode, bool ignore_cmd_internals)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  int2store(charset, thd_arg-&gt;variables.character_set_client-&gt;number);</span><br><span class="line">  int2store(charset+2, thd_arg-&gt;variables.collation_connection-&gt;number);</span><br><span class="line">  int2store(charset+4, thd_arg-&gt;variables.collation_server-&gt;number);</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>例如前面创建表cs_t1的case我们可以看到binlog如下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&gt; set character_set_connection=&apos;latin1&apos;;</span><br><span class="line">&gt; create table cs_t1(c1 varchar(10) default &apos;你好&apos;)charset=utf8;</span><br><span class="line"></span><br><span class="line">SET TIMESTAMP=1516089074/*!*/;</span><br><span class="line">/*!\C utf8 *//*!*/;</span><br><span class="line">SET @@session.character_set_client=33,@@session.collation_connection=8,@@session.collation_server=8/*!*/;</span><br><span class="line">create table cs_t1(c1 varchar(10) default &apos;你好&apos;)charset=utf8</span><br></pre></td></tr></table></figure>
+<h3 id="binlog字符集相关缺陷"><a href="#binlog字符集相关缺陷" class="headerlink" title="binlog字符集相关缺陷"></a>binlog字符集相关缺陷</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于Query_log_event如果记录的query仅仅是客户端的输入，上面记录字符集变量的方法没有问题。但<strong>如果query是server内部生成或者拼接成的，上面直接从thread中获取变量值得方法就可能导致错误</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如下面的testcase，这里为便于观察和理解case没有使用mysql-test方式，后面有mysql-test。这里主库执行成功，成功创建了表t和视图’收费明细表’，但备库在创建视图的时候却报语法错误。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">用gbk编码写如下sql文本</span><br><span class="line">cs_test.sql</span><br><span class="line"></span><br><span class="line">use test;</span><br><span class="line">set @@session.character_set_client=gbk;</span><br><span class="line">set @@session.collation_connection=gbk_chinese_ci;</span><br><span class="line">create table t(c1 int);</span><br><span class="line">create view `收费明细表` as select * from t;</span><br><span class="line"></span><br><span class="line">在主库执行</span><br><span class="line">&gt; source path/cs_test.sql;</span><br><span class="line"></span><br><span class="line">&gt; set character_set_results=&apos;gbk&apos;;</span><br><span class="line"></span><br><span class="line">&gt; use test;</span><br><span class="line"></span><br><span class="line">&gt; show tables;</span><br><span class="line">+----------------+</span><br><span class="line">| Tables_in_test |</span><br><span class="line">+----------------+</span><br><span class="line">| 收费明细表             |</span><br><span class="line">| t              |</span><br><span class="line">+----------------+</span><br><span class="line"></span><br><span class="line">备库</span><br><span class="line"></span><br><span class="line">&gt; show slave status\G</span><br><span class="line">...</span><br><span class="line">Last_SQL_Errno: 1064</span><br><span class="line">Last_SQL_Error: Error &apos;You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near &apos;`閺鎯板瀭閺勫海绮忕悰鈺? AS select * from t&apos; at line 1&apos; on query. Default database: &apos;test&apos;. Query: &apos;CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `鏀惰垂鏄庣粏琛╜ AS select * from t&apos;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;缺陷分析，MySQL记录create view的binlog代码如下。由前面基础知识可以知道对于db、table这些元数据MySQL会先转换为system_charset_info(utf8)。因此在下面代码中append_identifier添加的table name为utf8编码的’收费明细表’，但是views-&gt;source.str又是client端原始的gbk编码方式，binlog_query记录的是thd中的character_set_client。即<strong>binlog中的query可能是由system_charset_info和character_set_client两种编码方式组成的字符串，记录的是当前character_set_client的值</strong>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">sql/sql_view.cc</span><br><span class="line">bool mysql_create_view(THD *thd, TABLE_LIST *views,</span><br><span class="line">                       enum_view_create_mode mode)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  if (views-&gt;db &amp;&amp; views-&gt;db[0] &amp;&amp;</span><br><span class="line">    (thd-&gt;db().str == NULL || strcmp(views-&gt;db, thd-&gt;db().str)))</span><br><span class="line">  &#123;</span><br><span class="line">    append_identifier(thd, &amp;buff, views-&gt;db,</span><br><span class="line">                      views-&gt;db_length);</span><br><span class="line">                      buff.append(&apos;.&apos;);</span><br><span class="line">  &#125;</span><br><span class="line">  append_identifier(thd, &amp;buff, views-&gt;table_name,</span><br><span class="line">                    views-&gt;table_name_length);</span><br><span class="line">  if (lex-&gt;view_list.elements)</span><br><span class="line">  &#123;</span><br><span class="line">    List_iterator_fast&lt;LEX_STRING&gt; names(lex-&gt;view_list);</span><br><span class="line">    LEX_STRING *name;</span><br><span class="line">    int i;</span><br><span class="line"></span><br><span class="line">    for (i= 0; (name= names++); i++)</span><br><span class="line">    &#123;</span><br><span class="line">      buff.append(i ? &quot;, &quot; : &quot;(&quot;);</span><br><span class="line">      append_identifier(thd, &amp;buff, name-&gt;str, name-&gt;length);</span><br><span class="line">    &#125;</span><br><span class="line">    buff.append(&apos;)&apos;);</span><br><span class="line">  &#125;</span><br><span class="line">  buff.append(STRING_WITH_LEN(&quot; AS &quot;));</span><br><span class="line">  buff.append(views-&gt;source.str, views-&gt;source.length);</span><br><span class="line"></span><br><span class="line">  int errcode= query_error_code(thd, TRUE);</span><br><span class="line">  thd-&gt;add_to_binlog_accessed_dbs(views-&gt;db);</span><br><span class="line">  if (thd-&gt;binlog_query(THD::STMT_QUERY_TYPE,</span><br><span class="line">                        buff.ptr(), buff.length(), FALSE, FALSE, FALSE, errcode))</span><br><span class="line">    res= TRUE;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在MySQL源码中搜索binlog_query还可以找到多处类似的bug，可参考下面的testcase。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br></pre></td><td class="code"><pre><span class="line">--disable_warnings</span><br><span class="line">--source include/master-slave.inc</span><br><span class="line">--enable_warnings</span><br><span class="line"></span><br><span class="line"># case1:创建gbk编码中文名视图</span><br><span class="line"></span><br><span class="line">create table t(c1 int);</span><br><span class="line">SET @@session.character_set_client=gbk;</span><br><span class="line">set @@session.collation_connection=gbk_chinese_ci;</span><br><span class="line">set @@session.collation_server=utf8_general_ci;</span><br><span class="line">create view `收费明细` as select * from t;</span><br><span class="line">drop view `收费明细`;</span><br><span class="line">show tables;</span><br><span class="line"></span><br><span class="line">--sync_slave_with_master</span><br><span class="line"></span><br><span class="line">connection slave;</span><br><span class="line">show tables;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">connection master;</span><br><span class="line">drop table t;</span><br><span class="line"></span><br><span class="line"># case2:创建gbk编码中文名视图，且view body中包含中文</span><br><span class="line">connection master;</span><br><span class="line">SET @@session.character_set_client=gbk;</span><br><span class="line">create table 视图(c1 int);</span><br><span class="line">create view 视图信息 as select * from 视图;</span><br><span class="line">drop view 视图信息;</span><br><span class="line"></span><br><span class="line"># case3: drop table 语句会是generated by server.</span><br><span class="line">drop table 视图;</span><br><span class="line">--sync_slave_with_master</span><br><span class="line"></span><br><span class="line"># case4:内存表，重启后再次访问时会生成delete from tableName语句.</span><br><span class="line">connection master;</span><br><span class="line">SET @@session.character_set_client=utf8;</span><br><span class="line">set @@session.collation_connection=utf8_general_ci;</span><br><span class="line">set @@session.collation_server=utf8_general_ci;</span><br><span class="line">create table `收费明细表`(c1 int) engine=memory;</span><br><span class="line">create view tv as select * from `收费明细表`;</span><br><span class="line">--connection slave</span><br><span class="line">-- source include/stop_slave.inc</span><br><span class="line"></span><br><span class="line">--let $rpl_server_number= 1</span><br><span class="line">--source include/rpl_restart_server.inc</span><br><span class="line"># access memory table after restarting server cause binlog &apos;delete from tableName&apos;</span><br><span class="line">connection master;</span><br><span class="line">SET @@session.character_set_client=gbk;</span><br><span class="line">set @@session.collation_connection=gbk_chinese_ci;</span><br><span class="line">set @@session.collation_server=utf8_general_ci;</span><br><span class="line">select * from tv;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">--connection slave</span><br><span class="line">-- source include/start_slave.inc</span><br><span class="line">connection master;</span><br><span class="line">--sync_slave_with_master</span><br><span class="line">connection slave;</span><br><span class="line"></span><br><span class="line"># case5:character_set_client为gbk时中文名的procedure</span><br><span class="line"></span><br><span class="line">connection master;</span><br><span class="line">delimiter $$;</span><br><span class="line">create procedure 收费明细()</span><br><span class="line">begin</span><br><span class="line">  select &apos;hello world&apos;;</span><br><span class="line">end $$</span><br><span class="line">delimiter ;$$</span><br><span class="line">drop procedure `收费明细`;</span><br><span class="line"></span><br><span class="line">connection master;</span><br><span class="line">SET @@session.character_set_client=utf8;</span><br><span class="line">set @@session.collation_connection=utf8_general_ci;</span><br><span class="line">set @@session.collation_server=utf8_general_ci;</span><br><span class="line">drop view tv;</span><br><span class="line">drop table `收费明细表`;</span><br><span class="line">--sync_slave_with_master</span><br><span class="line"></span><br><span class="line">connection slave;</span><br><span class="line">show tables;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># case6: 不同环境变量下create table like/as 表中有中文default value的</span><br><span class="line"></span><br><span class="line">set character_set_client = utf8;</span><br><span class="line">set character_set_connection = utf8;</span><br><span class="line">set character_set_database = utf8;</span><br><span class="line">set character_set_results = utf8;</span><br><span class="line">set character_set_server = utf8;</span><br><span class="line"></span><br><span class="line">CREATE TABLE `t1` (</span><br><span class="line">  `id` int(11) NOT NULL,</span><br><span class="line">  `orderType` char(6) NOT NULL DEFAULT &apos;已创建&apos;,</span><br><span class="line">  PRIMARY KEY (`id`)</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8;</span><br><span class="line"></span><br><span class="line">create temporary table `tm` (c1 varchar(10) default &apos;你好&apos;);</span><br><span class="line"></span><br><span class="line">show create table t1;</span><br><span class="line"></span><br><span class="line">## switch client charset</span><br><span class="line">set character_set_client = latin1;</span><br><span class="line">set character_set_connection = latin1;</span><br><span class="line">set collation_server = utf8_bin;</span><br><span class="line">CREATE TABLE t2 SELECT * FROM t1;</span><br><span class="line">create table t3 like tm;</span><br><span class="line">show create table t2;</span><br><span class="line">show create table t3;</span><br><span class="line"></span><br><span class="line">--sync_slave_with_master</span><br><span class="line"></span><br><span class="line">connection slave;</span><br><span class="line">show tables;</span><br><span class="line">set character_set_client = utf8;</span><br><span class="line">set character_set_connection = utf8;</span><br><span class="line">set character_set_database = utf8;</span><br><span class="line">set character_set_results = utf8;</span><br><span class="line">set character_set_server = utf8;</span><br><span class="line">show create table t1;</span><br><span class="line">show create table t2;</span><br><span class="line">show create table t3;</span><br><span class="line"></span><br><span class="line">connection master;</span><br><span class="line">drop table t1;</span><br><span class="line">drop table t2;</span><br><span class="line">drop table t3;</span><br><span class="line"></span><br><span class="line">--sync_slave_with_master</span><br><span class="line"></span><br><span class="line">--source include/rpl_end.inc</span><br></pre></td></tr></table></figure>
+<h3 id="修复方法"><a href="#修复方法" class="headerlink" title="修复方法"></a>修复方法</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于create view/create procedure等一个query包含两种编码的可以将system_charset_info的部分转换为thread中的character_set_client</strong>。<strong>这里的转换需要考虑当前thread中character_set_client不支持utf8字符的问题，当转换失败需要报错，否则主备会不一致</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于完全由server生成的query，例如delete from和drop table语句，其query实际可以理解为system_charset_info，这种语句可以直接使binlog中character_set_client部分记录system_charset_info，而不是thread中的变量值。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该bug在MariaDB中也存在，可以见<a href="https://jira.mariadb.org/browse/MDEV-14249?page=com.atlassian.jira.plugin.system.issuetabpanels%3Aall-tabpanel" target="_blank" rel="noopener">MDEV-14249</a>，参考链接中的fix diff或者MariaDB的修复。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/MySql字符集/" rel="tag"># MySql字符集</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/20/MySQL字符集详解/" rel="next" title="MySQL字符集详解">
+                <i class="fa fa-chevron-left"></i> MySQL字符集详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/20/MySQL字符集和校对规则（Collation）/" rel="prev" title="MySQL字符集和校对规则（Collation）">
+                MySQL字符集和校对规则（Collation） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析"><span class="nav-number">1.</span> <span class="nav-text">MySQL字符集相关变量介绍及binlog中字符集相关缺陷分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL字符集相关基础知识介绍"><span class="nav-number">1.1.</span> <span class="nav-text">MySQL字符集相关基础知识介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-system"><span class="nav-number">1.1.1.</span> <span class="nav-text">character_set_system</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-server-collation-server"><span class="nav-number">1.1.2.</span> <span class="nav-text">character_set_server/collation_server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-database-collation-database"><span class="nav-number">1.1.3.</span> <span class="nav-text">character_set_database/collation_database</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-client"><span class="nav-number">1.1.4.</span> <span class="nav-text">character_set_client</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-connection-collation-connection"><span class="nav-number">1.1.5.</span> <span class="nav-text">character_set_connection/collation_connection</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#character-set-results"><span class="nav-number">1.1.6.</span> <span class="nav-text">character_set_results</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog-中字符集相关缺陷"><span class="nav-number">1.2.</span> <span class="nav-text">binlog 中字符集相关缺陷</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog当前字符集相关实现"><span class="nav-number">1.2.1.</span> <span class="nav-text">binlog当前字符集相关实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog字符集相关缺陷"><span class="nav-number">1.2.2.</span> <span class="nav-text">binlog字符集相关缺陷</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修复方法"><span class="nav-number">1.2.3.</span> <span class="nav-text">修复方法</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

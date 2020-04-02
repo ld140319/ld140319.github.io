@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Redis,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="Redis RDB 持久化详解  原文地址：https://mp.weixin.qq.com/s/NpUV-7bvXTD3iu0_2aRssQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis 是一种内存数据库，将数据保存在内存中，读写效率要比传统的将数据保存在磁盘上的数据库要快很多。但是一旦进程退出，Redis 的数据就会丢失。 &amp;nbsp;&amp;nbsp;&amp;n">
+<meta name="keywords" content="Redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis RDB 持久化详解">
+<meta property="og:url" content="http://blog.com/2019/07/13/Redis RDB 持久化详解/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="Redis RDB 持久化详解  原文地址：https://mp.weixin.qq.com/s/NpUV-7bvXTD3iu0_2aRssQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis 是一种内存数据库，将数据保存在内存中，读写效率要比传统的将数据保存在磁盘上的数据库要快很多。但是一旦进程退出，Redis 的数据就会丢失。 &amp;nbsp;&amp;nbsp;&amp;n">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/1.webp">
+<meta property="og:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/2.webp">
+<meta property="og:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/3.webp">
+<meta property="og:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/4.webp">
+<meta property="og:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/5.webp">
+<meta property="og:updated_time" content="2019-07-13T15:00:54.029Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis RDB 持久化详解">
+<meta name="twitter:description" content="Redis RDB 持久化详解  原文地址：https://mp.weixin.qq.com/s/NpUV-7bvXTD3iu0_2aRssQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Redis 是一种内存数据库，将数据保存在内存中，读写效率要比传统的将数据保存在磁盘上的数据库要快很多。但是一旦进程退出，Redis 的数据就会丢失。 &amp;nbsp;&amp;nbsp;&amp;n">
+<meta name="twitter:image" content="http://blog.com/2019/07/13/Redis%20RDB%20持久化详解/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/13/Redis RDB 持久化详解/">
+
+
+
+
+
+  <title>Redis RDB 持久化详解 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/13/Redis RDB 持久化详解/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis RDB 持久化详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-13T12:12:57+08:00">
+                2019-07-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Redis-RDB-持久化详解"><a href="#Redis-RDB-持久化详解" class="headerlink" title="Redis RDB 持久化详解"></a>Redis RDB 持久化详解</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/NpUV-7bvXTD3iu0_2aRssQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/NpUV-7bvXTD3iu0_2aRssQ</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code> 是一种内存数据库，将数据保存在内存中，读写效率要比传统的将数据保存在磁盘上的数据库要快很多。但是一旦进程退出，<code>Redis</code> 的数据就会丢失。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了解决这个问题，<code>Redis</code> 提供了 <code>RDB</code>和 <code>AOF</code>两种持久化方案，将内存中的数据保存到磁盘中，避免数据丢失。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;antirez 在《<code>Redis</code> 持久化解密》一文中说，一般来说有三种常见的策略来进行持久化操作，防止数据损坏：</p>
+<ul>
+<li>方法1 是<strong>数据库不关心发生故障，在数据文件损坏后通过数据备份或者快照来进行恢复</strong>。<code>Redis</code> 的 <code>RDB</code> 持久化就是这种方式。</li>
+<li>方法2 是<strong>数据库使用操作日志，每次操作时记录操作行为，以便在故障后通过日志恢复到一致性的状态</strong>。因为操作日志是顺序追加的方式写的，所以不会出现操作日志也无法恢复的情况。类似于 <code>Mysql</code> 的 <code>redo</code>和 <code>undo</code> 日志，具体可以看这篇<a href="https://mp.weixin.qq.com/s?__biz=Mzg2NjE5NDQyOA==&amp;mid=2247483785&amp;idx=1&amp;sn=e40537c048f0880daf441350c695ffc6&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">《InnoDB的磁盘文件及落盘机制》</a>文章。</li>
+<li>方法3 是<strong>数据库不进行老数据的修改，只是以追加方式去完成写操作，这样数据本身就是一份日志，这样就永远不会出现数据无法恢复的情况了</strong>。<code>CouchDB</code>就是此做法的优秀范例。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RDB</code> 就是第一种方法，它就是把当前 <code>Redis</code> 进程的数据生成<strong>时间点快照</strong>( <code>point-in-time snapshot</code> ) 保存到存储设备的过程。</p>
+<h2 id="RDB-的使用"><a href="#RDB-的使用" class="headerlink" title="RDB 的使用"></a>RDB 的使用</h2><p><code>RDB</code> 触发机制分为使用指令手动触发和 <code>redis.conf</code>配置自动触发。</p>
+<h3 id="手动触发"><a href="#手动触发" class="headerlink" title="手动触发"></a>手动触发</h3><p>手动触发 <code>Redis</code>进行 <code>RDB</code>持久化的指令的为:</p>
+<ul>
+<li><p><code>save</code> ，该指令会<strong>阻塞当前<code>Redis</code> 服务器，执行<code>save</code>指令期间，<code>Redis</code>不能处理其他命令</strong>，直到 <code>RDB</code>过程完成为止。</p>
+</li>
+<li><p><code>bgsave</code>，执行该命令时，<strong><code>Redis</code> 会在后台异步执行快照操作，此时 <code>Redis</code> 仍然可以相应客户端请求</strong>。</p>
+<p>具体操作是 <code>Redis</code> 进程执行 <code>fork</code> 操作创建子进程，<strong><code>RDB</code> 持久化过程由子进程负责</strong>，完成后自动结束。<strong><code>Redis</code> 只会在 <code>fork</code> 期间发生阻塞</strong>，但是一般时间都很短。但是如果 Redis 数据量特别大， <code>fork</code> 时间就会变长，而且占用内存会加倍，这一点需要特别注意。</p>
+</li>
+</ul>
+<h3 id="自动触发"><a href="#自动触发" class="headerlink" title="自动触发"></a>自动触发</h3><p>自动触发 <code>RDB</code> 的默认配置如下所示:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">save 900 1            # 表示900 秒内如果至少有 1 个 key 的值变化，则触发RDB</span><br><span class="line">save 300 10           # 表示300 秒内如果至少有 10 个 key 的值变化，则触发RDB</span><br><span class="line">save 60 10000         # 表示60 秒内如果至少有 10000 个 key 的值变化，则触发RDB</span><br></pre></td></tr></table></figure>
+<p>如果不需要 <code>Redis</code>进行持久化，那么可以注释掉所有的 <code>save</code>行来停用保存功能，也可以直接一个空字符串来停用持久化：<code>save &quot;&quot;</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Redis</code> 服务器周期操作函数 <code>serverCron</code> 默认每个 100 毫秒就会执行一次，该函数用于正在运行的服务器进行维护，它的一项工作就是检查 <code>save</code> 选项所设置的条件是否有一项被满足，如果满足的话，就执行 <code>bgsave</code> 指令</strong>。</p>
+<h2 id="RDB-整体流程"><a href="#RDB-整体流程" class="headerlink" title="RDB 整体流程"></a>RDB 整体流程</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;了解了 <code>RDB</code> 的基础使用后，我们要继续深入对 <code>RDB</code>持久化的学习。在此之前，我们可以先思考一下如何实现一个持久化机制，毕竟这是很多中间件所需的一个模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先，<strong>持久化保存的文件内容结构必须是紧凑的</strong>，特别对于数据库来说，需要持久化的数据量十分大，需要保证持久化文件不至于占用太多存储。其次，进行持久化时，<strong>中间件应该还可以快速地响应用户请求，持久化的操作应该尽量少影响中间件的其他功能</strong>。最后，毕竟<strong>持久化会消耗性能，如何在性能和数据安全性之间做出平衡，如何灵活配置触发持久化操作</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接下来我们将带着这些问题，到源码中寻求答案。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文中的源码来自 <code>Redis 4.0</code> ，<code>RDB</code>持久化过程的相关源码都在 <code>rdb.c</code>文件中。其中大概的流程如下图所示。</p>
+<p><img src="//blog.com/2019/07/13/Redis RDB 持久化详解/1.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上图表明了三种触发<code>RDB</code> 持久化的手段之间的整体关系。通过 <code>serverCron</code> 自动触发的<code>RDB</code>相当于直接调用了 <code>bgsave</code> 指令的流程进行处理。而 <code>bgsave</code> 的处理流程启动子进程后，调用了 <code>save</code>指令的处理流程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面我们从 <code>serverCron</code> 自动触发逻辑开始研究。</p>
+<h3 id="自动触发-RDB-持久化"><a href="#自动触发-RDB-持久化" class="headerlink" title="自动触发 RDB 持久化"></a>自动触发 RDB 持久化</h3><p><img src="//blog.com/2019/07/13/Redis RDB 持久化详解/2.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图所示， <code>redisServer</code> 结构体的 <code>save_params</code>指向拥有三个值的数组，该数组的值与 <code>redis.conf</code> 文件中 <code>save</code> 配置项一一对应。分别是 <code>save9001</code>、 <code>save30010</code> 和 <code>save6010000</code>。<code>dirty</code> 记录着有多少键值发生变化， <code>lastsave</code>记录着上次 <code>RDB</code> 持久化的时间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而 <code>serverCron</code> 函数就是遍历该数组的值，检查当前<code>Redis</code>状态是否符合触发 <code>RDB</code> 持久化的条件，比如说距离上次 <code>RDB</code>持久化过去了 900 秒并且有至少一条数据发生变更。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">serverCron</span><span class="params">(struct aeEventLoop *eventLoop, <span class="keyword">long</span> <span class="keyword">long</span> id, <span class="keyword">void</span> *clientData)</span> </span>&#123;</span><br><span class="line">    ....</span><br><span class="line">    <span class="comment">/* Check if a background saving or AOF rewrite in progress terminated. */</span></span><br><span class="line">    <span class="comment">/* 判断后台是否正在进行 rdb 或者 aof 操作 */</span></span><br><span class="line">    <span class="keyword">if</span> (server.rdb_child_pid != <span class="number">-1</span> || server.aof_child_pid != <span class="number">-1</span> ||</span><br><span class="line">        ldbPendingChildren())</span><br><span class="line">    &#123;</span><br><span class="line">        ....</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 到这儿就能确定 当前木有进行 rdb 或者 aof 操作</span></span><br><span class="line">        <span class="comment">// 遍历每一个 rdb 保存条件</span></span><br><span class="line">         <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; server.saveparamslen; j++) &#123;</span><br><span class="line">            struct saveparam *sp = server.saveparams+j;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//如果数据保存记录 大于规定的修改次数 且距离 上一次保存的时间大于规定时间或者上次BGSAVE命令执行成功，才执行 BGSAVE 操作</span></span><br><span class="line">            <span class="keyword">if</span> (server.dirty &gt;= sp-&gt;changes &amp;&amp;</span><br><span class="line">                server.unixtime-server.lastsave &gt; sp-&gt;seconds &amp;&amp;</span><br><span class="line">                (server.unixtime-server.lastbgsave_try &gt;</span><br><span class="line">                 CONFIG_BGSAVE_RETRY_DELAY ||</span><br><span class="line">                 server.lastbgsave_status == C_OK))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//记录日志</span></span><br><span class="line">                serverLog(LL_NOTICE,<span class="string">"%d changes in %d seconds. Saving..."</span>,</span><br><span class="line">                    sp-&gt;changes, (<span class="keyword">int</span>)sp-&gt;seconds);</span><br><span class="line">                rdbSaveInfo rsi, *rsiptr;</span><br><span class="line">                rsiptr = rdbPopulateSaveInfo(&amp;rsi);</span><br><span class="line">                <span class="comment">// 异步保存操作</span></span><br><span class="line">                rdbSaveBackground(server.rdb_filename,rsiptr);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ....</span><br><span class="line">    server.cronloops++;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1000</span>/server.hz;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果符合触发 <code>RDB</code>持久化的条件， <code>serverCron</code>会调用 <code>rdbSaveBackground</code>函数，也就是 <code>bgsave</code>指令会触发的函数。</p>
+<h3 id="子进程后台执行-RDB-持久化"><a href="#子进程后台执行-RDB-持久化" class="headerlink" title="子进程后台执行 RDB 持久化"></a>子进程后台执行 RDB 持久化</h3><p>执行 <code>bgsave</code> 指令时，<code>Redis</code> 会先触发 <code>bgsaveCommand</code> 进行当前状态检查，然后才会调用 <code>rdbSaveBackground</code>，其中的逻辑如下图所示。</p>
+<p><img src="//blog.com/2019/07/13/Redis RDB 持久化详解/3.webp" alt="img"></p>
+<p><code>rdbSaveBackground</code> 函数中最主要的工作就是调用 <code>fork</code> 命令生成子流程，然后在子流程中执行 <code>rdbSave</code>函数，也就是 <code>save</code>指令最终会触发的函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">rdbSaveBackground</span><span class="params">(<span class="keyword">char</span> *filename, rdbSaveInfo *rsi)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> childpid;</span><br><span class="line">    <span class="keyword">long</span> <span class="keyword">long</span> start;</span><br><span class="line">    <span class="comment">// 检查后台是否正在执行 aof 或者 rdb 操作</span></span><br><span class="line">    <span class="keyword">if</span> (server.aof_child_pid != <span class="number">-1</span> || server.rdb_child_pid != <span class="number">-1</span>) <span class="keyword">return</span> C_ERR;</span><br><span class="line">    <span class="comment">// 拿出 数据保存记录，保存为 上次记录</span></span><br><span class="line">    server.dirty_before_bgsave = server.dirty;</span><br><span class="line">    <span class="comment">// bgsave 时间</span></span><br><span class="line">    server.lastbgsave_try = time(<span class="literal">NULL</span>);</span><br><span class="line">    start = ustime();</span><br><span class="line">    <span class="comment">// fork 子进程</span></span><br><span class="line">    <span class="keyword">if</span> ((childpid = fork()) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> retval;</span><br><span class="line">        <span class="comment">/* 关闭子进程继承的 socket 监听 */</span></span><br><span class="line">        closeListeningSockets(<span class="number">0</span>);</span><br><span class="line">        <span class="comment">// 子进程 title 修改</span></span><br><span class="line">        redisSetProcTitle(<span class="string">"redis-rdb-bgsave"</span>);</span><br><span class="line">        <span class="comment">// 执行rdb 写入操作</span></span><br><span class="line">        retval = rdbSave(filename,rsi);</span><br><span class="line">        <span class="comment">// 执行完毕以后</span></span><br><span class="line">        ....</span><br><span class="line">        <span class="comment">// 退出子进程</span></span><br><span class="line">        exitFromChild((retval == C_OK) ? <span class="number">0</span> : <span class="number">1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* 父进程，进行fork时间的统计和信息记录，比如说rdb_save_time_start、rdb_child_pid、和rdb_child_type */</span></span><br><span class="line">        ....</span><br><span class="line">        <span class="comment">// rdb 保存开始时间 bgsave 子进程</span></span><br><span class="line">        server.rdb_save_time_start = time(<span class="literal">NULL</span>);</span><br><span class="line">        server.rdb_child_pid = childpid;</span><br><span class="line">        server.rdb_child_type = RDB_CHILD_TYPE_DISK;</span><br><span class="line">        updateDictResizePolicy();</span><br><span class="line">        <span class="keyword">return</span> C_OK;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> C_OK; <span class="comment">/* unreached */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为什么 <code>Redis</code> 使用子进程而不是线程来进行后台 <code>RDB</code>持久化呢？主要是出于<code>Redis</code>性能的考虑，我们知道<strong><code>Redis</code>对客户端响应请求的工作模型是单进程和单线程的，如果在主进程内启动一个线程，这样会造成对数据的竞争条件</strong>。所以<strong>为了避免使用锁降低性能，<code>Redis</code>选择启动新的子进程，独立拥有一份父进程的内存拷贝，以此为基础执行<code>RDB</code>持久化</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是需要注意的是，<code>fork</code> 会消耗一定时间，并且父子进程所占据的内存是相同的，当 <code>Redis</code>键值较大时，<code>fork</code> 的时间会很长，这段时间内 <code>Redis</code> 是无法响应其他命令的。除此之外，<code>Redis</code>占据的内存空间会翻倍。</p>
+<h3 id="生成-RDB-文件，并且持久化到硬盘"><a href="#生成-RDB-文件，并且持久化到硬盘" class="headerlink" title="生成 RDB 文件，并且持久化到硬盘"></a>生成 RDB 文件，并且持久化到硬盘</h3><p><code>Redis</code> 的 <code>rdbSave</code> 函数是真正进行 <code>RDB</code> 持久化的函数，它的大致流程如下：</p>
+<ul>
+<li>首先打开一个临时文件，</li>
+<li>调用 <code>rdbSaveRio</code>函数，将当前 <code>Redis</code> 的内存信息写入到这个临时文件中，</li>
+<li>接着调用 <code>fflush</code>、 <code>fsync</code> 和 <code>fclose</code> 接口将文件写入磁盘中，</li>
+<li>使用 <code>rename</code> 将临时文件改名为 正式的 <code>RDB</code> 文件，</li>
+<li>最后记录 <code>dirty</code> 和 <code>lastsave</code>等状态信息。这些状态信息在 <code>serverCron</code>时会使用到。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">rdbSave</span><span class="params">(<span class="keyword">char</span> *filename, rdbSaveInfo *rsi)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">char</span> tmpfile[<span class="number">256</span>];</span><br><span class="line">    <span class="comment">// 当前工作目录</span></span><br><span class="line">    <span class="keyword">char</span> cwd[MAXPATHLEN];</span><br><span class="line">    FILE *fp;</span><br><span class="line">    rio rdb;</span><br><span class="line">    <span class="keyword">int</span> error = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 生成tmpfile文件名 temp-[pid].rdb */</span></span><br><span class="line">    <span class="built_in">snprintf</span>(tmpfile,<span class="number">256</span>,<span class="string">"temp-%d.rdb"</span>, (<span class="keyword">int</span>) getpid());</span><br><span class="line">    <span class="comment">/* 打开文件 */</span></span><br><span class="line">    fp = fopen(tmpfile,<span class="string">"w"</span>);</span><br><span class="line">    .....</span><br><span class="line">    <span class="comment">/* 初始化rio结构 */</span></span><br><span class="line">    rioInitWithFile(&amp;rdb,fp);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveRio(&amp;rdb,&amp;error,RDB_SAVE_NONE,rsi) == C_ERR) &#123;</span><br><span class="line">        errno = error;</span><br><span class="line">        <span class="keyword">goto</span> werr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (fflush(fp) == EOF) <span class="keyword">goto</span> werr;</span><br><span class="line">    <span class="keyword">if</span> (fsync(fileno(fp)) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">    <span class="keyword">if</span> (fclose(fp) == EOF) <span class="keyword">goto</span> werr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 重新命名 rdb 文件，把之前临时的名称修改为正式的 rdb 文件名称 */</span></span><br><span class="line">    <span class="keyword">if</span> (rename(tmpfile,filename) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="comment">// 异常处理</span></span><br><span class="line">        ....</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 写入完成，打印日志</span></span><br><span class="line">    serverLog(LL_NOTICE,<span class="string">"DB saved on disk"</span>);</span><br><span class="line">    <span class="comment">// 清理数据保存记录</span></span><br><span class="line">    server.dirty = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 最后一次完成 SAVE 命令的时间</span></span><br><span class="line">    server.lastsave = time(<span class="literal">NULL</span>);</span><br><span class="line">    <span class="comment">// 最后一次 bgsave 的状态置位 成功</span></span><br><span class="line">    server.lastbgsave_status = C_OK;</span><br><span class="line">    <span class="keyword">return</span> C_OK;</span><br><span class="line">    ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里要简单说一下 <code>fflush</code>和 <code>fsync</code>的区别。它们俩都是用于刷缓存，但是所属的层次不同。<code>fflush</code>函数用于 <code>FILE*</code> 指针上，将缓存数据从应用层缓存刷新到内核中，而 <code>fsync</code> 函数则更加底层，作用于文件描述符，用于将内核缓存刷新到物理设备上。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于 Linux IO 的具体原理可以参考<a href="https://mp.weixin.qq.com/s?__biz=Mzg2NjE5NDQyOA==&amp;mid=2247483824&amp;idx=1&amp;sn=48d3fd8374c035361a9df4e67b6528df&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">《聊聊Linux IO》</a></p>
+<h3 id="内存数据到-RDB-文件"><a href="#内存数据到-RDB-文件" class="headerlink" title="内存数据到 RDB 文件"></a>内存数据到 RDB 文件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>rdbSaveRio</code> 会将 <code>Redis</code> 内存中的数据以相对紧凑的格式写入到文件中，其文件格式的示意图如下所示。</p>
+<p><img src="//blog.com/2019/07/13/Redis RDB 持久化详解/4.webp" alt="img"></p>
+<p><code>rdbSaveRio</code>函数的写入大致流程如下：</p>
+<ul>
+<li>先写入 <code>REDIS</code>魔法值，然后是 <code>RDB</code>文件的版本( <code>rdb_version</code> )，额外辅助信息 ( <code>aux</code>)。辅助信息中包含了 <code>Redis</code> 的版本，内存占用和复制库( <code>repl-id</code> )和偏移量(<code>repl-offset</code> )等。</li>
+<li>然后 <code>rdbSaveRio</code> 会遍历当前 <code>Redis</code> 的所有数据库，将数据库的信息依次写入。先写入 <code>RDB_OPCODE_SELECTDB</code>识别码和数据库编号，接着写入 <code>RDB_OPCODE_RESIZEDB</code>识别码和数据库键值数量和待失效键值数量，最后会遍历所有的键值，依次写入。</li>
+<li>在写入键值时，当该键值有失效时间时，会先写入 <code>RDB_OPCODE_EXPIRETIME_MS</code>识别码和失效时间，然后写入键值类型的识别码，最后再写入键和值。</li>
+<li>写完数据库信息后，还会把<code>Lua</code> 相关的信息写入，最后再写入 <code>RDB_OPCODE_EOF</code>结束符识别码和校验值。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">rdbSaveRio</span><span class="params">(rio *rdb, <span class="keyword">int</span> *error, <span class="keyword">int</span> flags, rdbSaveInfo *rsi)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">snprintf</span>(magic,<span class="keyword">sizeof</span>(magic),<span class="string">"REDIS%04d"</span>,RDB_VERSION);</span><br><span class="line">    <span class="comment">/* 1 写入 magic字符'REDIS' 和 RDB 版本 */</span></span><br><span class="line">    <span class="keyword">if</span> (rdbWriteRaw(rdb,magic,<span class="number">9</span>) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">    <span class="comment">/* 2 写入辅助信息  REDIS版本,服务器操作系统位数,当前时间,复制信息比如repl-stream-db,repl-id和repl-offset等等数据*/</span></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveInfoAuxFields(rdb,flags,rsi) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">    <span class="comment">/* 3 遍历每一个数据库，逐个数据库数据保存 */</span></span><br><span class="line">    <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; server.dbnum; j++) &#123;</span><br><span class="line">        <span class="comment">/* 获取数据库指针地址和数据库字典 */</span></span><br><span class="line">        redisDb *db = server.db+j;</span><br><span class="line">        dict *d = db-&gt;dict;</span><br><span class="line">        <span class="comment">/* 3.1 写入数据库部分的开始标识 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveType(rdb,RDB_OPCODE_SELECTDB) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">        <span class="comment">/* 3.2 写入当前数据库号 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveLen(rdb,j) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">uint32_t</span> db_size, expires_size;</span><br><span class="line">        <span class="comment">/* 获取数据库字典大小和过期键字典大小 */</span></span><br><span class="line">        db_size = (dictSize(db-&gt;dict) &lt;= UINT32_MAX) ?</span><br><span class="line">                                dictSize(db-&gt;dict) :</span><br><span class="line">                                UINT32_MAX;</span><br><span class="line">        expires_size = (dictSize(db-&gt;expires) &lt;= UINT32_MAX) ?</span><br><span class="line">                                dictSize(db-&gt;expires) :</span><br><span class="line">                                UINT32_MAX;</span><br><span class="line">        <span class="comment">/* 3.3 写入当前待写入数据的类型，此处为 RDB_OPCODE_RESIZEDB，表示数据库大小 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveType(rdb,RDB_OPCODE_RESIZEDB) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">        <span class="comment">/* 3.4 写入获取数据库字典大小和过期键字典大小 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveLen(rdb,db_size) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">        <span class="keyword">if</span> (rdbSaveLen(rdb,expires_size) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">        <span class="comment">/* 4 遍历当前数据库的键值对 */</span></span><br><span class="line">        <span class="keyword">while</span>((de = dictNext(di)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            sds keystr = dictGetKey(de);</span><br><span class="line">            robj key, *o = dictGetVal(de);</span><br><span class="line">            <span class="keyword">long</span> <span class="keyword">long</span> expire;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 初始化 key，因为操作的是 key 字符串对象，而不是直接操作 键的字符串内容 */</span></span><br><span class="line">            initStaticStringObject(key,keystr);</span><br><span class="line">            <span class="comment">/* 获取键的过期数据 */</span></span><br><span class="line">            expire = getExpire(db,&amp;key);</span><br><span class="line">            <span class="comment">/* 4.1 保存键值对数据 */</span></span><br><span class="line">            <span class="keyword">if</span> (rdbSaveKeyValuePair(rdb,&amp;key,o,expire) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 5 保存 Lua 脚本*/</span></span><br><span class="line">    <span class="keyword">if</span> (rsi &amp;&amp; dictSize(server.lua_scripts)) &#123;</span><br><span class="line">        di = dictGetIterator(server.lua_scripts);</span><br><span class="line">        <span class="keyword">while</span>((de = dictNext(di)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            robj *body = dictGetVal(de);</span><br><span class="line">            <span class="keyword">if</span> (rdbSaveAuxField(rdb,<span class="string">"lua"</span>,<span class="number">3</span>,body-&gt;ptr,sdslen(body-&gt;ptr)) == <span class="number">-1</span>)</span><br><span class="line">                <span class="keyword">goto</span> werr;</span><br><span class="line">        &#125;</span><br><span class="line">        dictReleaseIterator(di);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 6 写入结束符 */</span></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveType(rdb,RDB_OPCODE_EOF) == <span class="number">-1</span>) <span class="keyword">goto</span> werr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 7 写入CRC64校验和 */</span></span><br><span class="line">    cksum = rdb-&gt;cksum;</span><br><span class="line">    memrev64ifbe(&amp;cksum);</span><br><span class="line">    <span class="keyword">if</span> (rioWrite(rdb,&amp;cksum,<span class="number">8</span>) == <span class="number">0</span>) <span class="keyword">goto</span> werr;</span><br><span class="line">    <span class="keyword">return</span> C_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>rdbSaveRio</code>在写键值时，会调用 <code>rdbSaveKeyValuePair</code> 函数。该函数会依次写入键值的过期时间，键的类型，键和值。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">rdbSaveKeyValuePair</span><span class="params">(rio *rdb, robj *key, robj *val, <span class="keyword">long</span> <span class="keyword">long</span> expiretime)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* 如果有过期信息 */</span></span><br><span class="line">    <span class="keyword">if</span> (expiretime != <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="comment">/* 保存过期信息标识 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveType(rdb,RDB_OPCODE_EXPIRETIME_MS) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        <span class="comment">/* 保存过期具体数据内容 */</span></span><br><span class="line">        <span class="keyword">if</span> (rdbSaveMillisecondTime(rdb,expiretime) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Save type, key, value */</span></span><br><span class="line">    <span class="comment">/* 保存键值对 类型的标识 */</span></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveObjectType(rdb,val) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="comment">/* 保存键值对 键的内容 */</span></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveStringObject(rdb,key) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="comment">/* 保存键值对 值的内容 */</span></span><br><span class="line">    <span class="keyword">if</span> (rdbSaveObject(rdb,val) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据键的不同类型写入不同格式，各种键值的类型和格式如下所示。</p>
+<p><img src="//blog.com/2019/07/13/Redis RDB 持久化详解/5.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Redis</code>有庞大的对象和数据结构体系，它使用六种底层数据结构构建了包含字符串对象、列表对象、哈希对象、集合对象和有序集合对象的对象系统。感兴趣的同学可以参考 <a href="https://mp.weixin.qq.com/s?__biz=Mzg2NjE5NDQyOA==&amp;mid=2247483760&amp;idx=1&amp;sn=a601a4425e6316a4bba8d7936ce7c988&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">《十二张图带你了解 Redis 的数据结构和对象系统》</a>一文。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的数据结构进行<code>RDB</code>持久化的格式都不同。我们今天只看一下集合对象是如何持久化的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ssize_t</span> rdbSaveObject(rio *rdb, robj *o) &#123;</span><br><span class="line">    <span class="keyword">ssize_t</span> n = <span class="number">0</span>, nwritten = <span class="number">0</span>;</span><br><span class="line">    ....</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (o-&gt;type == OBJ_SET) &#123;</span><br><span class="line">        <span class="comment">/* Save a set value */</span></span><br><span class="line">        <span class="keyword">if</span> (o-&gt;encoding == OBJ_ENCODING_HT) &#123;</span><br><span class="line">            dict *<span class="built_in">set</span> = o-&gt;ptr;</span><br><span class="line">            <span class="comment">// 集合迭代器</span></span><br><span class="line">            dictIterator *di = dictGetIterator(<span class="built_in">set</span>);</span><br><span class="line">            dictEntry *de;</span><br><span class="line">            <span class="comment">// 写入集合长度</span></span><br><span class="line">            <span class="keyword">if</span> ((n = rdbSaveLen(rdb,dictSize(<span class="built_in">set</span>))) == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">            nwritten += n;</span><br><span class="line">            <span class="comment">// 遍历集合元素</span></span><br><span class="line">            <span class="keyword">while</span>((de = dictNext(di)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">                sds ele = dictGetKey(de);</span><br><span class="line">                <span class="comment">// 以字符串的形式写入，因为是SET 所以只写入 Key 即可</span></span><br><span class="line">                <span class="keyword">if</span> ((n = rdbSaveRawString(rdb,(<span class="keyword">unsigned</span> <span class="keyword">char</span>*)ele,sdslen(ele)))</span><br><span class="line">                    == <span class="number">-1</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">                nwritten += n;</span><br><span class="line">            &#125;</span><br><span class="line">            dictReleaseIterator(di);</span><br><span class="line">        &#125; </span><br><span class="line">    .....</span><br><span class="line">    <span class="keyword">return</span> nwritten;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/12/PHP使用nginx+sendfile机制实现大文件的下载/" rel="next" title="PHP使用nginx+sendfile机制实现大文件的下载">
+                <i class="fa fa-chevron-left"></i> PHP使用nginx+sendfile机制实现大文件的下载
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/13/磁盘IO那些事/" rel="prev" title="磁盘IO那些事">
+                磁盘IO那些事 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis-RDB-持久化详解"><span class="nav-number">1.</span> <span class="nav-text">Redis RDB 持久化详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RDB-的使用"><span class="nav-number">1.1.</span> <span class="nav-text">RDB 的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#手动触发"><span class="nav-number">1.1.1.</span> <span class="nav-text">手动触发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动触发"><span class="nav-number">1.1.2.</span> <span class="nav-text">自动触发</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RDB-整体流程"><span class="nav-number">1.2.</span> <span class="nav-text">RDB 整体流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#自动触发-RDB-持久化"><span class="nav-number">1.2.1.</span> <span class="nav-text">自动触发 RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#子进程后台执行-RDB-持久化"><span class="nav-number">1.2.2.</span> <span class="nav-text">子进程后台执行 RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成-RDB-文件，并且持久化到硬盘"><span class="nav-number">1.2.3.</span> <span class="nav-text">生成 RDB 文件，并且持久化到硬盘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存数据到-RDB-文件"><span class="nav-number">1.2.4.</span> <span class="nav-text">内存数据到 RDB 文件</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

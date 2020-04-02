@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,延时队列,消息队列,延时任务处理,kafka,时间轮,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析 原文地址：https://blog.csdn.net/chunlongyu/article/details/52971748  DelayedOperationPurgatory核心结构ReplicaManager内部的2个成员变量首先，我们知道ReplicaManager有2个Delay">
+<meta name="keywords" content="架构,延时队列,消息队列,延时任务处理,kafka,时间轮">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析">
+<meta property="og:url" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析 原文地址：https://blog.csdn.net/chunlongyu/article/details/52971748  DelayedOperationPurgatory核心结构ReplicaManager内部的2个成员变量首先，我们知道ReplicaManager有2个Delay">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161030135247278.png">
+<meta property="og:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161103172835126.png">
+<meta property="og:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161103202239330.png">
+<meta property="og:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161104143337239.png">
+<meta property="og:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161104143729344.png">
+<meta property="og:updated_time" content="2019-05-04T11:15:37.644Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析">
+<meta name="twitter:description" content="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析 原文地址：https://blog.csdn.net/chunlongyu/article/details/52971748  DelayedOperationPurgatory核心结构ReplicaManager内部的2个成员变量首先，我们知道ReplicaManager有2个Delay">
+<meta name="twitter:image" content="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161030135247278.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/">
+
+
+
+
+
+  <title>TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-04T12:12:57+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/" itemprop="url" rel="index">
+                    <span itemprop="name">延时队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/延时任务处理/" itemprop="url" rel="index">
+                    <span itemprop="name">延时任务处理</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/延时任务处理/kafka/" itemprop="url" rel="index">
+                    <span itemprop="name">kafka</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/消息队列/延时任务处理/kafka/时间轮/" itemprop="url" rel="index">
+                    <span itemprop="name">时间轮</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析"><a href="#TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析" class="headerlink" title="TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析"></a>TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析</h1><blockquote>
+<p>原文地址：<a href="https://blog.csdn.net/chunlongyu/article/details/52971748" target="_blank" rel="noopener">https://blog.csdn.net/chunlongyu/article/details/52971748</a></p>
+</blockquote>
+<h2 id="DelayedOperationPurgatory核心结构"><a href="#DelayedOperationPurgatory核心结构" class="headerlink" title="DelayedOperationPurgatory核心结构"></a>DelayedOperationPurgatory核心结构</h2><h3 id="ReplicaManager内部的2个成员变量"><a href="#ReplicaManager内部的2个成员变量" class="headerlink" title="ReplicaManager内部的2个成员变量"></a>ReplicaManager内部的2个成员变量</h3><p>首先，我们知道<code>ReplicaManager</code>有2个<code>DelayedOperationPurgatory</code>成员变量：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ReplicaManager</span>(<span class="params">val config: <span class="type">KafkaConfig</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     metrics: <span class="type">Metrics</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     time: <span class="type">Time</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     jTime: <span class="type">JTime</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     val zkUtils: <span class="type">ZkUtils</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     scheduler: <span class="type">Scheduler</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     val logManager: <span class="type">LogManager</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     val isShuttingDown: <span class="type">AtomicBoolean</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">                     threadNamePrefix: <span class="type">Option</span>[<span class="type">String</span>] = <span class="type">None</span></span>) <span class="keyword">extends</span> <span class="title">Logging</span> <span class="keyword">with</span> <span class="title">KafkaMetricsGroup</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//关键组件：每来1个ProduceReuqest，写入本地日志之后。就会生成一个DelayedProduce对象，放入delayedProducePurgatory中。</span></span><br><span class="line">  <span class="comment">// 之后这个delayedProduce对象，要么在处理FetchRequest的时候，被complete()；要么在purgatory内部被超时.</span></span><br><span class="line">  <span class="keyword">val</span> delayedProducePurgatory = <span class="keyword">new</span> <span class="type">DelayedOperationPurgatory</span>[<span class="type">DelayedProduce</span>](</span><br><span class="line">    purgatoryName = <span class="string">"Produce"</span>, config.brokerId, config.producerPurgatoryPurgeIntervalRequests)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> delayedFetchPurgatory = <span class="keyword">new</span> <span class="type">DelayedOperationPurgatory</span>[<span class="type">DelayedFetch</span>](</span><br><span class="line">    purgatoryName = <span class="string">"Fetch"</span>, config.brokerId, config.fetchPurgatoryPurgeIntervalRequests)</span><br></pre></td></tr></table></figure>
+<h3 id="DelayedProducePurgatory核心结构"><a href="#DelayedProducePurgatory核心结构" class="headerlink" title="DelayedProducePurgatory核心结构"></a>DelayedProducePurgatory核心结构</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>DelayedProducePurgatory</code>有2个核心部件，1个是一个<code>Watchers</code>的<code>map</code>，1个是<code>Timer</code>。对应的，<code>DelayedProduce</code>有2个角色：一个是<code>DelayedOperation</code>，同时它也是一个<code>TimerTask</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每当处理一个<code>ProduceRequest</code>，就会生成一个<code>DelayedProduce</code>对象，被加入到一个<code>Watchers</code>中，同时它也会作为一个<code>TimerTask</code>，加入到<code>Timer</code>中。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后这个<code>DelayedProduce</code>可能被接下来的<code>Fetch</code>满足，也可能在<code>Timer</code>中超时，给客户端返回超时错误。如果是前者，那就需要调用<code>TimerTask.cancel</code>，把该任务从<code>Timer</code>中删除。</p>
+<p><img src="//blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161030135247278.png" alt=""></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">TimerTask</span> <span class="keyword">extends</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> expirationMs: <span class="type">Long</span> <span class="comment">// TimerTask的核心变量：过期时间（绝对时间）</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> timerTaskEntry: <span class="type">TimerTaskEntry</span> = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cancel</span></span>(): <span class="type">Unit</span> = &#123;  <span class="comment">//取消该TimerTask</span></span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">if</span> (timerTaskEntry != <span class="literal">null</span>) timerTaskEntry.remove()</span><br><span class="line">      timerTaskEntry = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Timer实现-–-TimingWheel"><a href="#Timer实现-–-TimingWheel" class="headerlink" title="Timer实现 – TimingWheel"></a>Timer实现 – TimingWheel</h2><h3 id="为什么需要TimingWheel"><a href="#为什么需要TimingWheel" class="headerlink" title="为什么需要TimingWheel"></a>为什么需要TimingWheel</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于每1个请求，都要加入到<code>Timer</code>中，开始计时。如果时间到了，请求还未被满足，则就会返回给客户端超时错误。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于<code>Timer</code>的实现，Java中常用的有2个办法：<code>Java</code>自带的<code>Timer</code>或者<code>DelayedQueue</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>DelayedQueue</code>，其内部本质就是一个二根堆，所有<code>Task</code>按照过期时间排序，堆顶放置的就是最近要过期的元素。*队列的入对／出对其复杂度都是<code>Log(n)</code>**。</p>
+<p>在<code>Kafka</code>的场景中，基于2根堆实现的定时器，有2个缺点：<br>（1）在应对服务器大规模请求中，<code>Log(n)</code>的复杂度，还是不够高效<br>（2）<strong><code>DelayedQueue</code></strong>不支持随机删除。而在<code>Kafka</code>的这个场景中，当一个<code>DelayedProduce</code>在过期之前被<code>complete</code>之后，就需要把其从<code>Timer</code>中删除。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Kakfa</code>的作者也曾提到过，在旧的版本中，因为被<code>complete</code>的请求，不能及时从<code>DelayedQueue</code>删除，导致<code>Queue</code>吃完<code>jvm</code>的内存的情况。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以<code>Kafka</code>的设计者，提供了基于<code>TimingWheel</code>的“定时器“实现，这个定时器有2个优点：<br>（1）<strong><code>Task</code>的加入，取出，时间复杂度是<code>O(1)</code></strong></p>
+<p>（2）<strong>支持<code>Task</code>的随机删除</strong></p>
+<h3 id="Timer的使用方式"><a href="#Timer的使用方式" class="headerlink" title="Timer的使用方式"></a>Timer的使用方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们知道，<code>Java</code>自带的<code>Timer</code>，其内部有一个线程来驱动，我们只需要把<code>Task</code>加进去就可以了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但<code>Kafka</code>实现的<code>Timer</code>，在用法上有一些不同： </p>
+<p><img src="//blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161103172835126.png" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一方面，调用者（也就是<code>DelayedOperationPurgatory</code>)不断调用<code>timer.add</code>函数加入新的<code>Task</code>；另1方面，不是<code>Timer</code>内部有线程驱动，而是有一个外部线程<code>ExpiredOperationReaper</code>，不断调用<code>timer.advanceClock</code>函数，来驱动整个<code>Timer</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时，当某一个TimerTask到期之后，不是由<code>Timer</code>直接执行此<code>TimerTask</code>。而是交由一个<code>executor</code>，来执行所有过期的<code>TimerTask</code>。之所以这么做，是因为<strong>不能让<code>TimerTask</code>的执行阻塞<code>Timer</code>本身的进度</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总结一下：这里<strong>有2个外部线程，一个驱动<code>Timer</code>，一个<code>executor</code>，专门用来执行过期的<code>Task</code>。这2个线程，都是<code>DelayedOperationPurgatory</code>的内部变量</strong>。</p>
+<h3 id="Timer内部结构"><a href="#Timer内部结构" class="headerlink" title="Timer内部结构"></a>Timer内部结构</h3><p><code>Timer</code>的内部结构：</p>
+<p><img src="//blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161103202239330.png" alt=""></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Timer</code>是最外层类，表示一个定时器。其内部有一个<code>TimingWheel</code>对象，<code>TimingWheel</code>是有层次结构的，每个<code>TimingWheel</code>可能有<code>parent TimingWheel</code>（这个原理就类似我们生活中的水表，不同表盘有不同刻度）</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>TimingWheel</code>是一个时间刻度盘，每个刻度上有一个<code>TimerTask</code>的双向链表，称之为一个<code>bucket</code></strong>。<strong>同1个<code>bucket</code>里面的所有<code>Task</code>，其过期时间相等</strong>。因此，<strong>每1个<code>bucket</code>有一个过期时间的字段</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除此之外，<strong>所有<code>TimingWheel</code>共用了一个<code>DelayedQueue</code>，这个<code>DelayedQueue</code>存储了所有的<code>bucket</code>，而不是所有的<code>TimerTask</code></strong>。</p>
+<h4 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Timer</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Timer</span>(<span class="params">taskExecutor: <span class="type">ExecutorService</span>, tickMs: <span class="type">Long</span> = 1, wheelSize: <span class="type">Int</span> = 20, startMs: <span class="type">Long</span> = <span class="type">System</span>.currentTimeMillis</span>) </span>&#123;</span><br><span class="line">  ....</span><br><span class="line">  <span class="comment">//核心变量 TimingWheel</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> timingWheel = <span class="keyword">new</span> <span class="type">TimingWheel</span>(</span><br><span class="line">    tickMs = tickMs,</span><br><span class="line">    wheelSize = wheelSize,</span><br><span class="line">    startMs = startMs,</span><br><span class="line">    taskCounter = taskCounter,</span><br><span class="line">    delayQueue</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="comment">//Timer的核心函数之1：加入一个TimerTask</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(timerTask: <span class="type">TimerTask</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    readLock.lock()</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      addTimerTaskEntry(<span class="keyword">new</span> <span class="type">TimerTaskEntry</span>(timerTask))</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      readLock.unlock()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//Timer的核心函数之2：Tick，每走1次，内部判断过期的TimerTask，执行其run函数</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">advanceClock</span></span>(timeoutMs: <span class="type">Long</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">var</span> bucket = delayQueue.poll(timeoutMs, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>)</span><br><span class="line">    <span class="keyword">if</span> (bucket != <span class="literal">null</span>) &#123;</span><br><span class="line">      writeLock.lock()</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (bucket != <span class="literal">null</span>) &#123;</span><br><span class="line">          timingWheel.advanceClock(bucket.getExpiration())</span><br><span class="line">          bucket.flush(reinsert)</span><br><span class="line">          bucket = delayQueue.poll()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        writeLock.unlock()</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//TimingWheel内部结构</span></span><br><span class="line"><span class="keyword">private</span>[timer] <span class="class"><span class="keyword">class</span> <span class="title">TimingWheel</span>(<span class="params">tickMs: <span class="type">Long</span>, wheelSize: <span class="type">Int</span>, startMs: <span class="type">Long</span>, taskCounter: <span class="type">AtomicInteger</span>, queue: <span class="type">DelayQueue</span>[<span class="type">TimerTaskList</span>]</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> interval = tickMs * wheelSize   <span class="comment">//每1格的单位 ＊ 总格数（比如1格是1秒，60格，那总共也就能表达60s)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//核心变量之1：每个刻度对应一个TimerTask的链表</span></span><br><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> buckets = <span class="type">Array</span>.tabulate[<span class="type">TimerTaskList</span>](wheelSize) &#123; _ =&gt; <span class="keyword">new</span> <span class="type">TimerTaskList</span>(taskCounter) &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//核心变量之2：parent TimingWheel</span></span><br><span class="line"><span class="meta">@volatile</span> <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> overflowWheel: <span class="type">TimingWheel</span> = <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[timer] <span class="class"><span class="keyword">class</span> <span class="title">TimerTaskList</span>(<span class="params">taskCounter: <span class="type">AtomicInteger</span></span>) <span class="keyword">extends</span> <span class="title">Delayed</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// TimerTaskList forms a doubly linked cyclic list using a dummy root entry</span></span><br><span class="line">  <span class="comment">// root.next points to the head</span></span><br><span class="line">  <span class="comment">// root.prev points to the tail</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> root = <span class="keyword">new</span> <span class="type">TimerTaskEntry</span>(<span class="literal">null</span>, <span class="number">-1</span>)</span><br><span class="line">  root.next = root</span><br><span class="line">  root.prev = root</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> expiration = <span class="keyword">new</span> <span class="type">AtomicLong</span>(<span class="number">-1</span>L)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Set the bucket's expiration time</span></span><br><span class="line">  <span class="comment">// Returns true if the expiration time is changed</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">setExpiration</span></span>(expirationMs: <span class="type">Long</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    expiration.getAndSet(expirationMs) != expirationMs</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Get the bucket's expiration time</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getExpiration</span></span>(): <span class="type">Long</span> = &#123;</span><br><span class="line">    expiration.get()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Apply the supplied function to each of tasks in this list</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">foreach</span></span>(f: (<span class="type">TimerTask</span>)=&gt;<span class="type">Unit</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">var</span> entry = root.next</span><br><span class="line">      <span class="keyword">while</span> (entry ne root) &#123;</span><br><span class="line">        <span class="keyword">val</span> nextEntry = entry.next</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!entry.cancelled) f(entry.timerTask)</span><br><span class="line"></span><br><span class="line">        entry = nextEntry</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add a timer task entry to this list</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(timerTaskEntry: <span class="type">TimerTaskEntry</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">var</span> done = <span class="literal">false</span></span><br><span class="line">    <span class="keyword">while</span> (!done) &#123;</span><br><span class="line">      <span class="comment">// Remove the timer task entry if it is already in any other list</span></span><br><span class="line">      <span class="comment">// We do this outside of the sync block below to avoid deadlocking.</span></span><br><span class="line">      <span class="comment">// We may retry until timerTaskEntry.list becomes null.</span></span><br><span class="line">      timerTaskEntry.remove()</span><br><span class="line"></span><br><span class="line">      synchronized &#123;</span><br><span class="line">        timerTaskEntry.synchronized &#123;</span><br><span class="line">          <span class="keyword">if</span> (timerTaskEntry.list == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="comment">// put the timer task entry to the end of the list. (root.prev points to the tail entry)</span></span><br><span class="line">            <span class="keyword">val</span> tail = root.prev</span><br><span class="line">            timerTaskEntry.next = root</span><br><span class="line">            timerTaskEntry.prev = tail</span><br><span class="line">            timerTaskEntry.list = <span class="keyword">this</span></span><br><span class="line">            tail.next = timerTaskEntry</span><br><span class="line">            root.prev = timerTaskEntry</span><br><span class="line">            taskCounter.incrementAndGet()</span><br><span class="line">            done = <span class="literal">true</span></span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Remove the specified timer task entry from this list</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">remove</span></span>(timerTaskEntry: <span class="type">TimerTaskEntry</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      timerTaskEntry.synchronized &#123;</span><br><span class="line">        <span class="keyword">if</span> (timerTaskEntry.list eq <span class="keyword">this</span>) &#123;</span><br><span class="line">          timerTaskEntry.next.prev = timerTaskEntry.prev</span><br><span class="line">          timerTaskEntry.prev.next = timerTaskEntry.next</span><br><span class="line">          timerTaskEntry.next = <span class="literal">null</span></span><br><span class="line">          timerTaskEntry.prev = <span class="literal">null</span></span><br><span class="line">          timerTaskEntry.list = <span class="literal">null</span></span><br><span class="line">          taskCounter.decrementAndGet()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Remove all task entries and apply the supplied function to each of them</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">flush</span></span>(f: (<span class="type">TimerTaskEntry</span>)=&gt;<span class="type">Unit</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">var</span> head = root.next</span><br><span class="line">      <span class="keyword">while</span> (head ne root) &#123;</span><br><span class="line">        remove(head)</span><br><span class="line">        f(head)</span><br><span class="line">        head = root.next</span><br><span class="line">      &#125;</span><br><span class="line">      expiration.set(<span class="number">-1</span>L)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getDelay</span></span>(unit: <span class="type">TimeUnit</span>): <span class="type">Long</span> = &#123;</span><br><span class="line">    unit.convert(max(getExpiration - <span class="type">Time</span>.<span class="type">SYSTEM</span>.hiResClockMs, <span class="number">0</span>), <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">compareTo</span></span>(d: <span class="type">Delayed</span>): <span class="type">Int</span> = &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> other = d.asInstanceOf[<span class="type">TimerTaskList</span>]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(getExpiration &lt; other.getExpiration) <span class="number">-1</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(getExpiration &gt; other.getExpiration) <span class="number">1</span></span><br><span class="line">    <span class="keyword">else</span> <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//每个TimerTaskEntry封装一个TimerTask对象，同时内部3个变量</span></span><br><span class="line"><span class="keyword">private</span>[timer] <span class="class"><span class="keyword">class</span> <span class="title">TimerTaskEntry</span>(<span class="params">val timerTask: <span class="type">TimerTask</span>, val expirationMs: <span class="type">Long</span></span>) <span class="keyword">extends</span> <span class="title">Ordered</span>[<span class="type">TimerTaskEntry</span>] </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@volatile</span></span><br><span class="line">  <span class="keyword">var</span> list: <span class="type">TimerTaskList</span> = <span class="literal">null</span>   <span class="comment">//指向该链表自身</span></span><br><span class="line">  <span class="keyword">var</span> next: <span class="type">TimerTaskEntry</span> = <span class="literal">null</span>  <span class="comment">//后一个节点</span></span><br><span class="line">  <span class="keyword">var</span> prev: <span class="type">TimerTaskEntry</span> = <span class="literal">null</span>  <span class="comment">//前1个节点</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// if this timerTask is already held by an existing timer task entry,</span></span><br><span class="line">  <span class="comment">// setTimerTaskEntry will remove it.</span></span><br><span class="line">  <span class="keyword">if</span> (timerTask != <span class="literal">null</span>) timerTask.setTimerTaskEntry(<span class="keyword">this</span>)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cancelled</span></span>: <span class="type">Boolean</span> = &#123;</span><br><span class="line">    timerTask.getTimerTaskEntry != <span class="keyword">this</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">remove</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">var</span> currentList = list</span><br><span class="line">    <span class="comment">// If remove is called when another thread is moving the entry from a task entry list to another,</span></span><br><span class="line">    <span class="comment">// this may fail to remove the entry due to the change of value of list. Thus, we retry until the list becomes null.</span></span><br><span class="line">    <span class="comment">// In a rare case, this thread sees null and exits the loop, but the other thread insert the entry to another list later.</span></span><br><span class="line">    <span class="keyword">while</span> (currentList != <span class="literal">null</span>) &#123;</span><br><span class="line">      currentList.remove(<span class="keyword">this</span>)</span><br><span class="line">      currentList = list</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compare</span></span>(that: <span class="type">TimerTaskEntry</span>): <span class="type">Int</span> = &#123;</span><br><span class="line">    <span class="keyword">this</span>.expirationMs compare that.expirationMs</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Timer的3大核心功能"><a href="#Timer的3大核心功能" class="headerlink" title="Timer的3大核心功能"></a>Timer的3大核心功能</h3><p>我们知道，对于一个<code>Timer</code>来说，有3大功能： </p>
+<p>（1）添加：把一个<code>TimerTask</code>加入<code>Timer</code><br>（2）过期：时间到了，执行所有那些过期的<code>TimerTask</code><br>（3）取消：时间未到，取消<code>TimerTask</code>。把<code>TimerTask</code>删除</p>
+<p>下面就逐个分析这3大核心功能，来看一下如何用<code>TimingWheel</code>实现一个<code>Timer</code>。</p>
+<h4 id="添加"><a href="#添加" class="headerlink" title="添加"></a>添加</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Timer的对外接口add</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Timer</span>(<span class="params">taskExecutor: <span class="type">ExecutorService</span>, tickMs: <span class="type">Long</span> = 1, wheelSize: <span class="type">Int</span> = 20, startMs: <span class="type">Long</span> = <span class="type">System</span>.currentTimeMillis</span>) </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(timerTask: <span class="type">TimerTask</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    readLock.lock()</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      addTimerTaskEntry(<span class="keyword">new</span> <span class="type">TimerTaskEntry</span>(timerTask))  <span class="comment">//把TimerTask包装成一个TimerTaskEntry节点，添加进去</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      readLock.unlock()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">addTimerTaskEntry</span></span>(timerTaskEntry: <span class="type">TimerTaskEntry</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (!timingWheel.add(timerTaskEntry)) &#123;</span><br><span class="line">      <span class="comment">// Already expired or cancelled</span></span><br><span class="line">      <span class="keyword">if</span> (!timerTaskEntry.cancelled) <span class="comment">//关键点：如果该TimerTask不能被加入timingWheel，说明其已经过期了。同时该任务又没有被取消，则直接执行此任务</span></span><br><span class="line">        taskExecutor.submit(timerTaskEntry.timerTask)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//关键的TimingWheel的add函数</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(timerTaskEntry: <span class="type">TimerTaskEntry</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> expiration = timerTaskEntry.timerTask.expirationMs</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timerTaskEntry.cancelled) &#123;</span><br><span class="line">      <span class="comment">// 如果该任务已经被取消，则不加入timingWheel</span></span><br><span class="line">      <span class="literal">false</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (expiration &lt; currentTime + tickMs) &#123;</span><br><span class="line">      <span class="comment">//如果该Task的过期时间已经小于当前时间 ＋ 基本的tick单位（1ms)，说明此任务已经过期了，不用再加入timingWheel</span></span><br><span class="line">      <span class="literal">false</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (expiration &lt; currentTime + interval) &#123;</span><br><span class="line">      <span class="comment">// 如果过期时间 &lt; 当前时间 ＋ interval，则说明当前的刻度盘可以表达此过期时间。这里的interval就是当前刻度盘所能表达的最大时间范围：tickMs * wheelSize</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">//这里tickMs设置的是1ms，所以virtualId = expiration</span></span><br><span class="line">      <span class="keyword">val</span> virtualId = expiration / tickMs</span><br><span class="line"></span><br><span class="line">      <span class="comment">//关键的hash函数：根据过期时间，计算出bucket的位置</span></span><br><span class="line">      <span class="keyword">val</span> bucket = buckets((virtualId % wheelSize.toLong).toInt) </span><br><span class="line"></span><br><span class="line">      <span class="comment">//把该Task加入bucket</span></span><br><span class="line">      bucket.add(timerTaskEntry)</span><br><span class="line"></span><br><span class="line">      <span class="comment">//同一个bucket，所有task的expiration是相等的。因此，expiration相等的task，会hash到同1个bucket，然后此函数只第1次调用会成功</span></span><br><span class="line">      <span class="keyword">if</span> (bucket.setExpiration(virtualId * tickMs)) &#123;</span><br><span class="line">        queue.offer(bucket) <span class="comment">//该桶只会被加入delayedQueue 1次</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">//过期时间超出了currentTime + interval，说明该过期时间超出了当前刻度盘所能表达的最大范围，则调用其parent刻度盘，来试图加入此Task</span></span><br><span class="line">      <span class="keyword">if</span> (overflowWheel == <span class="literal">null</span>) addOverflowWheel()</span><br><span class="line">      overflowWheel.add(timerTaskEntry)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="过期"><a href="#过期" class="headerlink" title="过期"></a>过期</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>外部线程每隔200ms调用1次<code>advanceClock</code>，从而驱动时钟不断运转。在驱动过程中，发现过期的<code>Task</code>，放入<code>executors</code>执行</strong></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ExpiredOperationReaper</span> <span class="keyword">extends</span> <span class="title">ShutdownableThread</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    "<span class="type">ExpirationReaper</span>-%d".format(brokerId</span>),</span></span><br><span class="line"><span class="class">    <span class="title">false</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">doWork</span></span>() &#123;</span><br><span class="line">      <span class="comment">//不断循环，每200ms调用1次advanceClock</span></span><br><span class="line">      timeoutTimer.advanceClock(<span class="number">200</span>L)  </span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">advanceClock</span></span>(timeoutMs: <span class="type">Long</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="comment">//关键点：这里判断一个Task是否过期，其实还是用delayedQueue来判断的。而不是TimingWheel本事</span></span><br><span class="line">    <span class="comment">//过期的bucket会从队列的首部出对</span></span><br><span class="line">    <span class="keyword">var</span> bucket = delayQueue.poll(timeoutMs, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>)</span><br><span class="line">    <span class="keyword">if</span> (bucket != <span class="literal">null</span>) &#123;</span><br><span class="line">      writeLock.lock()</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (bucket != <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="comment">//把timingWheel的进度，调整到队列首部的bucket的过期时间，也就是当前时间  </span></span><br><span class="line">          timingWheel.advanceClock(bucket.getExpiration())</span><br><span class="line"></span><br><span class="line">          <span class="comment">//清空bucket，执行bucket中每个Task的过期函数（执行方式就是把所有这些过期的Task，放入executors)</span></span><br><span class="line">          <span class="comment">// 这里会遍历所有时间轮的任务，会存在一个降级的过程，因为所有时间轮的任务链都是存放在同一个delayQueue，有可能取出来的任务还未到达任务的执行时间（因为delayQueue指定了一个timeout，取出来的任务在发起(poll+timeout)的范围内, 可能任务还差几秒拆执行，这个误差取决于timeout的大小  因为在分配bucket时的最小单位tickMs）</span></span><br><span class="line">          bucket.flush(reinsert)</span><br><span class="line"></span><br><span class="line">          <span class="comment">//再次从队列首部拿下1个过期的bucket。如果没有，直接返回null。该函数不会阻塞</span></span><br><span class="line">          bucket = delayQueue.poll()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        writeLock.unlock()</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//TimingWheel</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">advanceClock</span></span>(timeMs: <span class="type">Long</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">if</span> (timeMs &gt;= currentTime + tickMs) &#123;</span><br><span class="line">      <span class="comment">//更新currentTime(把timeMs取整，赋给currentTime)</span></span><br><span class="line">      currentTime = timeMs - (timeMs % tickMs)</span><br><span class="line"></span><br><span class="line">      <span class="comment">//更新parent timingWheel的currentTime</span></span><br><span class="line">      <span class="keyword">if</span> (overflowWheel != <span class="literal">null</span>) overflowWheel.advanceClock(currentTime)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="取消"><a href="#取消" class="headerlink" title="取消"></a>取消</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Task</code>的取消，并不是在<code>Timer</code>里面实现的。而是<code>TimerTask</code>自身，定义了一<code>个cancel</code>函数。所谓<code>cancel</code>，就是自己把自己用<code>TimerTaskEntryList</code>这个双向链表中删除</strong>。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">TimerTask</span> <span class="keyword">extends</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> expirationMs: <span class="type">Long</span> <span class="comment">// timestamp in millisecond</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> timerTaskEntry: <span class="type">TimerTaskEntry</span> = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cancel</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">if</span> (timerTaskEntry != <span class="literal">null</span>) timerTaskEntry.remove()</span><br><span class="line">      timerTaskEntry = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">remove</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">var</span> currentList = list</span><br><span class="line">    <span class="keyword">while</span> (currentList != <span class="literal">null</span>) &#123;</span><br><span class="line">      currentList.remove(<span class="keyword">this</span>)  <span class="comment">//从链表中，把自己删掉</span></span><br><span class="line">      currentList = list</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">//remove函数。因为是双向链表，所以删除不需要遍历链表。删除复杂度是O(1)</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">remove</span></span>(timerTaskEntry: <span class="type">TimerTaskEntry</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      timerTaskEntry.synchronized &#123;</span><br><span class="line">        <span class="keyword">if</span> (timerTaskEntry.list eq <span class="keyword">this</span>) &#123;</span><br><span class="line">          timerTaskEntry.next.prev = timerTaskEntry.prev</span><br><span class="line">          timerTaskEntry.prev.next = timerTaskEntry.next</span><br><span class="line">          timerTaskEntry.next = <span class="literal">null</span></span><br><span class="line">          timerTaskEntry.prev = <span class="literal">null</span></span><br><span class="line">          timerTaskEntry.list = <span class="literal">null</span></span><br><span class="line">          taskCounter.decrementAndGet()</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="TimingWheel的本质"><a href="#TimingWheel的本质" class="headerlink" title="TimingWheel的本质"></a>TimingWheel的本质</h3><h4 id="DelayedQueue"><a href="#DelayedQueue" class="headerlink" title="DelayedQueue"></a>DelayedQueue</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上面代码中可以看到，添加/取消的时间复杂度都是<code>O(1)</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;并且在上面的代码中，大家可以看出，<strong><code>TimingWheel.advanceClock()</code>函数里面其实什么都没做，就只是更新了一下所有刻度盘的<code>currentTime</code></strong>。<strong>真正的判断哪个<code>Task</code>过期的逻辑，其实是用<code>DelayedQueue</code>来判断的，而不是通过<code>TimingWheel</code>判断的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那<code>TimingWheel</code>在此处到底起了一个什么作用呢？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;让我们从另外1个角度，来画一下<code>Timer</code>的实现机制：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面讲过，<strong><code>expiration</code>相等的<code>TimerTask</code>，会组成一个双向链表，称之为一个<code>bucket</code></strong>。<strong><code>DelayedQueue的</code>每个节点，放入的就是一个<code>bucket</code>，而不是单个的<code>TimerTask</code></strong>。<strong>过期的判断，就是通过<code>DelayedQueue</code>来实现的</strong>。</p>
+<p><img src="//blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161104143337239.png" alt=""></p>
+<h4 id="Hash函数"><a href="#Hash函数" class="headerlink" title="Hash函数"></a>Hash函数</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但这里有个问题，当我要把某个<code>TimerTask</code>加入这个<code>DelayedQueue</code>时，我怎么计算出所在的<code>bucket</code>呢？？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;答案就是<code>TimingWheel</code>。这里<strong><code>TimingWheel</code>本质上就是充当了一个<code>hash</code>函数，通过<code>Task</code>的<code>expiration time</code>，<code>hash</code>出所在的<code>bucket</code></strong>。如下图所示：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;跟水表一样，刻度盘有多级，每个刻度上对应一个<code>bucket</code>。根据<code>expiration</code>计算所属的<code>bucket</code>的代码，就在上面的<code>add</code>函数里面。</p>
+<p><img src="//blog.com/2019/05/04/TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析/20161104143729344.png" alt=""></p>
+<h3 id="刻度盘的层次"><a href="#刻度盘的层次" class="headerlink" title="刻度盘的层次"></a>刻度盘的层次</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每个刻度盘都有个变量，记录<code>currentTime</code>。所有刻度盘的<code>currentTime</code>基本是相等的（会根据自己的<code>tickMs</code>取整）。<strong><code>advanceClock</code>函数，就是更新这个<code>currentTime</code></strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这里，不同的刻度盘单位其实都是<code>ms</code>。只是不同的刻度盘上，1格所代表的时间长度是不一样的。这里有个关系：</p>
+<p><strong><code>parent</code> 刻度盘的1格表示的时间长度 ＝ <code>child</code>刻度盘的整个表盘所表示的时间范围</strong></p>
+<p>在代码中，即：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="function"><span class="keyword">def</span> <span class="title">addOverflowWheel</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      <span class="keyword">if</span> (overflowWheel == <span class="literal">null</span>) &#123;</span><br><span class="line">        overflowWheel = <span class="keyword">new</span> <span class="type">TimingWheel</span>(</span><br><span class="line">          tickMs = interval,  <span class="comment">//parent刻度盘的刻度tickMs = child刻度盘的整个表盘范围 interval(tickMs * wheelSize)</span></span><br><span class="line">          wheelSize = wheelSize,</span><br><span class="line">          startMs = currentTime,</span><br><span class="line">          taskCounter = taskCounter,</span><br><span class="line">          queue</span><br><span class="line">        )</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>因此，从底往上: <code>tickMs = 1ms, wheelSize = 20</code>格<br>第1层刻度盘能表达的<code>expiration</code>的范围就是<code>[currentTime, currentTime + tickMs*wheelSize]</code>; //每1格1ms，总共20ms范围 </p>
+<p>第2层刻度盘能表达的<code>expiration的</code>范围就是<code>[currentTime, currentTime + tickMs*wheelSize*wheelSize]</code>; //每1格20ms，总共400ms范围 </p>
+<p>第3层刻度盘能表达的<code>expiration</code>的范围就是<code>[currentTime, currentTime + tickMs*wheelSize*wheelSize*WheelSize]</code>; //每1格400ms，总共8000ms范围</p>
+<p><strong>这里有个细节</strong>：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> reinsert = (timerTaskEntry: <span class="type">TimerTaskEntry</span>) =&gt; addTimerTaskEntry(timerTaskEntry)</span><br><span class="line"></span><br><span class="line"><span class="comment">//advanceClock函数</span></span><br><span class="line">bucket.flush(reinsert)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>严格来讲，同1个<code>bucket</code>里面装的并不是<code>expiration</code>精确相等的<code>Task</code>，而是在当前刻度下，经过取整，落在同1个<code>bucket</code>里面的所有<code>Task</code></strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>最底层的精度是<code>1ms</code>，往上1层精度是<code>20ms</code>，意味着相差在<code>20ms</code>以内的所有<code>Task</code>都会落到同1个<code>bucket</code>里面，以此类推</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以当从上层的<code>TimingWheel</code>的<code>bucket</code>中取出来的<code>Task</code>，要重新从最低层加入<code>TimingWheel</code>体系，只有最底层都加不进去，才说明真正的过期！！</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><code>Kafka</code>对于<code>TimingWheel</code>的用法是有改进的，结合了<code>DelayedQueue</code>。</li>
+<li>并不同于传统的<code>TimingWheel</code>直接用来做<code>Task</code>的过期逻辑的判断，<code>Kafka</code>此处是用<code>DelayedQueue</code>判断过期，把<code>TimingWheel</code>当<code>hash</code>函数用，用来计算其在<code>DelayedQueue</code>中<code>bucket</code>的位置。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/延时队列/" rel="tag"># 延时队列</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+            <a href="/tags/延时任务处理/" rel="tag"># 延时任务处理</a>
+          
+            <a href="/tags/kafka/" rel="tag"># kafka</a>
+          
+            <a href="/tags/时间轮/" rel="tag"># 时间轮</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/04/Kafka解惑之时间轮（TimingWheel）/" rel="next" title="Kafka解惑之时间轮（TimingWheel）">
+                <i class="fa fa-chevron-left"></i> Kafka解惑之时间轮（TimingWheel）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/04/长连接和心跳的那些事儿/" rel="prev" title="长连接和心跳的那些事儿">
+                长连接和心跳的那些事儿 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析"><span class="nav-number">1.</span> <span class="nav-text">TimingWheel本质与DelayedOperationPurgatory核心结构-kafka时间轮分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DelayedOperationPurgatory核心结构"><span class="nav-number">1.1.</span> <span class="nav-text">DelayedOperationPurgatory核心结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ReplicaManager内部的2个成员变量"><span class="nav-number">1.1.1.</span> <span class="nav-text">ReplicaManager内部的2个成员变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayedProducePurgatory核心结构"><span class="nav-number">1.1.2.</span> <span class="nav-text">DelayedProducePurgatory核心结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Timer实现-–-TimingWheel"><span class="nav-number">1.2.</span> <span class="nav-text">Timer实现 – TimingWheel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么需要TimingWheel"><span class="nav-number">1.2.1.</span> <span class="nav-text">为什么需要TimingWheel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Timer的使用方式"><span class="nav-number">1.2.2.</span> <span class="nav-text">Timer的使用方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Timer内部结构"><span class="nav-number">1.2.3.</span> <span class="nav-text">Timer内部结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#源码解析"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">源码解析</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Timer的3大核心功能"><span class="nav-number">1.2.4.</span> <span class="nav-text">Timer的3大核心功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#添加"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">添加</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#过期"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">过期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#取消"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">取消</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TimingWheel的本质"><span class="nav-number">1.2.5.</span> <span class="nav-text">TimingWheel的本质</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DelayedQueue"><span class="nav-number">1.2.5.1.</span> <span class="nav-text">DelayedQueue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hash函数"><span class="nav-number">1.2.5.2.</span> <span class="nav-text">Hash函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#刻度盘的层次"><span class="nav-number">1.2.6.</span> <span class="nav-text">刻度盘的层次</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

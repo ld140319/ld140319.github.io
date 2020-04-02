@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,MySql,binlog,数据一致性问题,数据库与缓存,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="mysql binlog应用场景与原理深度剖析  原文地址：https://mp.weixin.qq.com/s/-CXTVPkUdMkT-6PB3lHLRw   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文深入介绍Mysql Binlog的应用场景，以及如何与MQ、elasticsearch、redis等组件的保持数据最终一致。最后通过案例深入分析binlog中几">
+<meta name="keywords" content="架构,MySql,binlog,数据一致性问题,数据库与缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql binlog应用场景与原理深度剖析">
+<meta property="og:url" content="http://blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="mysql binlog应用场景与原理深度剖析  原文地址：https://mp.weixin.qq.com/s/-CXTVPkUdMkT-6PB3lHLRw   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文深入介绍Mysql Binlog的应用场景，以及如何与MQ、elasticsearch、redis等组件的保持数据最终一致。最后通过案例深入分析binlog中几">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/1.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/2.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/3.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/4.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/5.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/6.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/7.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/8.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/9.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/10.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/11.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/12.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/13.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/14.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/15.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/16.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/17.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/18.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/19.webp">
+<meta property="og:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/20.webp">
+<meta property="og:updated_time" content="2019-06-07T05:05:15.354Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mysql binlog应用场景与原理深度剖析">
+<meta name="twitter:description" content="mysql binlog应用场景与原理深度剖析  原文地址：https://mp.weixin.qq.com/s/-CXTVPkUdMkT-6PB3lHLRw   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文深入介绍Mysql Binlog的应用场景，以及如何与MQ、elasticsearch、redis等组件的保持数据最终一致。最后通过案例深入分析binlog中几">
+<meta name="twitter:image" content="http://blog.com/2019/06/07/mysql%20binlog应用场景与原理深度剖析/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/">
+
+
+
+
+
+  <title>mysql binlog应用场景与原理深度剖析 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mysql binlog应用场景与原理深度剖析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-07T12:12:57+08:00">
+                2019-06-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/" itemprop="url" rel="index">
+                    <span itemprop="name">数据一致性问题</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库与缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/binlog/" itemprop="url" rel="index">
+                    <span itemprop="name">binlog</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/binlog/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="mysql-binlog应用场景与原理深度剖析"><a href="#mysql-binlog应用场景与原理深度剖析" class="headerlink" title="mysql binlog应用场景与原理深度剖析"></a>mysql binlog应用场景与原理深度剖析</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/-CXTVPkUdMkT-6PB3lHLRw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/-CXTVPkUdMkT-6PB3lHLRw</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文深入介绍<code>Mysql Binlog</code>的应用场景，以及如何与<code>MQ、elasticsearch、redis</code>等组件的保持数据最终一致。最后通过案例深入分析<code>binlog</code>中几乎所有<code>event</code>是如何产生的，作用是什么。</p>
+<h2 id="基于binlog的主从复制"><a href="#基于binlog的主从复制" class="headerlink" title="基于binlog的主从复制"></a>基于binlog的主从复制</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Mysql 5.0</code>以后，支持通过<code>binary log</code>(二进制日志)以支持主从复制。复制允许将来自一个<code>MySQL</code>数据库服务器（<code>master</code>) 的数据复制到一个或多个其他<code>MySQL</code>数据库服务器（<code>slave</code>)，以实现灾难恢复、水平扩展、统计分析、远程数据分发等功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>二进制日志中存储的内容称之为事件，每一个数据库更新操作(Insert、Update、Delete，不包括Select)等都对应一个事件。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注意：本文不是讲解mysql主从复制，而是讲解<code>binlog</code>的应用场景，<code>binlog</code>中包含哪些类型的<code>event</code>，这些<code>event</code>的作用是什么。你可以理解为，是对主从复制中关于<code>binlog</code>解析的细节进行深度剖析。而讲解主从复制主要是为了理解<code>binlog</code>的工作流程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面以<code>mysql</code>主从复制为例，讲解一个从库是如何从主库拉取<code>binlog</code>，并回放其中的<code>event</code>的完整流程。<code>mysql</code>主从复制的流程如下图所示：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/1.webp" alt="img"></p>
+<p>主要分为3个步骤：</p>
+<ul>
+<li><p><strong>第一步：</strong><code>master</code>在每次准备提交事务完成数据更新前，将改变记录到二进制日志(<code>binary log</code>)中（这些记录叫做二进制日志事件，<code>binary log event</code>，简称<code>event</code>)</p>
+</li>
+<li><p><strong>第二步：</strong><code>slave</code>启动一个<code>I/O</code>线程来读取主库<code>binary log</code>中的事件，并记录到<code>slave</code>自己的中继日志(<code>relay log</code>)中。 </p>
+</li>
+<li><p><strong>第三步：</strong><code>slave</code>还会起动一个<code>SQL</code>线程，该线程从<code>relay log</code>中读取事件并在备库执行，从而实现备库数据的更新。</p>
+</li>
+</ul>
+<h2 id="binlog的应用场景"><a href="#binlog的应用场景" class="headerlink" title="binlog的应用场景"></a>binlog的应用场景</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>binlog</code>本身就像一个螺丝刀，它能发挥什么样的作用，完全取决你怎么使用。就像你可以使用螺丝刀来修电器，也可以用其来固定家具。</p>
+<h3 id="读写分离"><a href="#读写分离" class="headerlink" title="读写分离"></a>读写分离</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最典型的场景就是通过<code>Mysql</code>主从之间通过<code>binlog</code>复制来实现横向扩展，来实现读写分离。如下图所示：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/2.webp" alt="img"></p>
+<p>   在这种场景下：</p>
+<ul>
+<li><p>有一个主库<code>Master</code>，所有的更新操作都在<code>master</code>上进行</p>
+</li>
+<li><p>同时会有多个<code>Slave</code>，每个<code>Slave</code>都连接到<code>Master</code>上，获取<code>binlog</code>在本地回放，实现数据复制。</p>
+</li>
+<li><p>在应用层面，需要对执行的<code>sql</code>进行判断。所有的更新操作都通过<code>Master</code>(<code>Insert、Update、Delete</code>等)，而查询操作(<code>Select</code>等)都在<code>Slave</code>上进行。由于存在多个<code>slave</code>，所以我们可以在<code>slave</code>之间做负载均衡。通常业务都会借助一些数据库中间件，如<code>tddl、sharding-jdbc</code>等来完成读写分离功能。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因为工作性质的原因，笔者见过最多的一个业务，一个<code>master</code>，后面挂了20多个<code>slave</code>。笔者之前写过一篇关于数据库中间件实现原理的文章，感兴趣的读者可以参考：<a href="http://mp.weixin.qq.com/s?__biz=MzA5MDA5Njk0NQ==&amp;mid=2456618601&amp;idx=1&amp;sn=c10839f1797e7be1ea41f005b57432df&amp;chksm=87897237b0fefb215dd74c28cf5b524984b8f50d2ef13293e37919774f1c51e36642e489ee38&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">数据库中间件详解</a></p>
+<h3 id="数据恢复"><a href="#数据恢复" class="headerlink" title="数据恢复"></a>数据恢复</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一些同学可能有误删除数据库记录的经历，或者因为误操作导致数据库存在大量脏数据的情况。例如笔者，曾经因为误操作污染了业务方几十万数据记录。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如何将脏数据恢复成原来的样子？如果恢复已经被删除的记录？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这些都可以通过反解<code>binlog</code>来完成，笔者也是通过这个手段，来恢复业务方的记录。</p>
+<h3 id="数据最终一致性"><a href="#数据最终一致性" class="headerlink" title="数据最终一致性"></a>数据最终一致性</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际开发中，我们经常会遇到一些需求，在数据库操作成功后，需要进行一些其他操作，如：发送一条消息到<code>MQ</code>中、更新缓存或者更新搜索引擎中的索引等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>如何保证数据库操作与这些行为的一致性，就成为一个难题</strong>。以数据库与<code>redis</code>缓存的一致性为例：操作数据库成功了，可能会更新<code>redis</code>失败；反之亦然。很难保证二者的完全一致。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>遇到这种看似无解的问题，最好的办法是换一种思路去解决它：</strong>不要同时去更新数据库和其他组件，只是简单的更新数据库即可。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果数据库操作成功，必然会产生<code>binlog</code>。之后，我们通过一个组件，来模拟的<code>mysql</code>的<code>slave</code>，拉取并解析<code>binlog</code>中的信息。<strong>通过解析binlog的信息，去异步的更新缓存、索引或者发送MQ消息，保证数据库与其他组件中数据的最终一致。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这里，我们将模拟<code>slave</code>的组件，统一称之为<strong>binlog同步组件</strong>。你并不需要自己编写这样的一个组件，已经有很多开源的实现，例如<code>linkedin</code>的<code>databus</code>，阿里巴巴的<code>canal</code>，美团点评的<code>puma</code>等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当我们通过<code>binlog</code>同步组件完成数据一致性时，此时架构可能如下图所示：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/3.webp" alt="img"></p>
+<h4 id="增量索引"><a href="#增量索引" class="headerlink" title="增量索引"></a>增量索引</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常索引分为全量索引和增量索引。对于增量索引的部分，可以通过监听<code>binlog</code>变化，根据<code>binlog</code>中包含的信息，转换成<code>es</code>语法，进行实时索引更新。当然，你可能并没有使用<code>es</code>，而是<code>solr</code>，这里只是以<code>es</code>举例。</p>
+<h4 id="可靠消息"><a href="#可靠消息" class="headerlink" title="可靠消息"></a>可靠消息</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可靠消息是指的是：保证本地事务与发送消息到<code>MQ</code>行为的一致性。一些业务使用<strong>本地事务表</strong>或者<strong>独立消息服务</strong>，来保证二者的最终一致。<code>Apache RocketMQ</code>在4.3版本开源了<strong>事务消息</strong>，也是用于完成此功能。事实上，这两种方案，都有一定侵入性，对业务不透明。通过订阅binlog来发送可靠消息，则是一种解耦、无侵入的方案。关于可靠消息，笔者最近写了一篇文章， 感兴趣的读者可以参考：<a href="http://mp.weixin.qq.com/s?__biz=MzA5MDA5Njk0NQ==&amp;mid=2456618733&amp;idx=1&amp;sn=2ffda081c7ba696f45d3bb392d4285b7&amp;chksm=878972b3b0fefba5ddad677032e5b2250df5ade97baed09d19a05de08500a284c9135dcfe1ea&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">可靠消息一致性的奇淫技巧</a>。</p>
+<h4 id="缓存一致性"><a href="#缓存一致性" class="headerlink" title="缓存一致性"></a>缓存一致性</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务经常遇到的一个问题是，如何保证数据库中记录和缓存中数据的一致性。不妨换一种思路，只更新数据库，数据库更新成功后，通过拉取<code>binlog</code>来异步的更新缓存(通常是删除，让业务回源到数据库)。如果数据库更新失败，没有对应<code>binlog</code>，那么也不会去更新缓存，从而实现最终一致性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>可以看到，binlog是一把利器，可以保证数据库与与其他任何组件(es、mq、redis等)的最终一致。这是一种优雅的、通用的、无业务入侵的、彻底的解决方案</strong>。我们没有必要再单独的研究某一种其他组件如何与数据库保持最终一致，可以通过<code>binlog</code>来实现统一的解决方案。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际开发中，你可以简单的像上图那样，<strong>每个应用场景都模拟一个<code>slave</code></strong>，各自连接到<code>Mysql</code>上去拉取<code>binlog</code>，<code>master</code>会给每个连接上来的<code>slave</code>一份完整的<code>binlog</code>拷贝，业务拿到各自的<code>binlog</code>之后进行消费，彼此之间互不影响。但是这样，有一些弊端，多个<code>slave</code>会给<code>master</code>带来一些额外<strong>管理上的开销，网卡流量也将翻倍的增长</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>我们可以进行一些优化，之所以不同场景模拟多个slave来连接master获取同一份binlog，本质上要满足的是：一份binlog数据，同时提供给多个不同业务场景使用，彼此之间互不影响</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，消息中间件是一个很好的解决方案。现在很多主流的消息中间件，都支持<strong>consumer group</strong>的概念，如<code>kafka、rocketmq</code>等。同一个<code>topic</code>中的数据，可以由多个不同<code>consumer group`</code>来消费，且不同的consumer group<code>之间是相互隔离的，例如：当前消费到的位置(</code>offset`)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此，我们完全可以将<code>binlog</code>，统一都发送到<code>MQ</code>中，不同的应用场景使用不同的<code>consumer grou</code>来消费，彼此之间互不影响。此时架构如下图所示：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/4.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过这样方式，我们巧妙的达到了一份数据多个应用场景来使用。一般，<strong>一个<code>Mysql</code>实例中可能会创建多个库(<code>Database</code>)，通常我们会将一个库的<code>binlog</code>放到一个对应的<code>MQ</code>中的<code>Topic</code>中</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当将<code>binlog</code>发送到<code>MQ</code>中后，我们就可以利用<code>MQ</code>的一些高级特性了。例如<code>binlog</code>发送到<code>MQ</code>过快，消费方来不及消费，可以利用<code>MQ</code>的消息堆积能力进行流量削峰。还可以利用<code>MQ</code>的消息回溯功能，例如一个业务需要消费历史的<code>binlog</code>，此时<code>MQ</code>中如果还有保存，那么就可以直接进行回溯。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，有一些<code>binlog</code>同步组件可能实现了类似于<code>MQ</code>的功能，此时你就无序再单独的使用<code>MQ</code>。</p>
+<h3 id="异地多活"><a href="#异地多活" class="headerlink" title="异地多活"></a>异地多活</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个更大的应用场景，异地多活场景下，跨数据中心之间的数据同步。这种场景的下，多个数据中心都需要写入数据，并且往对方同步。以下是一个简化的示意图：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/5.webp" alt="img"></p>
+<p>这里有一些特殊的问题需要处理。典型的包括：</p>
+<ul>
+<li><p><strong>数据冲突：</strong>双方同时插入了一个相同主键的值，那么往对方同步时，就会出现主键冲突的错误。</p>
+</li>
+<li><p><strong>数据回环：</strong>一个库A中插入的数据，通过<code>binlog</code>同步到另外一个库B中，依然会产生<code>binlo</code>g。此时库B的数据再次同步回库A，如此反复，就形成了一个死循环。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如何解决数据冲突、数据回环，就变成了<code>binlog</code>同步组件要解决的问题。同样，业界也有了成熟的实现，比较知名的有阿里开源的<code>otter</code>，以及摩拜(已经属于美团)的<code>DRC</code>等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;笔者之前写过一篇文章，介绍如何在多机房进行数据同步，感兴趣的读者可以参考以下文章：<a href="http://mp.weixin.qq.com/s?__biz=MzA5MDA5Njk0NQ==&amp;mid=2456618627&amp;idx=1&amp;sn=fce8115fd8f125cd7f2402c19b57c20a&amp;chksm=878972ddb0fefbcb2895570a5c8f5a4d73f6b79681f96ebb2c303810b06d6887963c07204459&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">异地多活场景下的数据同步之道</a></p>
+<h2 id="binlog事件详解"><a href="#binlog事件详解" class="headerlink" title="binlog事件详解"></a>binlog事件详解</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Mysql</code>已经经历了多个版本的发布，最新已经到<code>8.x</code>，然而目前企业中主流使用的还是<code>Mysql 5.6</code>或<code>5.7</code>。不同版本的<code>Mysql</code>中，<code>binlog</code>的格式和事件类型可能会有些细微的变化，不过暂时我们并不讨论这些细节。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总的来说，<code>binlog</code>文件中存储的内容称之为二进制事件，简称事件。我们的每一个数据库更新操作(<code>Insert、Update、Delete</code>等)，都会对应的一个事件。</p>
+<p>从大的方面来说，<code>binlog</code>主要分为2种格式：</p>
+<ul>
+<li><p><strong>Statement模式：</strong><code>binlog</code>中记录的就是我们执行的<code>SQL</code>；</p>
+</li>
+<li><p><strong>Row模式：</strong><code>binlog</code>记录的是每一行记录的每个字段变化前后得到值。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;熟悉主从复制的同学，应该知道，还有第三种模式<strong>Mixed</strong>(即混合模式)，从严格意义上来说，这并不是一种新的<code>binlog</code>格式，只是结合了Statement和<code>Row</code>两种模式而已。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当我们选择不同的<code>binlog</code>模式时，在<code>binlog</code>文件包含的事件类型也不相同，如:</p>
+<p> <strong>1)</strong>在<code>Statement</code>模式下，我们就看不到<code>Row</code>模式下独有的事件类型。</p>
+<p><strong>2)</strong>有一些类型的<code>event</code>，必须在我们开启某些特定配置的情况下，才会出现；</p>
+<p><strong>3)</strong>当然也会有一些公共的<code>event</code>类型，在任何模式下都会出现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mysql中定义了30多个<code>event</code>类型，这里并不打算将所有的事件类型提前列出，这样没有意义，只会让读者茫然不知所措。笔者将会在必要的地方，介绍遇到的每一种<code>event</code>类型的作用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前我们先从宏观的角度对<code>binlog</code>有一个感性的认知。</p>
+<h3 id="多文件存储"><a href="#多文件存储" class="headerlink" title="多文件存储"></a>多文件存储</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>mysql</code>将数据库更新操作对应的<code>event</code>记录到本地的<code>binlog</code>文件中，显然在一个文件中记录所有的<code>event</code>是不可能的，过大的文件会给我们的运维带来麻烦，如删除一个大文件，在<code>I/O</code>调度方面会给我们带来不可忽视的资源开销。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此，目前基本上所有支持本地文件存储的组件，如<code>MQ、Mysql</code>等，都会控制一个文件的大小。在数据量较多的情况下，就分配到多个文件进行存储。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>mysql</code>中，我们可以通过”<code>show binary logs</code>“语句，来查看当前有多少个<code>binlog</code>文件，以及每个<code>binlog</code>文件的大小，如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/6.webp" alt="img"></p>
+<p>另外，<code>mysql</code>提供了：</p>
+<ul>
+<li><p><strong>max_binlog_size</strong>配置项，用于控制一个<code>binlog</code>文件的大小，默认是<code>1G</code></p>
+</li>
+<li><p><strong>expire_logs_days</strong>配置项，可以控制<code>binlog</code>文件保留天数，默认是<code>0</code>，也就是永久保留。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际生产环境中，一般无法保留所有的历史<code>binlog</code>。因为一条记录可能会变更多次，记录依然是一条，但是对应的<code>binlog</code>事件就会有多个。在数据变更比较频繁的情况下，就会产生大量的<code>binlog</code>文件。此时，则无法保留所有的历史<code>binlog</code>文件。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在mysql的percona分支上，还提供了<strong>max_binlog_files</strong>配置项，用于设置可以保留的<code>binlog</code>文件数量，以便我们更精确的控制<code>binlog</code>文件占用的磁盘空间。这是一个非常有用的配置，笔者曾经遇到一个库，大约10分钟就会产生一个<code>binlog</code>文件，也就是1G，按照这种增长速度，1天下来产生的<code>binlog</code>文件，就会占用大概144G左右的空间，磁盘空间可能很快就会被使用完。通过此配置，我们可以显示的控制<code>binlog</code>文件的数量，例如指定50，<code>binlog</code>文件最多只会占用50G左右的磁盘空间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在更高版本的<code>mysql</code>中，支持按照秒级精度，来控制<code>binlog</code>文件的保留时间。下面我们将对<code>binlog</code>文件中的内容进行详细的讲解。</p>
+<h3 id="binlog管理事件"><a href="#binlog管理事件" class="headerlink" title="binlog管理事件"></a>binlog管理事件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所谓<code>binlog</code>管理事件，官方称之为<code>binlog managent events</code>，你可以认为是一些在任何模式下都有可能会出现的事件，不管你的配置<code>binlog_format</code>是<code>Row、Statement</code>还是<code>Mixed</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以下通过<strong>“show binlog events”</strong>语法进行查看一个空的<code>binlog</code>文件，也就是只包含(部分)管理事件，没有其他数据更新操作对应的事件。如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/7.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在当前<code>binlog v4</code>版本中，每个<code>binlog</code>文件总是以<strong>Format Description Event</strong>作为开始，以<strong>Rotate Event</strong>结束作为结束。如果你使用的是很古老的<code>Mysql</code>版本中，开始事件也有可能是<strong>START EVENT V3，</strong>而结束事件是<strong>Stop Event</strong>。在开始和结束之间，穿插着其他各种事件。</p>
+<p>在Event_Type列中，我们看到了三个事件类型：</p>
+<ul>
+<li><p><strong>Format_desc：</strong>也就是我们所说的<code>Format Description Event</code>，是<code>binlog</code>文件的第一个事件。在<code>Info</code>列，我们可以看到，其标明了<code>Mysql Server</code>的版本是<code>5.7.10</code>，<code>Binlog</code>版本是4。</p>
+</li>
+<li><p><strong>Previous_gtids：</strong>该事件完整名称为，<code>PREVIOUS_GTIDS_LOG_EVENT</code>。熟悉<code>Mysql</code> 基于<code>GTID</code>复制的同学应该知道，这是表示之前的<code>binlog</code>文件中，已经执行过的<code>GTID</code>。需要我们开启<code>GTID</code>选项，这个事件才会有值，在后文中，将会详细的进行介绍。</p>
+</li>
+<li><p><strong>Rotate：</strong><code>Rotate Event</code>是每个<code>binlog</code>文件的结束事件。在<code>Info</code>列中，我们看到了其指定了下一个<code>binlog</code>文件的名称是<code>mysql-bin.000004</code>。</p>
+</li>
+</ul>
+<p>关于<strong>“show binlog events”</strong>语法显示的每一列的作用说明如下：</p>
+<ul>
+<li><p><code>Log_name</code>：当前事件所在的<code>binlog</code>文件名称</p>
+</li>
+<li><p><code>Pos</code>：当前事件的开始位置，每个事件都占用固定的字节大小，结束位置(<code>End_log_position</code>)减去<code>Pos</code>，就是这个事件占用的字节数。细心的读者可以看到了，第一个事件位置并不是从0开始，而是从4。<code>Mysql</code>通过文件中的前4个字节，来判断这是不是一个<code>binlog</code>文件。这种方式很常见，很多格式的文件，如<code>pdf、doc、jpg</code>等，都会通常前几个特定字符判断是否是合法文件。`</p>
+</li>
+<li><p><code>Event_type</code>：表示事件的类型</p>
+</li>
+<li><p><code>Server_id</code>：表示产生这个事件的<code>mysql server_id</code>，通过设置<code>my.cnf</code>中的<strong>server-id</strong>选项进行配置。</p>
+</li>
+<li><p><code>End_log_position</code>：下一个事件的开始位置</p>
+</li>
+<li><p><code>Info</code>：当前事件的描述信息</p>
+</li>
+</ul>
+<h3 id="Statement模式下的事件"><a href="#Statement模式下的事件" class="headerlink" title="Statement模式下的事件"></a>Statement模式下的事件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>mysql5.0</code>及之前的版本只支持基于语句的复制，也称之为逻辑复制，也就是<code>binary log</code>文件中，直接记录的就是数据更新对应的<code>sql</code>。</p>
+<p>假设有名为<code>test</code>库中有一张<code>user</code>表，如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/8.webp" alt="img"></p>
+<p>现在，我们往<code>user</code>表中插入一条数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user(name) values(&quot;tianbowen&quot;);</span><br></pre></td></tr></table></figure>
+<p>之后，可以使用”<strong>show binlog events</strong>“ 语法查看<code>binary log</code>中的内容，如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/9.webp" alt="img"></p>
+<p>​       红色框架中Event，是我们执行上面<code>Insert</code>语句产生的4个<code>Event</code>。</p>
+<p>下面进行详细的说明：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(划重点)首先，需要说明的是，每个事务都是以<strong>Query Event</strong>作为开始，其<code>INFO</code>列内容为”<code>BEGIN</code>“，以<strong>Xid Event</strong>表示结束，其<code>INFO</code>列内容为<code>COMMIT</code>。即使对于单条更新<code>SQL</code>我们没有开启事务，<code>Mysql</code>也会默认的帮我们开启事务。因此在上面的红色框中，尽管我们只是执行了一个<code>INSERT</code>语句，没有开启事务，但是<code>Mysql</code>默认帮我们开启了事务，所以第一个<code>Event</code>是<code>Query Event</code>，最后一个是<code>Xid Event</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，是一个<strong>Intvar Event</strong>，因为我们的<code>Insert</code>语句插入的表中，主键是自增的(<code>AUTO_INCREMENT</code>)列，<code>Mysql</code>首先会自增一个值，这就是<code>Intvar Event</code>的作用，这里我们看到<code>INFO</code>列的值为<code>INSERT_ID=1</code>，也就是说，这次的自增主键id为1。需要注意的是，这个事件，只会在<code>Statement</code>模式下出现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后，还是一个<code>Query Event</code>，这里记录的就是我们插入的<code>SQL</code>。这也体现了<code>Statement</code>模式的作用，就是记录我们执行的<code>SQL</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Statement模式下还有一些不常用的<code>Event</code>，如<strong>USER_VAR_EVENT</strong>，这是用于记录用户设置的变量，仅仅在<code>Statement</code>模式起作用。如：</p>
+<p>执行以下<code>SQL</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set @name = &apos;tianshouzhi&apos;;insert into user(name) values(@name);</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里，我们插入<code>sql</code>的时候，通过引用一个变量。此时查看<code>binlog</code>变化，这里为了易于观察，在执行<code>show binlog events</code>时，指定了<code>binlog</code>文件和<code>from</code>的位置，即只查看指定<code>binlog</code>文件中从指定位置开始的<code>event</code>。如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/10.webp" alt="img"></p>
+<p>可以看到，依然符合我们所说的，对于这个插入语句，依然默认开启了事务。主键自曾值<code>INSERT_ID=2</code>。</p>
+<p>当然，我们也看到了<code>User var</code>这个事件，其记录了我们的设置的变量值，只不过以16进制显示。</p>
+<h3 id="Row模式下的事件"><a href="#Row模式下的事件" class="headerlink" title="Row模式下的事件"></a>Row模式下的事件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>mysql5.1</code>开始支持基于行的复制，这种方式记录的某条sql影响的所有行记录<strong>变更前</strong>和<strong>变更后</strong>的值。<code>Row</code>模式下主要有以下10个事件：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/11.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;很直观的，我们看到了<code>INSERT、DELETE、UPDATE</code>操作都有3个版本(<code>v0、v1、v2</code>)，v0和v1已经过时，我们只需要关注V2版本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此外，还有一个<strong>TABLE_MAP_EVENT</strong>，这个<code>event</code>我们需要特别关注，可以理解其作用就是记录了<code>INSERT、DELETE、UPDATE</code>操作的表结构。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面，我们通过案例演示，<code>ROW</code>模式是如何记录变更前后记录的值，而不是记录<code>SQL</code>。这里只演示<code>UPDATE，INSERT和DELETE</code>也是类似。</p>
+<p>在前面的操作步骤中，我们已经插入了2条记录，如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/12.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在需要从<code>Statement</code>模式切换到<code>Row</code>模式，重启<code>Mysql</code>之后，执行以下<code>SQL</code>更新这两条记录：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update user set name=&apos;wangxiaoxiao&apos;;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>binary log</code>中，会把这2条记录变更前后的值都记录下来，以下是一个逻辑示意图：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/13.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该逻辑示意图显示了，在默认情况下，受到影响的记录行，每个字段变更前的和变更后的值，都会被记录下来，即使这个字段的值没有发生变化<strong>。</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，我们还是通过”<code>show binlog events</code>“语法来验证：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/14.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先我们可以看到的是，在<code>Row</code>模式下，单条<code>SQL</code>依然会默认开启事务，通过<code>Query Event</code>(值为BEGIN)开始，以<code>Xid Event</code>结束。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，我们看到了一个<code>Table_map</code>事件，就是前面提到的<code>TABLE_MAP_EVENT</code>，在INFO列，我们可以看到其记录table_id为108，操作的是test库中user表。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，是一个<strong>Update_rows</strong>事件，然而其<code>INFO</code>，并没有像<code>Statement</code>模式那样，显示一条SQL，我们无法直接看到其变更前后的值是什么。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于存储的都是二进制内容，直接vim无法查看，我们需要借助另外一个工具<strong>mysqlbinlog</strong>来查看其内容。如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/15.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;截图中显示了2个<code>event</code>，第一个红色框就是<code>Table_map</code>事件，第二个是<code>Update_rows</code>事件。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在第二个红色框架中，显示了两个<code>Update sql</code>，这是只是<code>mysqlbinlog</code>工具为了方便我们查看，反解成<code>SQL</code>而已。我们看到了<code>WHERE</code>以及<code>SET</code>子句中，并没有直接列出字段名，而是以<strong>@1</strong>、<strong>@2</strong>这样的表示字段位于数据库表中的顺序。<strong>事实上，这里显示的内容，WHERE部分就是每个字段修改前的值，而SET部分，则是每个字段修改后的值，</strong>也就是变更前后的值都会记录。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里我们思考以下<code>mysqlbinlog</code>工具的工作原理，其可以将二进制数据反解成SQL进行展示。那么，<strong>如果我们可以自己解析binlog，就可以做数据恢复，这并非是什么难事</strong>。例如用户误删除的数据，执行的是<code>DETELE</code>语句，由于Row模式下会记录变更之前的字段的值，我们可以将其反解成一个<code>INSERT</code>语句，重新插入，从而实现数据恢复。</p>
+<h3 id="binlog-row-image参数"><a href="#binlog-row-image参数" class="headerlink" title="binlog_row_image参数"></a>binlog_row_image参数</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们经常会看到一些<code>Row</code>模式和<code>Statement</code>模式的比较。<code>ROW</code>模式下，即使我们只更新了一条记录的其中某个字段，也会记录每个字段变更前后的值，<code>binlog</code>日志就会变大，带来磁盘<code>IO</code>上的开销，以及网络开销。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实上，这个行为可以通过<strong>binlog_row_image</strong>控制其有3个值，默认为<code>FULL</code>： </p>
+<ul>
+<li><p><code>FULL</code> : 记录列的所有修改，即使字段没有发生变更也会记录。 </p>
+</li>
+<li><p><code>MINIMAL</code>：只记录修改的列。 </p>
+</li>
+<li><p><code>NOBLOB</code> :如果是text类型或clob字段，不记录这些日志。 </p>
+</li>
+</ul>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/16.webp" alt="img"></p>
+<p>我们可以将其修改为<code>MINIMAL</code>，则可以只记录修改的列的值。</p>
+<h3 id="binlog-rows-query-log-events参数"><a href="#binlog-rows-query-log-events参数" class="headerlink" title="binlog_rows_query_log_events参数"></a>binlog_rows_query_log_events参数</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>Statement</code>模式下，直接记录<code>SQL</code>比较直观，事实上，在<code>Row</code>模式下，也可以记录。<code>mysql</code>提供了一个<strong>binlog_rows_query_log_events</strong>参数，默认为值为<code>FALSE</code>，如果为<code>true</code>的情况下，会通过<strong>Rows Query Event</strong>来记录<code>SQL</code>。</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/17.webp" alt="img"></p>
+<p> 可以在<code>my.cnf</code>中添加以下配置，来开启<code>row</code>模式下的原始<code>sql</code>记录(需要重启)：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">binlog-rows-query-log_events=1</span><br></pre></td></tr></table></figure>
+<p>之后，再插入数据数据时</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user(name) values(&quot;maoxinyi&quot;);</span><br></pre></td></tr></table></figure>
+<p>在binlog文件中，我们将看到<strong>Rows Query Event</strong></p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/18.webp" alt="img"></p>
+<h3 id="GTID相关事件"><a href="#GTID相关事件" class="headerlink" title="GTID相关事件"></a>GTID相关事件</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从<code>MySQL 5.6</code>开始支持<code>GTID</code>复制。要开启<code>GTID</code>，修改<code>my.cnf</code>文件，添加以下配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gtid-mode=onenforce-gtid-consistency=true</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在这种情况下，每当我们执行一个事务之前，都会记录一个<strong>GTID Event</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user(&quot;name&quot;) values(&quot;zhuyihan&quot;);</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时<code>binlog</code>内容如下：</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/19.webp" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而当我们切换到下一个<code>binlog</code>文件时，会记录之前的已经执行过的<code>GTID</code>。这里我们通过执行以下sql手工切换到一个新的<code>binlog</code>文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; flush logs;Query OK, 0 rows affected (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;之后在新的<code>binlog</code>文件中，我们看到之前执行过的<code>GTID</code>在下一个文件中出现了。</p>
+<p><img src="//blog.com/2019/06/07/mysql binlog应用场景与原理深度剖析/20.webp" alt="img"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/binlog/" rel="tag"># binlog</a>
+          
+            <a href="/tags/数据一致性问题/" rel="tag"># 数据一致性问题</a>
+          
+            <a href="/tags/数据库与缓存/" rel="tag"># 数据库与缓存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/07/epoll的本质是什么/" rel="next" title="epoll的本质是什么">
+                <i class="fa fa-chevron-left"></i> epoll的本质是什么
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/07/线上慢查询优化思路/" rel="prev" title="线上慢查询优化思路">
+                线上慢查询优化思路 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql-binlog应用场景与原理深度剖析"><span class="nav-number">1.</span> <span class="nav-text">mysql binlog应用场景与原理深度剖析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基于binlog的主从复制"><span class="nav-number">1.1.</span> <span class="nav-text">基于binlog的主从复制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog的应用场景"><span class="nav-number">1.2.</span> <span class="nav-text">binlog的应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#读写分离"><span class="nav-number">1.2.1.</span> <span class="nav-text">读写分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据恢复"><span class="nav-number">1.2.2.</span> <span class="nav-text">数据恢复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据最终一致性"><span class="nav-number">1.2.3.</span> <span class="nav-text">数据最终一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#增量索引"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">增量索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#可靠消息"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">可靠消息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#缓存一致性"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">缓存一致性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异地多活"><span class="nav-number">1.2.4.</span> <span class="nav-text">异地多活</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog事件详解"><span class="nav-number">1.3.</span> <span class="nav-text">binlog事件详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#多文件存储"><span class="nav-number">1.3.1.</span> <span class="nav-text">多文件存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog管理事件"><span class="nav-number">1.3.2.</span> <span class="nav-text">binlog管理事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Statement模式下的事件"><span class="nav-number">1.3.3.</span> <span class="nav-text">Statement模式下的事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Row模式下的事件"><span class="nav-number">1.3.4.</span> <span class="nav-text">Row模式下的事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog-row-image参数"><span class="nav-number">1.3.5.</span> <span class="nav-text">binlog_row_image参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog-rows-query-log-events参数"><span class="nav-number">1.3.6.</span> <span class="nav-text">binlog_rows_query_log_events参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GTID相关事件"><span class="nav-number">1.3.7.</span> <span class="nav-text">GTID相关事件</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

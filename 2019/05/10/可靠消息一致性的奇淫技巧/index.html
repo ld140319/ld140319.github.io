@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,消息队列,分布式事务,最终一致性,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="可靠消息一致性的奇淫技巧  原文地址：https://mp.weixin.qq.com/s/yxYCybFPMrFp465FVg15TQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;”可靠消息最终一致性”是为了解决Producer端的消息发送与本地事务执行的原子性问题，是一种柔性事务，属于异步确保型，软状态，最终一致。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="keywords" content="架构,消息队列,分布式事务,最终一致性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="可靠消息一致性的奇淫技巧">
+<meta property="og:url" content="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="可靠消息一致性的奇淫技巧  原文地址：https://mp.weixin.qq.com/s/yxYCybFPMrFp465FVg15TQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;”可靠消息最终一致性”是为了解决Producer端的消息发送与本地事务执行的原子性问题，是一种柔性事务，属于异步确保型，软状态，最终一致。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/1.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/2.webp">
+<meta property="og:image" content="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/3.webp">
+<meta property="og:updated_time" content="2019-05-13T08:39:20.252Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="可靠消息一致性的奇淫技巧">
+<meta name="twitter:description" content="可靠消息一致性的奇淫技巧  原文地址：https://mp.weixin.qq.com/s/yxYCybFPMrFp465FVg15TQ   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;”可靠消息最终一致性”是为了解决Producer端的消息发送与本地事务执行的原子性问题，是一种柔性事务，属于异步确保型，软状态，最终一致。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp">
+<meta name="twitter:image" content="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/">
+
+
+
+
+
+  <title>可靠消息一致性的奇淫技巧 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/10/可靠消息一致性的奇淫技巧/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">可靠消息一致性的奇淫技巧</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-10T12:12:57+08:00">
+                2019-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/分布式事务/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式事务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/消息队列/分布式事务/最终一致性/" itemprop="url" rel="index">
+                    <span itemprop="name">最终一致性</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="可靠消息一致性的奇淫技巧"><a href="#可靠消息一致性的奇淫技巧" class="headerlink" title="可靠消息一致性的奇淫技巧"></a>可靠消息一致性的奇淫技巧</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/yxYCybFPMrFp465FVg15TQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/yxYCybFPMrFp465FVg15TQ</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;”可靠消息最终一致性”是为了解决<strong>Producer端的消息</strong>发送与<strong>本地事务执行</strong>的原子性问题，是一种柔性事务，属于异步确保型，软状态，<strong>最终一致</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>问题典型场景是：</strong>本地往DB中插入一条记录，同时往MQ中发送一条消息，必须保证二者同时成功或者同时失败。由于DB和MQ是不同的系统，可能插入DB成功，但是发消息到MQ中失败；也可能插入DB失败，但是发送消息到MQ成功。如何保证二者的一致性，就成为了我们要解决的问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本文深入讲解如何实现可靠消息一致性的各种实现方案，让你一次爽个够。包括：</p>
+<ul>
+<li><strong>本地事务表</strong></li>
+<li><strong>RocketMQ中的事务消息</strong></li>
+<li><strong>Binlog订阅解析</strong></li>
+<li><strong>Kafka中如何实现(彩蛋)</strong></li>
+</ul>
+<h2 id="本地事务表"><a href="#本地事务表" class="headerlink" title="本地事务表"></a>本地事务表</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要解决<code>Producer</code>端的消息发送与本地事务执行的原子性问题，一个典型的思路是，我们先将消息<strong>暂存</strong>到一个地方，<strong>在本地事务执行完成之前，这个消息对消费者是不可见的</strong>。<strong>只有当本地事务确认执行成功后，消费者才可以消费到这条消息</strong>。</p>
+<p>下面用伪代码演示这个过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">handle</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// 1. 预处理消息 插入待发送消息表  此时消费端看不到这条消息</span></span><br><span class="line">	Boolean preparedResult = executePreParedMessage();</span><br><span class="line">	<span class="keyword">if</span> (preparedResult != <span class="keyword">true</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 2. 执行本地事务</span></span><br><span class="line">	Boolean localResult = executeLocalTransaction();</span><br><span class="line">    <span class="comment">// 3. 消息确认 根据本地事务执行结果 决定是否提交这条消息，还是回滚这条消息</span></span><br><span class="line">	<span class="keyword">if</span> (localResult != <span class="keyword">true</span>) &#123;</span><br><span class="line">		rollbackMessage();</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	commitMessage();</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>​        步骤说明：</p>
+<ul>
+<li>先预发送一条消息，注意这里使用了<strong>”预发送“</strong>这个关键字，预发送的消息，消费者是看不到，因此不会消费。</li>
+<li>执行本地业务，例如往数据库插入一条记录。</li>
+<li>根据本地事务执行的结果，确认是提交这条消息，还是回滚这条消息。只有提交后的消息，消费者才能进行消费。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;显然，如果我们可以保证上述每个步骤都可以正确的执行，那么本地事务的执行与发送消息的行为将可以保持一致。然后事实总是残酷的，这一套流程充满了挑战。</p>
+<h3 id="如何实现预发送"><a href="#如何实现预发送" class="headerlink" title="如何实现预发送"></a>如何实现预发送</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大多数<code>MQ</code>，消息发送后，就可以直接被消费者消费了，然而我们并不想这样，需要等到本地事务也执行成功。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>一种很直观的思路是，我们先将这个消息，找一个地方暂存起来</strong>。例如在数据库中建立一个表，将消息存入到这个表中，称之为”本地事务表”。在这个表中，可以有一个<code>state</code>字段表示消息的状态，在预发送阶段，我们将其标记为<strong>UNKONWN</strong>。</p>
+<h3 id="如何确认或者回滚"><a href="#如何确认或者回滚" class="headerlink" title="如何确认或者回滚"></a>如何确认或者回滚</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们可以根据本地事务执行的结果，修改本地事务表中状态字段的值。如果本地事务执行成功，我们可以将本地事务表中的状态字段改为<strong>LOCAL_COMMIT</strong>；如果执行失败，我们可以将其改为<strong>LOCAL_ROLLBACK</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 另外，<strong>我们通过一个异步的线程，不断的从这个表中，查询状态为LOCAL_COMMIT的消息，将其发送到MQ中</strong>。异步线程发送消息到<code>MQ</code>中，也可能成功，或者失败：</p>
+<p><strong>发送MQ成功：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时，从发送端来说，整个事务已经结束，将其标记<strong>GLOBAL_COMMIT</strong>,接下来就是消费端进行消费。</p>
+<p><strong>发送MQ失败：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个时候需要进行<strong>重试</strong>，直到成功。如果你想<strong>限制一个最大重试次数</strong>，可以在这个表中添加一个<code>retries</code>字段，每重试一次，就+1，当超过次数阈值后，就不再发送。你也可以指定一个<strong>消息的超时时间</strong>，当超过时间阈值后，也不再发送。对于发送失败的消息，将其状态标记为<strong>MESSAGE_ERROR</strong>。还可以事务表中添加一个<code>cause</code>字段，表示是什么原因导致的发送失败。</p>
+<h3 id="如何避免状态丢失"><a href="#如何避免状态丢失" class="headerlink" title="如何避免状态丢失"></a>如何避免状态丢失</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面提到预发送消息阶段，会将本地事务表的状态字段设置为<strong>UNKONWN</strong>。在本地事务执行之后，将其改为<strong>LOCAL_COMMIT</strong>或者<strong>LOCAL_ROLLBACK</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>然而，有可能本地事务执行之后，更改本地消息表中消息状态的行为失败了。</strong>这种情况下，消息就一直处于<code>UNKONWN</code>状态，而<strong>异步线程只会发送状态为<code>LOCAL_COMMIT</code>的消息到<code>MQ</code>中</strong>，这个消息会一直被忽略，也就是产生了消息状态丢失。解决方案：</p>
+<h4 id="方案一：扩大事务边界"><a href="#方案一：扩大事务边界" class="headerlink" title="方案一：扩大事务边界"></a>方案一：扩大事务边界</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>将预发送消息、执行本地事务、修改本地事务表消息状态三个操作，合并到一个事务中</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在第一步预发送消息之前就开启事务，在第三步执行结束之后提交或者回滚事务，因为所有操作位于同一个事务中，从而保证，本地事务表中的消息记录，与业务操作产生的记录，总是同时成功或者失败，且状态一致。</p>
+<h4 id="方案二：合并事务状态"><a href="#方案二：合并事务状态" class="headerlink" title="方案二：合并事务状态"></a>方案二：合并事务状态</h4><p>​        显然，你还可以更进一步，消息不需要有预发送的状态，<strong>直接和正常的数据库操作合并到一个事务中写入到数据库，状态直接就是LOCAL_COMMIT</strong>，之后异步线程发送的逻辑不变。</p>
+<h4 id="方案三：对PREPARED状态消息也进行检查"><a href="#方案三：对PREPARED状态消息也进行检查" class="headerlink" title="方案三：对PREPARED状态消息也进行检查"></a>方案三：对PREPARED状态消息也进行检查</h4><p>​        方案一、二的特点在于，只在业务方法执行的时候，只进行一次判断事务是否可以提交，之后异步线程发送消息的时候，只检查<code>LOCAL_SUCCESS</code>状态的消息发送到<code>MQ</code>中，这可以满足大部分场景了。</p>
+<p>​        <strong>然而，有时可能会有更复杂的场景。</strong>例如，有一个业务逻辑很复杂，业务的发起方A，除了操作本地数据库，可能需要进行<code>RPC</code>调用查询业务B，以获得一些<code>MQ</code>消息中必须要包含的一些信息。然而，B可能当前还不能提供这些信息，需要等待一段时间才能提供。A希望将这条消息保存下来，等到B可以提供足够多信息的时候再发送。这个时候，方案一、二就不满足了，我们需要继续进行改进。</p>
+<p>​        <strong>具体策略是：</strong>在原始方案的基础上，让异步线程除了发送<code>LOCAL_SUCCESS</code>状态的消息之外，还对<code>PREPARED</code>状态的消息进行检查。当然你需要设置个过滤条件，如一个<code>PREPARED</code>状态的消息的创建时间，<strong>必须与当前时间比较的差值大于某个时间阈值时，才去尝试去查询这个消息的正确状态应该是什么</strong>。</p>
+<p>​        设置阈值，主要是为了避免与新事务一开始插入消息的<code>PREPARED</code>消息状态混淆，这些新的<code>PREPARED</code>消息可能立即就会修改为<code>LOCAL_SUCCESS</code>。只有那些长时间处于<code>PREPARED</code>状态的消息，才有可能是因为本地事务执行成功，但是更新消息状态失败而导致的。</p>
+<p>​        我们可以总结出，<strong>方案三的最大特点是：当前条件满足的情况下，立即判断可以发送消息；如果当前条件不满足，还可以异步的确定是否满足消息发送的条件</strong>。显然提供了极大的灵活性。而方案一二，只支持前者。</p>
+<h2 id="RocketMQ事务消息"><a href="#RocketMQ事务消息" class="headerlink" title="RocketMQ事务消息"></a>RocketMQ事务消息</h2><p>​         <code>Apache RocketMQ 4.3</code>版本中引入了事务消息。与我们前面使用本地事务表要解决的问题相同。都是为了为了解决<strong>Producer端发送消息</strong>与<strong>本地事务执行</strong>的原子性问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与本地事务表的思路一致，都是将消息先找一个地方<strong>暂存</strong>起来，只不过暂存的地方不一样，<code>RocketMQ</code>将消息暂存到了内部的主题中。</p>
+<p>​        <strong>为了支持事务消息，<code>RocketMQ</code>引入了<code>Half Topic</code>以及<code>Operation Topic</code>两个内部队列来存储事务消息推进状态</strong>。其中：</p>
+<ul>
+<li><code>Half Topic</code>对应队列中存放着<code>prepare</code>消息，也就是预发送的消息，消息会不直接发到目标Topic，因此消费者不可见，实现暂存</li>
+<li><code>Operation Topic</code>对应的队列则存放了<code>prepare message</code>对应的<code>commit/rollback</code>消息，消息体中则是<code>prepare message</code>对应的<code>offset</code>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于这两个<code>topic</code>，我们在后文会详细介绍其作用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面是<code>RocketMQ</code>中一个事务消息的发送流程，不够清楚，可以放大看一下每个步骤：</p>
+<p><img src="//blog.com/2019/05/10/可靠消息一致性的奇淫技巧/1.webp" alt=""></p>
+<h3 id="事务生产者预发送消息"><a href="#事务生产者预发送消息" class="headerlink" title="事务生产者预发送消息"></a>事务生产者预发送消息</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过<code>TransactionMQProducer</code>发送事务消息，这个<code>producer</code>会在一条普通的<code>Message</code>中加上一些元数据，标识这是一条预先发送的事务消息。<strong>broker端在发现这是一条事务消息的时候，会将其存储到Half Topic中。另外必须要制定producer group，以便在发送者失败甚至宕机的情况下，回查其他同一个producer group中的实例查询事务状态。</strong></p>
+<h3 id="执行本地事务"><a href="#执行本地事务" class="headerlink" title="执行本地事务"></a>执行本地事务</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在发送<code>prepare</code>消息成功后，需要执行本地事务。这是需要实现<code>RocketMQ</code>提供的一个<code>TransactionListener</code>接口的方法来完成(非Java读者不必在意，语言是次要的，关键是思路)：</p>
+<p><img src="//blog.com/2019/05/10/可靠消息一致性的奇淫技巧/2.webp" alt=""></p>
+<p>​        其中：</p>
+<ul>
+<li><strong>executeLocalTransaction方法：</strong>用于执行本地事务，显然就是我们的业务逻辑代码，操作数据库，或者干一些其他事情。</li>
+<li><code>checkLocalTransaction</code>方法：用于检查事务状态，关于这个方法的作用我们将后文讲解。</li>
+</ul>
+<p>这两个方法都返回了一个表示本地事务消息的执行状态LocalTransactionState，事务生产者会将其上报给broker。状态总共有三种，见下文分析：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> LocalTransactionState &#123;</span><br><span class="line">    COMMIT_MESSAGE,</span><br><span class="line">    ROLLBACK_MESSAGE,</span><br><span class="line">    UNKNOW,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="本地事务状态的处理"><a href="#本地事务状态的处理" class="headerlink" title="本地事务状态的处理"></a>本地事务状态的处理</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不管客户端返回的是哪一种状态，生产者拿到这个状态，都会将这个状态报告给<code>broker</code>。<code>broker</code>在处理时，发现这是一个报告事务状态的消息，首先会判断状态值，进行相应的处理。</p>
+<h4 id="COMMIT-amp-ROLLBACK状态"><a href="#COMMIT-amp-ROLLBACK状态" class="headerlink" title="COMMIT &amp; ROLLBACK状态"></a>COMMIT &amp; ROLLBACK状态</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>broker</code>会把收到事务消息的状态后，会记录在内部主题<strong>Operation Topic</strong>中，消息体中则是<code>prepare message</code>对应在<code>Half Topic</code>中的<code>offset</code>。如下图所示：</p>
+<p><img src="//blog.com/2019/05/10/可靠消息一致性的奇淫技巧/3.webp" alt=""></p>
+<p>此外，<code>broker</code>还会有一个内部服务，消费<code>Operation Topic</code>中的消息，具体来说：</p>
+<ul>
+<li>如果是<code>rollback</code>消息，<code>broker</code>将从<code>Half Topic</code>中删除该<code>prepare</code>消息不进行下发。</li>
+<li><strong>如果是commit消息，broker将会把这个消息从取出来</strong>，<strong>发送到原始的目标Topic中，此时consumer端可以消费</strong></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;细心的读者发现了，图中这两个队列的长度刻意画的不相等。其实是为了说明，在一些异常情况，可能上报事务消息状态失败，因此<code>OperationTopic</code>中没有记录，二者的差值可能就是<code>UNKOWN</code>未确认中间状态的消息，需要进行特殊处理。</p>
+<h3 id="UNKNOW状态"><a href="#UNKNOW状态" class="headerlink" title="UNKNOW状态"></a>UNKNOW状态</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如果消息是<code>UNKNOW</code>中间状态，那么说明目前还不能确定事务的状态，<strong>broker需要主动询问客户端producer</strong>。以下场景，可能会出现<code>UNKNOW</code>中间状态：</p>
+<ul>
+<li><strong>异常状态：</strong>如果执行本地事务过程中，执行端挂掉，或者超时</li>
+<li><strong>有意为之：</strong>回顾前面本地事务表方案讲解时，在一些特殊场景下，需要等待一段时间满足特定场景，才能将消息给消费者进行消费。所以我们主动返回<code>UNKNOW</code>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于<code>UNKNOW</code>中间状态的消息，并不会提交到<code>Operation Topic</code>中，因此<code>Half Topic</code>与<code>Operation Topic</code>这两个内部主题中，服务端通过比对两个主题的差值来找到尚未提交的超时事务，进行回查。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>回查意味着，业务方必须提供一个方法让rocketmq来回调。</strong>前面我们看到<code>TransactionListener</code>接口有2个方法，另外一个方法<code>checkLocalTransaction</code>就是用于回查。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们需实现这个方法，<code>rocketmq</code>会把我们之前发送的消息当做参数传入。我们可以根据消息中的内容，反查之前的业务记录信息，确定状态。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后小提一点，<strong>broker主动询问客户端producer事务状态，是依赖于broker与producer端的双向通信能力来完成的</strong>，也就是<code>broker</code>会主动给客户端<code>producer</code>发请求。双向通信能力是基于<code>rocketmq-remoting</code>模块基础上完成的。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>​        从上述事务消息设计中可以看到，<code>RocketMQ</code>事务消息较好的解决了事务的最终一致性问题，<strong>事务发起方仅需要关注本地事务执行以及实现回查接口给出事务状态判定等实现</strong>，而且在上游事务峰值高时，可以通过消息队列，避免对下游服务产生过大压力。<code>RocketMQ</code>官网上提供了事务消息的完整使用案例，读者可以自行参考。</p>
+<p>​      当然，事情不可能是那么的美好，<strong>以下是RocketMQ事务消息使用限制：</strong></p>
+<ul>
+<li><p>事务消息没有延迟和批量支持，即不能使用延迟消息的特性和批量发送消息的特性。</p>
+</li>
+<li><p>为了避免多次检查单个消息并导致<code>Half Topic</code>消息累积，默认将单个消息的检查次数限制为15次。</p>
+</li>
+<li><p>在<code>broker</code>的配置中，由参数“<code>transactionTimeout</code>”配置检查事务消息的固定周期。</p>
+</li>
+<li><p>可以多次检查或消费事务消息。</p>
+</li>
+<li><p>将事务消息提交到用户的目标<code>topic</code>的可能会失败。<code>RocketMQ</code>自身的高可用性机制确保了高可用性。如果要确保事务性消息不会丢失且事务完整性得到保证，建议使用<strong>同步双写机制</strong>。</p>
+</li>
+<li><p>事务消息的生产者ID不能与其他类型消息的生产者ID共享。与其他类型的消息不同，事务性消息允许后向查询。<code>MQ Server</code>按其生产者ID查询客户端。</p>
+</li>
+</ul>
+<h2 id="订阅数据库binlog"><a href="#订阅数据库binlog" class="headerlink" title="订阅数据库binlog"></a>订阅数据库binlog</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在之前的方案中，不论是本地事务表，还是<code>RocketMQ</code>中的事务消息，对业务都有一定的侵入性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实上，我们可以通过另外一种方案来实现可靠消息的发送。在这个方案中：</p>
+<ul>
+<li><strong>先把本地事务执行完成。</strong>本地事务中的每个数据库更新操作，如<code>INSERT、UPDATE</code>等都会产生<code>binlog event</code>，这些<code>event</code>会在本地事务提交成功后，才会生成。</li>
+<li><strong>接着，我们通过一个binlog订阅组件，来订阅数据库中的记录变更。</strong>订阅到的<code>binlog event</code>，必然都是已经成功执行的本地事务的信息。可以放心的根据这些<code>event</code>解析出相应的信息，发送消息到<code>MQ</code>中即可。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实上，笔者认为这个方案更加优雅。目前开源的<code>binlog</code>订阅组件有很多，各种语言的实现都有：<code>java、go、python</code>等，首推的还是阿里巴巴开源的<code>canal</code>，服务端使用<code>java</code>编写，支持多语言客户端。</p>
+<h2 id="Kafka中的事务消息"><a href="#Kafka中的事务消息" class="headerlink" title="Kafka中的事务消息"></a>Kafka中的事务消息</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从<code>Kafka 0.11</code>开始，<code>KafkaProducer</code>支持另外两种模式：幂等生产者(<code>idempotent producer</code>)和事务生产者(<code>transactional producer</code>)。</p>
+<ul>
+<li>幂等生产者：将<code>Kafka</code>的交付语义从<code>&quot;at least once”</code>加强到<code>&quot;exactly once&quot;</code>。特别是生产者重试将不再引入重复。</li>
+<li>事务生产者：允许应用程序以原子方式同时发送消息发送到多个主题和分区。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里我们看到了<code>Kafka</code>中的事务消息实际上与<code>RocketMQ</code>中的事务消息是截然不同的概念，类似于数据库事务的原子性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果你希望在<code>Kafka</code>中使用类似于<code>RocketMQ</code>的事务消息，那么只能自己做了，可以<strong>在<code>Kafka</code>之前加一个代理，由这个代理暂存事务消息，条件满足后，再发送到目标<code>Topic</code>中供业务方消费</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+            <a href="/tags/分布式事务/" rel="tag"># 分布式事务</a>
+          
+            <a href="/tags/最终一致性/" rel="tag"># 最终一致性</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/10/消息队列的高可用性保障/" rel="next" title="消息队列的高可用性保障">
+                <i class="fa fa-chevron-left"></i> 消息队列的高可用性保障
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/11/WEB安全开发规则/" rel="prev" title="WEB安全开发规则">
+                WEB安全开发规则 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#可靠消息一致性的奇淫技巧"><span class="nav-number">1.</span> <span class="nav-text">可靠消息一致性的奇淫技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#本地事务表"><span class="nav-number">1.1.</span> <span class="nav-text">本地事务表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何实现预发送"><span class="nav-number">1.1.1.</span> <span class="nav-text">如何实现预发送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何确认或者回滚"><span class="nav-number">1.1.2.</span> <span class="nav-text">如何确认或者回滚</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何避免状态丢失"><span class="nav-number">1.1.3.</span> <span class="nav-text">如何避免状态丢失</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方案一：扩大事务边界"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">方案一：扩大事务边界</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案二：合并事务状态"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">方案二：合并事务状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案三：对PREPARED状态消息也进行检查"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">方案三：对PREPARED状态消息也进行检查</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RocketMQ事务消息"><span class="nav-number">1.2.</span> <span class="nav-text">RocketMQ事务消息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#事务生产者预发送消息"><span class="nav-number">1.2.1.</span> <span class="nav-text">事务生产者预发送消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行本地事务"><span class="nav-number">1.2.2.</span> <span class="nav-text">执行本地事务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#本地事务状态的处理"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">本地事务状态的处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#COMMIT-amp-ROLLBACK状态"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">COMMIT &amp; ROLLBACK状态</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UNKNOW状态"><span class="nav-number">1.2.3.</span> <span class="nav-text">UNKNOW状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">1.2.4.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#订阅数据库binlog"><span class="nav-number">1.3.</span> <span class="nav-text">订阅数据库binlog</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka中的事务消息"><span class="nav-number">1.4.</span> <span class="nav-text">Kafka中的事务消息</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

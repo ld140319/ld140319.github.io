@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,微服务,分布式系统,高可用,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="微服务可靠性设计  原文地址：https://www.infoq.cn/article/micro-service-reliability-design   1. 背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;微服务化之后，系统分布式部署，传统单个流程的本地 API 调用被拆分成多个微服务之间的跨网络调用，由于引入了网络通信、序列化和反序列化等操作，系统发生故障的概率">
+<meta name="keywords" content="架构,微服务,分布式系统,高可用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务可靠性设计">
+<meta property="og:url" content="http://blog.com/2019/07/26/微服务可靠性设计/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="微服务可靠性设计  原文地址：https://www.infoq.cn/article/micro-service-reliability-design   1. 背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;微服务化之后，系统分布式部署，传统单个流程的本地 API 调用被拆分成多个微服务之间的跨网络调用，由于引入了网络通信、序列化和反序列化等操作，系统发生故障的概率">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/3425b07d1b46e6f895e92efd6299dae5.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/86fdc71a61674249f9478d074d6c1e9c.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/f2be286c0ef860cca4637b8f96e11de7.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/14ba138d1c8bf65e920024d1ee780098.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/86df30068322af1b27454fa84b386dc1.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/0b84748a80126ac7da8a7f0122cb978c.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/168d6c59aa54ac27f0ef691ca6dc9e60.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/3d0ab43793e1a9f3d82ebc5b0a734622.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/d4d101543d1e4d9e94ecc779cf64dc4d.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/7c072d10523b9567a260010296b997c5.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/52a28ac01b88d6615052756048d67f91.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/f529a1047385dd2b6e405e643455a58d.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/c9798be7c26a7405c3d1645e6cc958f2.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/588ef837f15fd14ac0df4cb68dc94a18.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/8380367f71011ef1b712adfcd416443a.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/a18f45559ca3aaf1462f728c7708371a.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/34760c813b6285a9c650b45df91568e2.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/c39acbafbe4df9ece2815c274a3b8ca3.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/d201f40c066e6fa7bb039fe1b7ebaca3.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/0e60773432e6cc5242095411398918d3.png">
+<meta property="og:image" content="http://blog.com/2019/07/26/微服务可靠性设计/a2a23e1c242c6e16fc700e694a20cff7.png">
+<meta property="og:updated_time" content="2019-07-27T02:28:20.008Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微服务可靠性设计">
+<meta name="twitter:description" content="微服务可靠性设计  原文地址：https://www.infoq.cn/article/micro-service-reliability-design   1. 背景&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;微服务化之后，系统分布式部署，传统单个流程的本地 API 调用被拆分成多个微服务之间的跨网络调用，由于引入了网络通信、序列化和反序列化等操作，系统发生故障的概率">
+<meta name="twitter:image" content="http://blog.com/2019/07/26/微服务可靠性设计/3425b07d1b46e6f895e92efd6299dae5.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/26/微服务可靠性设计/">
+
+
+
+
+
+  <title>微服务可靠性设计 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/26/微服务可靠性设计/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">微服务可靠性设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-26T12:12:57+08:00">
+                2019-07-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式系统</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/高可用/" itemprop="url" rel="index">
+                    <span itemprop="name">高可用</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="微服务可靠性设计"><a href="#微服务可靠性设计" class="headerlink" title="微服务可靠性设计"></a>微服务可靠性设计</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://www.infoq.cn/article/micro-service-reliability-design" target="_blank" rel="noopener">https://www.infoq.cn/article/micro-service-reliability-design</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="1-背景"><a href="#1-背景" class="headerlink" title="1. 背景"></a>1. 背景</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务化之后，系统分布式部署，传统单个流程的本地 <code>API</code> 调用被拆分成多个微服务之间的跨网络调用，由于引入了网络通信、序列化和反序列化等操作，系统发生故障的概率提高了很多。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务故障，有些是由于业务自身设计或者编码不当导致，有些是底层的微服务化框架容错能力不足导致。在实际项目中，需要从业务和平台两方面入手，提升微服务的可靠性。</p>
+<h3 id="1-1-无处不在的故障"><a href="#1-1-无处不在的故障" class="headerlink" title="1.1. 无处不在的故障"></a>1.1. 无处不在的故障</h3><h4 id="1-1-1-分布式部署和调用"><a href="#1-1-1-分布式部署和调用" class="headerlink" title="1.1.1. 分布式部署和调用"></a>1.1.1. 分布式部署和调用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传统单体架构一个完整的业务流程往往在同一个进程内部完成处理，不需要进行分布式协作，它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/3425b07d1b46e6f895e92efd6299dae5.png" alt="img"></p>
+<p><em>图 1-1 传统单体架构本地方法调用</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务化之后，不同的微服务采用分布式集群部署方式，<strong>服务的消费者和提供者通常运行在不同的进程中，需要跨网络做 <code>RPC</code>调用</strong>，它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/86fdc71a61674249f9478d074d6c1e9c.png" alt="img"></p>
+<p><em>图 1-2 微服务分布式 RPC 调用</em></p>
+<p>分布式调用之后，相比于传统单体架构的本地方法调用，主要引入了如下潜在故障点：</p>
+<ul>
+<li><strong>序列化与反序列化</strong>：微服务的请求和应答都需要经过序列化和反序列化，做消息的跨网络通信，由于数据结构不一致、不支持的数据类型、对方编解码错误等都会导致序列化和反序列化失败，进而导致微服务调用失败。</li>
+<li><strong>网络问题</strong>：常见的包括网络超时、网络闪断、网络单通、网络拥塞等，都可能会导致微服务远程调用的失败。</li>
+</ul>
+<h4 id="1-1-2-大型系统微服务进程内合设"><a href="#1-1-2-大型系统微服务进程内合设" class="headerlink" title="1.1.2. 大型系统微服务进程内合设"></a>1.1.2. 大型系统微服务进程内合设</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;理想情况下，每个微服务都独立打包和部署，微服务之间天然就支持进程级隔离，但事实上，对于一个大规模的企业 IT 系统、或者大型网站，是由成百上千个微服务组成的，在实践中，微服务通常是不可能做到百分之百独立部署的，原因如下：</p>
+<ol>
+<li><strong>方便开发</strong>：通常会按照业务域划分团队，同一个业务域往往包含多个微服务，由一个团队负责开发。为了方便 <code>CI/CD</code>，同一业务域的微服务往往打包和部署在一起，而不是每个微服务独立打包部署。</li>
+<li><strong>方便运维</strong>：海量的微服务进程（以 1000 个微服务 * 10 个进程实例为例），会增加部署、数据采集（性能 <code>KPI</code>和日志等）、告警、问题定位等成本，如果运维自动化程度不高，很难支撑大规模的微服务独立部署。</li>
+<li><strong>提升性能</strong>：一些业务对时延非常敏感，如果该业务链上的所有微服务调用都跨网络通信，时延往往无法满足业务要求。通过将微服务合设在同一个进程之内，利用路由短路，把 <code>RPC</code> 调用转化成本地方法调用，可以极大的提升性能。</li>
+<li><strong>简化分布式事务处理</strong>：分布式部署之后，会带来分布式事务问题。有时候业务为了简化分布式事务的处理，将事务相关的微服务部署在同一个进程中，把分布式事务转换成本地事务，简化事务处理。</li>
+</ol>
+<p>不同的微服务合设在同一个进程之中，就会引入一系列潜在的故障点，例如：</p>
+<ul>
+<li><strong>处理较慢的微服务会阻塞其它微服务</strong></li>
+<li><strong>某个微服务故障蔓延，可能导致整个进程不可用</strong></li>
+<li><strong>低优先级的微服务，抢占高优先级微服务的资源</strong></li>
+</ul>
+<h4 id="1-1-3-微服务健康度"><a href="#1-1-3-微服务健康度" class="headerlink" title="1.1.3. 微服务健康度"></a>1.1.3. 微服务健康度</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;传统情况下，往往使用服务注册中心检测微服务的状态，当检测到服务提供者不可用时，会<strong>将故障的服务信息广播到集群所有节点，消费者接收到服务故障通知消息之后，根据故障信息中的服务名称、IP 地址等信息，对故障节点进行隔离</strong>。它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/f2be286c0ef860cca4637b8f96e11de7.png" alt="img"></p>
+<p><em>图 1-3 微服务状态检测</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用基于心跳或者会话的微服务状态检测，可以发现微服务所在进程宕机、网络故障等问题，但在实际业务中，微服务并非“非死即活”，它可能处于“亚健康状态”，服务调用失败率很高，但又不是全部失败。或者微服务已经处于过负荷流控状态，业务质量受损，但是又没有全部中断。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用简单的微服务状态检测，很难应对上述这些场景。通过对微服务的运行质量建模，利用微服务健康度模型，根据采集的各种指标对微服务健康度实时打分，依据打分结果采取相应的可靠性对策，可以更有针对性的保障系统的可靠性。</p>
+<h4 id="1-1-4-同步的-I-O-操作"><a href="#1-1-4-同步的-I-O-操作" class="headerlink" title="1.1.4. 同步的 I/O 操作"></a>1.1.4. 同步的 I/O 操作</h4><p>在整个微服务调用过程中，主要会涉及到三类<code>I/O</code>操作：</p>
+<ul>
+<li><strong>网络 I/O 操作</strong>，涉及到网络读写</li>
+<li><strong>磁盘 I/O 操作</strong>，主要是记录日志、话单、写本地文件等</li>
+<li><strong>数据库访问</strong>，例如<code>Java</code>使用 <code>JDBC</code>驱动进行数据库操作</li>
+</ul>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/14ba138d1c8bf65e920024d1ee780098.png" alt="img"></p>
+<p><em>图 1-4 微服务涉及的主要 I/O 操作</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;凡是涉及到<code>I/O</code>操作的，如果<code>I/O</code> 操作是同步阻塞模式，例如 <code>Java</code> 的 <code>BIO</code>、文件 <code>File</code> 的读写操作、数据库访问的<code>JDBC</code>接口等，都是同步阻塞的。只要访问的网络、磁盘或者数据库实例比较慢，都会导致调用方线程的阻塞。由于线程是<code>Java</code>虚拟机比较重要的资源，当大量微服务调用线程被阻塞之后，系统的吞吐量将严重下降。</p>
+<h4 id="1-1-5-第三方-SDK-API-调用"><a href="#1-1-5-第三方-SDK-API-调用" class="headerlink" title="1.1.5. 第三方 SDK API 调用"></a>1.1.5. 第三方 SDK API 调用</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在微服务中，调用第三方<code>SDK API</code>，也可能会引入新的故障点，例如通过 <code>FTP</code> 客户端访问远端的 <code>FTP</code>服务，或者使用 <code>MQ</code> 客户端访问<code>MQ</code>服务，如果这些客户端<code>API</code>的容错性设计不好，也会导致调用方的级联故障，这些故障是潜在和隐性的，在设计的时候往往容易被忽视，但它带来的风险和危害是巨大的。</p>
+<h3 id="1-2-微服务可靠性"><a href="#1-2-微服务可靠性" class="headerlink" title="1.2. 微服务可靠性"></a>1.2. 微服务可靠性</h3><p>软件可靠性是指在给定时间内，特定环境下软件无错运行的概率。软件可靠性包含了以下三个要素：</p>
+<p>1) <strong>规定的时间</strong>：软件可靠性只是体现在其运行阶段，所以将运行时间作为规定的时间的度量。运行时间包括软件系统运行后工作与挂起 (启动但空闲) 的累计时间。由于软件运行的环境与程序路径选取的随机性，软件的失效为随机事件，所以运行时间属于随机变量。</p>
+<p>2) <strong>规定的环境条件</strong>: 环境条件指软件的运行环境。它涉及软件系统运行时所需的各种支持要素，如支持硬件、操作系统、其它支持软件、输入数据格式和范围以及操作规程等。</p>
+<p>3) <strong>规定的功能</strong>: 软件可靠性还与规定的任务和功能有关。由于要完成的任务不同，则调用的子模块就不同 (即程序路径选择不同)，其可靠性也就可能不同。所以要准确度量软件系统的可靠性必须首先明确它的任务和功能。</p>
+<h4 id="1-2-1-关键的可靠性因素"><a href="#1-2-1-关键的可靠性因素" class="headerlink" title="1.2.1. 关键的可靠性因素"></a>1.2.1. 关键的可靠性因素</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务的运行质量，除了自身的可靠性因素之外，还受到其它因素的影响，包括网络、数据库访问、其它相关联的微服务运行质量等。微服务的可靠性设计，需要考虑上述综合因素，总结如下：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/86df30068322af1b27454fa84b386dc1.png" alt="img"></p>
+<p><em>图 1-5 微服务可靠性设计模型</em></p>
+<h2 id="2-异步-I-O-操作"><a href="#2-异步-I-O-操作" class="headerlink" title="2. 异步 I/O 操作"></a>2. 异步 I/O 操作</h2><h3 id="2-1-网络-I-O"><a href="#2-1-网络-I-O" class="headerlink" title="2.1. 网络 I/O"></a>2.1. 网络 I/O</h3><h4 id="2-1-1-使用同步阻塞-I-O-的问题"><a href="#2-1-1-使用同步阻塞-I-O-的问题" class="headerlink" title="2.1.1. 使用同步阻塞 I/O 的问题"></a>2.1.1. 使用同步阻塞 I/O 的问题</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以 <code>Java</code>为例，在 <code>JDK 1.4</code> 推出<code>JAVA NIO1.0</code>之前，基于<code>JAVA</code> 的所有<code>Socket</code>通信都采用了同步阻塞模式（<code>BIO</code>），这种一请求一应答的通信模型简化了上层的应用开发，但是在可靠性和性能方面存在巨大的弊端：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/0b84748a80126ac7da8a7f0122cb978c.png" alt="img"></p>
+<p><em>2-1 传统 Java 同步阻塞 I/O 模型</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;采用 <code>BIO</code> 通信模型的服务端，通常由一个独立的 <code>Acceptor</code>线程负责监听客户端的连接，接收到客户端连接之后为客户端连接创建一个新的线程处理请求消息，处理完成之后，返回应答消息给客户端，线程销毁，这就是典型的一请求一应答模型。该架构最大的问题就是<strong>不具备弹性伸缩能力，当并发访问量增加后，服务端的线程个数和并发访问数成线性正比</strong>，由于线程是<code>JAVA</code>虚拟机非常宝贵的系统资源，当线程数膨胀之后，系统的性能急剧下降，随着并发量的继续增加，可能会发生<strong>句柄溢出、线程堆栈溢出</strong>等问题，并导致服务器最终宕机。</p>
+<h4 id="2-1-2-使用非阻塞-I-O-通信"><a href="#2-1-2-使用非阻塞-I-O-通信" class="headerlink" title="2.1.2. 使用非阻塞 I/O 通信"></a>2.1.2. 使用非阻塞 I/O 通信</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务进行远程通信时，通过使用非阻塞 <code>I/O</code>，可以解决由于网络时延大、高并发接入等导致的服务端线程数膨胀或者线程被阻塞等问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以 <code>Java</code>为例，从 <code>JDK1.4</code>开始，<code>JDK</code> 提供了一套专门的类库支持非阻塞<code>I/O</code>，可以在 <code>java.nio</code> 包及其子包中找到相关的类和接口。<code>JDK1.7</code> 之后，又提供了 <code>NIO2.0</code> 类库，支持异步 <code>I/O</code> 操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用<code>JDK</code>的异步非阻塞 <code>I/O</code>，可以实现一个 <code>I/O</code> 线程同时处理多个客户端链路，读写操作不会因为网络原因被阻塞，<code>I/O</code>线程可以高效的并发处理多个客户端链路，实现 <code>I/O</code>多路复用，它的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/168d6c59aa54ac27f0ef691ca6dc9e60.png" alt="img"></p>
+<p><em>2-2 Java 非阻塞 I/O 模型</em></p>
+<p>使用非阻塞 <code>I/O</code>进行通信，以 <code>Java</code> 语言为例，建议策略如下：</p>
+<p>1) <code>TCP</code> 私有协议：建议直接基于 <code>Netty</code>开发。</p>
+<p>2)<code>HTTP/Restful/SOAP</code> 等：选择支持非阻塞<code>I/O</code>的<code>Web</code>框架。也可以选择基于 <code>Netty</code> 构建的开源应用层协议栈框架，例如支持异步 <code>Restful</code>的 <code>RestExpress</code>。</p>
+<h3 id="2-2-磁盘-I-O"><a href="#2-2-磁盘-I-O" class="headerlink" title="2.2. 磁盘 I/O"></a>2.2. 磁盘 I/O</h3><p>微服务对磁盘<code>I/O</code> 的操作分为两类：</p>
+<ul>
+<li><strong>直接文件操作</strong>：例如调用 File 的 <code>open</code>、<code>write</code>、<code>read</code>等接口，进行文件操作。</li>
+<li><strong>间接文件操作</strong>：例如调用日志类库写日志，虽然微服务并没有直接操作日志文件，但是日志类库底层还是会进行文件的读写等操作。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际项目中，最容易被忽视的就是日志操作。不同的日志类库，写日志的机制不同，以 <code>Log4j 1.2.X</code>版本为例，当日志队列满之后，有多种策略：</p>
+<ul>
+<li><strong>同步等待，直到新的日志消息能够入队列，它会阻塞当前业务线程</strong>。</li>
+<li><strong>丢弃当前的日志消息，不会阻塞当前业务线程</strong>。</li>
+<li><strong>不入队列，由当前调用写日志的业务线程执行日志 I/O 操作，如果此时磁盘 I/O 写入速度慢，则会阻塞当前业务线程</strong>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实际生产环境中，我们就遇到过类似问题，在某些时段，磁盘 <code>WIO</code> 达到 10+ 持续几秒钟 -10 几秒钟，然后又恢复正常。<code>WIO</code> 较高的时段，需要写接口日志、话单等，由于系统默认采用的是同步等待策略，结果导致通信<code>I/O</code> 线程、微服务调度线程等都被阻塞，最终链路因为心跳超时被强制关闭、微服务被大量阻塞在消息队列中导致内存居高不小、响应超时等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于偶现的<code>WIO</code>高导致同步写日志被阻塞，继而引起通信线程、微服务调用线程级联故障，定位起来非常困难，平时 <code>Code Review</code>也很难被注意到。所以，<strong>隐性的磁盘<code>I/O</code>操作，更需要格外关注</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要解决上面的问题，有三种策略：</p>
+<ul>
+<li><strong>使用非阻塞<code>I/O</code>, 对文件进行异步读写操作</strong>。</li>
+<li><strong>业务层面封装一个异步的<code>I/O</code> 操作，最简单的策略就是由一个独立的线程或者线程池来执行磁盘<code>I/O</code> 操作</strong>。</li>
+<li><strong>选择支持非阻塞方式调用的<code>I/O</code>类库</strong>，例如使用 <code>log4j</code>的异步日志 <code>API</code>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以 <code>JDK1.7</code> 为例，它提供了异步的文件<code>I/O</code> 操作类库，基于该类库，就不需要担心磁盘 I/O 操作被阻塞：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/3d0ab43793e1a9f3d82ebc5b0a734622.png" alt="img"></p>
+<p><em>2-3 JDK1.7 异步非阻塞文件接口</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;自己在上层封装异步<code>I/O</code>操作，也比较简单，它的优点是可以实现磁盘<code>I/O</code> 操作与微服务之间的线程隔离，但是底层仍然使用的是同步阻塞<code>I/O</code>，如果此时磁盘的<code>I/O</code>比较高，依然会阻塞写磁盘的<code>I/O</code>线程。它的原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/d4d101543d1e4d9e94ecc779cf64dc4d.png" alt="img"></p>
+<p><em>2-4 应用层封装的异步文件操作</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将文件 <code>I/O</code> 操作封装成一个<code>Task</code> 或者<code>Event</code>，投递到文件<code>I/O</code>线程池的消息队列中，根据投递结果，构造<code>I/O</code>操作相关联的<code>Future</code> 对象给微服务调用线程。通过向<code>Future</code> 对象注册 <code>Listener</code> 并实现 <code>callback</code> 接口，可以实现异步回调通知，这样微服务和文件 I/O 操作就实现了线程隔离。文件 I/O 操作耗时，并不会阻塞微服务调度线程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当使用第三方文件<code>I/O</code>操作类库时，需要注意下相关 <code>API</code>，尽量使用支持异步非阻塞接口的 <code>API</code>，如果没有，则需要考虑是否做上层的异步封装。</p>
+<h3 id="2-3-数据库操作"><a href="#2-3-数据库操作" class="headerlink" title="2.3. 数据库操作"></a>2.3. 数据库操作</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;部分数据库访问支持非阻塞方式，例如 <code>Oracle</code> 的 <code>OCI</code>，它支持 <code>non-blocking</code> 模式和 <code>blocking</code>模式：阻塞方式就是当调用 <code>OCI</code> 操作时，必须等到此 <code>OCI</code> 操作完成后服务器才返回客户端相应的信息，不管是成功还是失败。非阻塞方式是当客户端提交<code>OCI</code> 操作给服务器后，服务器立即返回<code>OCI_STILL_EXECUTING</code>信息，而并不等待服务端的操作完成。对于 <code>non-blocking</code>方式，应用程序若收到一个<code>OCI</code>函数的返回值为 <code>OCI_STILL_EXECUTING</code> 时必须再次对每一个 <code>OCI</code>函数的返回值进行判断，判断其成功与否。 可通过设置服务器属性为 <code>OCI_ATTR_NONBLOCKING_MODE</code>来实现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于<code>Java</code> 语言而言，由于<code>JDK</code> 本身提供了数据库连接驱动相关的接口定义，<code>JDBC</code> 驱动本身就是同步 <code>API</code>接口，因此，<code>Java</code> 语言的开源 <code>ORM</code>框架也都是同步阻塞的，例如<code>MyBatis</code>、<code>Hibernate</code>等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;尽管大部分数据库访问接口是同步阻塞的，但是<strong>由于数据库中间件的超时控制机制都比较成熟，因此通过合理设置超时时间，可以避免微服务的数据库访问被长时间挂住</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;也可以在应用上层封装异步数据库操作层，实现微服务调度与数据库操作的线程级隔离，采用该方式同样存在两点不足：</p>
+<ul>
+<li><strong>排队现象</strong>：如果某个数据库操作非常耗时，超时时间配置的又比较大（例如 30S），会导致后续的数据库操作在队列中排队。</li>
+<li><strong>无法充分发挥数据库效能</strong>：由于底层数据库访问采用同步阻塞的方式，所以不能高效发挥数据库的效能。</li>
+</ul>
+<h2 id="3-故障隔离"><a href="#3-故障隔离" class="headerlink" title="3. 故障隔离"></a>3. 故障隔离</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于大部分微服务采用同步接口调用，而且多个领域相关的微服务会部署在同一个进程中，很容易发生“<strong>雪崩效应</strong>”，即某个微服务提供者故障，导致调用该微服务的消费者、或者与故障微服务合设在同一个进程中的其它微服务发生级联故障，最终导致系统崩溃。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了避免“雪崩效应”的发生，需要支持多种维度的依赖和故障隔离，以实现微服务的 <strong><code>HA</code></strong>。</p>
+<h3 id="3-1-通信链路隔离"><a href="#3-1-通信链路隔离" class="headerlink" title="3.1. 通信链路隔离"></a>3.1. 通信链路隔离</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于网络通信本身通常不是系统的瓶颈，因此大部分服务框架会采用多线程 + 单个通信链路的方式进行通信，原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/7c072d10523b9567a260010296b997c5.png" alt="img"></p>
+<p><em>3-1 多线程 - 单链路 P2P 通信模式</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于微服务使用异步非阻塞通信，单个<code>I/O</code> 线程可以同时并发处理多个链路的消息，而且网络读写都是非阻塞的，因此采用多线程 + 单链路的方式进行通信性能本身问题不大。但是从可靠性角度来看，只支持单链路本身又存在一些可靠性隐患，我们从下面的案例中看下问题所在。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;某互联网基地微服务架构上线之后，发现在一些时段，经常有业务超时，超时的业务没有固定规律。经定位发现当有较多的批量内容同步、语音和视频类微服务调用时，系统的整体时延就增高了很多，而且存在较突出的时延毛刺。由于这些操作获取的消息码流往往达到数 M 到数十兆，微服务之间又采用单链路的方式进行<code>P2P</code>通信，导致大码流的传输影响了其它消息的读写效率，增大了微服务的响应时延。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;问题定位出来之后，对微服务之间的通信机制做了优化，节点之间支持配置多链路，每个链路之间还可以实现不同策略的隔离，例如根据消息码流大小、根据微服务的优先级等策略，实现链路级的隔离，优化之后的微服务通信机制：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/52a28ac01b88d6615052756048d67f91.png" alt="img"></p>
+<p><em>图 3-2 支持多链路隔离</em></p>
+<h3 id="3-2-调度资源隔离"><a href="#3-2-调度资源隔离" class="headerlink" title="3.2. 调度资源隔离"></a>3.2. 调度资源隔离</h3><h4 id="3-2-1-微服务之间隔离"><a href="#3-2-1-微服务之间隔离" class="headerlink" title="3.2.1. 微服务之间隔离"></a>3.2.1. 微服务之间隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当多个微服务合设运行在同一个进程内部时，可以利用线程实现不同微服务之间的隔离。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于核心微服务，发布的时候可以独占一个线程 / 线程池，对于非核心微服务，则可以共享同一个大的线程池，在实现微服务隔离的同时，避免线程过于膨胀：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/f529a1047385dd2b6e405e643455a58d.png" alt="img"></p>
+<p><em>图 3-3 微服务之间故障隔离</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假如非核心服务 3 发生故障，长时间阻塞线程池 1 的工作线程，其它与其共用线程池消息队列的非核心服务 1 和服务 2 只能在队列中排队等待，当服务 3 释放线程之后，排队的服务 1 和服务 2 可能已经超时，只能被丢弃掉，导致业务处理失败。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;采用线程池隔离的核心服务 1 和服务 2，由于各自独占线程池，拥有独立的消息队列，它的执行不受发生故障的非核心服务 1 影响，因此可以继续正常工作。<strong>通过独立线程池部署核心服务，可以防止故障扩散，保障核心服务的正常运行</strong>。</p>
+<h4 id="3-2-2-第三方依赖隔离"><a href="#3-2-2-第三方依赖隔离" class="headerlink" title="3.2.2. 第三方依赖隔离"></a>3.2.2. 第三方依赖隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在微服务中通常会调用第三方中间件服务，例如分布式缓存服务、分布式消息队列、<code>NoSQL</code>服务等。只要调用第三方服务，就会涉及跨网络操作，由于客户端 <code>SDK API</code> 的封装，很多故障都是隐性的，因此，它的可靠性需要额外关注。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;整体而言，第三方依赖隔离可以采用<strong>线程池 + 响应式编程</strong>（例如 <code>RxJava</code>）的方式实现，它的原理如下所示：</p>
+<p>1) 对第三方依赖进行分类，每种依赖对应一个独立的线程 / 线程池。</p>
+<p>2) 微服务不直接调用第三方依赖的<code>API</code>，而是使用异步封装之后的 <code>API</code>接口。</p>
+<p>3) 异步调用第三方依赖 <code>API</code> 之后，获取<code>Future</code>对象。利用响应式编程框架，可以订阅后续的事件，接收响应，针对响应进行编程。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用 <code>Netflix</code>开源的<code>hystrix + RxJava</code>，可以快速实现第三方依赖的隔离。</p>
+<h3 id="3-3-进程级隔离"><a href="#3-3-进程级隔离" class="headerlink" title="3.3. 进程级隔离"></a>3.3. 进程级隔离</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于核心的微服务，例如商品购买、用户注册、计费等，可以采用独立部署的方式，实现高可用性。</p>
+<h4 id="3-3-1-容器隔离"><a href="#3-3-1-容器隔离" class="headerlink" title="3.3.1. 容器隔离"></a>3.3.1. 容器隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务鼓励软件开发者将整个软件解耦为功能单一的服务，并且这些服务能够独立部署、升级和扩容。如果微服务抽象的足够好，那么微服务的这一优点将能够提升应用的敏捷性和自治理能力。</p>
+<p>利用 <code>Docker</code> 容器部署微服务，可以带来如下几个优点：</p>
+<ul>
+<li>高效：<code>Docker</code>容器的启动和停止不需要几分钟，只要几百毫秒就足够了。使用<code>Docker</code>部署微服务，微服务的启动和销毁速度非常快，在高压力时，可以实现秒级弹性伸缩。</li>
+<li>高性能：<code>Docker</code> 容器的性能接近裸的物理机，比<code>VM</code>平均高 20%+。</li>
+<li>隔离性：利用 <code>Docker</code>，可以实现 0.1 core 的隔离。基于细粒度的资源隔离机制，可以实现高密度的部署微服务，同时实现它们之间的资源层隔离，保障微服务的可靠性。</li>
+<li>可移植性：在基于虚拟机的解决方案中，应用的可移植性通常来说会受到云提供商所提供的虚拟机格式限制。如果应用程序需要部署到不同类型的虚拟机中，需要针对特定的虚拟机格式做镜像文件，新增很多额外的开发和测试工作量。<code>Docker</code>容器的设计理念是“一次编写，到处运行”，这可以使开发者避免上面这种限制。</li>
+</ul>
+<p>基于 <code>Docker</code> 容器部署微服务，实现物理资源层隔离示意图如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/c9798be7c26a7405c3d1645e6cc958f2.png" alt="img"></p>
+<p><em>图 3-4  基于 Docker 容器的微服务隔离</em></p>
+<h4 id="3-3-2-VM-隔离"><a href="#3-3-2-VM-隔离" class="headerlink" title="3.3.2. VM 隔离"></a>3.3.2. VM 隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了 <code>Docker</code> 容器隔离，也可以使用<code>VM</code>对微服务进行故障隔离，相比于 <code>Docker</code>容器，使用 <code>VM</code>进行微服务隔离存在如下优势：</p>
+<ol>
+<li>微服务的资源隔离性更好，<code>CPU</code>、内存、网络等可以实现完全的资源隔离。</li>
+<li>对于已经完成硬件虚拟化的遗留系统，可以直接使用已有的 <code>VM</code>，而不需要在 <code>VM</code> 中重新部署 <code>Docker</code> 容器。</li>
+</ol>
+<h2 id="4-集群容错"><a href="#4-集群容错" class="headerlink" title="4. 集群容错"></a>4. 集群容错</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当微服务不可用时，需要根据预置的策略做容错处理，大部分的容错能力和策略是公共的，因此可以下沉到服务框架中实现。</p>
+<h4 id="4-1-路由容错"><a href="#4-1-路由容错" class="headerlink" title="4.1. 路由容错"></a>4.1. 路由容错</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当集群环境中微服务调用失败之后，利用<strong>路由容错机制</strong>，可以在底层实现微服务的自动容错处理，提升系统的可靠性。</p>
+<p>常用的容错策略包括：</p>
+<ul>
+<li><strong>失败自动切换机制</strong>：微服务调用失败自动切换策略指的是当发生服务调用异常时，重新选路，查找下一个可用的微服务提供者。微服务发布的时候，可以指定服务的集群容错策略。消费者可以覆盖服务提供者的通用配置，实现个性化的容错策略。</li>
+<li><strong>失败回调机制</strong>：微服务调用失败之后，提供异常回调接口，执行微服务消费者自定义的失败处理逻辑。</li>
+<li><strong>快速失败机制</strong>：在业务高峰期，对于一些非核心的服务，希望只调用一次，失败也不再重试，为重要的核心服务节约宝贵的运行资源。此时，快速失败是个不错的选择。快速失败策略的设计比较简单，获取到服务调用异常之后，直接忽略异常，记录异常日志。</li>
+</ul>
+<h4 id="4-2-服务降级"><a href="#4-2-服务降级" class="headerlink" title="4.2. 服务降级"></a>4.2. 服务降级</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大促或者业务高峰时，为了保证核心服务的 <code>SLA</code>，往往需要<strong>停掉一些不太重要的业务</strong>，例如商品评论、论坛或者粉丝积分等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外一种场景就是<strong>某些服务因为某种原因不可用，但是流程不能直接失败，需要本地 <code>Mock</code> 服务端实现，做流程放通</strong>。以图书阅读为例，如果用户登录余额鉴权服务不能正常工作，需要做业务放通，记录消费话单，允许用户继续阅读，而不是返回失败。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过服务治理的服务降级功能，即可以满足上述两种场景的需求。</p>
+<h5 id="4-2-1-强制降级"><a href="#4-2-1-强制降级" class="headerlink" title="4.2.1. 强制降级"></a>4.2.1. 强制降级</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当外界的触发条件达到某个临界值时，由运维人员 / 开发人员决策，对某类或者某个服务进行强制降级。</p>
+<p>强制降级的常用策略：</p>
+<ol>
+<li><strong>不发起远程服务调用，直接返回空</strong>。例如： <code>mock = force: return null</code>。</li>
+<li><strong>不发起远程服务调用，直接抛出指定异常</strong>。例如： <code>mock = force: throw Exception</code>。</li>
+<li><strong>不发起远程服务调用，直接执行本地模拟接口实现类</strong>。例如：<code>mock = force: execute Bean: &lt;Spring beanName&gt;</code>。</li>
+</ol>
+<h5 id="4-2-2-容错降级"><a href="#4-2-2-容错降级" class="headerlink" title="4.2.2. 容错降级"></a>4.2.2. 容错降级</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当非核心服务不可用时，可以对故障服务做业务逻辑放通，以保障核心服务的运行。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;容错降级与屏蔽降级的主要差异是：</p>
+<ol>
+<li><p><strong>触发条件不同</strong>：容错讲解是根据服务调用结果，自动匹配触发的；而屏蔽降级往往是通过人工根据系统运行情况手工操作触发的。</p>
+</li>
+<li><p><strong>作用不同</strong>：容错降级是当服务提供者不可用时，让消费者执行业务放通；屏蔽降级的主要目的是将原属于降级业务的资源调配出来供核心业务使用。</p>
+</li>
+<li><p><strong>调用机制不同</strong>：一个发起远程服务调用，一个只做本地调用。</p>
+</li>
+</ol>
+<p>容错降级的常用策略如下：</p>
+<ol>
+<li><strong>异常转义</strong>：<code>mock = fail: throw Exception</code>。</li>
+<li><strong>自定义降级逻辑</strong>：<code>mock = fail: execute Bean: &lt;beanName&gt;</code>。将异常屏蔽掉，直接执行本地模拟接口实现类，返回 <code>Mock</code> 接口的执行结果。</li>
+</ol>
+<h5 id="4-2-3-服务降级-Portal"><a href="#4-2-3-服务降级-Portal" class="headerlink" title="4.2.3. 服务降级 Portal"></a>4.2.3. 服务降级 Portal</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用服务治理 <code>Portal</code>，可以在线的动态修改微服务的降级策略，实时生效，它的界面如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/588ef837f15fd14ac0df4cb68dc94a18.png" alt="img"></p>
+<p><em>图 4-1 服务降级配置界面</em></p>
+<h4 id="4-3-熔断机制"><a href="#4-3-熔断机制" class="headerlink" title="4.3. 熔断机制"></a>4.3. 熔断机制</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;熔断机制（<code>Circuit Breaker</code>），也叫自动停盘机制，是指当股指波幅达到规定的熔断点时，交易所为控制风险采取的暂停交易措施。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在微服务领域，熔断机制是从消费端保护微服务提供者的措施，当微服务的运行质量低于某个临界值时，启动熔断机制，暂停微服务调用一段时间，以保障后端的微服务不会因为持续过负荷而宕机</strong>。</p>
+<h5 id="4-3-1-工作原理"><a href="#4-3-1-工作原理" class="headerlink" title="4.3.1. 工作原理"></a>4.3.1. 工作原理</h5><p>微服务的熔断机制原理如下所示：</p>
+<ol>
+<li>微服务调用时，对熔断开关状态进行判断，当熔断器开关关闭时, 请求被允许通过熔断器。如果当前微服务健康度高于指定阈值, 开关继续保持关闭。否则开关切换为打开状态。</li>
+<li>当熔断器开关打开时，微服务调用请求被禁止通过。调用失败，执行本地降级逻辑，如果没有实现降级逻辑，默认返回异常。</li>
+<li>当熔断器开关处于打开状态时, 经过指定周期 T, 熔断器会自动进入半开状态, 这时熔断器会允许请求通过，当请求调用成功时, 熔断器恢复到关闭状态。若失败, 则继续保持打开状态。</li>
+</ol>
+<p>它的工作原理示意如下：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/8380367f71011ef1b712adfcd416443a.png" alt="img"></p>
+<p><em>图 4-2 微服务熔断器工作原理</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>熔断器机制能保证微服务消费者在微服务运行状态不佳时，快速返回结果，避免大量的同步等待</strong>。并且能在指定周期 T 后继续侦测微服务是否可用, 以实现故障恢复之后的自动感知。</p>
+<h5 id="4-3-2-微服务健康度"><a href="#4-3-2-微服务健康度" class="headerlink" title="4.3.2. 微服务健康度"></a>4.3.2. 微服务健康度</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;熔断器开关的状态取决于微服务的运行质量，微服务的运行质量通常由多种因素决定，具有多个衡量因子。通过对微服务健康度建模，可以实现对微服务运行质量的 360°实时评估。</p>
+<p>微服务健康度模型如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/a18f45559ca3aaf1462f728c7708371a.png" alt="img"></p>
+<p><em>图 4-3 微服务健康度模型</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微服务运维体系通过分布式日志采集系统、告警系统、性能 <code>KPI</code>数据采集等，利用在线大数据实时分析技术，通过健康度模型，对微服务的健康度按照周期进行实时打分，同时<strong>将微服务的得分通过消息队列订阅发布出去，各个节点订阅微服务的健康度得分，与熔断器阈值进行比较，修改熔断器开关的状态</strong>。</p>
+<h2 id="5-流量控制"><a href="#5-流量控制" class="headerlink" title="5. 流量控制"></a>5. 流量控制</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当资源成为瓶颈时，服务框架需要对消费者做限流，启动流控保护机制。流量控制有多种策略，比较常用的有：针对访问速率的静态流控、针对资源占用的动态流控等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在实践中，各种流量控制策略需要综合使用才能起到较好的效果。</p>
+<h3 id="5-1-动态流控"><a href="#5-1-动态流控" class="headerlink" title="5.1. 动态流控"></a>5.1. 动态流控</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态流控的最终目标是为了保命，并不是对流量或者访问速度做精确控制。当系统负载压力非常大时，系统进入过负载状态，可能是 <code>CPU</code>、内存资源已经过载，也可能是应用进程内部的资源几乎耗尽，如果继续全量处理业务，可能会导致消息严重积压或者应用进程宕机。</p>
+<p>动态流控检测的资源包括：</p>
+<ul>
+<li><p><strong>CPU 使用率</strong>。</p>
+</li>
+<li><p><strong>内存使用率</strong>（对于 <code>Java</code>，主要是<code>JVM</code>内存使用率）。</p>
+</li>
+<li><p><strong>队列积压率</strong>。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主机 <code>CPU</code>、内存使用率采集算法非常多，例如使用<code>java.lang.Process</code>执行 <code>top</code>、<code>sar</code>等外部命令获取系统资源使用情况，然后解析后计算获得资源使用率。也可以直接读取操作系统的系统文件获取相关数据，需要注意的是，无论是执行操作系统的本地命令，还是直接读取操作系统的资源使用率文件，都是操作系统本地相关的，不同的操作系统和服务器，命令和输出格式可能存在很大差异。在计算时需要首先判断操作系统类型，然后调用相关操作系统的资源采集接口实现类，通过这种方式就可以支持跨平台。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>动态流控是分级别的，不同级别拒掉的消息比例不同，这取决于资源的负载使用情况</strong>。例如当发生一级流控时，拒绝掉 1/4 的消息；发生二级流控时，拒绝掉 1/2 消息；发生三级流控时，所有的消息都被流控掉。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的级别有不同的流控阈值，系统上线后会提供默认的；流控阈值，不同流控因子的流控阈值不同，业务上线之后通常会根据现场的实际情况做阈值调优，因此<strong>流控阈值需要支持在线修改和动态生效</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要指出的是<strong>为了防止系统波动导致的偶发性流控，无论是进入流控状态还是从流控状态恢复，都需要连续采集 N 次并计算平均值，如果连续 N 次平均值大于流控阈值，则进入流控状态；同理，只有连续 N 次资源使用率平均值低于流控阈值，才能脱离流控恢复正常</strong>。</p>
+<h3 id="5-2-静态流控"><a href="#5-2-静态流控" class="headerlink" title="5.2. 静态流控"></a>5.2. 静态流控</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>静态流控主要针对客户端访问速率进行控制，它通常根据服务质量等级协定（<code>SLA</code>）中约定的 <code>QPS</code> 做全局流量控制</strong>，例如计费服务的静态流控阈值为 200 <code>QPS</code>，则无论集群有多少个计费服务实例，它们总的处理速率之和不能超过 200 <code>QPS</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于微服务具备弹性伸缩、动态上线和下线等特性，因此集群中某个微服务实例的节点个数是动态变化的，采用传统的平均分配制无法做到精准的控制。</p>
+<p>在实践中，比较成熟的集群静态流控策略是动态配额申请制，它的工作原理如下：</p>
+<ol>
+<li>系统部署的时候，根据微服务节点数和静态流控<code>QPS</code>阈值，拿出一定比例的配额做初始分配，剩余的配额放在配额资源池中。</li>
+<li>哪个微服务节点使用完了配额，就主动向服务注册中心申请配额。配额的申请策略：如果流控周期为 T，则将周期 T 分成更小的周期 T/N（N 为经验值，默认值为 10），当前的服务节点数为 M 个，则申请的配额为 （总 QPS 配额 - 已经分配的 QPS 配额）/M * T/N。</li>
+<li>总的配额如果被申请完，则返回 0 配额给各个申请配额的服务节点，服务节点对新接入的请求消息进行流控。</li>
+</ol>
+<h3 id="5-3-用户自定义流控机制"><a href="#5-3-用户自定义流控机制" class="headerlink" title="5.3. 用户自定义流控机制"></a>5.3. 用户自定义流控机制</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的业务，存在不同的流控策略，例如基于微服务优先级的流控、基于节假日的流控、基于业务字段的流控等。底层的服务框架无法实现所有业务级的定制流控策略，因此，过于业务化的流控往往由业务通过自定义流控机制定制实现。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>服务框架提供服务调用入口的拦截点和切面接口，由业务实现自定义流控</strong>。也可以提供基础的流控框架，供业务实现流控条件判断、流控执行策略等，简化业务的定制工作量。</p>
+<h2 id="6-使用-Hystrix-提升微服务可靠性"><a href="#6-使用-Hystrix-提升微服务可靠性" class="headerlink" title="6. 使用 Hystrix 提升微服务可靠性"></a>6. 使用 Hystrix 提升微服务可靠性</h2><h3 id="6-1-Hystrix-简介"><a href="#6-1-Hystrix-简介" class="headerlink" title="6.1. Hystrix 简介"></a>6.1. Hystrix 简介</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Hystrix</code>是 <code>Netflix</code>开源的一个可靠性组件，主要用于分布式环境中的依赖解耦，<code>Hystrix library</code>通过添加延迟容忍和容错逻辑来控制分布式服务之间的相互影响，通过服务之间访问的隔离点阻止连锁故障，并提供了失败回调机制，来改进系统的可靠性。</p>
+<p><code>Hystrix</code> 提供如下机制来提升分布式系统的可靠性：</p>
+<ul>
+<li>保护通过第三方客户端 <code>API</code> 依赖访问，控制其延迟和故障</li>
+<li>阻止级联故障和“雪崩效应”</li>
+<li>提供熔断机制，快速失败和恢复</li>
+<li>失败回调和优雅降级机制</li>
+<li>近实时检测、报警和<code>KPI</code>指标展示</li>
+</ul>
+<h3 id="6-2-Hystrix-的核心功能"><a href="#6-2-Hystrix-的核心功能" class="headerlink" title="6.2. Hystrix 的核心功能"></a>6.2. Hystrix 的核心功能</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Hystrix</code> 提供了一些非常有价值、与具体微服务框架实现无关的特性，方便不同的分布式系统集成使用。</p>
+<h4 id="6-2-1-依赖隔离"><a href="#6-2-1-依赖隔离" class="headerlink" title="6.2.1. 依赖隔离"></a>6.2.1. 依赖隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Hystrix</code>使用命令模式 <code>HystrixCommand(Command)</code> 包装依赖调用逻辑，每个命令在单独线程 / 信号授权下执行。依赖调用的超时时间可配置，如果超时，则则返回失败或者执行 <code>fallback</code> 逻辑。原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/34760c813b6285a9c650b45df91568e2.png" alt="img"></p>
+<p><em>图 6-1 基于线程 / 信号的依赖隔离</em></p>
+<h4 id="6-2-2-熔断器"><a href="#6-2-2-熔断器" class="headerlink" title="6.2.2. 熔断器"></a>6.2.2. 熔断器</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Hystrix</code>会先经过熔断器，此时如果熔断器的状态是打开，则说明已经熔断，这时将直接进行降级处理，不会继续将请求发到线程池。</p>
+<p>熔断器的开关状态由熔断算法决定，它的原理如下：</p>
+<ul>
+<li>判断是否熔断：根据 <code>bucket</code>中记录的次数，计算错误率。如果错误率达到熔断预置的阈值，则开启熔断开关。</li>
+<li>熔断恢复：对于被熔断的请求，暂停处理一段时间之后（<code>HystrixCommandProperties.circuitBreakerSleepWindowInMilliseconds()</code>），允许单个请求通过，若请求成功，则取消熔断，否则，继续熔断。</li>
+</ul>
+<p><code>Hystrix</code> 熔断器的工作原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/c39acbafbe4df9ece2815c274a3b8ca3.png" alt="img"></p>
+<p><em>图 6-2 Hystrix 熔断机制</em></p>
+<h4 id="6-2-3-优雅降级"><a href="#6-2-3-优雅降级" class="headerlink" title="6.2.3. 优雅降级"></a>6.2.3. 优雅降级</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当微服务调用异常、超时，或者熔断时，可以通过回调 <code>Fallback（）</code>的方式实现业务的优雅降级，它的原理如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/d201f40c066e6fa7bb039fe1b7ebaca3.png" alt="img"></p>
+<p><em>图 6-3 Hystrix 优雅降级机制</em></p>
+<h4 id="6-2-4-Reactive-编程"><a href="#6-2-4-Reactive-编程" class="headerlink" title="6.2.4. Reactive 编程"></a>6.2.4. Reactive 编程</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Hystrix</code>支持响应式编程，并提供了相关接口给用户，如下所示：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/0e60773432e6cc5242095411398918d3.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;利用响应式编程，可以更加优雅和灵活的实现异步回调逻辑的处理。</p>
+<h4 id="6-2-5-信号量隔离"><a href="#6-2-5-信号量隔离" class="headerlink" title="6.2.5. 信号量隔离"></a>6.2.5. 信号量隔离</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低线程资源的开销，<code>Hystrix</code>提供了信号量 <code>Semaphores</code>，用于实现轻量级的依赖隔离。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发者可以限制系统对某一个依赖的最高并发数，这个基本上等同于并发流控策略。每次微服务调用依赖时都会检查一下是否到达信号量的限制值，如达到则拒绝。该隔离策略的优点是不新起线程，减少上下文切换和线程数，缺点是无法配置断路，每次都一定会去尝试获取信号量。</p>
+<h3 id="6-3-集成-Hystrix"><a href="#6-3-集成-Hystrix" class="headerlink" title="6.3. 集成 Hystrix"></a>6.3. 集成 Hystrix</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于 <code>Hystrix</code>与特定的分布式系统、微服务框架无关，是个通用的分布式系统可靠性组件，可以通过类库集成的方式方便的集成到已有的微服务架构体系中。</p>
+<h4 id="6-3-1-集成架构"><a href="#6-3-1-集成架构" class="headerlink" title="6.3.1. 集成架构"></a>6.3.1. 集成架构</h4><p>在已有微服务体系中集成 <code>Hystrix</code> 的策略如下：</p>
+<ol>
+<li>微服务框架中，对于通用的微服务调用、磁盘 I/O 操作、数据库操作和网络 I/O 操作等使用 <code>HystrixCommand</code> 做一层异步包装，实现业务的微服务调用线程和第三方依赖的线程隔离。</li>
+<li>对于非通用的第三方依赖，或者业务微服务自身引入的第三方依赖，直接基于 <code>HystrixCommand</code>做异步隔离。</li>
+<li>对第三方依赖进行分类、分组管理，根据依赖的特点设置熔断策略、优雅降级策略、超时策略等，以实现差异化的处理。</li>
+</ol>
+<p>集成架构示例如下：</p>
+<p><img src="//blog.com/2019/07/26/微服务可靠性设计/a2a23e1c242c6e16fc700e694a20cff7.png" alt="img"></p>
+<p><em>图 6-4  集成 Hystrix 的微服务架构</em></p>
+<h4 id="6-3-2-集成-Hystrix-带来的优点"><a href="#6-3-2-集成-Hystrix-带来的优点" class="headerlink" title="6.3.2. 集成 Hystrix 带来的优点"></a>6.3.2. 集成 Hystrix 带来的优点</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;第三方依赖隔离具备一定的通用性，例如数据库隔离、磁盘 I/O 隔离、第三方服务调用隔离等，如果各自构建一套隔离机制，除了增加工作量之外，后续维护起来也比较麻烦。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，业务微服务自身也会引入第三方依赖，如果没有通用的隔离机制，则业务需要自己构建业务级的隔离体系，相应的开发难度和工作量都较大，架构上也很难统一。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;集成 <code>Hystrix</code>，可以快速的构建微服务的隔离、熔断、优雅降级和响应式编程体系，提升系统的可靠性。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，<code>Hystrix</code> 非常成熟，在 <code>Netflix</code> 已经经历过苛刻的生产环境考验，它的可靠性和成熟度完全能够满足大部分业务场景的需要。</p>
+<h2 id="7-附录"><a href="#7-附录" class="headerlink" title="7. 附录"></a>7. 附录</h2><h3 id="7-1-参考文献"><a href="#7-1-参考文献" class="headerlink" title="7.1. 参考文献"></a>7.1. 参考文献</h3><p>Netflix Hystrix.</p>
+<p><a href="https://github.com/Netflix/Hystrix/wiki/How-To-Use" target="_blank" rel="noopener">https://github.com/Netflix/Hystrix/wiki/How-To-Use</a></p>
+<p><a href="https://github.com/Netflix/Hystrix/wiki/How-it-Works" target="_blank" rel="noopener">https://github.com/Netflix/Hystrix/wiki/How-it-Works</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/微服务/" rel="tag"># 微服务</a>
+          
+            <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+          
+            <a href="/tags/高可用/" rel="tag"># 高可用</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/25/分布式系统原理介绍/" rel="next" title="分布式系统原理介绍">
+                <i class="fa fa-chevron-left"></i> 分布式系统原理介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/26/MySQL列转行/" rel="prev" title="MySQL列转行">
+                MySQL列转行 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#微服务可靠性设计"><span class="nav-number">1.</span> <span class="nav-text">微服务可靠性设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-背景"><span class="nav-number">1.1.</span> <span class="nav-text">1. 背景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-无处不在的故障"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1. 无处不在的故障</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-1-分布式部署和调用"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">1.1.1. 分布式部署和调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-2-大型系统微服务进程内合设"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">1.1.2. 大型系统微服务进程内合设</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-3-微服务健康度"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">1.1.3. 微服务健康度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-4-同步的-I-O-操作"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">1.1.4. 同步的 I/O 操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-5-第三方-SDK-API-调用"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">1.1.5. 第三方 SDK API 调用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-微服务可靠性"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2. 微服务可靠性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-关键的可靠性因素"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">1.2.1. 关键的可靠性因素</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-异步-I-O-操作"><span class="nav-number">1.2.</span> <span class="nav-text">2. 异步 I/O 操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-网络-I-O"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1. 网络 I/O</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-使用同步阻塞-I-O-的问题"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">2.1.1. 使用同步阻塞 I/O 的问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-使用非阻塞-I-O-通信"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">2.1.2. 使用非阻塞 I/O 通信</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-磁盘-I-O"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2. 磁盘 I/O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-数据库操作"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3. 数据库操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-故障隔离"><span class="nav-number">1.3.</span> <span class="nav-text">3. 故障隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-通信链路隔离"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1. 通信链路隔离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-调度资源隔离"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2. 调度资源隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-微服务之间隔离"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">3.2.1. 微服务之间隔离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-第三方依赖隔离"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">3.2.2. 第三方依赖隔离</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-进程级隔离"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3. 进程级隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-1-容器隔离"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">3.3.1. 容器隔离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-2-VM-隔离"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">3.3.2. VM 隔离</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-集群容错"><span class="nav-number">1.4.</span> <span class="nav-text">4. 集群容错</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-路由容错"><span class="nav-number">1.4.0.1.</span> <span class="nav-text">4.1. 路由容错</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-服务降级"><span class="nav-number">1.4.0.2.</span> <span class="nav-text">4.2. 服务降级</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-1-强制降级"><span class="nav-number">1.4.0.2.1.</span> <span class="nav-text">4.2.1. 强制降级</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-2-容错降级"><span class="nav-number">1.4.0.2.2.</span> <span class="nav-text">4.2.2. 容错降级</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-3-服务降级-Portal"><span class="nav-number">1.4.0.2.3.</span> <span class="nav-text">4.2.3. 服务降级 Portal</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-熔断机制"><span class="nav-number">1.4.0.3.</span> <span class="nav-text">4.3. 熔断机制</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-3-1-工作原理"><span class="nav-number">1.4.0.3.1.</span> <span class="nav-text">4.3.1. 工作原理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-3-2-微服务健康度"><span class="nav-number">1.4.0.3.2.</span> <span class="nav-text">4.3.2. 微服务健康度</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-流量控制"><span class="nav-number">1.5.</span> <span class="nav-text">5. 流量控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-动态流控"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1. 动态流控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-静态流控"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2. 静态流控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-用户自定义流控机制"><span class="nav-number">1.5.3.</span> <span class="nav-text">5.3. 用户自定义流控机制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-使用-Hystrix-提升微服务可靠性"><span class="nav-number">1.6.</span> <span class="nav-text">6. 使用 Hystrix 提升微服务可靠性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-Hystrix-简介"><span class="nav-number">1.6.1.</span> <span class="nav-text">6.1. Hystrix 简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Hystrix-的核心功能"><span class="nav-number">1.6.2.</span> <span class="nav-text">6.2. Hystrix 的核心功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-1-依赖隔离"><span class="nav-number">1.6.2.1.</span> <span class="nav-text">6.2.1. 依赖隔离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-2-熔断器"><span class="nav-number">1.6.2.2.</span> <span class="nav-text">6.2.2. 熔断器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-3-优雅降级"><span class="nav-number">1.6.2.3.</span> <span class="nav-text">6.2.3. 优雅降级</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-4-Reactive-编程"><span class="nav-number">1.6.2.4.</span> <span class="nav-text">6.2.4. Reactive 编程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-5-信号量隔离"><span class="nav-number">1.6.2.5.</span> <span class="nav-text">6.2.5. 信号量隔离</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-集成-Hystrix"><span class="nav-number">1.6.3.</span> <span class="nav-text">6.3. 集成 Hystrix</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-1-集成架构"><span class="nav-number">1.6.3.1.</span> <span class="nav-text">6.3.1. 集成架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-2-集成-Hystrix-带来的优点"><span class="nav-number">1.6.3.2.</span> <span class="nav-text">6.3.2. 集成 Hystrix 带来的优点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-附录"><span class="nav-number">1.7.</span> <span class="nav-text">7. 附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-参考文献"><span class="nav-number">1.7.1.</span> <span class="nav-text">7.1. 参考文献</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

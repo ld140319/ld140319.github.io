@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="数据库中间件详解  原文地址：https://mp.weixin.qq.com/s/XisPkWGkB-a3dR2lrEjkwQ   1 数据库拆分过程及挑战&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。  1.1 垂直拆分&amp;nbsp;&amp;">
+<meta name="keywords" content="架构,数据库,数据库设计,分库分表,数据库优化,读写分离">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库中间件详解">
+<meta property="og:url" content="http://blog.com/2019/06/30/数据库中间件详解/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="数据库中间件详解  原文地址：https://mp.weixin.qq.com/s/XisPkWGkB-a3dR2lrEjkwQ   1 数据库拆分过程及挑战&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。  1.1 垂直拆分&amp;nbsp;&amp;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlDAScxnTaTdDBT2dB1cCRVzFxw1mNTJCZsGric2dE01JOZ0sicuVTXzkw.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlI5xC0KADJpg9h06zu18czhK21yibgbeuDZRcHXIKXeuJM9mKPLVWTHw.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlQyP8p8Jib1xqgsbrRsicuY4iaA2aqUiaEhBf0RsZPYicmv8qTuHjEtToI3A.png">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlm6lvbuyvzHoJ5Kp85y6MKlkghzibSdd3KXKib5kRbSIEib6Gkq9ArleibQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlBSLSL6u5EMO5LJWWcPbAGtVghJQxHDiaLV5QY8SMvgiaVia4MuhF9a56g.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlmCX6XQxQKkW5MOccPGlbnibKQywiaVfDjaGvoNDTcHmmArcerXic5ic8EA.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl3JictkiaNUKb6UxRO38JGsicnrKXY7rI3REufJUkFNrVbCwvjYAmPqlgQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlcoYicoP81LJicib45V9WZiaC3GAaMJrCAwg7MFHcTAmoj6k8tbJBndROHw.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl9NBEYjiakrzUaJ4pgJ1MXeTsraZ5cx1bAibADG4MugpibUX1qUnYVWs0w.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlzpZk35AqDSyYNk7LbZE2HXia0jr1FvW6utxaPADnInvtMIibZ5N6QiaEg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlT2niaK9qS1PVqXwd2OdXm9DeQdhJSzM6BZqTtZVxRRxHwFibgG98qz5Q.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlIT3lHAQmT2iaq7kUvH4iaM1zIULibEiaPSPfibOQsiaXPIoibpPjMiaGCxknTg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlZBCzOKvumNib8ceIfYmZG62GQTusIrp6NUjK4qklaExr0l0ycgibv7ZQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/mvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlMHagsmgHHXaIAolIYsFM8gfdXwZBSglDVThvMpNpuibeI1jOp12Vn7A.webp">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlBsICmKjib9WPn4PTSzjId24vQw84iccUQ47NiboDjVmB1T14mDw6p1XLg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xltNMMictztrsysejCyhRdL1pavKiaXHOq23k2rwtSzumgeqeoZ05kg8eg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlpQ1ddLnzG7AVZDAINJc5bT1M6H9Aw9p2iaQpcoyiaFbbAkibJur8CiarYQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl3ezjbdI7tVfPvVoMBh71m8lNJ2WA8I3Xj356mls9aXIWhjzUbKFA6Q.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlwFEwmHGsdoupJe59zj1FtPrILeHIzmLdzr6cdXNnZg3RxxwzXHDPDg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl2KVM1WrS169PzVEblzhCw5j1QXwreZoF3CxbZEPBnNuWl5PsnrNwrg.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlSmk2icbBOy8ELI6owtZZIpI2ZEpbBzfMsvmTIPCvibEVlMc5mYGFrruQ.png">
+<meta property="og:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlApS3vicuJDSZbiaBZRAjicUvss8fCOZoJ8sJxaIoWAdgHDJe41hRxlW5g.png">
+<meta property="og:updated_time" content="2019-06-30T06:45:31.452Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库中间件详解">
+<meta name="twitter:description" content="数据库中间件详解  原文地址：https://mp.weixin.qq.com/s/XisPkWGkB-a3dR2lrEjkwQ   1 数据库拆分过程及挑战&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：垂直拆分、读写分离、分库分表(水平拆分)。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。  1.1 垂直拆分&amp;nbsp;&amp;">
+<meta name="twitter:image" content="http://blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlDAScxnTaTdDBT2dB1cCRVzFxw1mNTJCZsGric2dE01JOZ0sicuVTXzkw.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/30/数据库中间件详解/">
+
+
+
+
+
+  <title>数据库中间件详解 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/30/数据库中间件详解/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据库中间件详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-30T10:12:57+08:00">
+                2019-06-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库优化</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库设计</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/" itemprop="url" rel="index">
+                    <span itemprop="name">读写分离</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据库/数据库优化/数据库设计/读写分离/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="数据库中间件详解"><a href="#数据库中间件详解" class="headerlink" title="数据库中间件详解"></a>数据库中间件详解</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://mp.weixin.qq.com/s/XisPkWGkB-a3dR2lrEjkwQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/XisPkWGkB-a3dR2lrEjkwQ</a></p>
+</blockquote>
+<p><br></p>
+<h2 id="1-数据库拆分过程及挑战"><a href="#1-数据库拆分过程及挑战" class="headerlink" title="1 数据库拆分过程及挑战"></a>1 数据库拆分过程及挑战</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;互联网当下的数据库拆分过程基本遵循的顺序是：<strong>垂直拆分、读写分离、分库分表(水平拆分)</strong>。每个拆分过程都能解决业务上的一些问题，但同时也面临了一些挑战。 </p>
+<h3 id="1-1-垂直拆分"><a href="#1-1-垂直拆分" class="headerlink" title="1.1 垂直拆分"></a>1.1 垂直拆分</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于一个刚上线的互联网项目来说，由于前期活跃用户数量并不多，并发量也相对较小，所以此时企业一般都会选择将所有数据存放在一个数据库 中进行访问操作。举例来说，对于一个电商系统，其用户模块和产品模块的表刚开始都是位于一个库中。</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlDAScxnTaTdDBT2dB1cCRVzFxw1mNTJCZsGric2dE01JOZ0sicuVTXzkw.png" alt="Image"></p>
+<p>其中：<code>user、useraccount</code>表属于用户模块，<code>productcategory、product</code>表属于产品模块</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;刚开始，可能公司的技术团队规模比较小，所有的数据都位于一个库中。随着公司业务的发展，技术团队人员也得到了扩张，划分为不同的技术小组，不同的小组负责不同的业务模块。例如A小组负责用户模块，B小组负责产品模块。此时数据库也迎来了第一次拆分：垂直拆分。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里的<strong>垂直拆分，指的是将一个包含了很多表的数据库，根据表的功能的不同，拆分为多个小的数据库，每个库包含部分表</strong>。下图演示将上面提到的<code>db_eshop</code>库，拆分为<code>db_user</code>库和<code>db_product</code>库。</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlI5xC0KADJpg9h06zu18czhK21yibgbeuDZRcHXIKXeuJM9mKPLVWTHw.png" alt="Image"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>通常来说，垂直拆分，都是根据业务来对一个库中的表进行拆分的</strong>。关于垂直拆分，还有另一种说法，<strong>将一个包含了很多字段的大表拆分为多个小表，每个表包含部分字段</strong>，这种情况在实际开发中基本很少遇到。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;垂直拆分的另一个典型应用场景是服务化<code>(SOA)</code>改造。在服务化的背景下，除了<strong>业务上需要进行拆分，底层的存储也需要进行隔离</strong>。 垂直拆分会使得单个用户请求的响应时间变长，原因在于，在单体应用的场景下，所有的业务都可以在一个节点内部完成，而垂直拆分之后，通常会需要进行<code>RPC</code>调用。然后虽然<strong>单个请求的响应时间增加了，但是整个服务的吞吐量确会大大的增加</strong>。</p>
+<h3 id="1-2-读写分离"><a href="#1-2-读写分离" class="headerlink" title="1.2 读写分离"></a>1.2 读写分离</h3><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着业务的不断发展，用户数量和并发量不断上升。这时如果仅靠单个数据库实例来支撑所有访问压力,几乎是在 自寻死路 。以产品库为例，可能库中包含了几万种商品，并且每天新增几十种，而产品库每天的访问了可能有几亿甚至几十亿次。<strong>数据库读的压力太大，单台<code>mysql</code>实例扛不住，此时大部分 <code>Mysql DBA</code>就会将数据库设置成 读写分离状态 </strong>。也就是一个 <code>Master</code> 节点(主库)对应多个 <code>Salve</code> 节点(从库)。<strong>可以将<code>slave</code>节点的数据理解为<code>master</code>节点数据的全量备份</strong>。</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlQyP8p8Jib1xqgsbrRsicuY4iaA2aqUiaEhBf0RsZPYicmv8qTuHjEtToI3A.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>master</code>节点接收用户的写请求，并写入到本地二进制文件(<code>binary log</code>)中。<code>slave</code>通过一个<code>I/O</code>线程与<code>Master</code>建立连接，发送<code>binlog dump</code>指令。<code>Master</code>会将<code>binlog</code>数据推送给<code>slave</code>，<code>slave</code>将接收到的<code>binlog</code>保存到本地的中继日志(<code>relay log</code>)中，最后，<code>slave</code>通过另一个线程<code>SQL thread</code>应用本地的<code>relay log</code>，将数据同步到<code>slave</code>库中。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于<code>mysql</code>主从复制，内部包含很多细节。例如<code>binlog</code>格式分为<code>statement</code>、<code>row</code>和<code>mixed</code>，<code>binlog</code>同步方式又可以划分为：<strong>异步</strong>、<strong>半同步</strong>和<strong>同步</strong>。复制可以基于<strong>binlogFile+position</strong>，也可以基于<strong>GTID</strong>。通常，这些都是<code>DBA</code>负责维护的，业务<code>RD</code>无感知。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在DBA将<code>mysql</code>配置成主从复制集群的背景下，开发同学所需要做的工作是：当更新数据时，应用将数据写入<code>master</code>主库，主库将数据同步给多个<code>slave</code>从库。当查询数据时，应用选择某个<code>slave</code>节点读取数据。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlm6lvbuyvzHoJ5Kp85y6MKlkghzibSdd3KXKib5kRbSIEib6Gkq9ArleibQ/640?wx_fmt=png&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="Image"></p>
+<h4 id="1-2-1-读写分离的优点"><a href="#1-2-1-读写分离的优点" class="headerlink" title="1.2.1 读写分离的优点"></a>1.2.1 读写分离的优点</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这样通过配置多个<code>slave</code>节点，可以有效的避免过大的访问量对单个库造成的<strong>读压力</strong>。</p>
+<h4 id="1-2-1-读写分离的挑战"><a href="#1-2-1-读写分离的挑战" class="headerlink" title="1.2.1 读写分离的挑战"></a>1.2.1 读写分离的挑战</h4><p><strong>1 对于DBA而言，多了很多集群运维工作</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如<strong>集群搭建、主从切换、从库扩容、缩容</strong>等。例如<code>master</code>配置了多个<code>slave</code>节点，如果其中某个<code>slave</code>节点挂了，那么之后的读请求，我们应用将其转发到正常工作的<code>slave</code>节点上。另外，如果新增了<code>slave</code>节点，应用也应该感知到，可以将读请求转发到新的<code>slave</code>节点上。</p>
+<p><strong>2 对于开发人员而言</strong></p>
+<ul>
+<li><strong>基本读写分离功能</strong>：对<code>sql</code>类型进行判断，如果是<code>select</code>等读请求，就走从库，如果是<code>insert</code>、<code>update</code>、<code>delete等写请求</code>，就走主库。</li>
+<li><strong>主从数据同步延迟问题</strong>：因为数据是从<code>master</code>节点通过网络同步给多个<code>slave</code>节点，因此必然存在延迟。因此有可能出现我们在<code>master</code>节点中已经插入了数据，但是从<code>slave</code>节点却读取不到的问题。对于一些强一致性的业务场景，要求插入后必须能读取到，因此对于这种情况，我们需要<strong>提供一种方式，让读请求也可以走主库，而主库上的数据必然是最新的</strong>。</li>
+<li><strong>事务问题</strong>：如果一个事务中同时包含了读请求(如<code>select</code>)和写请求(如<code>insert</code>)，如果读请求走从库，写请求走主库，由于跨了多个库，那么本地事务已经无法控制，属于分布式事务的范畴。而分布式事务非常复杂且效率较低。因此<strong>对于读写分离，目前主流的做法是，事务中的所有<code>sql</code>统一都走主库，由于只涉及到一个库，本地事务就可以搞定</strong>。</li>
+<li><strong>感知集群信息变更：</strong>如果访问的数据库集群信息变更了，例如主从切换了，写流量就要到新的主库上；又例如增加了从库数量，流量需要可以打到新的从库上；又或者某个从库延迟或者失败率比较高，应该将这个从库进行隔离，读流量尽量打到正常的从库上 </li>
+</ul>
+<h3 id="1-3-分库分表"><a href="#1-3-分库分表" class="headerlink" title="1.3 分库分表"></a>1.3 分库分表</h3><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;经过垂直分区后的 <code>Master/Salve</code>模式完全可以承受住难以想象的高并发访问操作，但是否可以永远 高枕无忧 了？答案是否定的，一旦业务表中的数据量大了，从维护和性能角度来看，无论是任何的 <code>CRUD</code> 操作，对于数据库而言都是一件极其耗费资源的事情。即便设置了索引， 仍然无法掩盖<strong>因为数据量过大从而导致的数据库性能下降</strong>的事实 ，因此这个时候 <code>Mysql DBA</code> 或许就该对数据库进行 <strong>水平分区</strong> （<code>sharding</code>，即分库分表 ）。<strong>经过水平分区设置后的业务表，必然能够将原本一张表维护的海量数据分配给 N 个子表进行存储和维护</strong>。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>水平分表从具体实现上又可以分为3种：只分表、只分库、分库分表</strong>，下图展示了这三种情况：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlBSLSL6u5EMO5LJWWcPbAGtVghJQxHDiaLV5QY8SMvgiaVia4MuhF9a56g.png" alt="img"></p>
+<p><strong>只分表</strong>：</p>
+<p>​        将<code>db</code>库中的<code>user</code>表拆分为2个分表，<code>user_0</code>和<code>user_1</code>，这两个表还位于同一个库中。  </p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;适用场景：<strong>如果库中的多个表中只有某张表或者少数表数据量过大，那么只需要针对这些表进行拆分，其他表保持不变</strong>。</p>
+<p><strong>只分库</strong>：</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将<code>db</code>库拆分为<code>db_0</code>和<code>db_1</code>两个库，同时在<code>db_0</code>和<code>db_1</code>库中各自新建一个<code>user</code>表，<code>db_0.user</code>表和<code>db_1.user</code>表中各自只存原来的<code>db.user</code>表中的部分数据。</p>
+<p><strong>分库分表</strong>：</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;将<code>db库</code>拆分为<code>db_0</code>和<code>db_1</code>两个库，<code>db_0</code>中包含<code>user_0</code>、<code>user_1</code>两个分表，<code>db_1</code>中包含<code>user_2</code>、<code>user_3</code>两个分表。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下图演示了在分库分表的情况下，数据是如何拆分的：假设<code>db</code>库的user表中原来有<code>4000W</code>条数据，现在将<code>db</code>库拆分为2个分库<code>db_0</code>和<code>db_1</code>，<code>user</code>表拆分为<code>user_0、user_1、user_2、user_3</code>四个分表，每个分表存储<code>1000W</code>条数据。</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlmCX6XQxQKkW5MOccPGlbnibKQywiaVfDjaGvoNDTcHmmArcerXic5ic8EA.png" alt="img"></p>
+<h4 id="1-3-1-分库分表的好处"><a href="#1-3-1-分库分表的好处" class="headerlink" title="1.3.1 分库分表的好处"></a>1.3.1 分库分表的好处</h4><p>如果说读写分离实现了数据库<strong>读能力的水平扩展</strong>，那么分库分表就是实现了<strong>写能力的水平扩展</strong>。   </p>
+<p><strong>1 存储能力的水平扩展</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在读写分离的情况下，每个集群中的<code>master</code>和<code>slave</code>基本上数据是完全一致的，从存储能力来说，在存在海量数据的情况下，可能由于磁盘空间的限制，无法存储所有的数据。而在分库分表的情况下，我们可以搭建多个<code>mysql</code>主从复制集群，每个集群只存储部分分片的数据，实现存储能力的水平扩展。</p>
+<p><strong>2 写能力的水平扩展</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在读写分离的情况下，由于每个集群只有一个<code>master</code>，所有的写操作压力都集中在这一个节点上，在写入并发非常高的情况下，这里会成为整个系统的瓶颈</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而在分库分表的情况下，每个分片所属的集群都有一个<code>master</code>节点，都可以执行写入操作，实现<strong>写能力的水平扩展</strong>。此外减小建立索引开销，降低写操作的锁操作耗时等，都会带来很多显然的好处。 </p>
+<h4 id="1-3-2-分库分表的挑战"><a href="#1-3-2-分库分表的挑战" class="headerlink" title="1.3.2 分库分表的挑战"></a>1.3.2 分库分表的挑战</h4><p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分库分表的挑战主要体现在4个方面：基本的数据库增删改功能，分布式id，分布式事务，动态扩容，下面逐一进行讲述。 </p>
+<p><strong>挑战1：基本的数据库增删改功能</strong>   </p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于开发人员而言，虽然分库分表的，但是其还是希望能和单库单表那样的去操作数据库。例如我们要批量插入四条用户记录，并且希望根据用户的id字段，确定这条记录插入哪个库的哪张表。例如1号记录插入user_1表，2号记录插入user_2表，3号记录插入user_3表，4号记录插入user_0表，以此类推。<code>sql</code>如下所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">user</span>(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">1</span>,”tianshouzhi”),(<span class="number">2</span>,”huhuamin”), (<span class="number">3</span>,”wanghanao”),(<span class="number">4</span>,”luyang”)</span><br></pre></td></tr></table></figure>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 这样的<code>sql</code>明显是无法执行的，因为我们已经对库和表进行了拆分,这种<code>sql</code>语法只能操作<code>mysql</code>的单个库和单个表。所以必须将<code>sql</code>改成4条如下所示，然后分别到每个库上去执行。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_1(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">1</span>,”tianshouzhi”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_2(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">2</span>,”huhuamin”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_3(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">3</span>,”wanghanao”);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> user_0(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span>  (<span class="number">4</span>,”luyang”);</span><br></pre></td></tr></table></figure>
+<p>具体流程可以用下图进行描述：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl3JictkiaNUKb6UxRO38JGsicnrKXY7rI3REufJUkFNrVbCwvjYAmPqlgQ.png" alt="Image.png"></p>
+<p>解释如下：</p>
+<p>​    <strong><code>sql</code>解析</strong>：首先对<code>sql</code>进行解析，得到需要插入的四条记录的id字段的值分别为1,2,3,4</p>
+<p>​    <strong><code>sql</code>路由</strong>：<code>sql</code>路由包括库路由和表路由。库路由用于确定这条记录应该插入哪个库，表路由用于确定这条记录应该插入哪个表。</p>
+<p>​    <strong><code>sql</code>改写</strong>：因为一条记录只能插入到一个库中，而上述批量插入的语法将会在 每个库中都插入四条记录，明显是不合适的，因此需要对<code>sql</code>进行改写，每个库只插入一条记录。</p>
+<p>​    <strong><code>sql</code>执行</strong>：一条<code>sql</code>经过改写后变成了多条<code>sql</code>，为了提升效率应该并发的到不同的库上去执行，而不是按照顺序逐一执行</p>
+<p>​    <strong>结果集合并</strong>：每个<code>sql</code>执行之后，都会有一个执行结果，我们需要对分库分表的结果集进行合并，从而得到一个完整的结果。</p>
+<p><strong>挑战2：分布式id</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在分库分表后，我们不能再使用<code>mysql</code>的自增主键。因为在插入记录的时候，不同的库生成的记录的自增<code>id</code>可能会出现冲突</strong>。因此需要有一个全局的<code>id</code>生成器。目前分布式<code>id</code>有很多中方案，其中一个比较轻量级的方案是<code>twitter</code>的<code>snowflake</code>算法。</p>
+<p><strong>挑战3：分布式事务</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>分布式事务是分库分表绕不过去的一个坎，因此涉及到了同时更新多个数据库</strong>。例如上面的批量插入记录到四个不同的库，如何保证要么同时成功，要么同时失败。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关于分布式事务，<code>mysql</code>支持<code>XA</code>事务，但是效率较低。柔性事务是目前比较主流的方案，柔性事务包括：最大努力通知型、可靠消息最终一致性方案以及<code>TCC</code>两阶段提交。但是无论<code>XA</code>事务还是柔性事务，实现起来都是非常复杂的。</p>
+<p><strong>挑战4：动态扩容</strong></p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态扩容指的是增加分库分表的数量。例如原来的user表拆分到2个库的四张表上。现在我们希望将分库的数量变为4个，分表的数量变为8个。这种情况下一般要伴随着数据迁移。例如在4张表的情况下，id为7的记录，<code>7%4=3</code>，因此这条记录位于user_3这张表上。但是现在分表的数量变为了8个，而<code>7%8=7</code>，而user_0这张表上根本就没有id=7的这条记录，因此<strong>如果不进行数据迁移的话，就会出现记录找不到的情况</strong>。</p>
+<h2 id="2-主流数据库中间件设计方案"><a href="#2-主流数据库中间件设计方案" class="headerlink" title="2 主流数据库中间件设计方案"></a>2 主流数据库中间件设计方案</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>数据库中间件的主要作用是向应用程序开发人员屏蔽读写分离和分库分表面临的挑战，并隐藏底层实现细节，使得开发人员可以像操作单库单表那样去操作数据</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在介绍分库分表的主流设计方案前，我们首先回顾一下在单个库的情况下，应用的架构，可以用下图进行描述： </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlcoYicoP81LJicib45V9WZiaC3GAaMJrCAwg7MFHcTAmoj6k8tbJBndROHw.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以看到在操作单库单表的情况下，我们是直接在应用中通过数据连接池(<code>connection pool</code>)与数据库建立连接，进行读写操作。 而对于读写分离和分库分表，应用都要操作多个数据库实例，在这种情况下，我们就需要使用到数据库中间件。</p>
+<h3 id="2-1-设计方案"><a href="#2-1-设计方案" class="headerlink" title="2.1 设计方案"></a>2.1 设计方案</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;典型的数据库中间件设计方案有2种：<code>proxy</code>、<code>smart-client</code>。下图演示了这两种方案的架构：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl9NBEYjiakrzUaJ4pgJ1MXeTsraZ5cx1bAibADG4MugpibUX1qUnYVWs0w.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可以看到不论是<code>proxy</code>还是<code>smart-client</code>，底层都操作了多个数据库实例。不论是分库分表，还是读写分离，都是在数据库中间件层面对业务开发同学进行屏蔽。</p>
+<h4 id="2-1-1-proxy模式"><a href="#2-1-1-proxy模式" class="headerlink" title="2.1.1 proxy模式"></a>2.1.1 proxy模式</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们独立部署一个代理服务，这个代理服务背后管理多个数据库实例。而在应用中，我们<strong>通过一个普通的数据源(<code>c3p0、druid、dbcp</code>等)与代理服务器建立连接，所有的<code>sql</code>操作语句都是发送给这个代理，由这个代理去操作底层数据库，得到结果并返回给应用</strong>。<strong>在这种方案下，分库分表和读写分离的逻辑对开发人员是完全透明的</strong>。</p>
+<p><strong>优点：</strong></p>
+<p><strong>1.  多语言支持</strong>。也就是说，不论你用的php、java或是其他语言，都可以支持。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以<code>mysql</code>数据库为例，<strong>如果<code>proxy</code>本身实现了<code>mysql</code>的通信协议，那么你可以就将其看成一个<code>mysql</code> 服务器</strong>。<code>mysql</code>官方团队为不同语言提供了不同的客户端驱动，如<code>java</code>语言的<code>mysql-connector-java</code>，<code>python</code>语言的<code>mysql-connector-python</code>等等。因此<strong>不同语言的开发者都可以使用<code>mysql</code>官方提供的对应的驱动来与这个代理服务器建通信</strong>。</p>
+<p><strong>2.  对业务开发同学透明</strong>。由于可以把<code>proxy</code>当成<code>mysql</code>服务器，理论上业务同学不需要进行太多代码改造，既可以完成接入。</p>
+<p><strong>缺点：</strong></p>
+<p><strong>1.  实现复杂</strong>。因为<code>proxy</code>需要实现被代理的数据库<code>server</code>端的通信协议，实现难度较大。通常我们看到一些<code>proxy</code>模式的数据库中间件，实际上只能代理某一种数据库，如<code>mysql</code>。几乎没有数据库中间件，可以同时代理多种数据库(<code>sqlserver、PostgreSQL、Oracle</code>)。</p>
+<p><strong>2.  proxy本身需要保证高可用</strong>。由于应用本来是直接访问数据库，现在改成了访问<code>proxy</code>，意味着<code>proxy</code>必须保证高可用。否则，数据库没有宕机，<code>proxy</code>挂了，导致数据库无法正常访问，就尴尬了。 </p>
+<p><strong>3. 租户隔离</strong> 。可能有多个应用访问<code>proxy</code>代理的底层数据库，必然会对<code>proxy</code>自身的内存、网络、cpu等产生资源竞争，<code>proxy</code>需要需要具备隔离的能力。</p>
+<h4 id="2-1-2-smart-client模式"><a href="#2-1-2-smart-client模式" class="headerlink" title="2.1.2 smart-client模式"></a>2.1.2 smart-client模式</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>业务代码需要进行一些改造，引入支持读写分离或者分库分表的功能的<code>sdk</code>，这个就是我们的<code>smart-client</code></strong>。通常<code>smart-client</code>是在连接池或者<code>driver</code>的基础上进行了一层封装，<code>smart-client</code>内部与不同的库建立连接。应用程序产生的<code>sql</code>交给<code>smart-client</code>进行处理，其内部对<code>sql</code>进行必要的操作，例如在读写分离情况下，选择走从库还是主库；在分库分表的情况下，进行<code>sql</code>解析、<code>sql</code>改写等操作，然后路由到不同的分库，将得到的结果进行合并，返回给应用。</p>
+<p><strong>优点：</strong></p>
+<p><strong>1. 实现简单</strong>。<strong><code>proxy</code>需要实现数据库的服务端协议，但是<code>smart-client</code>不需要实现客户端通信协议</strong>。原因在于，大多数据数据库厂商已经针对不同的语言提供了相应的数据库驱动<code>driver</code>，例如<code>mysq</code>l针对<code>java</code>语言提供了<code>mysql-connector-java</code>驱动，针对<code>python</code>提供了<code>mysql-connector-python</code>驱动，客户端的通信协议已经在<code>driver</code>层面做过了。因此<code>smart-client</code>模式的中间件，<strong>通常只需要在此基础上进行封装即可</strong>。</p>
+<p><strong>2.  天然去中心化</strong>。<code>smart-client</code>的方式，<strong>由于本身以<code>sdk</code>的方式，被应用直接引入，随着应用部署到不同的节点上，且直连数据库，中间不需要有代理层</strong>。因此相较于<code>proxy</code>言，除了网络资源之外，基本上不存在任何其他资源的竞争，也不需要考虑高可用的问题。只要应用的节点没有全部宕机，就可以访问数据库。(这里的高可用是相比<code>proxy</code>而言，数据库本身的高可用还是需要保证的)</p>
+<p><strong>缺点：</strong></p>
+<p><strong>1.  通常仅支持某一种语言</strong>。例如<code>tddl、zebra、sharding-jdbc</code>都是使用<code>java</code>语言开发，因此对于使用其他语言的用户，就无法使用这些中间件。如果其他语言要使用，那么就要开发多语言客户端。</p>
+<p><strong>2. 版本升级困难</strong>。因为应用使用数据源代理就是引入一个<code>jar</code>包的依赖，在有多个应用都对某个版本的<code>jar</code>包产生依赖时，一旦这个版本有<code>bug</code>，所有的应用都需要升级。而数据库代理升级则相对容易，因为服务是单独部署的，只要升级这个代理服务器，所有连接到这个代理的应用自然也就相当于都升级了。</p>
+<h3 id="2-2-业界产品"><a href="#2-2-业界产品" class="headerlink" title="2.2 业界产品"></a>2.2 业界产品</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;无论是<code>proxy</code>，还是<code>smart-client</code>，二者的作用都是类似的。以下列出了这两种方案目前已有的实现以及各自的优缺点：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlzpZk35AqDSyYNk7LbZE2HXia0jr1FvW6utxaPADnInvtMIibZ5N6QiaEg.png" alt="img"></p>
+<h4 id="proxy实现"><a href="#proxy实现" class="headerlink" title="proxy实现"></a>proxy实现</h4><p>目前的已有的实现方案有：</p>
+<ul>
+<li>阿里巴巴开源的<code>cobar</code></li>
+<li>阿里云上的<code>drds</code></li>
+<li><code>mycat</code>团队在<code>cobar</code>基础上开发的<code>mycat</code></li>
+<li><code>mysql</code>官方提供的<code>mysql-proxy</code></li>
+<li>奇虎360在<code>mysql-proxy</code>基础开发的<code>atlas</code>(只支持分表，不支持分库)</li>
+<li>当当网开源的<code>sharing-sphere</code></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前除了<code>mycat、sharing-sphere</code>，其他几个开源项目基本已经没有维护，<code>sharing-sphere</code>前一段时间已经进去了<code>Apache</code> 软件基金会孵化器。</p>
+<h4 id="smart-client实现"><a href="#smart-client实现" class="headerlink" title="smart-client实现"></a>smart-client实现</h4><p>目前的实现方案有：</p>
+<ul>
+<li><p>阿里巴巴开源的<code>tddl</code>，已很久没维护</p>
+</li>
+<li><p>大众点评开源的<code>zebra</code>，大众点评的<code>zebra</code>开源版本代码已经很久没有更新，不过最近美团上市，重新开源大量内部新的功能特性，并计划长期维持。</p>
+</li>
+<li><p>当当网开源的<code>sharding-jdbc</code>，目前算是做的比较好的，文档资料比较全。和<code>sharding-sphere</code>一起进入了<code>Apache</code>孵化器。</p>
+</li>
+<li><p>蚂蚁金服的<code>zal</code></p>
+</li>
+</ul>
+<h3 id="3-读写分离核心要点"><a href="#3-读写分离核心要点" class="headerlink" title="3 读写分离核心要点"></a>3 读写分离核心要点</h3><h4 id="3-1-基本路由功能"><a href="#3-1-基本路由功能" class="headerlink" title="3.1 基本路由功能"></a>3.1 基本路由功能</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基本路由路功能主要是解决在读写分离的情况下，如何实现一些基本的路由功能，这个过程通常可以通过下图进行描述：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlT2niaK9qS1PVqXwd2OdXm9DeQdhJSzM6BZqTtZVxRRxHwFibgG98qz5Q.png" alt="img"></p>
+<h5 id="3-1-1-sql类型判断"><a href="#3-1-1-sql类型判断" class="headerlink" title="3.1.1 sql类型判断"></a>3.1.1 sql类型判断</h5><p>主要是判断出来<code>sql</code>是读还是写<code>sql</code>，将读<code>sql</code>到从库上去执行，写<code>sql</code>去主库上执行</p>
+<p><code>write</code>语句：<code>insert、update、delete、create、alter、truncate</code>…</p>
+<p><code>query</code>语句：<code>select、show、desc、explain</code>… </p>
+<h5 id="3-1-2-强制走主库"><a href="#3-1-2-强制走主库" class="headerlink" title="3.1.2 强制走主库"></a>3.1.2 强制走主库</h5><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有的时候，对于一些强一致性的场景，需要写入后，必须能读取到数据。由于主从同步存在延迟，可能会出现主库写入，而从库查不到的情况。这次时候，我们需要使用<strong>强制走主库的功能</strong>。具体实现上有2种方案：<code>hint</code>或<code>API</code></p>
+<p>​    <strong>hint</strong>，就是开发人员在<code>sql</code>上做一些特殊的标记，数据库中间件识别到这个标记，就知道这个<code>sql</code>需要走主库，如： </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*master*/</span><span class="keyword">select</span> * <span class="keyword">from</span> table_xx</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里的<code>/*master*/</code>就是一个<code>hint</code>，表示需要走主库。不同的数据库中间件强制走主库的<code>hint</code>可能不同，例如<code>zebra</code>的hint为<code>/*zebra:w+*/</code>，<code>hint</code>到底是什么样是无所谓的，其作用仅仅就是一个标记而已。<strong>之所以将<code>hint</code>写在<code>/*…*/</code>中，是因为这是标准的<code>sql</code>注释语法</strong>。<strong>即使数据库中间件未能识别这个<code>hint</code>，也不会导致<code>sql</code>语法错误</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>api：</strong>主要是通过代码的方式来添加<code>sql</code>走主库的标识，<code>hint</code>通常只能加在某个<code>sql</code>上。如果我们希望<strong>多个<code>sql</code>同时都走主库，也不希望加<code>hint</code></strong>，则可以通过<code>api</code>的方式，其内部主要利用语言的<code>thread local</code>线程上下文特性，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ForceMasterHelper.forceMaster()    <span class="comment">//…执行多条sqlForceMasterHelper.clear()</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在<code>api</code>标识范围内执行的<code>sql</code>，都会走主库。具体<code>API</code>到底应该是什么样，如何使用，也是由相应的数据库中间件来决定的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>特别的，对于一些特殊的<code>sql</code>，例如 <code>select last_insert_id；</code>或者<code>select @@identity</code>等，这类<code>sql</code>总是需要走主库</strong>。 这些<code>sql</code>是要获得最后一个插入记录的id，插入操作只可能发生在主库上。</p>
+<h4 id="3-2-从库路由策略"><a href="#3-2-从库路由策略" class="headerlink" title="3.2 从库路由策略"></a>3.2 从库路由策略</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常在一个集群中，只会有一个<code>master</code>，但是有多个<code>slave</code>。当判断是一个读请求时，如何判断选择哪个slave呢？</p>
+<p>一些简单的选择策略包括：</p>
+<ul>
+<li>随机选择(<code>random</code>)</li>
+<li>按照权重进行选择(<code>weight</code>)</li>
+<li>或者轮训(<code>round-robin</code>)</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特别的，对于一些跨<code>IDC</code>(数据中心)部署的数据库集群，通常需要有<strong>就近路由</strong>的策略，如下图： </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlIT3lHAQmT2iaq7kUvH4iaM1zIULibEiaPSPfibOQsiaXPIoibpPjMiaGCxknTg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;图中，在IDC2部署了一个<code>master</code>，在IDC1和IDC2各部署了一个<code>slave</code>，应用app部署在IDC1。显然当app接收到一个查询请求时，应该优先查询与其位于同一个数据中心的<code>slave1</code>，而不是跨数据中心去查询<code>slave2</code>，这就是就近路由的概念。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然一个数据中心内，可能会部署多个<code>slave</code>，也需要进行选择，因此就近路由通常和一些基本的路由策略结合使用。另外，对于就近路由，通常也会有一个层级，例如同机房、同中心、同区域、跨区域等。 </p>
+<h4 id="3-3-HA、Scalable相关"><a href="#3-3-HA、Scalable相关" class="headerlink" title="3.3 HA、Scalable相关"></a>3.3 HA、Scalable相关</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据库中间件除了需要具备上述提到的读写分离功能来访问底层的数据库集群。也需要一套<strong>支持高可用、动态扩展</strong>的体系：</p>
+<ul>
+<li>从<code>HA</code>的角度来说，例如主库宕机了，那么应该从从库选择一个作为新的主库。开源的<code>MHA</code>可以帮助我们完成这个事；然而，<code>MHA</code>只能在主库宕机的情况下，完成主从切换，对于仅仅是一个从库宕机的情况下，<code>MHA</code>通常是无能为力的。因此，通常都会在<code>MHA进</code>行改造，使其支持更多的HA能力要求。</li>
+<li>从<code>Scalable</code>角度来说，例如读<code>qps</code>实在太高，需要加一些从库，来分担读流量。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实上，<strong>无论是<code>HA</code>，还是<code>Scalable</code>，对于数据库中间件(不论是<code>proxy</code>或者<code>smart-client</code>)来说，只是配置信息发生了变更</strong>。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>因此，通常我们会将所有的配置变更信息写到一个配置中心，然后配置心中监听这个配置的变更</strong>，例如主从切换，只需要把最新的主从信息设置到配置中心；增加从库，把新从库<code>ip</code>、<code>port</code>等信息放到配置中心。数据库中间件通过对这些配置信息变更进行监听，当配置发生变更时，实时的应用最新的配置信息即可。</p>
+<p>​        因此，一个简化的数据库中间件的高可用架构通常如下所示： </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlZBCzOKvumNib8ceIfYmZG62GQTusIrp6NUjK4qklaExr0l0ycgibv7ZQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;监控服务对集群进行监控，当发生变更时，将变更的信息<code>push</code>到配置中心中，数据库中间件(<code>proxy</code>或<code>smart-client</code>)接收到配置变更，应用最新的配置。而整个过程，<strong>对于业务代码基本是无感知的</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于配置中心的选择，有很多，例如百度的<code>disconf</code>、阿里的<code>diamond</code>、点评开源的<code>lion</code>、携程开源的<code>apollo</code>等，也可以使用<code>etcd</code>、<code>consul</code>。<strong>通常如果没有历史包袱的话，建议使用携程开源的apollo</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;特别需要注意的一点是，<strong>通常监控服务监控到集群信息变更，推送到配置中心，再到数据库中间件，必然存在一些延迟</strong>。对于一些场景，例如主从切换，没有办法做到彻底的业务无感知。当然，对于多个从库中，某个从库宕机的情况下，是可以做到业务无感知的。例如，某个从库失败，数据库中间件，自动从其他正常的从库进行重试。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，<strong>上图中的<code>HA</code>方案强依赖于配置中心</strong>，如果某个数据库集群上建立了很多库，这个集群发生变更时，将会存在大量的配置信息需要推送。又或者，如果数据库集群是多机房部署的，在某个机房整体宕机的情况下(例如光纤被挖断了，或者机房宕机演练)，也会存在大量的配置信息需要推送。如果配置中心，推送有延迟，业务会有非常明显的感知。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;因此，通常我们会<strong>在客户端进行一些轻量级的HA保障</strong>。例如，根据数据库返回异常的<code>sqlstate</code>和<code>vendor code</code>，判断异常的严重级别，确定数据库实例能否正常提供服务，如果不能正常提供服务，则自动将其进行隔离，并启动异步线程进行检测数据库实例是否恢复。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，很多数据库中间件，也会提供一些<strong>限流</strong>和<strong>降级</strong>的功能，计算<code>sql</code>的唯一标识(有些称之为<code>sql</code>指纹)，对于一些烂<code>sql</code>，导致数据库压力变大的情况，可以实时的进行拦截，直接抛出异常，不让这些<code>sql</code>打到后端数据库上去。 </p>
+<h3 id="4-分库分表核心要点"><a href="#4-分库分表核心要点" class="headerlink" title="4 分库分表核心要点"></a>4 分库分表核心要点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从业务开发的角度来说，其不关心底层是否是分库分表了，其还是希望想操作单个数据库实例那样编写<code>sql</code>，那么数据库中间件就需要对其屏蔽所有底层的复杂逻辑。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下图演示了一个数据库表(<code>user</code>表)在分库分表情况下，数据库中间件内部是如何执行一个批量插入<code>sql</code>的：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/mvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlMHagsmgHHXaIAolIYsFM8gfdXwZBSglDVThvMpNpuibeI1jOp12Vn7A.webp" alt="img"></p>
+<p>数据库中间件主要对应用屏蔽了以下过程：</p>
+<ul>
+<li><strong>sql解析</strong>：首先对<code>sql</code>进行解析，得到抽象语法树，从语法树中得到一些关键<code>sql</code>信息</li>
+<li><strong>sql路由</strong>：<code>sql</code>路由包括库路由和表路由。库路由用于确定这条记录应该操作哪个分库，表路由用于确定这条记录应该操作哪个分表。</li>
+<li><strong>sql改写</strong>：将<code>sql</code>改写成正确的执行方式。例如，对于一个批量插入<code>sql</code>，同时插入4条记录。但实际上用户希望4个记录分表存储到一个分表中，那么就要对sql进行改写成4条<code>sql</code>，每个<code>sql</code>都只能插入1条记录。</li>
+<li><strong>sql执行</strong>：一条<code>sql</code>经过改写后可能变成了多条<code>sql</code>，为了提升效率应该并发的去执行，而不是按照顺序逐一执行</li>
+<li><strong>结果集合并</strong>：每个<code>sql</code>执行之后，都会有一个执行结果，我们需要对分库分表的结果集进行合并，从而得到一个完整的结果。 </li>
+</ul>
+<h4 id="4-1-SQL解析"><a href="#4-1-SQL解析" class="headerlink" title="4.1 SQL解析"></a>4.1 SQL解析</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户执行只是一条<code>sql</code>，并传入相关参数。数据库中间件内部需要通过<code>sql</code>解析器，对<code>sql</code>进行解析。可以将<code>sql</code>解析，类比为<code>xml</code>解析，<code>xml</code>解析的最终结果是得到一个<code>document</code>对象，而<code>sql</code>解析最终得到一个抽象语法树(<code>AST</code>)。通过这个语法树，我们可以很简单的获取到<code>sql</code>的一些执行，例如当前执行的<code>sql</code>类型，查询了那些字段，数据库表名，<code>where</code>条件，<code>sql</code>的参数等一系列信息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>通常来说，对于<code>sql</code>解析，内部需要经过词法(<code>lex</code>)解析和语法(<code>Syntax</code>)解析两个阶段，最终得到一个语法树</strong>。 </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlBsICmKjib9WPn4PTSzjId24vQw84iccUQ47NiboDjVmB1T14mDw6p1XLg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SQL</code>解析器的内部实现原理对业务同学是屏蔽的，业务同学也感知不到。一些数据库中间件采用了第三方开源的<code>sql</code>解析器，也有一些自研<code>sql</code>解析器。例如<code>mycat、zebra</code>采用的都是<code>druid</code>解析器，<code>shard-jdbc</code>一开始也用的是<code>druid</code>解析器，后面自研了解析器。目前较为流行的<code>sql</code>解析器包括：</p>
+<ul>
+<li><code>FoundationDB SQL Parser</code></li>
+<li><code>Jsqlparser</code></li>
+<li><code>Druid SQL Parser</code></li>
+</ul>
+<p>​        其中，其中<code>Fdbparser</code>和<code>jsqlparser</code>都是基于<code>javacc</code>实现的。</p>
+<p>​        <code>mycat</code>团队曾经做过一个性能测试，<code>druid</code>解析器的解析性能通常能达到基于<code>javacc</code>生成的<code>sql</code>解析器10~20倍。本人也进行过类似的测试，得出的结论基本一致。</p>
+<p>​        如何对比不同的<code>sql</code>解析器的好坏呢？主要是考虑以下两点：</p>
+<p><strong>解析性能：</strong><code>druid</code>最好。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>druid</code>采用的是预测分析法，它只需要从字符的第一个到最后一个遍历一遍，就同时完成了词法解析和语法解析，语法树也已经构造完成。</p>
+<p><strong>数据库方言：</strong><code>druid</code>支持的最多。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>SQL-92、SQL-99</code>等都是标准<code>SQL</code>，<code>mysql/oracle/pg/sqlserver/odps</code>等都是方言，<code>sql-parser</code>需要针对不同的方言进行特别处理。<code>Druid</code>的<code>sql parser</code>是目前支持各种数据语法最完备的<code>SQL Parser</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：这里说的仅仅是基于<code>Java</code>实现的<code>SQL</code>解析器，<code>druid</code>是比较好的。大部分同学可能知道<code>druid</code>是一个为监控而生的连接池，事实上，<code>druid</code>另一大特性，就是它的<code>SQL</code>解析器。很多开源的数据库中间件，例如<code>zebra</code>、<code>sharding-jdbc</code>等，都使用了<code>druid</code>解析器。(<code>sharding-jdbc</code>后来自研了解析器)。虽然<code>SQL</code>解析是<code>druid</code>的一大亮点，不过<code>github</code>上也因为<code>SQL</code>解析的<code>bug</code>，收到了不少<code>issue</code>。</p>
+<h4 id="4-2-SQL路由"><a href="#4-2-SQL路由" class="headerlink" title="4.2 SQL路由"></a>4.2 SQL路由</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;路由规则是分库分表的基础，其规定了数据应该按照怎样的规则路由到不同的分库分表中。对于一个数据库中间件来说，通常是<strong>支持用户自定义任何路由规则的</strong>。<strong>路由规则本质上是一个脚本表达式，数据库中间件通过内置的脚本引擎对表达式进行计算，确定最终要操作哪些分库、分表</strong>。常见的路由规则包括哈希取模，按照日期等。</p>
+<p>​        下图展示了<code>user</code>表进行分库分表后(2个分库，每个分库2个分表)，并如何根据<code>id</code>进行路由的规则： </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xltNMMictztrsysejCyhRdL1pavKiaXHOq23k2rwtSzumgeqeoZ05kg8eg.png" alt="img"></p>
+<p>路由分则分为：</p>
+<ul>
+<li>库规则：用于确定到哪一个分库</li>
+<li>表规则：用于确定到哪一个分表</li>
+</ul>
+<p>在上例中，我们使用<code>id</code>来作为计算分表、分表，因此把<code>id</code>字段就称之为路由字段，或者分区字段。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要注意的是，<strong>不管执行的是INSERT、UPDATE、DELETE、SELECT语句，SQL中都应该包含这个路由字段</strong>。否则，对于插入语句来说，就不知道插入到哪个分库或者分表；对于<code>UPDATE、DELETE、SELECT</code>语句而言，则更为严重，因为不知道操作哪个分库分表，意味着必须要对所有分表都进行操作。<strong><code>SELECT</code>聚合所有分表的内容，极容易内存溢出，<code>UPDATE、DELETE</code>更新、删除所有的记录，非常容易误更新、删除数据</strong>。因此，一些数据库中间件，对于<code>SQL</code>可能有一些限制，例如<code>UPDATE、DELETE</code><strong>必须要带上分区字段</strong>，或者指定过滤条件。 </p>
+<h4 id="4-3-SQL改写"><a href="#4-3-SQL改写" class="headerlink" title="4.3 SQL改写"></a>4.3 SQL改写</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前面已经介绍过，如一个批量插入语句，如果记录要插入到不同的分库分表中，那么就需要对<code>SQL</code>进行改写。 例如，将以下<code>SQL</code></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">user</span>(<span class="keyword">id</span>,<span class="keyword">name</span>) <span class="keyword">values</span> (<span class="number">1</span>,”tianshouzhi”),(<span class="number">2</span>,”huhuamin”), (<span class="number">3</span>,”wanghanao”),(<span class="number">4</span>,”luyang”)</span><br></pre></td></tr></table></figure>
+<p>​        改写为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">insert into user_1(id,name) values (1,”tianshouzhi”);</span><br><span class="line">insert into user_2(id,name) values (2,”huhuamin”);</span><br><span class="line">insert into user_3(id,name) values (3,”wanghanao”);</span><br><span class="line">insert into user_0(id,name) values  (4,”luyang”);</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里只是一个简单的案例，<strong>通常对于INSERT、UPDATE、DELETE等，改写相对简单</strong>。比较复杂的是<code>SELECT</code>语句的改写，对于一些复杂的<code>SELECT语句</code>，改写过程中会进行一些优化，例如将子查询改成<code>JOIN</code>，过滤条件下推等。因为<code>SQL</code>改写很复杂，所以很多数据库中间件并不支持复杂的<code>SQL</code>(通常有一个支持的<code>SQL</code>)，只能支持一些简单的<code>OLTP</code>场景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然也有一些数据库中间件，不满足于只支持<code>OLTP</code>，在迈向<code>OLAP</code>的方向上进行了更多的努力。例如阿里的<code>TDDL</code>、蚂蚁的<code>Zda</code>l、大众点评的<code>zebra</code>，都引入了<code>apache calcite</code>，尝试对复杂的查询<code>SQL</code>(例如嵌套子查询，<code>join</code>等)进行支持，通过过滤条件下推，流式读取，并结合<code>RBO</code>(基于规则的优化)、<code>CBO</code>(基于代价的优化)来对一些简单的<code>OLAP</code>场景进行支持。</p>
+<h4 id="4-4-SQL执行"><a href="#4-4-SQL执行" class="headerlink" title="4.4 SQL执行"></a>4.4 SQL执行</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当经过<code>SQL</code>改写阶段后，会产生多个<code>SQL</code>，需要到不同的分片上去执行，通常我们会使用一个线程池，将每个<code>SQL</code>包装成一个任务，提交到线程池里面并发的去执行，以提升效率</strong>。</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlpQ1ddLnzG7AVZDAINJc5bT1M6H9Aw9p2iaQpcoyiaFbbAkibJur8CiarYQ.png" alt="img"></p>
+<p>​    这些执行的<code>SQL</code>中，如果有一个失败，则整体失败，返回异常给业务代码。 =》 <strong>部分失败，数据不一致，分布式事务</strong> </p>
+<h4 id="4-5-结果集合并"><a href="#4-5-结果集合并" class="headerlink" title="4.5 结果集合并"></a>4.5 结果集合并</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结果集合并，是数据库中间件的一大难点，需要<code>case by case</code>的分析，主要是考虑实现的复杂度，以及执行的效率问题，对于一些复杂的<code>SQL</code>，可能并不支持。例如：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>对于查询条件：</strong>大部分中间件都支持<code>=、IN</code>作为查询条件，且可以作为分区字段。但是<strong>对于<code>NIT IN、BETWEEN…AND、LIKE,NOT LIKE</code>等，只能作为普通的查询条件，因为根据这些条件，无法记录到底是在哪个分库或者分表，只能全表扫描</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>聚合函数：</strong>大部分中间件都支持<code>MAX、MIN、COUNT、SUM</code>，但是对于<code>AVG</code>可能只是部分支持。另外，如果是函数嵌套、分组(<code>GROUP BY</code>)聚合，可能也有一些数据库中间件不支持。 =&gt; <strong>全库全表扫描</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>子查询：</strong>分为<code>FROM</code>部分的子查询和<code>WHERE</code>部分的子查询。大部分中对于子查询的支持都是非常有限，例如语法上兼容，但是<strong>无法识别子查询中的分区字段</strong>，或者要求子查询的表名必须与外部查询表名相同，又或者只能支持一级嵌套子查询。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>JOIN：</strong>对于<code>JOIN</code>的支持通常很复杂，如果做不到过滤条件下推和流式读取，在中间件层面，基本无法对JOIN进行支持，因为<strong>不可能把两个表的所有分表，全部拿到内存中来进行<code>JOIN</code>，内存早就崩了</strong>。当然也有一些取巧的办法，一个是<strong><code>Binding Table</code></strong>，另外一个是<strong>小表广播</strong>(见后文)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>分页排序：</strong>通常中间件都是支持<code>ORDER BY</code>和<code>LIMIT</code>的。但是<strong>在分库分表的情况下，分页的效率较低</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如对于limit 100，10 ORDER BY id。表示按照id排序，从第100个位置开始取10条记录。那么，大部分数据库中间件实际上是要从每个分表都查询110(100+10)条记录，拿到<strong>内存中进行重新排序</strong>，然后取出10条。假设有10个分表，那么实际上要查询1100条记录，而最终只过滤出了10记录。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>因此，在分页的情况下，通常建议使用<code>&quot;where id &gt; ? limit 10”</code>的方式来进行查询，应用记住每次查询的最大的记录id。之后查询时，每个分表只需要从这个id之后，取10条记录即可，而不是取<code>offset + rows</code>条记录，最后再在内存中排序取全局top 10</strong>。 </p>
+<p>关于<code>JOIN</code>的特属说明：</p>
+<p><strong>Binding Table：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>适用于两个表之间存在关联关系，路由规则相同</strong>。例如，有<code>user</code>表和<code>user_account</code>表，由于<code>user_account</code>与<code>user</code>表强关联，我们可以将这<strong>两个表的路由规则设置为完全一样，那么对于某个特定用户的信息，其所在的<code>user</code>分表和<code>user_account</code>分表必然唯一同一个分库下，后缀名相同的分表中</strong>。在<code>join</code>时，某一个分库内的<code>join</code>，就可以拿到这个用户以及账号的完整信息，而不需要进行跨库<code>join</code>，这样就不需要把用户的数据库拿到内存中来进行<code>join</code>。 </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl3ezjbdI7tVfPvVoMBh71m8lNJ2WA8I3Xj356mls9aXIWhjzUbKFA6Q.png" alt="img"></p>
+<p><strong>小表广播：</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>小表广播通常是某一个表的数据量比较少</strong>， 例如部门表<code>department</code>。另外一个表数据量比较大，例如<code>user</code>。此时<code>user</code>需要进行分库分表，但是<code>department</code>不需要进行分库分表。为了达到<code>JOIN</code>的目的，我们可以<strong>将 <code>department</code>表在每个分库内都实时同步一份完整的数据</strong>。这样，<strong>在<code>JOIN</code>的时候，数据库中间件只需要将分库<code>JOIN</code>的结果进行简单合并即可</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下图演示了小表广播的流程，用户在更新<code>department</code>表时，总是更新分库<code>db0</code>的<code>department</code>表，同步组件将变更信息同步到其他分库中。 </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlwFEwmHGsdoupJe59zj1FtPrILeHIzmLdzr6cdXNnZg3RxxwzXHDPDg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：图中的同步组件指的是一般是伪装成数据库的从库，解析源库<code>binlog</code>，插入目标库。有一些开源的组件，如<code>canal、puma</code>可以实现这个功能，当然这些组件的应用场景非常广泛，不仅限于此。</p>
+<h4 id="4-6-二级索引"><a href="#4-6-二级索引" class="headerlink" title="4.6 二级索引"></a>4.6 二级索引</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常情况下，分库分表的时候，分区字段只有一个。例如对于用户表<code>user</code>，按照<code>user_id</code>字段进行分区，那么之后查询某个用户的信息，只能根据user_id作为分区字段。<strong>使用其他字段，则需要扫描所有分表，效率很低</strong>。但是又有根据其他字段查询某个用户信息的需求，例如根据手机号<code>phone_id</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此时，我们可以将按照<code>user_id</code>插入的数据，进行一份<strong>全量拷贝</strong>。<strong>通过同步组件，重新按照<code>phone_id</code>插入到另一个分库分表集群中，这个集群就成为二级索引，或者叫辅维度同步</strong>。此后，对于根据<code>user_id</code>的操作，就在原来的分库分表集群中进行操作；根据<code>phone_id</code>的操作，就到二级索引集群中去进行操作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>需要注意的是，对于更新操作，只能操作原集群，二级索引集群只能执行查询操作</strong>。<strong>原集群的增量数据变更信息，实时的通过同步组件，同步到二级索引集群中</strong>。 </p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xl2KVM1WrS169PzVEblzhCw5j1QXwreZoF3CxbZEPBnNuWl5PsnrNwrg.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：这是一个很常见的面试题。阿里的一些面试官，比较喜欢问。一些面试者，可能自己想到了这个方案，因为考虑到这样比较浪费资源，就自行排除了。事实上，这点资源相对于满足业务需求来说，都不是事。</p>
+<h4 id="4-7-分布式id生成器"><a href="#4-7-分布式id生成器" class="headerlink" title="4.7 分布式id生成器"></a>4.7 分布式id生成器</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在分库分表的情况下，数据库的自增主键已经无法使用。所以要使用一个分布式的id生成器。分布式事务id生成器要满足以下条件：<strong>唯一、趋势递增(减少落库时的索引开销)、高性能、高可用</strong>。</p>
+<p>目前主流的分布式id生成方案都有第三方组件依赖，如：</p>
+<ul>
+<li><p>基于<code>zk</code></p>
+</li>
+<li><p>基于<code>mysql</code></p>
+</li>
+<li><p>基于缓存</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>twitter</code>的<code>snowflake</code>算法是一个完全去中心化的分布式id算法，但是限制<code>workid</code>最多能有1024，也就是说，应用规模不能超过1024。虽然可以进行细微的调整，但是总是有数量的限制。 </p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;另外，美团之前在github开源了一个<code>lea</code>f组件，是用于生成分布式id的，感兴趣的读者可以研究一下。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里提出一种支持动态扩容的去中心化分布式id生成方案，此方案的优势，除了保证唯一、趋势递增，没有第三方依赖，支持存储的动态扩容之外，还具有以下优势：</p>
+<ul>
+<li><strong>支持按照时间范围查询，或者 时间范围+ip查询，可以直接走主键索引</strong>；</li>
+<li><strong>每秒的最大序列id就是某个ip的qps</strong>等</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">12位日期+10位IP+6位序列ID+4位数据库扩展位</span><br></pre></td></tr></table></figure>
+<p>其中：</p>
+<p><strong>12位日期：</strong>格式为<code>yyMMddHHmmss</code>，意味着本方案的id生成策略可以使用到2099年，把时间部分前置，从而保证趋势递增。</p>
+<p><strong>10位ip：</strong>利用<code>ip to decimal</code>算法将12位的ip转为10进制数字。通过ip地址，来保证全局唯一。如果ip地址被回收重复利用了，也不用担心id的唯一性，因为日期部分还在变化。</p>
+<p><strong>6位序列id：</strong>意味着每秒最多支持生成100百万个<code>id(0~999999)</code>。不足6位前置补0，如<code>000123</code>。</p>
+<p><strong>4位数据库扩展位：</strong>为了实现不迁移数据的情况下，实现动态扩容，其中<strong>2位表示<code>DB</code>，2位表示<code>TB</code>，最多可扩容到10000张表（0000~9999）</strong>。假设每张表存储1000万数据，则总共可以支持存储1000亿条数据。 </p>
+<p>关于数据库扩展位实现动态扩容图解：</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlSmk2icbBOy8ELI6owtZZIpI2ZEpbBzfMsvmTIPCvibEVlMc5mYGFrruQ.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先明确一点，<strong>路由策略始终根据数据库最后四位，确定某一条记录要到哪个分库的哪个分表中</strong>。例如<code>xxxx0001</code>，意味着这条记录肯定是在00分库的01分表上。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接着，就要在id的生成策略上做文章。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设初始状态为两个分库<code>db_00</code>,<code>db_01</code>，每个分库里面有10张分表，<code>tb_00~tb_09</code>。此时，<strong>业务要保证生成id的时候，始终保证db的两位在00~01之间，tb的两位始终在00~09之间（随机生成，与系列id无关）</strong>。路由策略根据这些id，可以找到正确的分库分表。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在需要扩容到10个分库，每个分表10个分表。那么DBA首先将新增的分库：<code>db_02~db_09</code>创建好，每个分库里面再创建10个分表：<code>tb_01~tb_09</code>。业务同学在此基础上，<strong>将id生成策略改成：db的两位在00~09之间，tb的两位规则维持不变(只是分库数变了，每个分库的分表数没变)</strong>。而由于路由从策略是根据最后四位确定到哪个分库，哪个分表，当这些新的分库分表扩展位id出现时，自然可以插入到新的分库分表中。也就实现了动态扩容，而无需迁移数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，新的分库分表中，一开始数据是没有数据的，所以数据是不均匀的，可以调整id扩展位中<code>db</code>和<code>tb</code>生成某个值的概率，使得落到新的分库分表中的概率相对大一点点(不宜太大)，等到数据均匀后，再重新调整成完全随机。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>此方案的核心思想是，预分配未来的可能使用到的最大资源数量</strong>。通常，100个分库，每个分库100张分表，能满足绝大部分应用的数据存储。如果<code>100</code>个分库都在不同的mysql实例上，假设每个<code>mysql</code>实例都是4T的磁盘，那么可以存储<code>400T</code>的数据，基本上可以满足绝大部分业务的需求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，这个方案不完美。如果超过这个值，这种方案可能就不可行了。然而，通常一个技术方案，可以保证在5~10年之间不需要在架构上做变动，应该就算的上一个好方案了。如果你追求的是完美的方案，可能类似于<code>TIDB</code>这种可以实现自动扩容的数据库产品更适合，不过目前来说，<code>TIDB</code>等类似产品还是无法取代传统的关系型数据库的。说不定等到5~10年后，这些产品更成熟了，你再迁移过去也不迟。</p>
+<h4 id="4-7-分布式事务"><a href="#4-7-分布式事务" class="headerlink" title="4.7 分布式事务"></a>4.7 分布式事务</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在分库分表的情况下，由于操作多个分库，此时就涉及到分布式事务。例如执行一个批量插入<code>SQL</code>，如果记录要插入到不同的分库中，就无法保证一致性。因此，通常情况下，数据库中间件，只会保证单个分库的事务，也就是说，业务方在创建一个事务的时候，必须要保证事务中的所有操作，必须最终都在一个分库中执行。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;事实上，在微服务的架构下，事务的问题更加复杂，如下图</p>
+<p><img src="//blog.com/2019/06/30/数据库中间件详解/xmvcWIfCQiaBPjFzlDCBcW33a97Bicm0xlApS3vicuJDSZbiaBZRAjicUvss8fCOZoJ8sJxaIoWAdgHDJe41hRxlW5g.png" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Service A</code>在执行某个操作时，需要操作数据库，同时调用<code>Service B</code>和<code>Service C</code>，<code>Service B</code>底层操作的数据库是分库分表的，<code>Service C</code>也要操作数据库。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种场景下，保证事务的一致性就非常麻烦。一些常用的一致性算法如：<code>paxios</code>协议、<code>raft协议</code>也无法解决这个问题，因为<strong>这些协议都是资源层面的一致性</strong>。<strong>在微服务架构下，已经将事务的一致性上升到了业务的层面</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果仅仅考虑分库分表，一些同学可能会想到<code>XA</code>，但是性能很差，对数据库的版本也有要求，例如必须使用<code>mysql 5.7</code>，官方还建议将事务隔离级别设置为串行化，这是无法容忍的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于分布式事务的应用场景，并不是仅仅分库分表，因此通常都是会有一个专门的团队来做分布式事务，并不一定是数据库中间件团队来做。例如，<code>sharding-jdbc</code>就使用了华为开源的一套微服务架构解决方案<code>service comb</code>中的<code>saga</code>组件，来实现分布式事务最终一致性。阿里也有类似的组件，在内部叫<code>TXC</code>，在阿里云上叫<code>GTS</code>，最近开源到了<code>GitHub</code>上叫<code>fescar（Fast &amp; Easy Commit And Rollback)</code>。蚂蚁金服也有类似的组件，叫<code>DTX</code>，支持<code>FMT</code>模式和<code>TCC</code>模式。其中<code>FMT</code>模式就类似于<code>TXC</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>总体来说，实际上<code>TCC</code>更能满足业务的需求，虽然接入更加复杂</strong>。关于<code>fescar</code>，最近比较火，这是<code>java</code>写的，具体可以参考：<a href="https://github.com/alibaba/fescar。" target="_blank" rel="noopener">https://github.com/alibaba/fescar。</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/数据库设计/" rel="tag"># 数据库设计</a>
+          
+            <a href="/tags/分库分表/" rel="tag"># 分库分表</a>
+          
+            <a href="/tags/数据库优化/" rel="tag"># 数据库优化</a>
+          
+            <a href="/tags/读写分离/" rel="tag"># 读写分离</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/30/分库分表/" rel="next" title="分库分表">
+                <i class="fa fa-chevron-left"></i> 分库分表
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/30/孤儿进程与僵尸进程/" rel="prev" title="孤儿进程与僵尸进程">
+                孤儿进程与僵尸进程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库中间件详解"><span class="nav-number">1.</span> <span class="nav-text">数据库中间件详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-数据库拆分过程及挑战"><span class="nav-number">1.1.</span> <span class="nav-text">1 数据库拆分过程及挑战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-垂直拆分"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 垂直拆分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-读写分离"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 读写分离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-读写分离的优点"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">1.2.1 读写分离的优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-读写分离的挑战"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">1.2.1 读写分离的挑战</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-分库分表"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.3 分库分表</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-分库分表的好处"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">1.3.1 分库分表的好处</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-分库分表的挑战"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">1.3.2 分库分表的挑战</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-主流数据库中间件设计方案"><span class="nav-number">1.2.</span> <span class="nav-text">2 主流数据库中间件设计方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-设计方案"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 设计方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-proxy模式"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">2.1.1 proxy模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-smart-client模式"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">2.1.2 smart-client模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-业界产品"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 业界产品</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#proxy实现"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">proxy实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#smart-client实现"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">smart-client实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-读写分离核心要点"><span class="nav-number">1.2.3.</span> <span class="nav-text">3 读写分离核心要点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-基本路由功能"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">3.1 基本路由功能</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-1-sql类型判断"><span class="nav-number">1.2.3.1.1.</span> <span class="nav-text">3.1.1 sql类型判断</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-2-强制走主库"><span class="nav-number">1.2.3.1.2.</span> <span class="nav-text">3.1.2 强制走主库</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-从库路由策略"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">3.2 从库路由策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-HA、Scalable相关"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">3.3 HA、Scalable相关</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-分库分表核心要点"><span class="nav-number">1.2.4.</span> <span class="nav-text">4 分库分表核心要点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-SQL解析"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">4.1 SQL解析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-SQL路由"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">4.2 SQL路由</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-SQL改写"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">4.3 SQL改写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-SQL执行"><span class="nav-number">1.2.4.4.</span> <span class="nav-text">4.4 SQL执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-5-结果集合并"><span class="nav-number">1.2.4.5.</span> <span class="nav-text">4.5 结果集合并</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-6-二级索引"><span class="nav-number">1.2.4.6.</span> <span class="nav-text">4.6 二级索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-7-分布式id生成器"><span class="nav-number">1.2.4.7.</span> <span class="nav-text">4.7 分布式id生成器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-7-分布式事务"><span class="nav-number">1.2.4.8.</span> <span class="nav-text">4.7 分布式事务</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

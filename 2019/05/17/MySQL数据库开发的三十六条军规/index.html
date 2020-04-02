@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,数据库设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="MySQL数据库开发的三十六条军规一、核心军规(5)1.1 尽量不在数据库做运算 别让脚趾头想事情，那是脑瓜子的职责 让数据库多做她擅长的事: 尽量不在数据库做运算 复杂运算秱到程序端CPU 尽可能简单应用MySQL   举例: md5() / Order by Rand()  1.2 控制单表数据量 一年内的单表数据量预估 纯INT不超1000W 含CHAR不超500W   合理分表不超载 US">
+<meta name="keywords" content="数据库,MySql,数据库设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL数据库开发的三十六条军规">
+<meta property="og:url" content="http://blog.com/2019/05/17/MySQL数据库开发的三十六条军规/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="MySQL数据库开发的三十六条军规一、核心军规(5)1.1 尽量不在数据库做运算 别让脚趾头想事情，那是脑瓜子的职责 让数据库多做她擅长的事: 尽量不在数据库做运算 复杂运算秱到程序端CPU 尽可能简单应用MySQL   举例: md5() / Order by Rand()  1.2 控制单表数据量 一年内的单表数据量预估 纯INT不超1000W 含CHAR不超500W   合理分表不超载 US">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-17T14:19:18.356Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL数据库开发的三十六条军规">
+<meta name="twitter:description" content="MySQL数据库开发的三十六条军规一、核心军规(5)1.1 尽量不在数据库做运算 别让脚趾头想事情，那是脑瓜子的职责 让数据库多做她擅长的事: 尽量不在数据库做运算 复杂运算秱到程序端CPU 尽可能简单应用MySQL   举例: md5() / Order by Rand()  1.2 控制单表数据量 一年内的单表数据量预估 纯INT不超1000W 含CHAR不超500W   合理分表不超载 US">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/17/MySQL数据库开发的三十六条军规/">
+
+
+
+
+
+  <title>MySQL数据库开发的三十六条军规 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/17/MySQL数据库开发的三十六条军规/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MySQL数据库开发的三十六条军规</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T12:12:57+08:00">
+                2019-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/数据库设计/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="MySQL数据库开发的三十六条军规"><a href="#MySQL数据库开发的三十六条军规" class="headerlink" title="MySQL数据库开发的三十六条军规"></a>MySQL数据库开发的三十六条军规</h1><h2 id="一、核心军规-5"><a href="#一、核心军规-5" class="headerlink" title="一、核心军规(5)"></a>一、核心军规(5)</h2><h3 id="1-1-尽量不在数据库做运算"><a href="#1-1-尽量不在数据库做运算" class="headerlink" title="1.1 尽量不在数据库做运算"></a>1.1 尽量不在数据库做运算</h3><ul>
+<li>别让脚趾头想事情，那是脑瓜子的职责</li>
+<li>让数据库多做她擅长的事:<ul>
+<li>尽量不在数据库做运算</li>
+<li>复杂运算秱到程序端CPU</li>
+<li>尽可能简单应用MySQL</li>
+</ul>
+</li>
+<li>举例: md5() / Order by Rand()</li>
+</ul>
+<h3 id="1-2-控制单表数据量"><a href="#1-2-控制单表数据量" class="headerlink" title="1.2 控制单表数据量"></a>1.2 控制单表数据量</h3><ul>
+<li>一年内的单表数据量预估<ul>
+<li>纯INT不超1000W</li>
+<li>含CHAR不超500W</li>
+</ul>
+</li>
+<li>合理分表不超载<ul>
+<li>USERID</li>
+<li>DATE</li>
+<li>AREA</li>
+<li>……</li>
+</ul>
+</li>
+<li>建议单库不超过300-400个表</li>
+</ul>
+<h3 id="1-3-保持表身段苗条"><a href="#1-3-保持表身段苗条" class="headerlink" title="1.3 保持表身段苗条"></a>1.3 保持表身段苗条</h3><ul>
+<li>表字段数少而精<ul>
+<li>IO高效</li>
+<li>全表遍历</li>
+<li>表修复快</li>
+<li>提高幵发</li>
+<li>alter table快</li>
+</ul>
+</li>
+<li>单表多少字段合适?</li>
+<li>单表1G体积 500W行评估<ul>
+<li>顺序读1G文件需N秒</li>
+<li>单行不超过200Byte</li>
+<li>单表不超过50个纯INT字段</li>
+<li>单表不超过20个CHAR(10)字段</li>
+</ul>
+</li>
+<li>单表字段数上限控制在20~50个</li>
+</ul>
+<h3 id="1-4-平衡范式不冗余"><a href="#1-4-平衡范式不冗余" class="headerlink" title="1.4 平衡范式不冗余"></a>1.4 平衡范式不冗余</h3><ul>
+<li>严格遵循三大范式?</li>
+<li>效率优先、提升性能</li>
+<li>没有绝对的对不错</li>
+<li>适当时牺牲范式、加入冗余</li>
+<li>但会增加代码复杂度</li>
+</ul>
+<h3 id="1-5-拒绝3B"><a href="#1-5-拒绝3B" class="headerlink" title="1.5 拒绝3B"></a>1.5 拒绝3B</h3><ul>
+<li>数据库幵发像城市交通<ul>
+<li>非线性增长</li>
+</ul>
+</li>
+<li>拒绝3B<ul>
+<li>大SQL (BIG SQL)</li>
+<li>大事务 (BIG Transaction)</li>
+<li>大批量 (BIG Batch)</li>
+</ul>
+</li>
+<li>详细解析见后</li>
+</ul>
+<h3 id="1-6-核心军规小结"><a href="#1-6-核心军规小结" class="headerlink" title="1.6 核心军规小结"></a>1.6 核心军规小结</h3><ul>
+<li>尽量不在数据库做运算</li>
+<li>控制单表数据量</li>
+<li>保持表身段苗条</li>
+<li>平衡范式不冗余</li>
+<li>拒绝3B</li>
+</ul>
+<h2 id="二、字段类军规-6"><a href="#二、字段类军规-6" class="headerlink" title="二、字段类军规(6)"></a>二、字段类军规(6)</h2><h3 id="2-1-用好数值字段类型"><a href="#2-1-用好数值字段类型" class="headerlink" title="2.1 用好数值字段类型"></a>2.1 用好数值字段类型</h3><ul>
+<li>三类数值类型:<ul>
+<li>TINYINT(1Byte)</li>
+<li>SMALLINT(2B)</li>
+<li>MEDIUMINT(3B)</li>
+<li>INT(4B)、BIGINT(8B)</li>
+<li>FLOAT(4B)、DOUBLE(8B)</li>
+<li>DECIMAL(M,D)</li>
+</ul>
+</li>
+<li>BAD CASE:<ul>
+<li>INT(1) VS INT(11)</li>
+<li>BIGINT AUTO_INCREMENT</li>
+<li>DECIMAL(18,0)</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-2-将字符转化为数字"><a href="#2-2-将字符转化为数字" class="headerlink" title="2.2 将字符转化为数字"></a>2.2 将字符转化为数字</h3><ul>
+<li>数字型VS字符串型索引<ul>
+<li>更高效</li>
+<li>查询更快</li>
+<li>占用空间更小</li>
+</ul>
+</li>
+<li>举例:用无符号INT存储IP，而非CHAR(15)<ul>
+<li>INT UNSIGNED</li>
+<li>INET_ATON()</li>
+<li>INET_NTOA()</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-3-优先使用ENUM或SET"><a href="#2-3-优先使用ENUM或SET" class="headerlink" title="2.3 优先使用ENUM或SET"></a>2.3 优先使用ENUM或SET</h3><ul>
+<li>优先使用ENUM或SET<ul>
+<li>字符串</li>
+<li>可能值已知且有限</li>
+</ul>
+</li>
+<li>存储<ul>
+<li>ENUM占用1字节，转为数值运算</li>
+<li>SET视节点定，最多占用8字节</li>
+<li>比较时需要加’ 单引号(即使是数值)</li>
+</ul>
+</li>
+<li>举例<ul>
+<li><code>sex</code> enum(‘F’,’M’) COMMENT ‘性别’</li>
+<li><code>c1</code> enum(‘0’,’1’,’2’,’3’) COMMENT ‘职介审核’</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-4-避免使用NULL字段"><a href="#2-4-避免使用NULL字段" class="headerlink" title="2.4 避免使用NULL字段"></a>2.4 避免使用NULL字段</h3><ul>
+<li>避免使用NULL字段<ul>
+<li>很难进行查询优化</li>
+<li>NULL列加索引，需要额外空间</li>
+<li>含NULL复合索引无效</li>
+</ul>
+</li>
+<li>举例<ul>
+<li><code>a</code> char(32) DEFAULT NULL</li>
+<li><code>b</code> int(10) NOT NULL</li>
+<li><code>c</code> int(10) NOT NULL DEFAULT 0</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-5-少用并拆分TEXT-BLOB"><a href="#2-5-少用并拆分TEXT-BLOB" class="headerlink" title="2.5 少用并拆分TEXT/BLOB"></a>2.5 少用并拆分TEXT/BLOB</h3><ul>
+<li>TEXT类型处理性能远低亍VARCHAR<ul>
+<li>强制生成硬盘临时表</li>
+<li>浪费更多空间</li>
+<li>VARCHAR(65535)==&gt;64K (注意UTF-8)</li>
+</ul>
+</li>
+<li>尽量不用TEXT/BLOB数据类型</li>
+<li>若必须使用则拆分到单独的表</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT, <span class="keyword">data</span> <span class="built_in">text</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">‏PRIMARY <span class="keyword">KEY</span> <span class="keyword">id</span></span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="2-6-不在数据库里存图片"><a href="#2-6-不在数据库里存图片" class="headerlink" title="2.6 不在数据库里存图片"></a>2.6 不在数据库里存图片</h3><h3 id="2-7-字段类军规小结"><a href="#2-7-字段类军规小结" class="headerlink" title="2.7 字段类军规小结"></a>2.7 字段类军规小结</h3><ul>
+<li>用好数值字段类型</li>
+<li>将字符转化为数字</li>
+<li>优先使用枚举ENUM/SET</li>
+<li>避免使用NULL字段</li>
+<li>少用幵拆分TEXT/BLOB</li>
+<li>不在数据库里存图片</li>
+</ul>
+<h2 id="三、索引类军规-5"><a href="#三、索引类军规-5" class="headerlink" title="三、索引类军规(5)"></a>三、索引类军规(5)</h2><h3 id="3-1-谨慎合理添加索引"><a href="#3-1-谨慎合理添加索引" class="headerlink" title="3.1 谨慎合理添加索引"></a>3.1 谨慎合理添加索引</h3><ul>
+<li>谨慎合理添加索引<ul>
+<li>改善查询</li>
+<li>减慢更新</li>
+<li>索引不是赹多赹好</li>
+</ul>
+</li>
+<li>能不加的索引尽量不加<ul>
+<li>综合评估数据密度和数据分布</li>
+<li>最好不赸过字段数20%</li>
+</ul>
+</li>
+<li>结合核心SQL优先考虑覆盖索引</li>
+<li>举例<ul>
+<li>不要给“性别”列创建索引</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-2-字符字段必须建前缀索引"><a href="#3-2-字符字段必须建前缀索引" class="headerlink" title="3.2 字符字段必须建前缀索引"></a>3.2 字符字段必须建前缀索引</h3><ul>
+<li>区分度<ul>
+<li>单字母区分度:26</li>
+<li>4字母区分度:26<em>26</em>26*26=456,976</li>
+<li>5字母区分度:26<em>26</em>26<em>26</em>26=11,881,376</li>
+<li>6字母区分度:26<em>26</em>26<em>26</em>26*26=308,915,776</li>
+</ul>
+</li>
+<li>字符字段必须建前缀索引:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(</span><br><span class="line">`pinyin` varchar(100) DEFAULT NULL <span class="keyword">COMMENT</span> <span class="string">'小区拼音'</span>, <span class="keyword">KEY</span> <span class="string">`idx_pinyin`</span> (<span class="string">`pinyin`</span>(<span class="number">8</span>)),</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span></span><br></pre></td></tr></table></figure>
+<h3 id="3-3-不在索引列做运算"><a href="#3-3-不在索引列做运算" class="headerlink" title="3.3 不在索引列做运算"></a>3.3 不在索引列做运算</h3><ul>
+<li>不在索引列进行数学运算或凼数运算<ul>
+<li>无法使用索引</li>
+<li>导致全表扫描</li>
+</ul>
+</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">BAD: <span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">WHERE</span> <span class="keyword">to_days</span>(<span class="keyword">current_date</span>) – <span class="keyword">to_days</span>(date_col) &lt;= <span class="number">10</span></span><br><span class="line">GOOD: <span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">WHERE</span> date_col &gt;= <span class="keyword">DATE_SUB</span>(<span class="string">'2011-10- 22'</span>,<span class="built_in">INTERVAL</span> <span class="number">10</span> <span class="keyword">DAY</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="3-4-自增列或全局ID做INNODB主键"><a href="#3-4-自增列或全局ID做INNODB主键" class="headerlink" title="3.4 自增列或全局ID做INNODB主键"></a>3.4 自增列或全局ID做INNODB主键</h3><ul>
+<li>对主键建立聚簇索引</li>
+<li>二级索引存储主键值</li>
+<li>主键不应更新修改</li>
+<li>按自增顺序揑入值</li>
+<li>忌用字符串做主键</li>
+<li>聚簇索引分裂</li>
+<li>推荐用独立亍业务的AUTO_INCREMENT列或全局ID生成 器做代理主键</li>
+<li>若不指定主键，InnoDB会用唯一且非空值索引代替</li>
+</ul>
+<h3 id="3-5-尽量不用外键"><a href="#3-5-尽量不用外键" class="headerlink" title="3.5 尽量不用外键"></a>3.5 尽量不用外键</h3><ul>
+<li>线上OLTP系统(线下系统另论)<ul>
+<li>外键可节省开发量</li>
+<li>有额外开销</li>
+<li>逐行操作</li>
+<li>可’到达’其它表，意味着锁</li>
+<li>高并发时容易死锁</li>
+</ul>
+</li>
+<li>由程序保证约束</li>
+</ul>
+<h3 id="3-6-索引类军规小结"><a href="#3-6-索引类军规小结" class="headerlink" title="3.6 索引类军规小结"></a>3.6 索引类军规小结</h3><ul>
+<li>谨慎合理添加索引</li>
+<li>字符字段必须建前缀索引</li>
+<li>不在索引列做运算</li>
+<li>自增列或全局ID做INNODB主键</li>
+<li>尽量不用外键</li>
+</ul>
+<h2 id="四、SQL类军规-15"><a href="#四、SQL类军规-15" class="headerlink" title="四、SQL类军规(15)"></a>四、SQL类军规(15)</h2><h3 id="4-1-SQL语句尽可能简单"><a href="#4-1-SQL语句尽可能简单" class="headerlink" title="4.1 SQL语句尽可能简单"></a>4.1 SQL语句尽可能简单</h3><ul>
+<li>大SQL VS 多个简单SQL<ul>
+<li>传统设计思想</li>
+<li>BUT MySQL NOT</li>
+<li>一条SQL叧能在一个CPU运算</li>
+<li>5000+ QPS的高幵发中，1秒大SQL意味着?</li>
+<li>可能一条大SQL就把整个数据库堵死</li>
+</ul>
+</li>
+<li>拒绝大SQL，拆解成多条简单SQL<ul>
+<li>简单SQL缓存命中率更高</li>
+<li>减少锁表时间，特别是MyISAM</li>
+<li>用上多CPU</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-2-保持事务-连接-短小"><a href="#4-2-保持事务-连接-短小" class="headerlink" title="4.2 保持事务(连接)短小"></a>4.2 保持事务(连接)短小</h3><ul>
+<li>保持事务/DB连接短小精悍<ul>
+<li>事务/连接使用原则:即开即用，用完即关</li>
+<li>与事务无关操作放到事务外面, 减少锁资源的占用</li>
+<li>不破坏一致性前提下，使用多个短事务代替长事务</li>
+</ul>
+</li>
+<li>举例<ul>
+<li>发贴时的图片上传等待</li>
+<li>大量的sleep连接</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-3-尽可能避免使用SP-TRIG-FUNC"><a href="#4-3-尽可能避免使用SP-TRIG-FUNC" class="headerlink" title="4.3 尽可能避免使用SP/TRIG/FUNC"></a>4.3 尽可能避免使用SP/TRIG/FUNC</h3><ul>
+<li>线上OLTP系统(线下库另论)<ul>
+<li>尽可能少用存储过程</li>
+<li>尽可能少用触发器</li>
+<li>减用使用MySQL凼数对结果进行处理</li>
+</ul>
+</li>
+<li>由客户端程序负责</li>
+</ul>
+<h3 id="4-4-尽量不用-SELECT"><a href="#4-4-尽量不用-SELECT" class="headerlink" title="4.4 尽量不用 SELECT *"></a>4.4 尽量不用 SELECT *</h3><ul>
+<li>用SELECT * 时</li>
+<li>更多消耗CPU、内存、IO、网络带宽</li>
+<li>先向数据库请求所有列，然后丢掉不需要列?</li>
+<li>尽量不用SELECT * ，叧取需要数据列 • 更安全的设计:减少表变化带来的影响</li>
+<li>为使用covering index提供可能性</li>
+<li>SELECT/JOIN减少硬盘临时表生成，特别是有TEXT/BLOB时</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> tag <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">999184</span>;</span><br><span class="line"><span class="keyword">SELECT</span> keyword <span class="keyword">FROM</span> tag <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">999184</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="4-5-改写OR为IN"><a href="#4-5-改写OR为IN" class="headerlink" title="4.5 改写OR为IN()"></a>4.5 改写OR为IN()</h3><ul>
+<li>同一字段，将or改写为in()</li>
+<li>OR效率:O(n)</li>
+<li>IN 效率:O(Log n)</li>
+<li>当n很大时，OR会慢很多</li>
+<li>注意控制IN的个数，建议n小亍200</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> opp <span class="keyword">WHERE</span> phone=<span class="string">'12347856'</span> <span class="keyword">or</span> phone=<span class="string">'42242233'</span> \G;</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> opp <span class="keyword">WHERE</span> phone <span class="keyword">in</span> (<span class="string">'12347856'</span> , <span class="string">'42242233'</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="4-6-改写OR为UNION"><a href="#4-6-改写OR为UNION" class="headerlink" title="4.6 改写OR为UNION"></a>4.6 改写OR为UNION</h3><ul>
+<li>不同字段，将or改为union</li>
+<li>减少对不同字段进行 “or” 查询</li>
+<li>Merge index往往很弱智</li>
+<li>如果有足够信心:set global optimizer_switch=’index_merge=off’;</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> opp <span class="keyword">WHERE</span> phone=<span class="string">'010-88886666'</span> <span class="keyword">or</span> cellPhone=<span class="string">'13800138000'</span>;</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> opp <span class="keyword">WHERE</span> phone=<span class="string">'010-88886666'</span> <span class="keyword">union</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> opp <span class="keyword">WHERE</span> cellPhone=<span class="string">'13800138000'</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="4-7-避免负向查询和-前缀模糊查询"><a href="#4-7-避免负向查询和-前缀模糊查询" class="headerlink" title="4.7 避免负向查询和% 前缀模糊查询"></a>4.7 避免负向查询和% 前缀模糊查询</h3><ul>
+<li>避免负向查询<ul>
+<li>NOT、!=、&lt;&gt;、!&lt;、!&gt;、NOT EXISTS、NOT IN、 NOT LIKE等</li>
+</ul>
+</li>
+<li>避免 % 前缀模糊查询<ul>
+<li>B+ Tree</li>
+<li>使用不了索引</li>
+<li>导致全表扫描</li>
+</ul>
+</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> post <span class="keyword">WHERE</span> title <span class="keyword">like</span> <span class="string">'北京%'</span>; <span class="comment">-- 298 rows in set (0.01 sec)</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> post <span class="keyword">WHERE</span> title <span class="keyword">like</span> <span class="string">'%北京%'</span>; <span class="comment">-- 572 rows in set (3.27 sec)</span></span><br></pre></td></tr></table></figure>
+<h3 id="4-8-COUNT-的几个例子"><a href="#4-8-COUNT-的几个例子" class="headerlink" title="4.8 COUNT(*)的几个例子"></a>4.8 COUNT(*)的几个例子</h3><ul>
+<li>几个有趣的例子:<ul>
+<li>COUNT(COL) VS COUNT(*)</li>
+<li>COUNT(*) VS COUNT(1)</li>
+<li>COUNT(1) VS COUNT(0) VS COUNT(100)</li>
+</ul>
+</li>
+<li>示例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`id` int(10) NOT NULL AUTO_INCREMENT <span class="keyword">COMMENT</span> <span class="string">'公司的id'</span>, <span class="string">`sale_id`</span> <span class="built_in">int</span>(<span class="number">10</span>) <span class="keyword">unsigned</span> <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br></pre></td></tr></table></figure>
+<ul>
+<li>结论<ul>
+<li>COUNT(<em>)=count(1)
+</em>COUNT(0)=count(1)</li>
+<li>COUNT(1)=count(100)</li>
+<li>COUNT(*)!=count(col)</li>
+<li>WHY?</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-9-减少COUNT"><a href="#4-9-减少COUNT" class="headerlink" title="4.9 减少COUNT(*)"></a>4.9 减少COUNT(*)</h3><ul>
+<li>MyISAM VS INNODB<ul>
+<li>不带 WHERE COUNT()</li>
+<li>带 WHERE COUNT()</li>
+</ul>
+</li>
+<li>COUNT(*)的资源开销大，尽量不用少用</li>
+<li>计数统计<ul>
+<li>实时统计:用memcache，双向更新，凌晨 跑基准</li>
+<li>非实时统计:尽量用单独统计表，定期重算</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-10-LIMIT高效分页"><a href="#4-10-LIMIT高效分页" class="headerlink" title="4.10 LIMIT高效分页"></a>4.10 LIMIT高效分页</h3><ul>
+<li>传统分页:<ul>
+<li>SELECT * from table limit 10000,10;</li>
+</ul>
+</li>
+<li>LIMIT原理:<ul>
+<li>Limit 10000,10  偏秱量赹大则赹慢</li>
+</ul>
+</li>
+<li>推荐分页:<ul>
+<li>SELECT <em> from table WHERE id&gt;=23423 limit 11;
+</em>SELECT * from table WHERE id&gt;=23434 limit 11;</li>
+</ul>
+</li>
+<li>分页方式二:<ul>
+<li>SELECT * from table WHERE id &gt;= ( SELECT id from table limit 10000,1 ) limit 10;</li>
+</ul>
+</li>
+<li>分页方式三:<ul>
+<li>SELECT * FROM table INNER JOIN (SELECT id FROM table LIMIT 10000,10) USING (id);</li>
+</ul>
+</li>
+<li>分页方式四:<ul>
+<li>程序取ID:SELECT id from table limit 10000,10;</li>
+<li>SELECT * from table WHERE id in (123,456…);</li>
+</ul>
+</li>
+<li>可能需按场景分析幵重组索引</li>
+<li>示例:</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">MySQL&gt; SELECT sql_no_cache * from post limit 10,10; 10 row in set (0.01 sec)</span><br><span class="line">MySQL&gt; SELECT sql_no_cache * from post limit 20000,10; 10 row in set (0.13 sec)</span><br><span class="line">MySQL&gt; SELECT sql_no_cache * from post limit 80000,10; 10 rows in set (0.58 sec)</span><br><span class="line">MySQL&gt; SELECT sql_no_cache id from post limit 80000,10; 10 rows in set (0.02 sec)</span><br><span class="line">MySQL&gt; SELECT sql_no_cache * from post WHERE id&gt;=323423 limit 10; 10 rows in set (0.01 sec)</span><br><span class="line">MySQL&gt; SELECT * from post WHERE id &gt;= ( SELECT sql_no_cache id from post limit 80000,1 ) limit 10; 10 rows in set (0.02 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="4-11-用UNION-ALL-而非-UNION"><a href="#4-11-用UNION-ALL-而非-UNION" class="headerlink" title="4.11 用UNION ALL 而非 UNION"></a>4.11 用UNION ALL 而非 UNION</h3><ul>
+<li>若无需对结果进行去重，则用UNION ALL<ul>
+<li>UNION有去重开销</li>
+</ul>
+</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20091128 <span class="keyword">UNION</span> ALL <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20110427 <span class="keyword">UNION</span> ALL <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20110426 <span class="keyword">UNION</span> ALL <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20110425 <span class="keyword">UNION</span> ALL <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20110424 <span class="keyword">UNION</span> ALL <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> detail20110423;</span><br></pre></td></tr></table></figure>
+<h3 id="4-12-分解联接保证高并发"><a href="#4-12-分解联接保证高并发" class="headerlink" title="4.12 分解联接保证高并发"></a>4.12 分解联接保证高并发</h3><ul>
+<li>高幵发DB不建议进行两个表以上的JOIN</li>
+<li>适当分解联接保证高幵发<ul>
+<li>可缓存大量早期数据</li>
+<li>使用了多个MyISAM表</li>
+<li>对大表的小ID IN()</li>
+<li>联接引用同一个表多次</li>
+<li>举例:</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MySQL&gt; SELECT * from tag JOIN post on tag_post.post_id=post.id WHERE tag.tag='二手玩具';</span><br><span class="line"></span><br><span class="line">MySQL&gt; SELECT * from tag WHERE tag='二手玩具';</span><br><span class="line">MySQL&gt; SELECT * from tag_post WHERE tag_id=1321;</span><br><span class="line">MySQL&gt; SELECT * from post WHERE post.id in (123,456,314,141);</span><br></pre></td></tr></table></figure>
+<h3 id="4-13-GROUP-BY-去除排序"><a href="#4-13-GROUP-BY-去除排序" class="headerlink" title="4.13 GROUP BY 去除排序"></a>4.13 GROUP BY 去除排序</h3><ul>
+<li>GROUP BY 实现<ul>
+<li>分组</li>
+<li>自劢排序</li>
+</ul>
+</li>
+<li>无需排序:Order by NULL</li>
+<li>特定排序:Group by DESC/ASC</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MySQL&gt; SELECT phone,count(*) from post group by phone limit 1 ; 1 row in set (2.19 sec)</span><br><span class="line">MySQL&gt; SELECT phone,count(*) from post group by phone order by null limit 1; 1 row in set (2.02 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="4-14-同数据类型的列值比较"><a href="#4-14-同数据类型的列值比较" class="headerlink" title="4.14 同数据类型的列值比较"></a>4.14 同数据类型的列值比较</h3><ul>
+<li>原则:数字对数字，字符对字符</li>
+<li>数值列不字符类型比较<ul>
+<li>同时转换为双精度</li>
+<li>进行比对</li>
+</ul>
+</li>
+<li>字符列不数值类型比较<ul>
+<li>字符列整列转数值</li>
+<li>不会使用索引查询</li>
+</ul>
+</li>
+<li>举例:字符列不数值类型比较</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">字段:`remark` varchar(50) NOT NULL <span class="keyword">COMMENT</span> <span class="string">'备注, 默认为空'</span>,</span><br><span class="line"></span><br><span class="line">MySQL&gt;<span class="keyword">SELECT</span> <span class="string">`id`</span>, <span class="string">`gift_code`</span> <span class="keyword">FROM</span> gift <span class="keyword">WHERE</span> <span class="string">`deal_id`</span> = <span class="number">640</span> <span class="keyword">AND</span> remark=<span class="number">115127</span>; 1 row in <span class="keyword">set</span> (<span class="number">0.14</span> sec)</span><br><span class="line">MySQL&gt;<span class="keyword">SELECT</span> <span class="string">`id`</span>, <span class="string">`gift_code`</span> <span class="keyword">FROM</span> pool_gift <span class="keyword">WHERE</span> <span class="string">`deal_id`</span> = <span class="number">640</span> <span class="keyword">AND</span> remark=<span class="string">'115127'</span>; 1 row in <span class="keyword">set</span> (<span class="number">0.005</span> sec)</span><br></pre></td></tr></table></figure>
+<h3 id="4-15-Load-data-导数据"><a href="#4-15-Load-data-导数据" class="headerlink" title="4.15 Load data 导数据"></a>4.15 Load data 导数据</h3><ul>
+<li>批量数据快导入:<ul>
+<li>成批装载比单行装载更快，不需要每次刷新缓存</li>
+<li>无索引时装载比索引装载更快</li>
+<li>Insert values ,values，values 减少索引刷新</li>
+<li>Load data比insert快约20倍</li>
+</ul>
+</li>
+<li>尽量不用 INSERT … SELECT<ul>
+<li>延迟</li>
+<li>同步出错</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-16-打散大批量更新"><a href="#4-16-打散大批量更新" class="headerlink" title="4.16 打散大批量更新"></a>4.16 打散大批量更新</h3><ul>
+<li>大批量更新凌晨操作，避开高峰</li>
+<li>凌晨不限制</li>
+<li>白天上限默认为100条/秒(特殊再议)</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> post <span class="keyword">set</span> tag=<span class="number">1</span> <span class="keyword">WHERE</span> <span class="keyword">id</span> <span class="keyword">in</span> (<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>); sleep 0.01;</span><br><span class="line"><span class="keyword">update</span> post <span class="keyword">set</span> tag=<span class="number">1</span> <span class="keyword">WHERE</span> <span class="keyword">id</span> <span class="keyword">in</span> (<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>); sleep 0.01;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<h3 id="4-17-Know-Every-SQL"><a href="#4-17-Know-Every-SQL" class="headerlink" title="4.17 Know Every SQL"></a>4.17 Know Every SQL</h3><ul>
+<li>SHOW PROFILE</li>
+<li>MySQLdumpslow</li>
+<li>EXPLAIN</li>
+<li>Show Slow Log</li>
+<li>SHOW QUERY_RESPONSE_TIME(Percona)</li>
+<li>MySQLsla</li>
+<li>Show Processlist</li>
+</ul>
+<h3 id="4-18-SQL类军规小结"><a href="#4-18-SQL类军规小结" class="headerlink" title="4.18 SQL类军规小结"></a>4.18 SQL类军规小结</h3><ul>
+<li>SQL语句尽可能简单</li>
+<li>保持事务(连接)短小</li>
+<li>尽可能避免使用SP/TRIG/FUNC</li>
+<li>尽量不用 SELECT *</li>
+<li>改写OR语句</li>
+<li>避免负向查询和% 前缀模糊查询</li>
+<li>减少COUNT(*)</li>
+<li>LIMIT的高效分页</li>
+<li>用UNION ALL 而非 UNION</li>
+<li>分解联接保证高幵发</li>
+<li>GROUP BY 去除排序</li>
+<li>同数据类型的列值比较</li>
+<li>Load data导数据</li>
+<li>打散大批量更新</li>
+<li>Know Every SQL!</li>
+</ul>
+<h2 id="五、约定类军规-5"><a href="#五、约定类军规-5" class="headerlink" title="五、约定类军规(5)"></a>五、约定类军规(5)</h2><h3 id="5-1-隔离线上线下"><a href="#5-1-隔离线上线下" class="headerlink" title="5.1 隔离线上线下"></a>5.1 隔离线上线下</h3><ul>
+<li>构建数据库的生态环境</li>
+<li>开发无线上库操作权限</li>
+<li>原则:线上连线上，线下连线下<ul>
+<li>实时数据用real库</li>
+<li>模拟环境用sim库</li>
+<li>测试用qa库</li>
+<li>开发用dev库</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-2-禁止未经DBA确认的子查询"><a href="#5-2-禁止未经DBA确认的子查询" class="headerlink" title="5.2 禁止未经DBA确认的子查询"></a>5.2 禁止未经DBA确认的子查询</h3><ul>
+<li>MySQL子查询<ul>
+<li>大部分情况优化较差</li>
+<li>特别WHERE中使用IN id的子查询  一般可用JOIN改写</li>
+</ul>
+</li>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> table1 <span class="keyword">where</span> <span class="keyword">id</span> <span class="keyword">id</span> <span class="keyword">from</span> table2) <span class="keyword">in</span> (<span class="keyword">SELECT</span> <span class="keyword">insert</span> <span class="keyword">into</span> table1 (<span class="keyword">SELECT</span> * <span class="keyword">from</span> table2); <span class="comment">-- 可能导致复制异常</span></span><br></pre></td></tr></table></figure>
+<h3 id="5-3-永远不在程序端显式加锁"><a href="#5-3-永远不在程序端显式加锁" class="headerlink" title="5.3 永远不在程序端显式加锁"></a>5.3 永远不在程序端显式加锁</h3><ul>
+<li>永远不在程序端对数据库显式加锁<ul>
+<li>外部锁对数据库不可控</li>
+<li>高并发时是灾难</li>
+<li>极难调试和排查</li>
+</ul>
+</li>
+<li>并发扣款等一致性问题<ul>
+<li>采用事务</li>
+<li>相对值修改</li>
+<li>Commit前二次较验冲突</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-4-统一字符集为UTF8"><a href="#5-4-统一字符集为UTF8" class="headerlink" title="5.4 统一字符集为UTF8"></a>5.4 统一字符集为UTF8</h3><ul>
+<li>字符集:<ul>
+<li>MySQL 4.1 以前叧有latin1</li>
+<li>为多语言支持增加多字符集</li>
+<li>也带来了N多问题</li>
+<li>保持简单</li>
+</ul>
+</li>
+<li>统一字符集:UTF8</li>
+<li>校对规则:utf8_general_ci</li>
+<li>乱码:SET NAMES UTF8</li>
+</ul>
+<h3 id="5-5-统一命名规范"><a href="#5-5-统一命名规范" class="headerlink" title="5.5 统一命名规范"></a>5.5 统一命名规范</h3><ul>
+<li>库表等名称统一用小写<ul>
+<li>Linux VS Windows</li>
+<li>MySQL库表大小写敏感</li>
+<li>字段名的大小写不敏感</li>
+</ul>
+</li>
+<li>索引命名默认为“idx_字段名”</li>
+<li>库名用缩写，尽量在2~7个字母<ul>
+<li>DataSharing ==&gt; ds</li>
+</ul>
+</li>
+<li>注意避免用保留字命名</li>
+<li>……</li>
+</ul>
+<h3 id="5-6-注意避免用保留字命名"><a href="#5-6-注意避免用保留字命名" class="headerlink" title="5.6 注意避免用保留字命名"></a>5.6 注意避免用保留字命名</h3><ul>
+<li>举例:</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="keyword">return</span>;</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="string">`return`</span>;</span><br></pre></td></tr></table></figure>
+<details><br><summary><b>MySQL系统关键字</b></summary><br><br>- ADD<br>- ALL<br>- ALTER GOTO<br>- GRANT<br>- GROUP<br>- PURGE<br>- RAID0<br>- RANGE<br>- ANALYZE<br>- AND<br>- AS HAVING<br>- HIGH_PRIORIT Y<br>- HOUR_MICROSEC OND<br>- READ<br>- READS<br>- REAL<br>- ASC<br>- ASENSITIVE<br>- BEFORE HOUR_MINUTE<br>- HOUR_SECON D<br>- IF<br>- REFERENCES<br>- REGEXP<br>- RELEASE<br>- BETWEEN<br>- BIGINT<br>- BINARY IGNORE<br>- IN<br>- INDEX<br>- RENAME<br>- REPEAT<br>- REPLACE<br>- BLOB<br>- BOTH<br>- BY INFILE<br>- INNER<br>- INOUT<br>- REQUIRE<br>- RESTRICT<br>- RETURN<br>- CALL<br>- CASCADE<br>- CASE INSENSITIVE<br>- INSERT<br>- INT<br>- REVOKE<br>- RIGHT<br>- RLIKE<br>- CHANGE<br>- CHAR<br>- CHARACTER INT1<br>- INT2<br>- INT3<br>- SCHEMA<br>- SCHEMAS<br>- SECOND_MICROSEC OND<br>- CHECK<br>- COLLATE<br>- COLUMN INT4<br>- INT8<br>- INTEGER<br>- SELECT<br>- SENSITIVE<br>- SEPARATOR<br>- CONDITION<br>- CONNECTION<br>- CONSTRAINT INTERVAL<br>- INTO<br>- IS<br>- SET<br>- SHOW<br>- SMALLINT<br>- CONTINUE<br>- CONVERT<br>- CREATE ITERATE<br>- JOIN<br>- KEY<br>- SPATIAL<br>- SPECIFIC<br>- SQL<br>- CROSS<br>- CURRENT_DA TE<br>- CURRENT_TIM KEYS E<br>- KILL<br>- LABEL<br>- SQLEXCEPTION<br>- SQLSTATE<br>- SQLWARNING<br>- CURRENT_TIMESTA MP<br>- CURRENT_US ER<br>- CURSOR LEADING<br>- LEAVE<br>- LEFT<br>- SQL_BIG_RESUL T<br>- SQL_CALC_FOUND_R OWS<br>- SQL_SMALL_RESULT<br>- DATABASE<br>- DATABASES<br>- DAY_HOUR LIKE<br>- LIMIT<br>- LINEAR<br>- SSL<br>- STARTING<br>- STRAIGHT_JOIN<br>- DAY_MICROSECON D<br>- DAY_MINUTE<br>- DAY_SECOND LINES<br>- LOAD<br>- LOCALTIME<br>- TABLE<br>- TERMINATED<br>- THEN<br>- DEC<br>- DECIMAL<br>- DECLARE LOCALTIMESTAMP<br>- LOCK<br>- LONG<br>- TINYBLOB<br>- TINYINT<br>- TINYTEXT<br>- DEFAULT<br>- DELAYED<br>- DELETE LONGBLOB<br>- LONGTEXT<br>- LOOP<br>- TO<br>- TRAILING<br>- TRIGGER<br>- DESC<br>- DESCRIBE<br>- DETERMINISTI LOW_PRIORITY C<br>- MATCH<br>- MEDIUMBLOB<br>- TRUE<br>- UNDO<br>- UNION<br>- DISTINCT<br>- DISTINCTROW<br>- DIV MEDIUMINT<br>- MEDIUMTEXT<br>- MIDDLEINT<br>- UNIQUE<br>- UNLOCK<br>- UNSIGNED<br>- DOUBLE<br>- DROP<br>- DUAL<br>- MINUTE_MICROSECO ND<br>- MINUTE_SECO ND<br>- MOD<br>- UPDATE<br>- USAGE<br>- USE<br>- EACH<br>- ELSE<br>- ELSEIF MODIFIES<br>- NATURAL<br>- NOT<br>- USING<br>- UTC_DATE<br>- UTC_TIME<br>- ENCLOSED<br>- ESCAPED<br>- EXISTS<br>- NO_WRITE_TO_BINL OG<br>- NULL<br>- NUMERIC<br>- UTC_TIMESTAM P<br>- VALUES<br>- VARBINARY<br>- EXIT<br>- EXPLAIN<br>- FALSE ON<br>- OPTIMIZE<br>- OPTION<br>- VARCHAR<br>- VARCHARACTER<br>- VARYING<br>- FETCH<br>- FLOAT<br>- FLOAT4 OPTIONALLY<br>- OR<br>- ORDER<br>- WHEN<br>- WHERE<br>- WHILE<br>- FLOAT8<br>- FOR<br>- FORCE OUT<br>- OUTER<br>- OUTFILE<br>- WITH<br>- WRITE<br>- X509<br>- FOREIGN<br>- FROM<br>- FULLTEXT PRECISION<br>- PRIMARY<br>- PROCEDURE<br>- XOR<br>- YEAR_MONTH<br>- ZEROFILL<br>  </details>
+
+<h3 id="5-7-约定类军规小结"><a href="#5-7-约定类军规小结" class="headerlink" title="5.7 约定类军规小结"></a>5.7 约定类军规小结</h3><ul>
+<li>隔离线上线下</li>
+<li>禁止未经DBA确认的子查询上线</li>
+<li>永远不在程序端显式加锁</li>
+<li>统一字符集为UTF8</li>
+<li>统一命名规范</li>
+</ul>
+<h2 id="六、原文链接"><a href="#六、原文链接" class="headerlink" title="六、原文链接"></a>六、原文链接</h2><ul>
+<li><a href="http://weibo.com/wushizhan" target="_blank" rel="noopener">http://weibo.com/wushizhan</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/数据库设计/" rel="tag"># 数据库设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/Laravel框架中如何使用 Presenter 模式/" rel="next" title="Laravel框架中如何使用Presenter 模式">
+                <i class="fa fa-chevron-left"></i> Laravel框架中如何使用Presenter 模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/17/Laravel 实现 API 通讯数据的加解密【macro】/" rel="prev" title="Laravel 实现 API 通讯数据的加解密【macro】">
+                Laravel 实现 API 通讯数据的加解密【macro】 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL数据库开发的三十六条军规"><span class="nav-number">1.</span> <span class="nav-text">MySQL数据库开发的三十六条军规</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、核心军规-5"><span class="nav-number">1.1.</span> <span class="nav-text">一、核心军规(5)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-尽量不在数据库做运算"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 尽量不在数据库做运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-控制单表数据量"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 控制单表数据量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-保持表身段苗条"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.3 保持表身段苗条</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-平衡范式不冗余"><span class="nav-number">1.1.4.</span> <span class="nav-text">1.4 平衡范式不冗余</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-拒绝3B"><span class="nav-number">1.1.5.</span> <span class="nav-text">1.5 拒绝3B</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-6-核心军规小结"><span class="nav-number">1.1.6.</span> <span class="nav-text">1.6 核心军规小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、字段类军规-6"><span class="nav-number">1.2.</span> <span class="nav-text">二、字段类军规(6)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-用好数值字段类型"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 用好数值字段类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-将字符转化为数字"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 将字符转化为数字</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-优先使用ENUM或SET"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 优先使用ENUM或SET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-避免使用NULL字段"><span class="nav-number">1.2.4.</span> <span class="nav-text">2.4 避免使用NULL字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-少用并拆分TEXT-BLOB"><span class="nav-number">1.2.5.</span> <span class="nav-text">2.5 少用并拆分TEXT/BLOB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-不在数据库里存图片"><span class="nav-number">1.2.6.</span> <span class="nav-text">2.6 不在数据库里存图片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-7-字段类军规小结"><span class="nav-number">1.2.7.</span> <span class="nav-text">2.7 字段类军规小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、索引类军规-5"><span class="nav-number">1.3.</span> <span class="nav-text">三、索引类军规(5)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-谨慎合理添加索引"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 谨慎合理添加索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-字符字段必须建前缀索引"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 字符字段必须建前缀索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-不在索引列做运算"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3 不在索引列做运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-自增列或全局ID做INNODB主键"><span class="nav-number">1.3.4.</span> <span class="nav-text">3.4 自增列或全局ID做INNODB主键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-尽量不用外键"><span class="nav-number">1.3.5.</span> <span class="nav-text">3.5 尽量不用外键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-索引类军规小结"><span class="nav-number">1.3.6.</span> <span class="nav-text">3.6 索引类军规小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、SQL类军规-15"><span class="nav-number">1.4.</span> <span class="nav-text">四、SQL类军规(15)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-SQL语句尽可能简单"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 SQL语句尽可能简单</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-保持事务-连接-短小"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 保持事务(连接)短小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-尽可能避免使用SP-TRIG-FUNC"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 尽可能避免使用SP/TRIG/FUNC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-尽量不用-SELECT"><span class="nav-number">1.4.4.</span> <span class="nav-text">4.4 尽量不用 SELECT *</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-改写OR为IN"><span class="nav-number">1.4.5.</span> <span class="nav-text">4.5 改写OR为IN()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-6-改写OR为UNION"><span class="nav-number">1.4.6.</span> <span class="nav-text">4.6 改写OR为UNION</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-避免负向查询和-前缀模糊查询"><span class="nav-number">1.4.7.</span> <span class="nav-text">4.7 避免负向查询和% 前缀模糊查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-8-COUNT-的几个例子"><span class="nav-number">1.4.8.</span> <span class="nav-text">4.8 COUNT(*)的几个例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-9-减少COUNT"><span class="nav-number">1.4.9.</span> <span class="nav-text">4.9 减少COUNT(*)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-10-LIMIT高效分页"><span class="nav-number">1.4.10.</span> <span class="nav-text">4.10 LIMIT高效分页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-11-用UNION-ALL-而非-UNION"><span class="nav-number">1.4.11.</span> <span class="nav-text">4.11 用UNION ALL 而非 UNION</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-12-分解联接保证高并发"><span class="nav-number">1.4.12.</span> <span class="nav-text">4.12 分解联接保证高并发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-13-GROUP-BY-去除排序"><span class="nav-number">1.4.13.</span> <span class="nav-text">4.13 GROUP BY 去除排序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-14-同数据类型的列值比较"><span class="nav-number">1.4.14.</span> <span class="nav-text">4.14 同数据类型的列值比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-15-Load-data-导数据"><span class="nav-number">1.4.15.</span> <span class="nav-text">4.15 Load data 导数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-16-打散大批量更新"><span class="nav-number">1.4.16.</span> <span class="nav-text">4.16 打散大批量更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-17-Know-Every-SQL"><span class="nav-number">1.4.17.</span> <span class="nav-text">4.17 Know Every SQL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-18-SQL类军规小结"><span class="nav-number">1.4.18.</span> <span class="nav-text">4.18 SQL类军规小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、约定类军规-5"><span class="nav-number">1.5.</span> <span class="nav-text">五、约定类军规(5)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-隔离线上线下"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1 隔离线上线下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-禁止未经DBA确认的子查询"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2 禁止未经DBA确认的子查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-永远不在程序端显式加锁"><span class="nav-number">1.5.3.</span> <span class="nav-text">5.3 永远不在程序端显式加锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-统一字符集为UTF8"><span class="nav-number">1.5.4.</span> <span class="nav-text">5.4 统一字符集为UTF8</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-统一命名规范"><span class="nav-number">1.5.5.</span> <span class="nav-text">5.5 统一命名规范</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-6-注意避免用保留字命名"><span class="nav-number">1.5.6.</span> <span class="nav-text">5.6 注意避免用保留字命名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-7-约定类军规小结"><span class="nav-number">1.5.7.</span> <span class="nav-text">5.7 约定类军规小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、原文链接"><span class="nav-number">1.6.</span> <span class="nav-text">六、原文链接</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

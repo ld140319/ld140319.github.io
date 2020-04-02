@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,微服务,RPC,分布式系统,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="RPC协议之争和选型要点1. 协议之争背景1.1 RPC 调用的协议选择RPC 调用的协议选择包含两部分： 1．协议栈：广义上协议栈可以分为公有协议和私有协议，例如 HTTP、SMPP、WebService 等都是公有协议；如果是某个公司或者组织内部自定义、自己使用的协议，没有被国际标准化组织接纳和认可的，往往划为私有协议，例如 Thrift 协议。 2．序列化方式：同一种协议也可以承载多种序列化">
+<meta name="keywords" content="架构,微服务,RPC,分布式系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RPC协议之争和选型要点">
+<meta property="og:url" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="RPC协议之争和选型要点1. 协议之争背景1.1 RPC 调用的协议选择RPC 调用的协议选择包含两部分： 1．协议栈：广义上协议栈可以分为公有协议和私有协议，例如 HTTP、SMPP、WebService 等都是公有协议；如果是某个公司或者组织内部自定义、自己使用的协议，没有被国际标准化组织接纳和认可的，往往划为私有协议，例如 Thrift 协议。 2．序列化方式：同一种协议也可以承载多种序列化">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/1.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/2.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/3.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/4.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/5.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/6.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/7.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/8.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/9.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/10.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/11.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/12.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/13.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/14.webp">
+<meta property="og:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/15.webp">
+<meta property="og:updated_time" content="2019-07-28T05:28:05.549Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RPC协议之争和选型要点">
+<meta name="twitter:description" content="RPC协议之争和选型要点1. 协议之争背景1.1 RPC 调用的协议选择RPC 调用的协议选择包含两部分： 1．协议栈：广义上协议栈可以分为公有协议和私有协议，例如 HTTP、SMPP、WebService 等都是公有协议；如果是某个公司或者组织内部自定义、自己使用的协议，没有被国际标准化组织接纳和认可的，往往划为私有协议，例如 Thrift 协议。 2．序列化方式：同一种协议也可以承载多种序列化">
+<meta name="twitter:image" content="http://blog.com/2019/07/27/RPC协议之争和选型要点/1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/07/27/RPC协议之争和选型要点/">
+
+
+
+
+
+  <title>RPC协议之争和选型要点 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/07/27/RPC协议之争和选型要点/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">RPC协议之争和选型要点</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-27T12:12:57+08:00">
+                2019-07-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式系统</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/微服务/分布式系统/RPC/" itemprop="url" rel="index">
+                    <span itemprop="name">RPC</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="RPC协议之争和选型要点"><a href="#RPC协议之争和选型要点" class="headerlink" title="RPC协议之争和选型要点"></a>RPC协议之争和选型要点</h1><h2 id="1-协议之争背景"><a href="#1-协议之争背景" class="headerlink" title="1. 协议之争背景"></a>1. 协议之争背景</h2><h3 id="1-1-RPC-调用的协议选择"><a href="#1-1-RPC-调用的协议选择" class="headerlink" title="1.1 RPC 调用的协议选择"></a>1.1 RPC 调用的协议选择</h3><p><code>RPC</code> 调用的协议选择包含两部分：</p>
+<p><strong>1．协议栈：</strong>广义上协议栈可以分为公有协议和私有协议，例如 <code>HTTP</code>、<code>SMPP</code>、<code>WebService</code> 等都是公有协议；如果是某个公司或者组织内部自定义、自己使用的协议，没有被国际标准化组织接纳和认可的，往往划为私有协议，例如 <code>Thrift</code> 协议。</p>
+<p><strong>2．序列化方式：</strong>同一种协议也可以承载多种序列化方式，以<code>HTTP</code>协议为例，它可以承载文本类序列化方式，例如：<code>XML</code>、<code>JSON</code> 等，也可以承载二进制序列化方式，例如谷歌的<code>Protobuf</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的协议选择，对 <code>RPC</code> 调用的性能、开发难度和问题定位效率都有影响，因此，选择哪种协议，对 <code>RPC</code>框架而言至关重要。由于各个协议都有自己的优缺点，因此很多框架在技术选型时都非常纠结。各种观点存在激烈交锋，<strong>有的看重性能和时延、有的更看重跨语言和可维护性</strong>。协议的选择是 <code>RPC</code> 框架构建的一个技术难点。</p>
+<h3 id="1-2-私有协议流行的原因"><a href="#1-2-私有协议流行的原因" class="headerlink" title="1.2 私有协议流行的原因"></a>1.2 私有协议流行的原因</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;私有协议本质上是厂商内部发展和采用的标准，除非授权，其他厂商一般无权使用该协议。私有协议也称非标准协议，就是未经国际或国家标准化组织采纳或批准，由某个企业自己制订，协议实现细节不愿公开，只在企业自己生产的设备之间使用的协议。私有协议具有封闭性、垄断性、排他性等特点。如果网上大量存在私有（非标准）协议，现行网络或用户一旦使用了它，后进入的厂家设备就必须跟着使用这种非标准协议，才能够互连互通，否则根本不可能进入现行网络。这样，使用非标准协议的厂家就实现了垄断市场的愿望。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;尽管私有协议具有垄断性的特征，但并非所有的私有协议设计者的初衷就是为了垄断。由于现代软件系统的复杂性，一个大型软件系统往往会被人为地拆分成多个模块，另外随着移动互联网的兴起，网站的规模也越来越大，业务的功能越来越多，为了能够支撑业务的发展，往往需要集群和分布式部署，这样，各个模块之间就要进行跨节点通信。</p>
+<p>在传统的 <code>Java</code> 应用中，通常使用以下 4 种方式进行跨节点通信。</p>
+<p>1．通过<code>RMI</code> 进行远程服务调用。</p>
+<p>2．通过 <code>Java</code>的<code>Socket+Java</code>序列化的方式进行跨节点调用。</p>
+<p>3．利用一些开源的<code>RPC</code> 框架进行远程服务调用，例如<code>Facebook</code>的<code>Thrift</code>，<code>Google</code> 的<code>gRPC</code>等。</p>
+<p>4．利用标准的公有协议进行跨节点服务调用，例如 <code>HTTP+XML</code>、<code>Restful+JSON</code> 或者 <code>WebService</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;跨节点的远程服务调用，除了链路层的物理连接外，还需要对请求和响应消息进行编解码。在请求和应答消息本身以外，也需要携带一些其他控制和管理类指令，例如链路建立的握手请求和响应消息、链路检测的心跳消息等。当这些功能组合到一起之后，就会形成私有协议。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;私有协议的优点：<strong>灵活性高，可以按照业务的使用场景来设计和优化，在某个公司或者组织内部使用时也可以按需定制和演进</strong>，所以大部分<code>RPC</code>框架都支持私有二进制协议，例如阿里的<code>Dubbo</code>、华为的 <code>ServiceComb</code>、<code>Apache</code> 的 <code>Thrift</code> 等。</p>
+<h3 id="1-3-序列化方式"><a href="#1-3-序列化方式" class="headerlink" title="1.3 序列化方式"></a>1.3 序列化方式</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>当进行远程跨进程服务调用时，需要把被传输的数据结构 / 对象序列化为字节数组或者 <code>ByteBuffer</code>。而当远程服务读取到 <code>ByteBuffer</code> 对象或者字节数组时，需要将其反序列化为原始的数据结构 / 对象</strong>。利用序列化框架可以实现上述转换工作。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Java</code> 序列化从<code>JDK 1.1</code> 版本就已经提供，它不需要添加额外的类库，只需实现<code>java.io.Serializable</code>并生成序列 ID 即可，因此，它从诞生之初就得到了广泛的应用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是在远程服务调用（<code>RPC</code>）时，很少直接使用<code>Java</code>序列化进行消息的编解码和传输，这又是什么原因呢？下面通过分析<code>Java</code>序列化的缺点来找出答案:</p>
+<p><strong>缺点 1：无法跨语言</strong>，是 <code>Java</code> 序列化最致命的问题。对于跨进程的服务调用，服务提供者可能会使用 <code>C++</code>或者其他语言开发，当我们需要和异构语言进程交互时，<code>Java</code> 序列化就难以胜任。由于<code>Java</code>序列化技术是<code>Java</code>语言内部的私有协议，其它语言并不支持，对于用户来说它完全是黑盒。对于<code>Java</code>序列化后的字节数组，别的语言无法进行反序列化，这就严重阻碍了它的应用。事实上，目前几乎所有流行的<code>Java RPC</code>通信框架，都没有使用<code>Java</code> 序列化作为编解码框架，原因就在于它无法跨语言，而这些 <code>RPC</code> 框架往往需要支持跨语言调用。</p>
+<p><strong>缺点 2：</strong>相比于业界的一些序列化框架，<code>Java</code>默认的<strong>序列化效能较低，主要体现在：序列化之后的字节数组体积较大，性能较低</strong>。在同等情况下，编码后的字节数组越大，存储的时候就越占空间，存储的硬件成本就越高，并且在网络传输时更占带宽，导致系统的吞吐量降低。<code>Java</code> 序列化后的码流偏大也一直被业界所诟病，导致它的应用范围受到了很大限制。</p>
+<p>当前比较流行的序列化方式可以分为两大类:</p>
+<p><strong>1．文本类序列化方式：</strong>主要包括 <code>JSON</code>和<code>XML</code>，它们的优点是：支持跨语言、可读性好、配套的支持工具比较全。缺点就是：<strong>序列化之后的码流比较大、冗余内容多，性能相对比较差</strong>。</p>
+<p><strong>2．私有的二进制类序列化方式：</strong>比较流行的有 <code>Thrift</code>序列化框架、<code>MessagePack</code> 和谷歌的 <code>Protobuf</code>框架。它的优点是性能高，缺点就是<strong>可读性差，支撑的工具链不健全</strong>。</p>
+<h2 id="2-RPC-协议选型要点"><a href="#2-RPC-协议选型要点" class="headerlink" title="2. RPC 协议选型要点"></a>2. RPC 协议选型要点</h2><h3 id="2-1-协议栈的选择"><a href="#2-1-协议栈的选择" class="headerlink" title="2.1 协议栈的选择"></a>2.1 协议栈的选择</h3><h4 id="2-1-1-公有协议"><a href="#2-1-1-公有协议" class="headerlink" title="2.1.1 公有协议"></a>2.1.1 公有协议</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;尽管公有协议种类繁多例如之前非常流行的 <code>WebService</code>、<code>WADL</code> 等，但目前来看，<strong>如果选择公有协议，<code>HTTP</code> 协议还是首选，具有 <code>Rest</code> 风格的<code>Restful + JSON</code>接口是当前最流行的方式</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>RPC</code>协议如果选择 <code>Restful + JSON</code>，会带来如下几个优点：</p>
+<p><strong>1．践行 API First 理念：</strong>通过使用<code>Swagger YAML</code>定义 <code>API</code>，服务端和客户端都基于 <code>API</code> 定义，通过 <code>Swagger</code>代码生成工具生成不同语言的接口和模型定义类库，客户端不需要从服务端导入接口定义类库，也不需要配置 <code>Maven</code> 依赖，这样就实现了双方依赖的解耦：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/1.webp" alt="img"></p>
+<p><em>Swagger 代码工具生成服务端和客户端代码</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了代码生成，利用 <code>swagger editor</code> 和 <code>swagger ui</code>工具，可以在线定义和维护 <code>API</code>接口的契约，实现接口 <code>API</code>的在线化管理，更好的管控<code>API</code>变更，示例如下：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/2.webp" alt="img"></p>
+<p><em>基于 Swagger UI 在线管理 Restful API</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 <code>RPC</code>接口的测试，由于是 <code>Restful</code> 风格的，利用一些开源的契约测试框架，可以方便的进行契约化测试：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/3.webp" alt="img"></p>
+<p><em>对 Restful 风格的 RPC API 做契约化测试</em></p>
+<p><strong>2．天生语言中立：</strong><code>HTTP</code> 协议和 <code>JSON</code> 序列化天生就是语言中立的，对于 <code>RPC</code> 框架，在架构上能够支持多语言非常重要。不同的业务场景，适合不同的语言，例如后端复杂业务逻辑使用 <code>Java</code>开发效率更高，对于 <code>API</code>网关或者边缘服务，适合 <code>GO</code> 语言。对于一些序列化框架，由于使用了一些特定语言的特性，例如<code>Exception</code>、泛型等，这对于跨语言演进是个灾难，像<code>protostuff</code> 就绑定了<code>Java</code>语言。</p>
+<p><strong>3．内部和外部 API 接口的统一：</strong><code>RPC</code>服务通常只开放给内部的客户端做调用，如果需要开放给外部的端侧、其它渠道调用，往往需要前置一个 <code>API</code>网关或者 <code>Edge Service</code>，用来做安全接入、权限管理、统一流控、灰度发布等。组网示例如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/4.webp" alt="img"></p>
+<p><em>对 RPC 服务对外开放组网图</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果 <code>RPC</code> 调用选择 <code>Restful API</code>，则对外开放时，<code>API</code>网关 <code>Edge Service</code> 只要做安全等相关功能即可，消息可以透传转发给后端 <code>RPC</code> 服务。如果后端<code>RPC</code> 服务选择私有协议，将私有协议直接开放给合作伙伴显然是不合适的，这就需要在 <code>API</code>网关上为后端<code>RPC</code> 服务定义 <code>API</code>接口，同时做消息映射和转换，最终形成对外开放一套 <code>API</code>接口，内部使用又一套<code>API</code>接口，但是功能却相同或者类似，这增加了接口的开发和维护工作量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目前主流的<code>API Gateway</code>都支持直接导入 <code>Swagger</code> 定义的<code>API</code>，自动生成并发布<code>API</code>接口，以<code>AWS</code>的 <code>API Gateway</code>为例，如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/5.webp" alt="img"></p>
+<p><em>AWS 基于 Swagger 接口定义生成 API</em></p>
+<p>当 <code>RPC</code> 服务开放给内部和外部是同一套<code>API</code>接口时，接口的开发和维护工作量都会减少很多。</p>
+<p><strong>4．问题定位更简单：</strong><code>HTTP</code> 协议 +<code>JSON</code>文本序列化方式，更容易调试，抓包的码流解读也更容易，相反如果是二进制私有协议，码流需要人工解读，难度较高。</p>
+<h4 id="2-1-2-私有协议"><a href="#2-1-2-私有协议" class="headerlink" title="2.1.2 私有协议"></a>2.1.2 私有协议</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;绝大多数的私有协议传输层都基于<code>TCP/IP</code>，对于<code>Java</code>语言，可以利用 <code>Netty</code> 的 <code>NIO TCP</code> 协议栈进行私有协议的定制和开发。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;私有协议的格式往往存在较大差异，但是对于大多数 <code>RPC</code> 框架的私有协议，往往会包含如下几个字段：</p>
+<p><strong>1．消息头：</strong>消息头中通常会包含<strong>校验码、消息长度、消息类型、消息 / 会话 ID、需要调用的 RPC 接口名、方法名，以及扩展的消息头</strong>，通常是个类似 <code>Map</code> 的结构，用于隐式传参。</p>
+<p><strong>2．消息体：</strong>对于请求消息，主要就是<strong>请求参数</strong>，对于响应，就是<strong>响应对象以及结果码</strong>。</p>
+<p>下面以基于 <code>Netty</code> 开发的 <code>Netty</code>协议栈为例进行说明，它的协议栈模型如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/6.webp" alt="img"></p>
+<p><em>Netty 协议栈通信交互图</em></p>
+<p><code>Netty</code> 协议栈承载了业务内部各模块之间的消息交互和 <code>RPC</code> 调用，它的主要功能包括：</p>
+<p>1．基于 <code>Netty</code> 的 <code>NIO</code> 通信框架，提供高性能的异步通信能力。</p>
+<p>2．提供消息的编解码框架，可以实现 <code>POJO</code> 的序列化和反序列化。</p>
+<p>3．提供基于 IP 地址的白名单接入认证机制。</p>
+<p>4．链路的有效性校验机制。</p>
+<p>5．链路的断连重连机制。</p>
+<p><code>RPC</code> 协议栈交互的流程说明如下：</p>
+<p>1．<code>Netty</code> 协议栈客户端发送握手请求消息，携带节点 ID 等有效身份认证信息。</p>
+<p>2．<code>Netty</code>协议栈服务端对握手请求消息进行合法性校验，包括节点 ID 有效性校验、节点重复登录校验和 IP 地址合法性校验，校验通过后，返回登录成功的握手应答消息。</p>
+<p>3．链路建立成功之后，客户端发送业务消息。</p>
+<p>4．链路成功之后，服务端发送心跳消息。</p>
+<p>5．链路建立成功之后，客户端发送心跳消息。</p>
+<p>6．链路建立成功之后，服务端发送业务消息。</p>
+<p>7．服务端退出时，服务端关闭连接，客户端感知对方关闭连接后，被动关闭客户端连接。</p>
+<p><code>Netty</code> 协议栈的消息定义如下：</p>
+<p>消息包含消息头和消息体：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">名 称</th>
+<th style="text-align:left">类 型</th>
+<th style="text-align:left">长 度</th>
+<th style="text-align:left">描 述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">header</td>
+<td style="text-align:left">Header</td>
+<td style="text-align:left">变长</td>
+<td style="text-align:left">消息头定义</td>
+</tr>
+<tr>
+<td style="text-align:left">body</td>
+<td style="text-align:left">Object</td>
+<td style="text-align:left">变长</td>
+<td style="text-align:left">对于请求消息，它是方法的参数（作为示例，只支持携带一个参数）；对于响应消息，它是返回值</td>
+</tr>
+</tbody>
+</table>
+<p>其中，消息头定义如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">名 称</th>
+<th style="text-align:left">类 型</th>
+<th style="text-align:left">长 度</th>
+<th style="text-align:left">描 述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">crcCode</td>
+<td style="text-align:left">整型 int</td>
+<td style="text-align:left">32</td>
+<td style="text-align:left">Netty 消息的校验码，它由三部分组成：1）0xABEF：固定值，表明该消息是 Netty 协议消息，2 个字节；2）主版本号：1～255，1 个字节；3）次版本号：1～255，1 个字节。crcCode = 0xABEF + 主版本号 + 次版本号</td>
+</tr>
+</tbody>
+</table>
+<p>续表</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">名 称</th>
+<th style="text-align:left">类 型</th>
+<th style="text-align:left">长 度</th>
+<th style="text-align:left">描 述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">length</td>
+<td style="text-align:left">整型 int</td>
+<td style="text-align:left">32</td>
+<td style="text-align:left">消息长度，整个消息，包括消息头和消息体</td>
+</tr>
+<tr>
+<td style="text-align:left">sessionID</td>
+<td style="text-align:left">长整型 long</td>
+<td style="text-align:left">64</td>
+<td style="text-align:left">集群节点内全局唯一，由会话 ID 生成器生成</td>
+</tr>
+<tr>
+<td style="text-align:left">type</td>
+<td style="text-align:left">Byte</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">0：业务请求消息；1：业务响应消息；2：业务 ONE WAY 消息（既是请求又是响应消息）；3：握手请求消息；4：握手应答消息；5：心跳请求消息；6：心跳应答消息。</td>
+</tr>
+<tr>
+<td style="text-align:left">priority</td>
+<td style="text-align:left">Byte</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">消息优先级：0～255</td>
+</tr>
+<tr>
+<td style="text-align:left">interfaceName</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">变长</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">methodName</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">变长</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">attachment</td>
+<td style="text-align:left">Map&lt;String, Object&gt;</td>
+<td style="text-align:left">变长</td>
+<td style="text-align:left">可选字段，用于扩展消息头</td>
+</tr>
+</tbody>
+</table>
+<p>对于私有协议栈的构建，需要考虑到如下几点，整体成本较高：</p>
+<p>1．支持的数据结构类型，以及采用的序列化方式。</p>
+<p>2．握手和接入认证。</p>
+<p>3．心跳检测机制。</p>
+<p>4．断连和重连机制。</p>
+<p>5．并发连接数的控制。</p>
+<p>6．异常、畸形码流的检测和保护。</p>
+<p>7．流量限制和整形。</p>
+<p>8．连接池。</p>
+<p>9．网络闪断、宕机保护、消息缓存和重发机制等。</p>
+<p>尽管私有协议栈构建成本较高，但是它的优势也很明显：</p>
+<p>1．灵活性、可定制性更好，可以针对业务特定场景做优化。</p>
+<p>2．可以实现更高的性能。</p>
+<h3 id="2-2-序列化框架"><a href="#2-2-序列化框架" class="headerlink" title="2.2 序列化框架"></a>2.2 序列化框架</h3><h4 id="2-2-1-选型的原则"><a href="#2-2-1-选型的原则" class="headerlink" title="2.2.1 选型的原则"></a>2.2.1 选型的原则</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果对性能要求不高，则建议选用 <code>JSON</code>，否则可以选择一些业界主流的序列化框架，需要注意的是，对于序列化框架的选择，<strong>一定要考虑跨语言性</strong>，如果绑定特定语言，会对未来 <code>RPC</code> 框架支持多语言带来极大的困难。</p>
+<h4 id="2-2-2-Google-的-Protobuf"><a href="#2-2-2-Google-的-Protobuf" class="headerlink" title="2.2.2 Google 的 Protobuf"></a>2.2.2 Google 的 Protobuf</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Protobuf</code> 全称<code>Google Protocol Buffers</code>，它由谷歌开源而来，在谷歌内部久经考验。它将数据结构以<code>.proto</code>文件进行描述，通过代码生成工具可以生成对应数据结构的<code>POJO</code> 对象和 <code>Protobuf</code> 相关的方法和属性。</p>
+<p>它的特点如下:</p>
+<p>1．结构化数据存储格式（<code>XML</code>，<code>JSON</code> 等）。</p>
+<p>2．高效的编解码性能。</p>
+<p>3．语言无关、平台无关、扩展性好。</p>
+<p>4．官方支持<code>Java</code>、<code>C++</code>和 <code>Python</code> 三种语言（社区会支持更多中语言）。</p>
+<p><code>Protobuf</code>的优点主要有两个：</p>
+<p><strong>1．IDL 契约：</strong>利用数据描述文件对数据结构进行说明，可以实现语言和平台无关，通过标识字段的顺序，可以实现协议的前向兼容，同时提供代码生成工具，可以生成各种语言的服务端和客户端代码。</p>
+<p><strong>2．性能：</strong>相比于其它序列化框架，它的性能更优，数据对比如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/7.webp" alt="img"></p>
+<p><em>Protobuf 编解码和其他几种序列化框架的响应时间对比</em></p>
+<h4 id="2-2-3-Apache-Thrift"><a href="#2-2-3-Apache-Thrift" class="headerlink" title="2.2.3 Apache Thrift"></a>2.2.3 Apache Thrift</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Thrift</code> 源于<code>Facebook</code>，在 2007 年<code>Facebook</code> 将<code>Thrift</code>作为一个开源项目提交给 Apache 基金会。对于当时的<code>Facebook</code> 来说，创造 <code>Thrift</code>是为了解决<code>Facebook</code> 各系统间大数据量的传输通信以及系统之间语言环境不同需要跨平台的特性，因此 <code>Thrift</code>可以支持多种程序语言，如 <code>C++、Cocoa、Erlang、Haskell、Java、Ocami、Perl、PHP、Python、Ruby</code>和<code>Smalltalk</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在多种不同的语言之间通信，<code>Thrift</code> 可以作为高性能的通信中间件使用，它支持数据（对象）序列化和多种类型的 <code>RPC</code> 服务。<code>Thrift</code> 适用于静态的数据交换，需要先确定好它的数据结构，当数据结构发生变化时，必须重新编辑<code>IDL</code>文件，生成代码和编译，这一点跟其他 <code>IDL</code>工具相比可以视为是<code>Thrift</code>的弱项。<code>Thrift</code> 适用于搭建大型数据交换及存储的通用工具，对于大型系统中的内部数据传输，相对于<code>JSON</code>和<code>XML</code> 在性能和传输大小上都有明显的优势。</p>
+<p><code>Thrift</code> 主要由 5 部分组成:</p>
+<ol>
+<li><strong>语言系统以及 IDL 编译器：</strong>负责由用户给定的 <code>IDL</code>文件生成相应语言的接口代码；</li>
+<li><strong>TProtocol：</strong><code>RPC</code> 的协议层，可以选择多种不同的对象序列化方式，如 <code>JSON</code> 和 <code>Binary</code>；</li>
+<li><strong>TTransport：</strong><code>RPC</code> 的传输层，同样可以选择不同的传输层实现，如 <code>socket、NIO、MemoryBuffer</code> 等；</li>
+<li><strong>TProcessor：</strong>作为协议层和用户提供的服务实现之间的纽带，负责调用服务实现的接口；</li>
+<li><strong>TServer：</strong>聚合 <code>TProtocol</code>、<code>TTransport</code> 和 <code>TProcessor</code>等对象。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;需要重点关注的是编解码框架，与之对应的就是 <code>TProtocol</code>。由于 <code>Thrift</code>的 <code>RPC</code>服务调用和编解码框架绑定在一起，所以，通常我们使用<code>Thrift</code>的时候会采取 <code>RPC</code> 框架的方式。但是，它的 <code>TProtocol</code>编解码框架还是可以以类库的方式独立使用的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与 <code>Protobuf</code>比较类似的是，<code>Thrift</code> 通过<code>IDL</code>描述接口和数据结构定义，它支持 8 种 <code>Java</code> 基本类型、<code>Map</code>、<code>Set</code>和 <code>List</code>，支持可选和必选定义，功能非常强大。因为可以定义数据结构中字段的顺序，所以它也可以支持协议的前向兼容。</p>
+<p><code>Thrift</code> 支持三种比较典型的编解码方式。</p>
+<ul>
+<li>通用的二进制编解码</li>
+<li>压缩二进制编解码</li>
+<li>优化的可选字段压缩编解码</li>
+</ul>
+<p>由于支持二进制压缩编解码，<code>Thrift</code>的编解码性能表现也相当优异，远远超过<code>Java</code> 序列化和 <code>RMI</code> 等。</p>
+<h4 id="2-2-4-MessagePack-序列化框架"><a href="#2-2-4-MessagePack-序列化框架" class="headerlink" title="2.2.4 MessagePack 序列化框架"></a>2.2.4 MessagePack 序列化框架</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>MessagePack</code> 是一个高效的二进制序列化框架，它像<code>JSON</code>一样支持不同语言间的数据交换，但是它的性能更快，序列化之后的码流也更小。<code>MessagePack</code>提供了对多语言的支持，官方支持的语言如下：<code>Java、Python、Ruby、Haskell、C#、OCaml、Lua、Go、C、C++</code> 等。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>MessagePack</code> 的 <code>Java API</code>非常简单，如果使用<code>MessagePack</code>进行开发，只需要导入<code>MessagePack maven</code>依赖：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;groupId&gt;org.msgpack&lt;/groupId&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;artifactId&gt;msgpack&lt;/artifactId&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;version&gt;$&#123;msgpack.version&#125;&lt;/version&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+<p>它的<code>API</code>使用示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; src = new ArrayList&lt;String&gt;();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">src.add(&quot;msgpack&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">src.add(&quot;kumofs&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">src.add(&quot;viver&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">MessagePack msgpack = new MessagePack();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">byte[] raw = msgpack.write(src);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">List&lt;String&gt; dst1 =</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">msgpack.read(raw, Templates.tList(Templates.TString));</span><br></pre></td></tr></table></figure>
+<h4 id="2-2-5-选型建议"><a href="#2-2-5-选型建议" class="headerlink" title="2.2.5. 选型建议"></a>2.2.5. 选型建议</h4><p>上面列举的几种序列化框架各有优缺点，如果选用，则建议从如下几个维度做对比：</p>
+<p>1．支持数据类型的丰富度。</p>
+<p>2．性能对比测试，主要包括 序列化和反序列化的耗时、CPU 和内存占用，以及序列化之后的码流大小。</p>
+<p>3．尽管都支持跨语言，但是由于支持的语言丰富度不同，业务需要根据自己 <code>RPC</code> 框架未来可能支持的语言做选择。</p>
+<h2 id="3-RPC-协议栈实践"><a href="#3-RPC-协议栈实践" class="headerlink" title="3. RPC 协议栈实践"></a>3. RPC 协议栈实践</h2><h3 id="3-1-Restful-API-的优化"><a href="#3-1-Restful-API-的优化" class="headerlink" title="3.1 Restful API 的优化"></a>3.1 Restful API 的优化</h3><p>使用 <code>Restful API</code>可以带来很多收益：</p>
+<ul>
+<li><code>API</code> 接口更加规范和标准，可以通过 <code>Swagger API</code> 规范来描述服务接口，并生成客户端和服务端代码。</li>
+<li><code>Restful API</code>可读性更好，也更容易维护。</li>
+<li>服务提供者和消费者基于<code>API</code>契约，双方可以解耦，不需要在客户端引入 <code>SDK</code>和类库的直接依赖，未来的独立升级也更方便。</li>
+<li>内外可以使用同一套<code>API</code>，非常容易开放给外部或者合作伙伴使用，而不是对内和对外维护两套不同协议的 <code>API</code>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常，对外开放的<code>API</code>使用 <code>Restful</code> 是通用的做法，但是在系统内部，例如商品中心和订单中心，<code>RPC</code> 调用使用 <code>Restful</code> 风格的 <code>API</code>作为微服务的<code>API</code>，却可能存在性能风险。</p>
+<h4 id="3-1-1-HTTP1-X-的性能问题"><a href="#3-1-1-HTTP1-X-的性能问题" class="headerlink" title="3.1.1 HTTP1.X 的性能问题"></a>3.1.1 HTTP1.X 的性能问题</h4><p>如果采用的 <code>Restful API</code> 底层使用的 <code>HTTP</code>协议栈是同步阻塞<code>I/O</code>，则服务端的处理性能将大打折扣：</p>
+<p><strong>1．性能问题：</strong>一连接一线程模型导致服务端的并发接入数和系统吞吐量受到极大限制。</p>
+<p><strong>2．可靠性问题：</strong>由于 <code>I/O</code> 操作采用同步阻塞模式，当网络拥塞或者通信对端处理缓慢会导致<code>I/O</code> 线程被挂住，阻塞时间无法预测。</p>
+<p><strong>3．可维护性问题：</strong><code>I/O</code>线程数无法有效控制、资源无法有效共享（多线程并发问题），系统可维护性差。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果 <code>HTTP</code> 协议栈采用了异步非阻塞 <code>I/O</code>模型（例如 <code>Netty</code>、<code>Servlet3.X</code>版本），则可以解决同步阻塞 <code>I/O</code>的问题，带来如下收益：</p>
+<p>1．同一个<code>I/O</code>线程可以并行处理多个客户端链接，有效降低了<code>I/O</code>线程数量，提升了资源调度利用率</p>
+<p>2．读写操作都是非阻塞的，不会因为对端处理慢、网络时延大等导致的<code>I/O</code> 线程被阻塞</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相比于 <code>TCP</code> 类协议，例如<code>Thrift</code>, 采用了非阻塞 <code>I/O</code>的 <code>HTTP/1.X</code>协议仍然存在性能问题，原因如下所示：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果 <code>HTTP</code> 协议栈采用了异步非阻塞 <code>I/O</code>模型（例如<code>Netty</code>、<code>Servlet3.X</code> 版本），则可以解决同步阻塞<code>I/O</code>的问题，带来如下收益：</p>
+<ul>
+<li><p>同一个<code>I/O</code>线程可以并行处理多个客户端链接，有效降低了 <code>I/O</code>线程数量，提升了资源调度利用率。</p>
+</li>
+<li><p>读写操作都是非阻塞的，不会因为对端处理慢、网络时延大等导致的<code>I/O</code> 线程被阻塞。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相比于 <code>TCP</code> 类协议，例如 <code>Thrift</code>, 采用了非阻塞 <code>I/O</code> 的 <code>HTTP/1.X</code> 协议仍然存在性能问题，原因如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/8.webp" alt="img"></p>
+<p><em>HTTP/1.X 请求 - 响应模式</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由于 <code>HTTP</code> 协议是无状态的，客户端发送请求之后，必须等待接收到服务端响应之后，才能继续发送请求（非 <code>websocket</code>、<code>pipeline</code> 等模式）。<strong>在某一个时刻，链路上只存在单向的消息流，实际上把 <code>TCP</code>的双工变成了单工模式</strong>。<strong>如果服务端响应耗时较大，则单个<code>HTTP</code>链路的通信性能严重下降，只能通过不断的新建连接来提升 <code>I/O</code>性能</strong>。但这也会带来很多副作用，例如<strong>句柄数的增加、<code>I/O</code> 线程的负载加重</strong>等。显而易见，修 8 条单向车道的成本远远高于修一条双向 8 车道的成本。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了无状态导致的链路传输性能差之外，<code>HTTP/1.X</code> 还存在如下几个影响性能的问题：</p>
+<ul>
+<li><code>HTTP</code>客户端超时之后，由于协议是无状态的，客户端无法对请求和响应进行关联，只能关闭链路重连，<strong>反复的建链会增加成本开销和时延</strong>（如果客户端选择不关闭链路，继续发送新的请求，服务端可能会把上一条客户端认为超时的响应返回回去，也可能按照 HTTP 协议规范直接关闭链路，无路哪种处理，都会导致链路被关闭）。如果采用传统的 <code>RPC</code> 私有协议，请求和响应可以通过消息 ID 或者会话 ID 做关联，某条消息的超时并不需要关闭链路，只需要丢弃该消息重发即可。</li>
+<li><strong><code>HTTP</code> 本身包含文本类型的协议消息头，占用一些字节</strong>。另外，采用<code>JSON</code>类文本的序列化方式，报文相比于传统的私有 <code>RPC</code> 协议也大很多，降低了传输性能。</li>
+<li><strong>服务端无法主动推送响应</strong>。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果业务对性能和资源成本要求非常苛刻，在选择使用基于 <code>HTTP/1.X</code> 的 <code>Restful API</code>代替私有 <code>RPC API</code>（通常是基于 <code>TCP</code>的二进制私有协议）时就要三思；反之，如果业务对性能要求较低，或者在硬件成本和开放性、规范性上更看重后者，则使用 <code>Restful API</code>也无妨。</p>
+<h4 id="3-1-2-优化方案"><a href="#3-1-2-优化方案" class="headerlink" title="3.1.2 优化方案"></a>3.1.2 优化方案</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果选择 <code>Restful API</code>作为内部<code>RPC</code> 或者微服务的接口协议，则建议使用<code>HTTP/2.0</code>协议来承载，它的优点如下：支持双向流、消息头压缩、单 <code>TCP</code>的多路复用、服务端推送等特性, 某个 <code>RPC</code>调用超时也不需要关闭 <code>HTTP</code>连接，只需要关闭对应的<code>Stream</code> 流即可，这样可以避免大量超时时频繁的 <code>HTTP</code>连接重建，有效解决传统 <code>HTTP/1.X</code>协议遇到的问题，效果与 <code>RPC</code>的 <code>TCP</code> 私有协议接近，采用<code>HTTP/2</code> 的 <code>gRPC Steaming</code> 通信模式示例如下：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/9.webp" alt="img"></p>
+<p><em>gRPC 基于 HTTP/2 的服务端 streaming 调用</em></p>
+<h3 id="3-2-Apache-ServiceComb-的多协议实践"><a href="#3-2-Apache-ServiceComb-的多协议实践" class="headerlink" title="3.2 Apache ServiceComb 的多协议实践"></a>3.2 Apache ServiceComb 的多协议实践</h3><h4 id="3-2-1-标准化的服务契约"><a href="#3-2-1-标准化的服务契约" class="headerlink" title="3.2.1 标准化的服务契约"></a>3.2.1 标准化的服务契约</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>ServiceComb</code>使用 <code>yaml</code>文件格式定义服务契约，推荐使用 <code>Swagger Editor</code>工具来编写契约，可检查语法格式及自动生成 <code>API</code> 文档。服务契约与具体协议无关系，无论使用 <code>RPC</code> 二进制协议通信还是使用标准的 <code>Restful + JSON</code>，都可以使用 <code>Swagger API</code> 来描述和定义微服务接口。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接口定义完成之后，将契约文件放到 <code>&quot;resources/microservices&quot;</code>或者<code>&quot;resources/application&quot;</code> 目录下即可，目录结构如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/10.webp" alt="img"></p>
+<p><em>微服务接口契约定义</em></p>
+<h4 id="3-2-2-通信协议"><a href="#3-2-2-通信协议" class="headerlink" title="3.2.2 通信协议"></a>3.2.2 通信协议</h4><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>ServiceComb</code> 实现了两种网络通道，包括 <code>Rest</code> 和 <code>Highway</code>，均支持 <code>TLS</code>加密传输。其中，<code>REST</code> 网络通道将服务以标准 <code>Restful</code> 形式发布，调用端兼容直接使用 <code>Http client</code> 使用标准 <code>Restful</code>形式进行调用。</p>
+<p><code>Rest</code>协议栈支持两种实现方式：</p>
+<p>1．<code>REST over Servlet</code> 对应使用 <code>web</code> 容器部署运行，需要新建一个 <code>servlet</code>工程将微服务包装起来，打成 <code>war</code> 包，加载到 <code>web</code> 容器中启动运行。</p>
+<p>2．<code>REST over Vertx</code> 通信通道对应使用 <code>standalone</code>部署运行模式，可直接通过 <code>main</code> 函数拉起。使用 <code>REST over Vertx</code> 网络通道需要在 <code>maven pom</code> 文件中添加如下依赖：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/11.webp" alt="img"></p>
+<p><em>REST over Vertx 通信方式</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了对 <code>Rest</code>的支持，在一些需要高性能、低时延的场景，使用私有二进制性能会更高一些。<code>Highway</code> 是 <code>ServiceComb</code>的高性能私有协议，用户可在有特殊性能需求的场景下选用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用 <code>Highway</code>网络通道需要在 <code>maven pom</code> 文件中添加如下依赖：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/12.webp" alt="img"></p>
+<p><em>Highway 通信方式</em></p>
+<p><code>ServiceComb</code> 的通信协议有如下几个特点：</p>
+<p>1．协议与服务接口契约定义没关系，使用 <code>Swagger</code> 定义的 <code>API</code>接口，仍然可以使用二进制 <code>Highway</code>私有协议进行 <code>RPC</code> 调用。</p>
+<p>2．协议与业务代码无耦合关系，一套业务接口，可以选择发布成哪种协议。支持同一个服务接口发布成多种协议，客户端可以根据自己的需要选择哪种协议方式调用。</p>
+<h4 id="3-2-3-对-HTTP-2-协议的支持"><a href="#3-2-3-对-HTTP-2-协议的支持" class="headerlink" title="3.2.3 对 HTTP/2 协议的支持"></a>3.2.3 对 HTTP/2 协议的支持</h4><p><code>ServiceComb</code> 提供了对 <code>HTTP/2</code>的支持，用于解决传统 <code>HTTP/1.1</code> 的性能问题，它支持 2 种 <code>HTTP/2</code>通信方式：</p>
+<p><strong>1．h2(Http2 + TLS)：</strong>服务端在配置服务监听地址时，可以通过在地址后面追加<code>?sslEnabled=true</code> 开启 <code>TLS</code>通信，示例如下：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/13.webp" alt="img"></p>
+<p><em>h2 通信方式配置</em></p>
+<p><strong>2．h2c(Http2 without TLS)：</strong>服务端在配置服务监听地址时，可以通过在地址后面追加<code>?protocol=http2</code> 启用 h2c 通信：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/14.webp" alt="img"></p>
+<p><em>h2c 通信方式配置</em></p>
+<h4 id="3-2-4-性能对比数据"><a href="#3-2-4-性能对比数据" class="headerlink" title="3.2.4. 性能对比数据"></a>3.2.4. 性能对比数据</h4><p><code>Restful</code>和 <code>Highway</code>（私有二进制协议）两种协议在不同模式的性能对比数据如下所示：</p>
+<p><img src="//blog.com/2019/07/27/RPC协议之争和选型要点/15.webp" alt="img"></p>
+<p><em>性能对比数据</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过上述性能测试数据对比可以发现，私有的二进制协议 <code>Highway（TCP + Protobuf）</code>比 <code>Restful+JSON</code> 协议整体性能高 2 倍 + 左右。如果 <code>Restful+JSON</code>采用 <code>HTTP/1.1</code> 承载，无法实现链路的多路复用，一旦 <code>RPC</code>调用超时就会频繁重建链路，可靠性相比于<code>TCP</code>私有协议会差很多。</p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h2><h3 id="4-1-协议与接口的解耦"><a href="#4-1-协议与接口的解耦" class="headerlink" title="4.1. 协议与接口的解耦"></a>4.1. 协议与接口的解耦</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;无论是选择 <code>Restful</code>（<code>HTTP</code> 协议）还是私有二进制协议，总是存在各自的优缺点，对于比较复杂的业务场景，可能多种协议都需要支持，这就要求 <code>RPC</code> 框架必须实现接口定义与协议本身的解耦，即业务可以平滑的切换协议，上层应用不需要感知。</p>
+<h3 id="4-2-RPC-协议的定制和扩展"><a href="#4-2-RPC-协议的定制和扩展" class="headerlink" title="4.2 RPC 协议的定制和扩展"></a>4.2 RPC 协议的定制和扩展</h3><p>一个比较好的协议往往具备较强的扩展性，协议的扩展主要体现在两点：</p>
+<p>1．协议栈本身的扩展，例如基于协议框架扩展出另一种协议。</p>
+<p>2．协议栈采用的序列化框架的扩展。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于 <code>RPC</code>框架而言，更有价值的是序列化框架的扩展，可以在协议头中增加一个标识协议类型的字段，RPC 框架根据协议类型来调用对应的序列化框架，实现业务自定义的序列化和反序列化。</p>
+<h3 id="4-3-一些技术难点"><a href="#4-3-一些技术难点" class="headerlink" title="4.3 一些技术难点"></a>4.3 一些技术难点</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;不同的序列化框架，对数据类型的支持不同，对字段是否支持乱序也存在差异，所以，从某种程度看，协议和序列化方式完全与业务接口解耦也是很困难的，会有很多约束和限制，所以需要辨证的看待接口和协议的解耦，尽量做到对业务的影响最小、以及约束和限制的规范化。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/微服务/" rel="tag"># 微服务</a>
+          
+            <a href="/tags/RPC/" rel="tag"># RPC</a>
+          
+            <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/27/深入剖析通信层和 RPC 调用的异步化/" rel="next" title="深入剖析通信层和 RPC 调用的异步化">
+                <i class="fa fa-chevron-left"></i> 深入剖析通信层和 RPC 调用的异步化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/27/RPC 框架的可靠性设计/" rel="prev" title="RPC 框架的可靠性设计">
+                RPC 框架的可靠性设计 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RPC协议之争和选型要点"><span class="nav-number">1.</span> <span class="nav-text">RPC协议之争和选型要点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-协议之争背景"><span class="nav-number">1.1.</span> <span class="nav-text">1. 协议之争背景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-RPC-调用的协议选择"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 RPC 调用的协议选择</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-私有协议流行的原因"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 私有协议流行的原因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-序列化方式"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.3 序列化方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-RPC-协议选型要点"><span class="nav-number">1.2.</span> <span class="nav-text">2. RPC 协议选型要点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-协议栈的选择"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 协议栈的选择</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-公有协议"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">2.1.1 公有协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-私有协议"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">2.1.2 私有协议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-序列化框架"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 序列化框架</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-选型的原则"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">2.2.1 选型的原则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-2-Google-的-Protobuf"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">2.2.2 Google 的 Protobuf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-3-Apache-Thrift"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">2.2.3 Apache Thrift</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-4-MessagePack-序列化框架"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">2.2.4 MessagePack 序列化框架</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-5-选型建议"><span class="nav-number">1.2.2.5.</span> <span class="nav-text">2.2.5. 选型建议</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-RPC-协议栈实践"><span class="nav-number">1.3.</span> <span class="nav-text">3. RPC 协议栈实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Restful-API-的优化"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 Restful API 的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-1-HTTP1-X-的性能问题"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">3.1.1 HTTP1.X 的性能问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-2-优化方案"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">3.1.2 优化方案</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Apache-ServiceComb-的多协议实践"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 Apache ServiceComb 的多协议实践</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-标准化的服务契约"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">3.2.1 标准化的服务契约</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-通信协议"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">3.2.2 通信协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-对-HTTP-2-协议的支持"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">3.2.3 对 HTTP/2 协议的支持</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-4-性能对比数据"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">3.2.4. 性能对比数据</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-总结"><span class="nav-number">1.4.</span> <span class="nav-text">4. 总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-协议与接口的解耦"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1. 协议与接口的解耦</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-RPC-协议的定制和扩展"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 RPC 协议的定制和扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-一些技术难点"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 一些技术难点</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

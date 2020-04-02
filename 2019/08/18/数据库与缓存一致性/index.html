@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,数据库,数据一致性问题,数据库与缓存,缓存,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="数据库与缓存一致性 文章结构本文由以下三个部分组成： 1、讲解缓存更新策略2、对每种策略进行缺点分析3、针对缺点给出改进方案 正文​    先做一个说明，从理论上来说，给缓存设置过期时间，是保证最终一致性的解决方案。这种方案下，我们可以对存入缓存的数据设置过期时间，所有的写操作以数据库为准，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自">
+<meta name="keywords" content="架构,数据库,数据一致性问题,数据库与缓存,缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库与缓存一致性">
+<meta property="og:url" content="http://blog.com/2019/08/18/数据库与缓存一致性/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="数据库与缓存一致性 文章结构本文由以下三个部分组成： 1、讲解缓存更新策略2、对每种策略进行缺点分析3、针对缺点给出改进方案 正文​    先做一个说明，从理论上来说，给缓存设置过期时间，是保证最终一致性的解决方案。这种方案下，我们可以对存入缓存的数据设置过期时间，所有的写操作以数据库为准，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/08/18/数据库与缓存一致性/640.webp">
+<meta property="og:image" content="http://blog.com/2019/08/18/数据库与缓存一致性/641.webp">
+<meta property="og:image" content="http://blog.com/2019/08/18/数据库与缓存一致性/643.webp">
+<meta property="og:image" content="http://blog.com/2019/08/18/数据库与缓存一致性/644.webp">
+<meta property="og:updated_time" content="2019-08-18T13:13:47.557Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库与缓存一致性">
+<meta name="twitter:description" content="数据库与缓存一致性 文章结构本文由以下三个部分组成： 1、讲解缓存更新策略2、对每种策略进行缺点分析3、针对缺点给出改进方案 正文​    先做一个说明，从理论上来说，给缓存设置过期时间，是保证最终一致性的解决方案。这种方案下，我们可以对存入缓存的数据设置过期时间，所有的写操作以数据库为准，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自">
+<meta name="twitter:image" content="http://blog.com/2019/08/18/数据库与缓存一致性/640.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/08/18/数据库与缓存一致性/">
+
+
+
+
+
+  <title>数据库与缓存一致性 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/08/18/数据库与缓存一致性/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据库与缓存一致性</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-18T12:12:57+08:00">
+                2019-08-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/" itemprop="url" rel="index">
+                    <span itemprop="name">数据一致性问题</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库与缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/缓存/" itemprop="url" rel="index">
+                    <span itemprop="name">缓存</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/数据一致性问题/数据库与缓存/缓存/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="数据库与缓存一致性"><a href="#数据库与缓存一致性" class="headerlink" title="数据库与缓存一致性"></a>数据库与缓存一致性</h1><p><img src="//blog.com/2019/08/18/数据库与缓存一致性/640.webp" alt="img"></p>
+<h2 id="文章结构"><a href="#文章结构" class="headerlink" title="文章结构"></a>文章结构</h2><p>本文由以下三个部分组成：</p>
+<p>1、讲解缓存更新策略<br>2、对每种策略进行缺点分析<br>3、针对缺点给出改进方案</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>​    先做一个说明，<strong>从理论上来说，给缓存设置过期时间，是保证最终一致性的解决方案</strong>。这种方案下，我们可以对存入缓存的数据设置过期时间，所有的写操作以数据库为准，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自然会从数据库中读取新值然后回填缓存。因此，接下来讨论的思路不依赖于给缓存设置过期时间这个方案。</p>
+<p>在这里，我们讨论<strong>三种</strong>更新策略：</p>
+<ol>
+<li>先更新数据库，再更新缓存</li>
+<li>先删除缓存，再更新数据库</li>
+<li>先更新数据库，再删除缓存</li>
+</ol>
+<p>应该没人问我，为什么没有先更新缓存，再更新数据库这种策略。</p>
+<h3 id="1-先更新数据库，再更新缓存"><a href="#1-先更新数据库，再更新缓存" class="headerlink" title="1. 先更新数据库，再更新缓存"></a><strong>1. 先更新数据库，再更新缓存</strong></h3><p>这套方案，大家是普遍反对的。为什么呢？有如下两点原因。</p>
+<p><strong>原因一（线程安全角度）</strong></p>
+<p>同时有请求A和请求B进行更新操作，那么会出现</p>
+<p>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存</p>
+<p>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p>
+<p><strong>网络延迟 =》脏数据</strong></p>
+<p><strong>原因二（业务场景角度）</strong></p>
+<p>有如下两点：</p>
+<p>（1）如果你是一个写数据库场景比较多，而读数据场景比较少的业务需求，采用这种方案就会导致，数据压根还没读到，<strong>缓存就被频繁的更新，浪费性能</strong>。</p>
+<p>（2）如果你写入数据库的值，并不是直接写入缓存的，而是要经过<strong>一系列复杂的计算</strong>再写入缓存。那么，每次写入数据库后，都再次计算写入缓存的值，无疑是<strong>浪费性能</strong>的。显然，删除缓存更为适合。</p>
+<p>接下来讨论的就是争议最大的，先删缓存，再更新数据库。还是先更新数据库，再删缓存的问题。</p>
+<h3 id="2-先删缓存，再更新数据库"><a href="#2-先删缓存，再更新数据库" class="headerlink" title="2. 先删缓存，再更新数据库"></a><strong>2. 先删缓存，再更新数据库</strong></h3><p>该方案会导致不一致的原因是。同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形：</p>
+<p>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库</p>
+<p>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p>
+<p>那么，<strong>如何解决呢？采用延时双删策略</strong>。</p>
+<p>伪代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(String key,Object data)</span></span>&#123;</span><br><span class="line">        redis.delKey(key);</span><br><span class="line">        db.updateData(data);</span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">        redis.delKey(key);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>转化为中文描述就是：</p>
+<p>（1）先淘汰缓存<br>（2）再写数据库（这两步和原来一样）<br>（3）休眠1秒，再次淘汰缓存</p>
+<p>这么做，可以将1秒内所造成的缓存脏数据，再次删除。</p>
+<p><strong>那么，这个1秒怎么确定的，具体该休眠多久呢？</strong></p>
+<p>针对上面的情形，读者应该<strong>自行评估自己的项目的读数据业务逻辑的耗时。然后写数据的休眠时间则在读数据业务逻辑的耗时基础上，加几百ms即可。这么做的目的，就是确保读请求结束，写请求可以删除读请求造成的缓存脏数据</strong>。</p>
+<p><strong>如果你用了mysql的读写分离架构怎么办？</strong></p>
+<p>ok，在这种情况下，造成数据不一致的原因如下，还是两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。</p>
+<p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还<strong>没有完成主从同步，因此查询到的是旧值</strong><br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p>
+<p>上述情形，就是数据不一致的原因。还是使用双删延时策略。只是，<strong>睡眠时间修改为在主从同步的延时时间基础上，加几百ms</strong>。</p>
+<p><strong>采用这种同步淘汰策略，吞吐量降低怎么办？</strong></p>
+<p>ok，那就将第二次删除作为异步的。自己起一个线程，异步删除。这样，写的请求就不用沉睡一段时间后了，再返回。这么做，加大吞吐量。</p>
+<p><strong>第二次删除,如果删除失败怎么办？</strong></p>
+<p>这是个非常好的问题，因为第二次删除失败，就会出现如下情形。还是有两个请求，一个请求A进行更新操作，另一个请求B进行查询操作，为了方便，假设是单库：</p>
+<p>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>（6）请求A试图去删除请求B写入对缓存值，结果失败了。</p>
+<p>ok，这也就是说。如果第二次删除缓存失败，会再次出现缓存和数据库不一致的问题。</p>
+<p><strong>如何解决呢？</strong></p>
+<p>具体解决方案，且看博主对第(3)种更新策略的解析。</p>
+<h3 id="3-先更新数据库，再删缓存"><a href="#3-先更新数据库，再删缓存" class="headerlink" title="3. 先更新数据库，再删缓存"></a><strong>3. 先更新数据库，再删缓存</strong></h3><p>首先，先说一下。老外提出了一个缓存更新套路，名为《Cache-Aside pattern》（<a href="https://docs.microsoft.com/en-us/azure/architecture/patterns/cache-aside）。其中就指出：" target="_blank" rel="noopener">https://docs.microsoft.com/en-us/azure/architecture/patterns/cache-aside）。其中就指出：</a></p>
+<ul>
+<li><strong>失效：</strong>应用程序先从cache取数据，没有得到，则从数据库中取数据，成功后，放到缓存中。</li>
+<li><strong>命中：</strong>应用程序从cache中取数据，取到后返回。</li>
+<li><strong>更新：</strong>先把数据存到数据库中，成功后，再让缓存失效。</li>
+</ul>
+<p>另外，知名社交网站facebook也在论文《Scaling Memcache at Facebook》（<a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf）中提出，他们用的也是先更新数据库，再删缓存的策略。" target="_blank" rel="noopener">https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf）中提出，他们用的也是先更新数据库，再删缓存的策略。</a></p>
+<p><strong>这种情况不存在并发问题么？</strong></p>
+<p>不是的。假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生：</p>
+<p>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存</p>
+<p>ok，如果发生上述情况，确实是会发生脏数据。</p>
+<p><strong>然而，发生这种情况的概率又有多少呢？</strong></p>
+<p>发生上述情况有一个先天性条件，就是步骤（3）的写数据库操作比步骤（2）的读数据库操作耗时更短，才有可能使得步骤（4）先于步骤（5）。可是，大家想想，数据库的读操作的速度远快于写操作的（不然做读写分离干嘛，做读写分离的意义就是因为读操作比较快，耗资源少），因此步骤（3）耗时比步骤（2）更短，这一情形很难出现。</p>
+<p>假设，有人非要抬杠，有强迫症，一定要解决怎么办？</p>
+<p><strong>如何解决上述并发问题？</strong></p>
+<p>首先，给缓存设有效时间是一种方案。其次，采用策略（2）里给出的异步延时删除策略，保证读请求完成以后，再进行删除操作。</p>
+<p><strong>还有其他造成不一致的原因么？</strong></p>
+<p>有的，这也是缓存更新策略（2）和缓存更新策略（3）都存在的一个问题，如果删缓存失败了怎么办，那不是会有不一致的情况出现么。比如一个写数据请求，然后写入数据库了，删缓存失败了，这会就出现不一致的情况了。这也是缓存更新策略（2）里留下的最后一个疑问。</p>
+<h3 id="4-重试机制"><a href="#4-重试机制" class="headerlink" title="4. 重试机制"></a>4. 重试机制</h3><h5 id="消息队列（异步检查）"><a href="#消息队列（异步检查）" class="headerlink" title="消息队列（异步检查）"></a>消息队列（异步检查）</h5><p><img src="//blog.com/2019/08/18/数据库与缓存一致性/641.webp" alt="img"><br>流程如下所示：</p>
+<p>（1）更新数据库数据；<br>（2）缓存因为种种问题删除失败<br>（3）将需要删除的key发送至消息队列<br>（4）自己消费消息，获得需要删除的key<br>（5）继续重试删除操作，直到成功</p>
+<p>然而，该方案有一个缺点，<strong>对业务线代码造成大量的侵入</strong>。于是有了方案二，在方案二中，启动一个订阅程序去订阅数据库的binlog，获得需要操作的数据。在应用程序中，另起一段程序，获得这个订阅程序传来的信息，进行删除缓存操作。</p>
+<h5 id="订阅binlog"><a href="#订阅binlog" class="headerlink" title="订阅binlog"></a>订阅binlog</h5><h6 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h6><p><img src="//blog.com/2019/08/18/数据库与缓存一致性/643.webp" alt="img"></p>
+<p>流程如下：</p>
+<ul>
+<li>1、更新数据库数据；</li>
+<li>2、MySQL 将数据更新日志写入 binlog 中；</li>
+<li>3、Canal 订阅 &amp; 消费 MySQL binlog，并提取出被更新数据的表名及 ID；</li>
+<li>4、调用应用删除缓存接口；</li>
+<li>5、删除缓存数据；</li>
+<li>6、Redis 不可用时，将更新数据的表名及 ID 发送到 MQ 中；</li>
+<li>7、应用接收到消息后，删除缓存，如果删除缓存确认 MQ 消息被消费，如果删除缓存失败，则让消息重新入队列，进行多次尝试删除缓存操作，直到缓存删除成功为止。</li>
+</ul>
+<p>像电商详情页这种高并发的场景，要尽量避免用户请求回源到数据库，所以会把数据都持久化到 Redis 中，那么相应的缓存架构也要做些调整。</p>
+<h6 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h6><p><img src="//blog.com/2019/08/18/数据库与缓存一致性/644.webp" alt="img"></p>
+<p>流程如下：</p>
+<ul>
+<li>1、更新数据库数据；</li>
+<li>2、MySQL 将数据更新日志写入 binlog 中；</li>
+<li>3、Canal 订阅 &amp; 消费 MySQL binlog，并提取出被更新数据的表名及 ID；</li>
+<li>4、将更新数据的表名及 ID 发送到 MQ 中；</li>
+<li>5、应用订阅 &amp; 消费数据更新消息；</li>
+<li>6、从数据库中拉取最新的数据；</li>
+<li>7、更新缓存数据，如果更新缓存失败，则让消息重新入队列，进行多次尝试更新缓存操作，直到缓存更新成功为止。</li>
+</ul>
+<p>此方案中，把数据更新的消息发送到 MQ 中，主要避免数据更新洪峰时，造成从数据库获取数据压力过大，起到削峰的作用。通过 Canal 就可以把最新数据发到 MQ 以及应用，为什么还要从数据库中获取最新数据？因为当消息过多时，MQ 消息可能出现积压，应用收到时可能已经是“旧”消息，通过去数据库取一次，以保证缓存数据是最新的。</p>
+<p><strong>备注说明：</strong>上述的订阅binlog程序在mysql中有现成的中间件叫<strong>canal</strong>，可以完成订阅binlog日志的功能</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/数据一致性问题/" rel="tag"># 数据一致性问题</a>
+          
+            <a href="/tags/数据库与缓存/" rel="tag"># 数据库与缓存</a>
+          
+            <a href="/tags/缓存/" rel="tag"># 缓存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/18/缓存技术使用的实践与思考/" rel="next" title="缓存技术使用的实践与思考">
+                <i class="fa fa-chevron-left"></i> 缓存技术使用的实践与思考
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/21/写缓冲change buffer/" rel="prev" title="写缓冲change buffer">
+                写缓冲change buffer <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库与缓存一致性"><span class="nav-number">1.</span> <span class="nav-text">数据库与缓存一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#文章结构"><span class="nav-number">1.1.</span> <span class="nav-text">文章结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正文"><span class="nav-number">1.2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-先更新数据库，再更新缓存"><span class="nav-number">1.2.1.</span> <span class="nav-text">1. 先更新数据库，再更新缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-先删缓存，再更新数据库"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 先删缓存，再更新数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-先更新数据库，再删缓存"><span class="nav-number">1.2.3.</span> <span class="nav-text">3. 先更新数据库，再删缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-重试机制"><span class="nav-number">1.2.4.</span> <span class="nav-text">4. 重试机制</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#消息队列（异步检查）"><span class="nav-number">1.2.4.0.1.</span> <span class="nav-text">消息队列（异步检查）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#订阅binlog"><span class="nav-number">1.2.4.0.2.</span> <span class="nav-text">订阅binlog</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#删除"><span class="nav-number">1.2.4.0.2.1.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#更新"><span class="nav-number">1.2.4.0.2.2.</span> <span class="nav-text">更新</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

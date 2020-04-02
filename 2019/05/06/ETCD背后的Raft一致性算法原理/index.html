@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,一致性协议,Raft,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="ETCD背后的Raft一致性算法原理 原文地址：https://www.jianshu.com/p/5aed73b288f7  ETCD是什么 ETCD是一个go语言实现的高可靠的KV存储系统，支持HTTP协议的PUT/GET/DELETE操作； 为了支持服务注册与发现，支持WATCH接口（通过http long poll实现）； 支持KEY持有TTL属性； CAS（compare and swa">
+<meta name="keywords" content="架构,一致性协议,Raft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ETCD背后的Raft一致性算法原理">
+<meta property="og:url" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="ETCD背后的Raft一致性算法原理 原文地址：https://www.jianshu.com/p/5aed73b288f7  ETCD是什么 ETCD是一个go语言实现的高可靠的KV存储系统，支持HTTP协议的PUT/GET/DELETE操作； 为了支持服务注册与发现，支持WATCH接口（通过http long poll实现）； 支持KEY持有TTL属性； CAS（compare and swa">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-cb622903b24eca64.webp">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/4155740-03cdfdddc5c18365.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000/format/webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-f52aba9a5adf2911.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-085dfb6884f94668.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-a1489344bf45989a.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-85c29a294e85597d.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-25ab79cd881475a4.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-0394aa275e193d63.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-4f0f3367dcd8a5e2.webp">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/4155740-e9d15d881bb21b53.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000/format/webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-7acf2c68afd498c2.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-a03298dc7bc58cd0.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-fc136a16d7e7a629.webp">
+<meta property="og:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-c017a7412608145a.webp">
+<meta property="og:updated_time" content="2019-05-06T08:35:47.498Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ETCD背后的Raft一致性算法原理">
+<meta name="twitter:description" content="ETCD背后的Raft一致性算法原理 原文地址：https://www.jianshu.com/p/5aed73b288f7  ETCD是什么 ETCD是一个go语言实现的高可靠的KV存储系统，支持HTTP协议的PUT/GET/DELETE操作； 为了支持服务注册与发现，支持WATCH接口（通过http long poll实现）； 支持KEY持有TTL属性； CAS（compare and swa">
+<meta name="twitter:image" content="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-cb622903b24eca64.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/">
+
+
+
+
+
+  <title>ETCD背后的Raft一致性算法原理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ETCD背后的Raft一致性算法原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-06T12:12:57+08:00">
+                2019-05-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/一致性协议/" itemprop="url" rel="index">
+                    <span itemprop="name">一致性协议</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/一致性协议/Raft/" itemprop="url" rel="index">
+                    <span itemprop="name">Raft</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="ETCD背后的Raft一致性算法原理"><a href="#ETCD背后的Raft一致性算法原理" class="headerlink" title="ETCD背后的Raft一致性算法原理"></a>ETCD背后的Raft一致性算法原理</h1><blockquote>
+<p>原文地址：<a href="https://www.jianshu.com/p/5aed73b288f7" target="_blank" rel="noopener">https://www.jianshu.com/p/5aed73b288f7</a></p>
+</blockquote>
+<h2 id="ETCD是什么"><a href="#ETCD是什么" class="headerlink" title="ETCD是什么"></a>ETCD是什么</h2><ul>
+<li><code>ETCD</code>是一个<code>go</code>语言实现的高可靠的KV存储系统，支持<code>HTTP</code>协议的<code>PUT/GET/DELETE</code>操作；</li>
+<li>为了支持服务注册与发现，支持<code>WATCH</code>接口（通过<code>http long poll</code>实现）；</li>
+<li>支持<code>KEY</code>持有<code>TTL</code>属性；</li>
+<li><code>CAS（compare and swap）</code>操作;</li>
+<li>支持多<code>key</code>的事务操作；</li>
+<li>支持目录操作</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;简单的来说，<code>ETCD</code>可以看做是一个<code>no sql</code>的存储，存的是<code>key-value</code>的<code>node</code>，每个<code>node</code>又可以像树形结构一样产生子<code>node</code>。它是集群化的运行状态来保证高可用，并且对外提供了一套简单友好的交互接口。</p>
+<h2 id="一致性的基础：Raft算法"><a href="#一致性的基础：Raft算法" class="headerlink" title="一致性的基础：Raft算法"></a>一致性的基础：Raft算法</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>ETCD</code>实现高可靠的基础在于<code>Raft</code>算法，也是理解<code>ETCD</code>工作原理最重要的一部分。类似于<code>zookeeper</code>的<code>zab</code>协议（<code>Paxos</code>算法），<code>Raft</code>也是用于保证分布式环境下多节点数据的一致性，但更易于理解。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;看了很多相关Raft算法的技术文章，要么是介绍的过于简单，要么是过于晦涩难懂。最后看了原始的论文<a href="https://link.jianshu.com?t=https://ramcloud.atlassian.net/wiki/download/attachments/6586375/raft.pdf" target="_blank" rel="noopener">In search of an Understandable Consensus Algorithm</a>和infoQ上对应的中文翻译<a href="https://link.jianshu.com?t=http://www.infoq.com/cn/articles/raft-paper" target="_blank" rel="noopener">Raft 一致性算法论文译文</a>才对整个逻辑有细致的理解。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先来看看<code>Raft</code>大致的原理，这是一个选主（<code>leader selection</code>）思想的算法，集群总每个节点都有三种可能的角色：</p>
+<ul>
+<li><code>leader</code><br> 对客户端通信的入口，对内数据同步的发起者，一个集群通常只有一个<code>leader</code>节点</li>
+</ul>
+<ul>
+<li><code>follower</code><br> 非<code>leader</code>的节点，被动的接受来自<code>leader</code>的数据请求</li>
+</ul>
+<ul>
+<li><code>candidate</code><br> 一种临时的角色，只存在于leader的选举阶段，某个节点想要变成<code>leader</code>，那么就发起投票请求，同时自己变成<code>candidate</code>。如果选举成功，则变为<code>candidate</code>，否则退回为<code>follower</code></li>
+</ul>
+<h3 id="数据提交的过程"><a href="#数据提交的过程" class="headerlink" title="数据提交的过程"></a>数据提交的过程</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;先看前两种角色，<strong><code>leader</code>扮演的是分布式事务中的协调者，每次有数据更新的时候产生二阶段提交（<code>two-phase commit</code>）</strong>。<strong>在<code>leader</code>收到数据操作的请求，先不着急更新本地数据（数据是持久化在磁盘上的），而是生成对应的<code>log</code>，然后把生成<code>log</code>的请求广播给所有的<code>follower</code></strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每个<code>follower</code>在收到请求之后有两种选择：一种是听从<code>leader</code>的命令，也写入<code>log</code>，然后返回<code>success</code>回去；另一种情况，在某些条件不满足的情况下，<code>followe</code>认为不应该听从<code>leader</code>的命令，返回<code>false</code>。例如下图，<code>leader</code>收到客户端的写请求，我们暂时不考虑请求的具体值，虚线表示<code>leader</code>先写<code>log</code></p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-cb622903b24eca64.webp" alt="img"></p>
+<p>​                                                                <strong>leader写log</strong></p>
+<p>然后告诉所有的<code>follower</code>准备提交数据，先和我一样写<code>log</code>，</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/4155740-03cdfdddc5c18365.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000/format/webp" alt="img"></p>
+<p>​                                                                    <strong>同步log</strong></p>
+<p>然后回到<code>leader</code>，此时如果超过半数的<code>follower</code>都成功写了log，那么<code>leader</code>开始<strong>第二阶段</strong>的提交：正式写入数据，然后同样广播给<code>follower</code>，<code>follower</code>也根据自身情况选择写入或者不写入并返回结果给<code>leader</code>。继续上面的例子，<strong><code>leader</code>先写自己的数据，然后告诉<code>follower</code>也开始持久化数据</strong>，</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-f52aba9a5adf2911.webp" alt="img"></p>
+<p>​                                                        <strong>leader持久化并同步数据</strong></p>
+<p>最终所有节点的数据达成一致，图中用实线表示已提交的数据。</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-085dfb6884f94668.webp" alt="img"></p>
+<p>​                                                <strong>数据一致</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这两阶段中如果任意一个都有超过半数的<code>follower</code>返回<code>false</code>或者根本没有返回，那么这个分布式事务是不成功的。<strong>此时虽然不会有回滚的过程，但是由于数据不会真正在多数节点上提交，所以会在之后的过程中被覆盖掉</strong>。</p>
+<h3 id="选举的过程"><a href="#选举的过程" class="headerlink" title="选举的过程"></a>选举的过程</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上面只说了常规时候两种角色是如何协调工作的，还剩下<code>candidate</code>没说，对，就是一个<code>follower</code>是如何逆袭成为<code>leader</code>的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;初始状态下，大家都是平等的<code>follower</code>，那么<code>follow</code>谁呢，总要选个老大吧。大家都蠢蠢欲动，<strong>每个<code>follower</code>内部都维护了一个随机的<code>timer</code></strong>。如下图，</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-a1489344bf45989a.webp" alt="img"></p>
+<p>​                                                                <strong>每个follower都有timer</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在timer时间到了的时候还没有人主动联系它的话，那它就要变成<code>candidate</code>，同时发出投票请求（<code>RequestVote</code>）给其他人</strong>。特殊情况如下图，S1和S3都变成了<code>candidate</code>，</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-85c29a294e85597d.webp" alt="img"></p>
+<p>​                                                        <strong>转变为candidate</strong></p>
+<p>当然选不选就是人家的事了，原则是</p>
+<blockquote>
+<p><strong>每个follower一轮只能投一次票给一个candidate</strong></p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>对于相同条件的<code>candidate</code>，<code>follower</code>们采取先来先投票的策略。如果超过半数的<code>follower</code>都认为他是合适做领导的，那么恭喜，新的<code>leader</code>产生了</strong>，如下图，S3变成了新一届的大哥，又可以很开心的像上一节一样的正常工作了。</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-25ab79cd881475a4.webp" alt="img"></p>
+<p>​                                            <strong>所有follower接受candidate的大哥身份</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是如果很不幸，没有人愿意选这个悲剧的<code>candidate</code>，那它只有老老实实的变回小弟的状态。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>选举完成之后，<code>leader</code>靠什么来确保小弟是跟着我的呢？答案是定时发送心跳检测(heart beat)</strong>。<strong>小弟们也是通过心跳来感知大哥的存在的</strong>。如下图</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-0394aa275e193d63.webp" alt="img"></p>
+<p>​                                                                    <strong>leader定期发心跳检测</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同样的，如果在<code>timer</code>期间内没有收到大哥的联络，这时很可能大哥已经跪了，如下图，所有小弟又开始蠢蠢欲动，新的一轮(<code>term)</code>选举开始了。</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-4f0f3367dcd8a5e2.webp" alt="img"></p>
+<p>​                                                                    <strong>新的一轮选举</strong></p>
+<h3 id="选举时会产生的问题"><a href="#选举时会产生的问题" class="headerlink" title="选举时会产生的问题"></a>选举时会产生的问题</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;之前说过，在选举阶段，每个<code>follower</code>如果在自身的<code>timer</code>到期之后都会变成<code>candidate</code>去参与选举。所以就这个<code>candidate</code>身份而言，是没有特别条件的，每个<code>follower</code>都有机会参选。但是，<strong>在分布式的环境里，每个follower节点存储的数据是不一样的</strong>，考虑一下下图的情况，在这些节点经历了一些损坏和恢复。此时S4想当leader，</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/4155740-e9d15d881bb21b53.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000/format/webp" alt="img"></p>
+<p>​                                                            <strong>不适合的candidate</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是如果S4成功当选的话，根据<code>leader</code>为上的原则，S4的<code>log</code>在<code>index</code>为4-7的数据，会覆盖掉S2和S3的8。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如何解决这样的冲突的问题呢？有两种方法：</p>
+<ol>
+<li><p>S4在变为大哥之前，先向所有的小弟拿数据来保证自己数据是最全的；</p>
+</li>
+<li><p><strong>其他小弟遇到这样资历不足的大哥想上位的时候，完全不予以理睬</strong>；</p>
+</li>
+</ol>
+<p>   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Raft算法认为第一种策略过于复杂，所以选择了第二种，保证数据只从leader流向follower</strong>。S4在<code>vote</code>请求中会带上<strong>自身数据的描述信息</strong>，包括：</p>
+<ol>
+<li><strong><code>term</code>，自身处于的选举周期</strong></li>
+<li><strong><code>lastLogIndex</code>，<code>log</code>中最新的<code>index</code>值</strong></li>
+<li><strong><code>lastLogTerm</code>，<code>log</code>中最近的<code>index</code>是在哪个<code>term</code>中产生的</strong></li>
+</ol>
+<p>S2和S3在收到<code>vote请求</code>时候会和自身的情况进行对比，<strong>每个节点保存的数据信息</strong>包括：</p>
+<ol>
+<li><p><strong><code>currentTerm</code>，节点处于的term号</strong></p>
+</li>
+<li><p><strong><code>log[ ]</code>，自身的log集合</strong></p>
+</li>
+<li><p><strong><code>commitIndex</code>，log中最后一个被提交的index值</strong></p>
+</li>
+</ol>
+<p>对比的原则有：</p>
+<ol>
+<li>如果<code>term &lt; currentTerm</code>，也就是说<code>candidate</code>的版本还没我新，返回<code>false</code></li>
+<li>如果已经投票给别的<code>candidate了（votedFor）</code>，则返回false</li>
+<li><code>log</code>匹配，如果和自身的<code>log</code>匹配上了，则返回<code>true</code></li>
+</ol>
+<p>这个<code>log</code>匹配原则（<code>Log Matching Property</code>）具体是：</p>
+<blockquote>
+<p><strong>如果在不同日志中的两个条目有着相同的索引和任期号，则它们所存储的命令是相同的</strong>。</p>
+</blockquote>
+<blockquote>
+<p><strong>如果在不同日志中的两个条目有着相同的索引和任期号，则它们之间的所有条目都是完全一样的</strong>。</p>
+</blockquote>
+<p>这样就可以一直等到含有最新数据的<code>candidate</code>被选上，从而保证领导人完全原则（<code>Leader Completeness</code>）：</p>
+<blockquote>
+<p><strong>如果一个日志的index在一个给定term内被提交，那么这个index一定会出现在所有term号更大的领导人中</strong>。</p>
+</blockquote>
+<p>好了，继续看图说话。S4的<code>vote请求</code>，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">lastLogIndex</th>
+<th style="text-align:center">lastLogTerm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">7</td>
+</tr>
+</tbody>
+</table>
+<p>被无情的拒绝。接下来S3也变成了<code>candidate</code>，</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-7acf2c68afd498c2.webp" alt="img"></p>
+<p>​                                                                                <strong>S3变成candidate</strong></p>
+<p>一直等到S3变成了<code>candidate</code>，发出<code>vote请求</code>。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">lastLogIndex</th>
+<th style="text-align:center">lastLogTerm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">8</td>
+</tr>
+</tbody>
+</table>
+<p>被S4和S10接受，变成新的<code>leader</code>，并初始化两个数组：</p>
+<ol>
+<li><strong><code>nextIndex[ ]</code>，表示需要发给每个<code>follower</code>的下一个日志条目的索引（初始化为<code>leader</code>最新log的<code>index+1</code></strong>，因为leader总是先假定所有的<code>follower</code>和自己是一致的，后面说明当有不一致的时候是如何协商的）</li>
+<li><strong><code>matchIndex[ ]</code>，表示已经复制到每个<code>follower</code>的log的<code>最高index值</code>（从0开始递增）</strong></li>
+</ol>
+<p>在这个例子中，S3中的这两个数组会初始化为，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">S1</th>
+<th style="text-align:center">S2</th>
+<th style="text-align:center">S4</th>
+<th style="text-align:center">S5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">nextIndex</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">7</td>
+</tr>
+<tr>
+<td style="text-align:center">matchIndex</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="数据更新的问题"><a href="#数据更新的问题" class="headerlink" title="数据更新的问题"></a>数据更新的问题</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在新的一届<code>leader</code>选举出来了，虽然选举的过程保证了<code>leader</code>的数据是最新的，但是<code>follower</code>中的数据还是可能存在不一致的情况。比如下图的S4，这就需要一个补偿机制来纠正这个问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>在正常情况下，S3会给S4发心跳请求(一种名叫AppendEntries请求的特殊格式，entries为空)，其中携带一些数据信息</strong>，包括，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">prevIndex</th>
+<th style="text-align:center">prevTerm</th>
+<th style="text-align:center">entries</th>
+<th style="text-align:center">commitIndex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">[ ]</td>
+<td style="text-align:center">6</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>commitIndex</code>之前已经解释过了，是log中最后一个被提交的index值</strong>。<strong><code>prevIndex</code>与<code>lastLogIndex</code>类似，都是最新的日志的index值，只是属于不同的请求类型</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>prevTerm</code>也与<code>lastLogTerm</code>类似，是<code>prevLogIndex</code>对应的<code>term</code>号</strong>。</p>
+<p>S4在接收到该请求之后会做一致性的判断，规则包括：</p>
+<ol>
+<li>如果<code>term &lt; currentTerm</code>返回<code>false</code></li>
+<li>如果<code>在prevLogIndex</code>处的log的<code>term</code>号与<code>prevLogTerm</code>不匹配时，返回 <code>false</code></li>
+<li><strong>如果一条已经存在的log与新的冲突（index相同但是term号不同），则删除已经存在的日志和它之后所有的日志，返回<code>true</code></strong></li>
+<li>添加任何在已有的log中不存在的index，返回true</li>
+<li><strong>如果请求中<code>leader的commitIndex &gt; 自身的commitIndex</code>，则比较leader的commitIndex和最新log index，将其中较小的赋给<code>自身的commitIndex</code></strong></li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;结果与规则2不符合，返回false给S3。这时S3需要做一次退让，修改保存的<code>nextIndex数组</code>，将S4的<code>nextIndex退化为6</code></p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-a03298dc7bc58cd0.webp" alt="img"></p>
+<p>​                                                                <strong>S4的nextIndex退化为6</strong></p>
+<p>再次发送<code>AppendEntries</code>询问S4</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">prevIndex</th>
+<th style="text-align:center">prevTerm</th>
+<th style="text-align:center">entries</th>
+<th style="text-align:center">commitIndex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">5</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">[ ]</td>
+<td style="text-align:center">5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>如此循环的退让，一直到<code>nextIndex</code>减小到4</strong></p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-fc136a16d7e7a629.webp" alt="img"></p>
+<p>​                                                                        <strong>nextIndex减小到4</strong></p>
+<p>S3此时发送的请求为，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">prevIndex</th>
+<th style="text-align:center">prevTerm</th>
+<th style="text-align:center">entries</th>
+<th style="text-align:center">commitIndex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">[ ]</td>
+<td style="text-align:center">3</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>S4和自己的log匹配成功，返回true，并告诉leader，当前的<code>matchIndex等于3</code></strong>。<strong>S3收到之后更新<code>matchIndex数组</code></strong>，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">S1</th>
+<th style="text-align:center">S2</th>
+<th style="text-align:center">S4</th>
+<th style="text-align:center">S5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">nextIndex</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">7</td>
+</tr>
+<tr>
+<td style="text-align:center">matchIndex</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>并发送从<code>nextIndex</code>之后的数据(<code>entries</code>)</strong>，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">term</th>
+<th style="text-align:center">prevIndex</th>
+<th style="text-align:center">prevTerm</th>
+<th style="text-align:center">entries</th>
+<th style="text-align:center">commitIndex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">[8]</td>
+<td style="text-align:center">4</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>S4再根据覆盖的原则，把自身的数据追平<code>leader</code>，并抛弃之后的数据</strong>。</p>
+<p><img src="//blog.com/2019/05/06/ETCD背后的Raft一致性算法原理/4155740-c017a7412608145a.webp" alt="img"></p>
+<p>​                                                        <strong>S4的index4同步为leader的内容</strong></p>
+<p>这样<strong>消息往复，数据最终一致</strong>。</p>
+<h3 id="一些其他的问题"><a href="#一些其他的问题" class="headerlink" title="一些其他的问题"></a>一些其他的问题</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;还有一些值得注意的特殊情况，比如log的清理。<strong>log是以追加的方式递增的，随着系统的不断运行，log会越来越大</strong>。<strong>Raft通过log的<code>snapshot</code>方式，可以定期压缩log为一个<code>snapshot</code>，并且清除之前的log</strong>。压缩的具体策略可以参考原论文。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Raft</code>是一种基于<code>leader</code>选举的算法，用于保证分布式数据的一致性。所有节点在三个角色<code>（leader, follower和candidate）</code>之中切换。选举阶段<code>candidate</code>向其他节点发送<code>vote</code>请求，但是只有包括所有最新数据的节点可以变为<code>leader</code>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在数据同步阶段，leader通过一些标记<code>（commitIndex，term，prevTerm，prevIndex等等）</code>与follower不断协商<strong>最终达成一致</strong>。当有新的数据产生时，采用<strong><code>二阶段（twp-phase）</code>提交</strong>，先更新log，等大多数节点都做完之后再正式提交数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上的图片来自github上<a href="https://link.jianshu.com?t=https://raft.github.io/]" target="_blank" rel="noopener">raft算法</a>的算法动画的截图。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/一致性协议/" rel="tag"># 一致性协议</a>
+          
+            <a href="/tags/Raft/" rel="tag"># Raft</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/06/分布式-Raft协议的理解与分析/" rel="next" title="分布式-Raft协议的理解与分析">
+                <i class="fa fa-chevron-left"></i> 分布式-Raft协议的理解与分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/06/一致性算法Raft详解/" rel="prev" title="一致性算法Raft详解">
+                一致性算法Raft详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ETCD背后的Raft一致性算法原理"><span class="nav-number">1.</span> <span class="nav-text">ETCD背后的Raft一致性算法原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ETCD是什么"><span class="nav-number">1.1.</span> <span class="nav-text">ETCD是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一致性的基础：Raft算法"><span class="nav-number">1.2.</span> <span class="nav-text">一致性的基础：Raft算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据提交的过程"><span class="nav-number">1.2.1.</span> <span class="nav-text">数据提交的过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选举的过程"><span class="nav-number">1.2.2.</span> <span class="nav-text">选举的过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选举时会产生的问题"><span class="nav-number">1.2.3.</span> <span class="nav-text">选举时会产生的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据更新的问题"><span class="nav-number">1.2.4.</span> <span class="nav-text">数据更新的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些其他的问题"><span class="nav-number">1.2.5.</span> <span class="nav-text">一些其他的问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">2.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

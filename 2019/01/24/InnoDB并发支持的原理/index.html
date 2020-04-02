@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,MySql,Innodb,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="InnoDB并发支持的原理一、并发控制为啥要进行并发控制？ 并发的任务对同一个临界资源进行操作，如果不采取措施，可能导致不一致，故必须进行并发控制（Concurrency Control）。 技术上，通常如何进行并发控制？通过并发控制保证数据一致性的常见手段有：  锁（Locking） 数据多版本（Multi Versioning）  二、锁如何使用普通锁保证一致性？普通锁，被使用最多： (1)操">
+<meta name="keywords" content="数据库,MySql,Innodb">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB并发支持的原理">
+<meta property="og:url" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="InnoDB并发支持的原理一、并发控制为啥要进行并发控制？ 并发的任务对同一个临界资源进行操作，如果不采取措施，可能导致不一致，故必须进行并发控制（Concurrency Control）。 技术上，通常如何进行并发控制？通过并发控制保证数据一致性的常见手段有：  锁（Locking） 数据多版本（Multi Versioning）  二、锁如何使用普通锁保证一致性？普通锁，被使用最多： (1)操">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/数据多版本1.webp">
+<meta property="og:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/回滚段1.webp">
+<meta property="og:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/回滚段2.webp">
+<meta property="og:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/回滚段3.webp">
+<meta property="og:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/回滚段4.webp">
+<meta property="og:updated_time" content="2019-01-24T15:25:46.215Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="InnoDB并发支持的原理">
+<meta name="twitter:description" content="InnoDB并发支持的原理一、并发控制为啥要进行并发控制？ 并发的任务对同一个临界资源进行操作，如果不采取措施，可能导致不一致，故必须进行并发控制（Concurrency Control）。 技术上，通常如何进行并发控制？通过并发控制保证数据一致性的常见手段有：  锁（Locking） 数据多版本（Multi Versioning）  二、锁如何使用普通锁保证一致性？普通锁，被使用最多： (1)操">
+<meta name="twitter:image" content="http://blog.com/2019/01/24/InnoDB并发支持的原理/数据多版本1.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/01/24/InnoDB并发支持的原理/">
+
+
+
+
+
+  <title>InnoDB并发支持的原理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/01/24/InnoDB并发支持的原理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">InnoDB并发支持的原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-24T12:12:57+08:00">
+                2019-01-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/" itemprop="url" rel="index">
+                    <span itemprop="name">MySql</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/MySql/Innodb/" itemprop="url" rel="index">
+                    <span itemprop="name">Innodb</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="InnoDB并发支持的原理"><a href="#InnoDB并发支持的原理" class="headerlink" title="InnoDB并发支持的原理"></a>InnoDB并发支持的原理</h2><h2 id="一、并发控制"><a href="#一、并发控制" class="headerlink" title="一、并发控制"></a>一、并发控制</h2><p><strong>为啥要进行并发控制？</strong></p>
+<p>并发的任务对同一个临界资源进行操作，如果不采取措施，可能导致不一致，故必须进行<strong>并发控制</strong>（Concurrency Control）。</p>
+<h3 id="技术上，通常如何进行并发控制？"><a href="#技术上，通常如何进行并发控制？" class="headerlink" title="技术上，通常如何进行并发控制？"></a>技术上，通常如何进行并发控制？</h3><p>通过并发控制保证数据一致性的常见手段有：</p>
+<ul>
+<li>锁（Locking）</li>
+<li>数据多版本（Multi Versioning）</li>
+</ul>
+<h2 id="二、锁"><a href="#二、锁" class="headerlink" title="二、锁"></a>二、锁</h2><h3 id="如何使用普通锁保证一致性？"><a href="#如何使用普通锁保证一致性？" class="headerlink" title="如何使用普通锁保证一致性？"></a>如何使用普通锁保证一致性？</h3><p>普通锁，被使用最多：</p>
+<p>(1)操作数据前，锁住，实施互斥，不允许其他的并发任务操作；</p>
+<p>(2)操作完成后，释放锁，让其他任务执行；</p>
+<p>如此这般，来保证一致性。</p>
+<h3 id="普通锁存在什么问题？"><a href="#普通锁存在什么问题？" class="headerlink" title="普通锁存在什么问题？"></a>普通锁存在什么问题？</h3><p>简单的锁住太过粗暴，连“读任务”也无法并行，任务执行过程本质上是串行的。</p>
+<p>于是出现了<strong>共享锁</strong>与<strong>排他锁</strong>：</p>
+<ul>
+<li>共享锁（<strong>S</strong>hare Locks，记为S锁），读取数据时加S锁</li>
+<li>排他锁（e<strong>X</strong>clusive Locks，记为X锁），修改数据时加X锁</li>
+</ul>
+<p>共享锁与排他锁的玩法是：</p>
+<ul>
+<li>共享锁之间不互斥，简记为：读读可以并行</li>
+<li>排他锁与任何锁互斥，简记为：写读，写写不可以并行</li>
+</ul>
+<p>可以看到，一旦写数据的任务没有完成，数据是不能被其他任务读取的，这对并发度有较大的影响。</p>
+<p><em>画外音：对应到数据库，可以理解为，写事务没有提交，读相关数据的select也会被阻塞。</em></p>
+<p><strong>有没有可能，进一步提高并发呢？</strong></p>
+<p>即使写任务没有完成，其他读任务也可能并发，这就引出了数据多版本。</p>
+<h2 id="三、数据多版本"><a href="#三、数据多版本" class="headerlink" title="三、数据多版本"></a>三、数据多版本</h2><p>数据多版本是一种能够进一步提高并发的方法，它的<strong>核心原理</strong>是：</p>
+<p>（1）写任务发生时，将数据克隆一份，以版本号区分；</p>
+<p>（2）写任务操作新克隆的数据，直至提交；</p>
+<p>（3）并发读任务可以继续读取旧版本的数据，不至于阻塞；</p>
+<p><img src="//blog.com/2019/01/24/InnoDB并发支持的原理/数据多版本1.webp" alt=""></p>
+<p>如上图：</p>
+<ol>
+<li>最开始数据的版本是V0；</li>
+<li>T1时刻发起了一个写任务，这是把数据clone了一份，进行修改，版本变为V1，但任务还未完成；</li>
+<li>T2时刻并发了一个读任务，依然可以读V0版本的数据；</li>
+<li>T3时刻又并发了一个读任务，依然不会阻塞；</li>
+</ol>
+<p>可以看到，数据多版本，通过“读取旧版本数据”能够极大提高任务的并发度。</p>
+<p>提高并发的演进思路，就在如此：</p>
+<ul>
+<li><strong>普通锁</strong>，本质是串行执行</li>
+<li><strong>读写锁</strong>，可以实现读读并发</li>
+<li><strong>数据多版本</strong>，可以实现读写并发</li>
+</ul>
+<h2 id="四、redo-undo-回滚段"><a href="#四、redo-undo-回滚段" class="headerlink" title="四、redo, undo, 回滚段"></a>四、redo, undo, 回滚段</h2><h3 id="为什么要有redo日志？"><a href="#为什么要有redo日志？" class="headerlink" title="为什么要有redo日志？"></a>为什么要有redo日志？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据库事务提交后，必须将更新后的数据刷到磁盘上，以保证ACID特性。磁盘<strong>随机写</strong>性能较低，如果每次都刷盘，会极大影响数据库的吞吐量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;优化方式是，将修改行为先写到redo日志里（此时变成了<strong>顺序写</strong>），再定期将数据刷到磁盘上，这样能极大提高性能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>随机写优化为顺序写</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假如某一时刻，数据库崩溃，还没来得及刷盘的数据，在数据库重启后，会重做redo日志里的内容，以保证已提交事务对数据产生的影响都刷到磁盘上。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>redo日志用于保障，已提交事务的ACID特性</strong></p>
+<h3 id="为什么要有undo日志？"><a href="#为什么要有undo日志？" class="headerlink" title="为什么要有undo日志？"></a>为什么要有undo日志？</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据库事务未提交时，会将事务修改数据的镜像（即<strong>修改前的旧版本</strong>）存放到undo日志里，当事务回滚时，或者数据库奔溃时，可以利用undo日志，即旧版本数据，撤销未提交事务对数据库产生的影响。</p>
+<p>对于insert操作，undo日志记录新数据的PK(ROW_ID)，回滚时直接删除；</p>
+<p>对于delete/update操作，undo日志记录旧数据row，回滚时直接恢复；</p>
+<p><em>他们分别存放在不同的buffer里。</em></p>
+<p>一句话，<strong>undo日志用于保障，未提交事务不会对数据库的ACID特性产生影响</strong>。</p>
+<h3 id="什么是回滚段？"><a href="#什么是回滚段？" class="headerlink" title="什么是回滚段？"></a>什么是回滚段？</h3><p><strong>存储undo日志的地方，是回滚段</strong></p>
+<p><strong>undo日志和回滚段和InnoDB的MVCC密切相关</strong></p>
+<p><strong>例子</strong>：</p>
+<p>t(id PK, name);</p>
+<p> 数据为：</p>
+<p>1, shenjian</p>
+<p>2, zhangsan</p>
+<p>3, lisi</p>
+<p><img src="//blog.com/2019/01/24/InnoDB并发支持的原理/回滚段1.webp" alt="img"></p>
+<p>此时没有事务未提交，故回滚段是空的。</p>
+<p>接着启动了一个事务：</p>
+<p>start trx;</p>
+<p>delete (1, shenjian);</p>
+<p>update set(3, lisi) to (3, xxx);</p>
+<p>insert (4, wangwu);</p>
+<p>并且事务处于未提交的状态。</p>
+<p><img src="//blog.com/2019/01/24/InnoDB并发支持的原理/回滚段2.webp" alt="img"></p>
+<p>可以看到：</p>
+<p>(1)被删除前的(1, shenjian)作为旧版本数据，进入了回滚段；</p>
+<p>(2)被修改前的(3, lisi)作为旧版本数据，进入了回滚段；</p>
+<p>(3)被插入的数据，PK(4)进入了回滚段；</p>
+<p>接下来，假如事务rollback，此时可以通过回滚段里的undo日志回滚。</p>
+<p>假设事务提交，回滚段里的undo日志可以删除。*</p>
+<p><img src="//blog.com/2019/01/24/InnoDB并发支持的原理/回滚段3.webp" alt="img"></p>
+<p>可以看到：</p>
+<p>(1)被删除的旧数据恢复了；</p>
+<p>(2)被修改的旧数据也恢复了；</p>
+<p>(3)被插入的数据，删除了；</p>
+<p><img src="//blog.com/2019/01/24/InnoDB并发支持的原理/回滚段4.webp" alt="img"></p>
+<p>事务回滚成功，一切如故。</p>
+<h2 id="五、InnoDB是基于多版本并发控制的存储引擎"><a href="#五、InnoDB是基于多版本并发控制的存储引擎" class="headerlink" title="五、InnoDB是基于多版本并发控制的存储引擎"></a>五、InnoDB是基于多版本并发控制的存储引擎</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;InnoDB是高并发互联网场景最为推荐的存储引擎，根本原因，就是其<strong>多版本并发控制</strong>（Multi Version Concurrency Control, MVCC）。行锁，并发，事务回滚等多种特性都和MVCC相关。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MVCC就是通过“读取旧版本数据”来降低并发事务的锁冲突，提高任务的并发度。</p>
+<p><strong>核心问题：</strong></p>
+<p><strong>旧版本数据存储在哪里？</strong></p>
+<p><strong>存储旧版本数据，对MySQL和InnoDB原有架构是否有巨大冲击？</strong></p>
+<p>通过上文undo日志和回滚段的铺垫，这两个问题就非常好回答了：</p>
+<p>(1)旧版本数据存储在回滚段里；</p>
+<p>(2)对MySQL和InnoDB原有架构体系冲击不大；</p>
+<p>InnoDB的内核，会对所有row数据增加三个内部属性：</p>
+<p>(1)<strong>DB_TRX_ID</strong>，6字节，记录每一行最近一次修改它的事务ID；</p>
+<p>(2)<strong>DB_ROLL_PTR</strong>，7字节，记录指向回滚段undo日志的指针；</p>
+<p>(3)<strong>DB_ROW_ID</strong>，6字节，单调递增的行ID；</p>
+<p><strong>InnoDB为何能够做到这么高的并发？</strong></p>
+<p>回滚段里的数据，其实是历史数据的快照（snapshot），这些数据是不会被修改，select可以肆无忌惮的并发读取他们。</p>
+<p><strong>快照读</strong>（Snapshot Read），这种<strong>一致性不加锁的读</strong>（Consistent Nonlocking Read），就是InnoDB并发如此之高的核心原因之一。</p>
+<p>这里的<strong>一致性</strong>是指，事务读取到的数据，要么是事务开始前就已经存在的数据（当然，是其他已提交事务产生的），要么是事务自身插入或者修改的数据。</p>
+<p><strong>什么样的select是快照读？</strong></p>
+<p>除非显示加锁，普通的select语句都是快照读，例如：</p>
+<p>select * from t where id&gt;2;</p>
+<p>这里的显示加锁，非快照读是指：</p>
+<p>select * from t where id&gt;2 <strong>lock in share mode</strong>;</p>
+<p>select * from t where id&gt;2 <strong>for update</strong>;</p>
+<h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><p>(1)常见并发控制保证数据一致性的方法有<strong>锁</strong>，<strong>数据多版本</strong>；</p>
+<p>(2)<strong>普通锁</strong>串行，<strong>读写锁</strong>读读并行，<strong>数据多版本</strong>读写并行；</p>
+<p>(3)<strong>redo日志</strong>保证已提交事务的ACID特性，设计思路是，通过顺序写替代随机写，提高并发；</p>
+<p>(4)<strong>undo日志</strong>用来回滚未提交的事务，它存储在回滚段里；</p>
+<p>(5)InnoDB是基于<strong>MVCC</strong>的存储引擎，它利用了存储在回滚段里的undo日志，即数据的旧版本，提高并发；</p>
+<p>(6)InnoDB之所以并发高，快照读不加锁；</p>
+<p>(7)InnoDB所有普通select都是快照读；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+            <a href="/tags/MySql/" rel="tag"># MySql</a>
+          
+            <a href="/tags/Innodb/" rel="tag"># Innodb</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/24/MySQL索引背后的数据结构及算法原理/" rel="next" title="MySQL索引背后的数据结构及算法原理">
+                <i class="fa fa-chevron-left"></i> MySQL索引背后的数据结构及算法原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/25/从零开始搭建监控告警平台/" rel="prev" title="从零开始搭建监控告警平台">
+                从零开始搭建监控告警平台 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB并发支持的原理"><span class="nav-number">1.</span> <span class="nav-text">InnoDB并发支持的原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一、并发控制"><span class="nav-number">2.</span> <span class="nav-text">一、并发控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#技术上，通常如何进行并发控制？"><span class="nav-number">2.1.</span> <span class="nav-text">技术上，通常如何进行并发控制？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、锁"><span class="nav-number">3.</span> <span class="nav-text">二、锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何使用普通锁保证一致性？"><span class="nav-number">3.1.</span> <span class="nav-text">如何使用普通锁保证一致性？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#普通锁存在什么问题？"><span class="nav-number">3.2.</span> <span class="nav-text">普通锁存在什么问题？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、数据多版本"><span class="nav-number">4.</span> <span class="nav-text">三、数据多版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、redo-undo-回滚段"><span class="nav-number">5.</span> <span class="nav-text">四、redo, undo, 回滚段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要有redo日志？"><span class="nav-number">5.1.</span> <span class="nav-text">为什么要有redo日志？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要有undo日志？"><span class="nav-number">5.2.</span> <span class="nav-text">为什么要有undo日志？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是回滚段？"><span class="nav-number">5.3.</span> <span class="nav-text">什么是回滚段？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、InnoDB是基于多版本并发控制的存储引擎"><span class="nav-number">6.</span> <span class="nav-text">五、InnoDB是基于多版本并发控制的存储引擎</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、总结"><span class="nav-number">7.</span> <span class="nav-text">六、总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

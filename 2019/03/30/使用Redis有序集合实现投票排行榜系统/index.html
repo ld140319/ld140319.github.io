@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,投票,排行榜,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="使用Redis有序集合实现投票排行榜系统使用Redis有序集合实现投票排行榜系统 需求&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;业务开发中多多少少会遇到这种需求，需要一个排行榜，它需要对列表中成员的票数进行排序。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在一个排行榜中，成员的名次是要根据当前票数动态变化的，如果使用Mysql，将会造成频繁的修改，Mysql的性能将得不到满足。其实成员">
+<meta name="keywords" content="架构,投票,排行榜">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Redis有序集合实现投票排行榜系统">
+<meta property="og:url" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="使用Redis有序集合实现投票排行榜系统使用Redis有序集合实现投票排行榜系统 需求&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;业务开发中多多少少会遇到这种需求，需要一个排行榜，它需要对列表中成员的票数进行排序。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在一个排行榜中，成员的名次是要根据当前票数动态变化的，如果使用Mysql，将会造成频繁的修改，Mysql的性能将得不到满足。其实成员">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/1.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/2.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/4.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/5.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/6.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/7.jpg">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/2.png">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/3.png">
+<meta property="og:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/1.png">
+<meta property="og:updated_time" content="2019-03-30T02:27:11.794Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Redis有序集合实现投票排行榜系统">
+<meta name="twitter:description" content="使用Redis有序集合实现投票排行榜系统使用Redis有序集合实现投票排行榜系统 需求&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;业务开发中多多少少会遇到这种需求，需要一个排行榜，它需要对列表中成员的票数进行排序。 &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;在一个排行榜中，成员的名次是要根据当前票数动态变化的，如果使用Mysql，将会造成频繁的修改，Mysql的性能将得不到满足。其实成员">
+<meta name="twitter:image" content="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/">
+
+
+
+
+
+  <title>使用Redis有序集合实现投票排行榜系统 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用Redis有序集合实现投票排行榜系统</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-30T12:12:57+08:00">
+                2019-03-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/投票/" itemprop="url" rel="index">
+                    <span itemprop="name">投票</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/投票/排行榜/" itemprop="url" rel="index">
+                    <span itemprop="name">排行榜</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="使用Redis有序集合实现投票排行榜系统"><a href="#使用Redis有序集合实现投票排行榜系统" class="headerlink" title="使用Redis有序集合实现投票排行榜系统"></a>使用Redis有序集合实现投票排行榜系统</h1><p><a href="https://mp.weixin.qq.com/s?__biz=MzA5ODIxODE2Ng==&amp;mid=2651137190&amp;idx=1&amp;sn=22c9fa81a44a83dfac0ec15683c35366&amp;chksm=8b657d7fbc12f469ab3f49a456e0ec704b175aac91720df759cec356725b03fd7460c2a9baaa&amp;mpshare=1&amp;scene=1&amp;srcid=0329RMQu70oA5NfKtkzmqW1C&amp;key=d1ef9b0fa6e6abd4f4ce0079cd33966eaa6ccff66340729c411398b6f6368201513198d824f6991db4635d87252228d700d9b830e2fa9abaab9241b865801b1c3b21cefdafe78799d7a6560ac53382e7&amp;ascene=1&amp;uin=MTEzMDAzMjAyMg%3D%3D&amp;devicetype=Windows+10&amp;version=62060739&amp;lang=zh_CN&amp;pass_ticket=H1WxZReImXNHtiO%2BKxobmLL7Jvin76os6q8Snc43pIytzZ19%2FgV8nzQizhHbxeND" target="_blank" rel="noopener">使用Redis有序集合实现投票排行榜系统</a></p>
+<h2 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;业务开发中多多少少会遇到这种需求，需要一个排行榜，它需要对列表中成员的票数进行排序。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>在一个排行榜中，成员的名次是要根据当前票数动态变化的</strong>，如果使用Mysql，将会造成频繁的修改，Mysql的性能将得不到满足。其实成员的数据结构特别简单： <code>[成员名：分数]</code>，如果了解过Redis的有序集合( <code>ZSet</code>)，那你将发现Redis的有序集合非常适合做排行榜。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;简单介绍一下Redis的有序集合，它的存储结构抽象一下可以理解为以下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">key[score1 member1][score2 member2][score3 member3][......]</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;其中 <code>key</code>就是Redis的key，而 <strong><code>score</code> 和 <code>member</code>总是成对出现， <code>score</code>是 <code>member</code>的分数，这里可以理解为获取的票数</strong>。</p>
+<p>有序集合提供了很多方法，如</p>
+<ul>
+<li><p><code>ZADD key score member[[score member][score member]…]</code> </p>
+<p>为 <code>key</code>添加名为 <code>member</code>的选项并设置它的分数为 <code>score</code>；</p>
+<blockquote>
+<p>添加某个成员并初始化票数</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p><code>ZSCORE key member</code>                                            </p>
+<p>获取某个 <code>key</code>下成员 <code>member</code>的分数；</p>
+<blockquote>
+<p>获取某个成员的票数</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p><code>ZINCRBY key increment member</code>                   </p>
+<p>  给 <code>member</code>的分数增加 <code>increment</code></p>
+<blockquote>
+<p>增加某个成员的票数</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p><code>ZRANGE key start stop [WITHSCORES]</code></p>
+<p>返回从 <code>start</code>到 <code>stop</code>名次的成员， <code>[WITHSCORES]</code>是可选项，添加后将一并返回成员的分数。这个命令是根据成员的 <code>score</code>从小到大排名，还有一个命令 <code>ZREVRANGE key start stop[WITHSCORES]</code>是按照 <code>score</code>从大到小排名。</p>
+<blockquote>
+<p>获取排名某个区间的成员</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p><code>ZRANK key member</code> </p>
+<p>返回某个 <code>key</code> 下成员名为 <code>member</code>的排名，分数按照从小到大，相对应的有个 <code>ZREVRANK key member</code></p>
+<blockquote>
+<p>获取某个成员的排名</p>
+</blockquote>
+</li>
+</ul>
+<p>最后，我们梳理下投票系统需要的功能，需要实现下几点：</p>
+<ul>
+<li>可以投票</li>
+<li>获取排行榜</li>
+<li>获取成员的排名和分数</li>
+<li>参与人数统计</li>
+<li>需要一个后台对选项进行配置以及数据展示</li>
+</ul>
+<p><strong>一个通用的投票系统，通过HTTP接口调用的方式进行接入</strong>。</p>
+<h2 id="排行榜"><a href="#排行榜" class="headerlink" title="排行榜"></a>排行榜</h2><h3 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;先说最简单的排行榜。其实之前我们有个用于投票的系统，但是他没有用有序集合，他是这样做的：用redis最基本的 <code>key-value</code>结构中记录票数， <code>key</code>是选项， <code>value</code>是票数，然后每个月的后三天不能再进行投票，因为需要一个定时任务，将票数统计出来持久存储，作为本月的排行榜。可以看到有好多缺点：</p>
+<ol>
+<li><strong>不能实时计算榜单</strong>，只能每个月跑脚本最后计算出来；</li>
+<li><strong>每个月都有几天用户不能投票，损失一大波流量</strong>；</li>
+<li><strong>只能支持月榜</strong>；</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在系统中设计了<strong>多个周期的排行榜</strong>，有小时榜、日榜、周榜、月榜、总榜。解释一下 <code>小时榜</code>就是所有列表成员，在一个小时内获取票数的排行榜，其他榜单以此类推。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">在设计到多个周期的排行榜时，为了保证对多个key操作的原子性，可以采用redis lua script或者redis事务来实现。投票/取消投票均需要通过lua script或者事务来实现	</span><br><span class="line"></span><br><span class="line">其实这里也可以不使用lua script, 因为这里采用redis incr/decr的执行顺序对排行榜的结果没有影响，但是要注意一点：所有的排行榜key操作均需要通过incr/decr来进行，如果第一次set但没有加分布式锁控制的话，会存在并发问题。</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;能做到不同排行榜主要是<strong>在于ZSet的 <code>key</code>的设置，一个 <code>key</code>就是一个排行榜，向不同 <code>key</code>对 <code>member</code>的 <code>score</code>进行增加，ZSet会帮助我们进行排序，而我们只需要调用 <code>ZRANGE</code>或者 <code>ZREVRANGE</code>即可返回排行榜</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这样设计的好处就是所有的数据都会被保存下来、<strong>榜单是完全实时的、不需要脚本、不需要暂停投票</strong>。投票时只要根据用户点击投票的时间，计算这个投票时间属于哪个小时、哪一天、哪一周、哪一月，计算对应榜单 <code>key</code>，给对应的 <code>member</code>增加票数就可以了。</p>
+<h3 id="排行榜key设计"><a href="#排行榜key设计" class="headerlink" title="排行榜key设计"></a>排行榜key设计</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;看到下面几组key，我觉得大家就会一目了然，其中<strong><code>{voteId}</code>是系统中不同投票列表的ID，如男星榜和女星榜的 <code>voteId</code>是不同的</strong>。</p>
+<p>小时榜：</p>
+<ul>
+<li>2019年3月17日11点排行榜： <code>vote:{voteId}:hour:2019031711</code></li>
+<li>2019年3月17日12点排行榜： <code>vote:{voteId}:hour:2019031712</code></li>
+</ul>
+<p>日榜：</p>
+<ul>
+<li>2019年3月17日排行榜： <code>vote:{voteId}:day:20190317</code></li>
+<li>2019年3月18日排行榜： <code>vote:{voteId}:day:20190318</code></li>
+</ul>
+<p>周榜：</p>
+<ul>
+<li>2019年第12周排行榜： <code>vote:{voteId}:week:201912</code></li>
+<li>2019年第13周排行榜： <code>vote:{voteId}:week:201913</code></li>
+</ul>
+<p>月榜：</p>
+<ul>
+<li>2019年1月排行榜： <code>vote:{voteId}:week:201901</code></li>
+<li>2019年2月排行榜： <code>vote:{voteId}:week:201902</code></li>
+</ul>
+<p>总榜： <code>vote:{voteId}:total</code></p>
+<h2 id="投票功能"><a href="#投票功能" class="headerlink" title="投票功能"></a>投票功能</h2><ul>
+<li><strong>多维度的频率限制</strong></li>
+<li><strong>灵活的票数增加</strong></li>
+<li><strong>HyperLogLog实现的人数统计</strong></li>
+</ul>
+<h3 id="频率限制"><a href="#频率限制" class="headerlink" title="频率限制"></a>频率限制</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;首先是频率限制，对于一个完善的投票系统，不可能让用户无限制的进行投票。除了基本的IP限制之外，我们在系统中实现了更<strong>多维度的频率限制</strong>。</p>
+<ul>
+<li><strong>对单个用户的频率限制</strong>，如一分钟单个用户能投5票，一小时只能投10票，甚至在整个投票周期内，限制单个用户只能投一次票；</li>
+<li><strong>对被投票成员的限制</strong>，这种情况是为了避免恶意刷票而导致某个投票项票数增加太快而导致数据不好看，如在明星榜中，为了防止易烊千玺票数突然被刷爆，可以设置他每秒只能被投票1000次，每小时100000次等。</li>
+<li><strong>对不同渠道来源的频率限制</strong>，比如和某公司合作，从他渠道过来的流量，我们可以给他额外增加5票的限制，可以激励用户到他的平台进行投票，实现导流目的；</li>
+<li><strong>对不同终端进行频率限制</strong>，如PC端投了5票达到上限后，用户还可以在移动端再进行投票，从而能提高整个投票活动的活跃度；</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这几个维度的配置在后台实现，配置也十分灵活，因为上面每个维度都支持多个时间周期的设置，周期可以是秒、分钟、小时、星期、月，而且可以多个频率限制进行组合。</p>
+<h3 id="票数增加"><a href="#票数增加" class="headerlink" title="票数增加"></a>票数增加</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;其次是票数增加，票数增加也没有想象的那么简单，并不是调用一个 <code>ZINCRBY key increment member</code>就能完事了的，因为票数加完了之后，这个是为了产出排行榜的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从产品经理的维度来看，他可能并不能满足当前用户投票的真实增长速度，因为往往在推广前期，用户量并没有这么多，如果看着排行榜里面十几、几十的票数是非常难看的，因此我们设计了一些功能</p>
+<ul>
+<li><p><strong>初始化票数</strong>：直接通过后台修改某个选项的投票数量。当要修改的人太多的话，运营将是很崩溃的，因此后台在初始化导入的时候，允许选项有一个初始的票数；</p>
+</li>
+<li><p><strong>多个周期排行榜</strong>：上面说了，一组成员，可能会有多个周期的排行榜，如小时榜、周榜、月榜等；</p>
+</li>
+<li><p><strong>投1票加N票</strong>：支持对某个选项设置，只要他被投1次票，可以增加N票，这个N可以在后台进行设置，这样会增快票数增长速度，让票数增加更快更好看；</p>
+</li>
+<li><p><strong>票数在周期间继承</strong>：<code>对于周期性的排行榜，每个周期的开始，往往票数会归为0</code>，比如周榜，周一票数就会变为0。这会引起两个问题，第一，<code>所有成员票数都是0，排行榜是完全随机的，你不知道谁在前面，就会导致热度很高的明星排在后面</code>，这样用户来投票得花功夫去找他想投的明星；第二就是刚说的那个问题，票数不好看，其中一个有个解决方案，就是<code>根据当初导入时初始化的票数对每个周期的票数重新设置，但这样每次周期开始都是一样的</code>。那对于一个成熟的系统来说，他要自己学会<strong><code>初始化票数，因此我们可以将上一个周期的票数继承到下个周期的开始</code></strong>。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我这里挑选几点详细说明一下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>多个周期排行榜：</strong>列表具体要统计哪个周期的榜单，可以在后台设置。如女星榜设置要只要统计小时榜和日榜，某个用户在 2019年3月17日 12:33 点击给 <code>迪丽热巴</code>投票，那么会根据 <code>2019年3月17日12:33</code>这个时间计算出两个榜单的Key：小时榜 <code>vote:actress:2019031712</code>、日榜 <code>vote:actress:20190317</code>，需要同时给这两个 <code>key</code>中的成员 <code>迪丽热巴</code>进行加票。这样就同时有了小时榜和日榜。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>投1票加N票：</strong>这里需要记录到两个不同的排行榜，那其实最后还要在 <code>key</code>中加一个维度，形如： <code>vote:actress:20190317:true</code>和 <code>vote:actress:20190317:false</code>，姑且称为 <code>True排行榜</code>和 <code>False排行榜</code>，用户点击一次投1票，在 <code>True排行榜</code>中给那个选项增加1票，然后从配置中获取后台设置N，再在 <code>False排行榜</code>中给同样的选项增加N票。最后展示给用户的，可以用 <code>False排行榜</code>进行展示。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>票数在周期间继承：</strong>一开始想的是，在每个周期结束的时候，跑一个自动的脚本，把票数统计加入到下个周期的排行榜，但是我们后来发现逻辑复杂而且不容易维护，还有就是要跑多久才能跑完，周期结束前什么时候开始跑呢，一大堆问题。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在说解决方案之前，我先说一下有序集合 <code>key[score1 member1][score2 member2][......]</code>中， <code>score</code>并不是整数，是一个浮点数。那这样的话，我们就可以<strong>在用户投一票的时候，程序同时给下个周期加 <code>1</code>票这样子，下个周期的开始票数是完全根据上个周期的票数计算的，完全实时，没有必要跑脚本之类</strong>。而能这样做的原因是<strong>因为周期长度都是固定的，完全可以根据点击投票的时间计算出下个周期的 <code>key</code></strong>。对于滚动排行榜，如最近n天，这种方案是没有用的。</p>
+<blockquote>
+<p>这里有一个细节我觉得需要注意：</p>
+<p>​     如果在排行榜中要展示真实的票数，每个周期总数要减去上一个周期总数，原因在于为了排名统计时，加上了上一周期总数</p>
+</blockquote>
+<h3 id="人数统计"><a href="#人数统计" class="headerlink" title="人数统计"></a>人数统计</h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>人数统计不同于人次统计</strong>，如果说人次统计和PV类似，那么人数统计就是UV。我借助Redis的数据结构 <code>HyperLogLog</code>进行统计，因为我们只要一个最后<strong>总参与人数</strong>的大概数字，而我们也不需要知道到底是谁什么时候来投票了。这个时候 <code>HyperLogLog</code>就能满足需求，同时占用空间特别小（每个 <code>HyperLogLog</code> 只需使用 12k 字节内存，以及几个字节的内存来储存键本身）。 本系统中我分别统计了某个选项的参与人数和整个投票的参与人数。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;可以看到，一个投票接口，需要做好多工作：<strong>多个周期榜单票数增加、真假排行榜票数增加、下一周期票数增加、人数统计</strong>。同时也可以发现，这几个操作之间并没有任何关联，所以我们可以<strong>并行写入，降低接口的响应时间</strong>。那实际在做的时候，投票接口通过频率限制检查之后，这几个接口我就直接用<strong>go协程</strong>处理了，因为不需要我返回投票后的票数，这个完全可以在前端+1。</p>
+<h2 id="获取某成员的排名和分数"><a href="#获取某成员的排名和分数" class="headerlink" title="获取某成员的排名和分数"></a>获取某成员的排名和分数</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;了解了排行榜和投票功能之后，这个功能理解起来就特别简单了，接口通过参数传入想要获取哪个榜单的成员名称，计算得到 <code>key</code>，通过调用 <code>ZRANK key member</code>和 <code>ZREVRANK key member</code>即可。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但其实也处理了一些复杂逻辑，比如<strong>能支持返回他的前一名，这样可以获取到他和前一名的差距；还支持获取他上个周期的排名和分数，这样能看到他本周期和上个周期相比票数上升了还是下降了</strong>。</p>
+<blockquote>
+<p>这里的复杂逻辑操作，均需要使用redis lua script来实现，才能保证结果的准确性</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;同时这几个接口都是支持批量操作的，<strong>投票接口支持对多个榜单多个选项同时投票，排行榜接口支持同时获取多个排行榜，获取成员排名和分数的时候也支持同时获取多个成员的信息</strong>。这些都多亏了golang的goroutine，从而接口性能得以保证。</p>
+<h2 id="系统配置后台"><a href="#系统配置后台" class="headerlink" title="系统配置后台"></a>系统配置后台</h2><h3 id="频率限制-1"><a href="#频率限制-1" class="headerlink" title="频率限制"></a>频率限制</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/1.jpg" alt="img"></p>
+<h3 id="投票列表"><a href="#投票列表" class="headerlink" title="投票列表"></a>投票列表</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/2.jpg" alt="img"></p>
+<h3 id="投票统计"><a href="#投票统计" class="headerlink" title="投票统计"></a>投票统计</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/4.jpg" alt="img"></p>
+<h2 id="测试报告"><a href="#测试报告" class="headerlink" title="测试报告"></a>测试报告</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;一方面得益于golang的goroutine，另一方面<strong>在启动程序时将投票信息从mysql写入到内存中【缓存预热】，接口只对redis进行读写操作</strong>，所以接口性能和稳定性表现都十分不错。下面是对几个接口的测试报告：</p>
+<h3 id="投票接口"><a href="#投票接口" class="headerlink" title="投票接口"></a>投票接口</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/5.jpg" alt="img"></p>
+<h3 id="获取排行榜接口"><a href="#获取排行榜接口" class="headerlink" title="获取排行榜接口"></a>获取排行榜接口</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/6.jpg" alt="img"></p>
+<h3 id="获取某成员的排名和分数接口"><a href="#获取某成员的排名和分数接口" class="headerlink" title="获取某成员的排名和分数接口"></a>获取某成员的排名和分数接口</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/7.jpg" alt="img"></p>
+<h2 id="示例产品"><a href="#示例产品" class="headerlink" title="示例产品"></a>示例产品</h2><h3 id="360人气榜"><a href="#360人气榜" class="headerlink" title="360人气榜"></a>360人气榜</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/2.png" alt=""></p>
+<h3 id="2018公益活动榜"><a href="#2018公益活动榜" class="headerlink" title="2018公益活动榜"></a>2018公益活动榜</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/3.png" alt=""></p>
+<h3 id="校园好声音专题"><a href="#校园好声音专题" class="headerlink" title="校园好声音专题"></a>校园好声音专题</h3><p><img src="//blog.com/2019/03/30/使用Redis有序集合实现投票排行榜系统/1.png" alt=""></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/投票/" rel="tag"># 投票</a>
+          
+            <a href="/tags/排行榜/" rel="tag"># 排行榜</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/30/秒杀系统设计/" rel="next" title="秒杀系统设计">
+                <i class="fa fa-chevron-left"></i> 秒杀系统设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/31/三次握手与四次挥手/" rel="prev" title="三次握手与四次挥手">
+                三次握手与四次挥手 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#使用Redis有序集合实现投票排行榜系统"><span class="nav-number">1.</span> <span class="nav-text">使用Redis有序集合实现投票排行榜系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#需求"><span class="nav-number">1.1.</span> <span class="nav-text">需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#排行榜"><span class="nav-number">1.2.</span> <span class="nav-text">排行榜</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实现思路"><span class="nav-number">1.2.1.</span> <span class="nav-text">实现思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#排行榜key设计"><span class="nav-number">1.2.2.</span> <span class="nav-text">排行榜key设计</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投票功能"><span class="nav-number">1.3.</span> <span class="nav-text">投票功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#频率限制"><span class="nav-number">1.3.1.</span> <span class="nav-text">频率限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#票数增加"><span class="nav-number">1.3.2.</span> <span class="nav-text">票数增加</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#人数统计"><span class="nav-number">1.3.3.</span> <span class="nav-text">人数统计</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取某成员的排名和分数"><span class="nav-number">1.4.</span> <span class="nav-text">获取某成员的排名和分数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统配置后台"><span class="nav-number">1.5.</span> <span class="nav-text">系统配置后台</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#频率限制-1"><span class="nav-number">1.5.1.</span> <span class="nav-text">频率限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#投票列表"><span class="nav-number">1.5.2.</span> <span class="nav-text">投票列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#投票统计"><span class="nav-number">1.5.3.</span> <span class="nav-text">投票统计</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试报告"><span class="nav-number">1.6.</span> <span class="nav-text">测试报告</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#投票接口"><span class="nav-number">1.6.1.</span> <span class="nav-text">投票接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取排行榜接口"><span class="nav-number">1.6.2.</span> <span class="nav-text">获取排行榜接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取某成员的排名和分数接口"><span class="nav-number">1.6.3.</span> <span class="nav-text">获取某成员的排名和分数接口</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#示例产品"><span class="nav-number">1.7.</span> <span class="nav-text">示例产品</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#360人气榜"><span class="nav-number">1.7.1.</span> <span class="nav-text">360人气榜</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2018公益活动榜"><span class="nav-number">1.7.2.</span> <span class="nav-text">2018公益活动榜</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#校园好声音专题"><span class="nav-number">1.7.3.</span> <span class="nav-text">校园好声音专题</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

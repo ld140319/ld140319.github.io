@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="PHP,Laravel,定时任务,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="原文地址：https://cloud.tencent.com/developer/article/1386221  深入理解Laravel定时任务调度机制1. 基本实现逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;一个复杂的web系统后台当中，一定会有很多定时脚本或者任务要跑。例如爬虫系统需要定期去爬取一些网站数据，自动还贷系统需要每个月定时对用户账户扣款结算，会">
+<meta name="keywords" content="PHP,Laravel,定时任务">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解Laravel定时任务调度机制">
+<meta property="og:url" content="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="原文地址：https://cloud.tencent.com/developer/article/1386221  深入理解Laravel定时任务调度机制1. 基本实现逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;一个复杂的web系统后台当中，一定会有很多定时脚本或者任务要跑。例如爬虫系统需要定期去爬取一些网站数据，自动还贷系统需要每个月定时对用户账户扣款结算，会">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/e5jvp1qngw.jpg">
+<meta property="og:image" content="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/wnqqz8fqq5.png">
+<meta property="og:image" content="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/yc6vkfuqyt.png">
+<meta property="og:updated_time" content="2019-06-14T15:22:28.390Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解Laravel定时任务调度机制">
+<meta name="twitter:description" content="原文地址：https://cloud.tencent.com/developer/article/1386221  深入理解Laravel定时任务调度机制1. 基本实现逻辑&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;一个复杂的web系统后台当中，一定会有很多定时脚本或者任务要跑。例如爬虫系统需要定期去爬取一些网站数据，自动还贷系统需要每个月定时对用户账户扣款结算，会">
+<meta name="twitter:image" content="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/e5jvp1qngw.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/">
+
+
+
+
+
+  <title>深入理解Laravel定时任务调度机制 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/06/12/深入理解Laravel定时任务调度机制/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入理解Laravel定时任务调度机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-12T12:12:57+08:00">
+                2019-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/" itemprop="url" rel="index">
+                    <span itemprop="name">PHP</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/Laravel/" itemprop="url" rel="index">
+                    <span itemprop="name">Laravel</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/PHP/Laravel/定时任务/" itemprop="url" rel="index">
+                    <span itemprop="name">定时任务</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://cloud.tencent.com/developer/article/1386221" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1386221</a><br><br></p>
+</blockquote>
+<h1 id="深入理解Laravel定时任务调度机制"><a href="#深入理解Laravel定时任务调度机制" class="headerlink" title="深入理解Laravel定时任务调度机制"></a>深入理解Laravel定时任务调度机制</h1><h2 id="1-基本实现逻辑"><a href="#1-基本实现逻辑" class="headerlink" title="1. 基本实现逻辑"></a>1. 基本实现逻辑</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个复杂的<code>web</code>系统后台当中，一定会有很多定时脚本或者任务要跑。例如爬虫系统需要定期去爬取一些网站数据，自动还贷系统需要每个月定时对用户账户扣款结算，会员系统需要定期检测用户剩余会员天数以便及时通知续费等等。<code>Linux</code>系统中内置的<code>crontab</code>一般被广泛地用于跑定时任务。其任务指令格式如下：</p>
+<p><img src="//blog.com/2019/06/12/深入理解Laravel定时任务调度机制/e5jvp1qngw.jpg" alt="img"></p>
+<p><em><code>crontab</code>指令解释</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;命令行<code>crontab -e</code>进入<code>crontab</code>编辑，把自己要执行的指令编辑好之后保存退出即可生效。不过本文并不会过多讨论<code>crontab</code>的内容，而是要深入分析一下<code>PHP Laravel</code>框架是如何基于<code>crontab</code>封装出功能更加强大的任务调度（<code>Task Scheduling</code>）模块。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于定时任务，我们当然可以每个任务配置一个<code>crontab</code>指令。只不过这样做的话随着定时任务的增加，<code>crontab</code>指令也线性增长。毕竟<code>crontab</code>是一项系统级的配置，在业务中我们为了节约机器，往往对于量不大的多个项目会放在同一台服务器上，<code>crontab</code>指令多了就容易管理混乱，并且功能也不够灵活强大（无法随心所欲的停启、处理任务间依赖关系等）。对此<code>Laravel</code>的解决方案是只声明一条<code>crontab</code>，业务中的所有定时任务全都在这一条<code>crontab</code>中做处理和判断，实现在代码层面管理任务：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">* * * * * php artisan schedule:run &gt;&gt; /dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;即<strong><code>php artisan schedule:run</code>每分钟跑一次（<code>crontab</code>的最高频率）</strong>，至于业务上的具体任务配置，则注册于<code>Kernel::schedule()</code>中</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Kernel</span> <span class="keyword">extends</span> <span class="title">ConsoleKernel</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">Protected</span> <span class="function"><span class="keyword">function</span> <span class="title">schedule</span><span class="params">(Schedule $schedule)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $schedule-&gt;command(<span class="string">'account:check'</span>)-&gt;everyMinute(); <span class="comment">// 每分钟执行一次php artisan account:check 指令</span></span><br><span class="line">        $schedule-&gt;exec(<span class="string">'node /home/username/index.js'</span>)-&gt;everyFifteenMinutes(); <span class="comment">//每15分钟执行一次node /home/username/index.js 命令</span></span><br><span class="line">        $schedule-&gt;job(<span class="keyword">new</span> MyJob())-&gt;cron(<span class="string">'1 2 3 10 *'</span>); <span class="comment">// 每年的10月3日凌晨2点1分向任务队列分发一个MyJob任务</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上述例子中我们可以很清晰的看到系统中注册了三项定时任务，并且提供了<code>everyMinute, everyFifteenMinutes, daily, hourly</code>等语义化的方法来配置任务周期。本质上，这些语义化的方法只是<code>crontab</code>表示方式的一个别称罢了，最终都会转化为<code>crontab</code>中的表达方式（如 <code>* * * * *</code>表示每分钟执行一次）。如此一来，<strong>每分钟执行一次的<code>php artisan schedule:run</code>指令，会扫描<code>Kernel::schedule</code>中注册的所有指令并判断该指令配置的执行周期时候已经到期，如果到期则推入待执行队列</strong>。最后依次执行所有的指令。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ScheduleRunCommand::handle函数</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">handle</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="keyword">$this</span>-&gt;schedule-&gt;dueEvents() <span class="keyword">as</span> $event) &#123;</span><br><span class="line">        <span class="keyword">if</span> (! $event-&gt;filtersPass()) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        $event-&gt;run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="//blog.com/2019/06/12/深入理解Laravel定时任务调度机制/wnqqz8fqq5.png" alt="img"></p>
+<p><em><code>schedule task</code>流程图</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里需要注意两个点：</p>
+<p>第一、<strong>如何判断指令是否已经<code>Due</code>了该执行了</strong>。</p>
+<p>第二、<strong>指令的执行顺序问题</strong>。<strong>首先，<code>crontab</code>表达式所指定的执行时间，是指绝对时间，而不是相对时间</strong>。</p>
+<blockquote>
+<p>所以定时任务第一次执行的时间点跟我们预想的可能不一致</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;所以仅仅根据当前时间和<code>crontab</code>表达式，即可判断出指令是否已经<code>Due</code>了该执行了。如果想要实现相对时间，那么必须存储上一次执行的时间，然后才能进行推算下次执行应该是什么时候。绝对时间和相对时间的区别可以用下面一幅图概括（<code>crontab</code>的执行时间如图中左侧列表所示）。<code>Laravel</code>中对于<code>crontab</code>表达式的静态分析和判断使用的是<code>cron-expression</code>库(<a href="github.com/mtdowling/cron-expression">cron-expression</a>)，原理也比较直观，就是静态的字符分析比对。</p>
+<p><img src="//blog.com/2019/06/12/深入理解Laravel定时任务调度机制/yc6vkfuqyt.png" alt="img"></p>
+<p><em><code>crontab</code>是绝对时间，而非相对时间</em></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;第二个问题是执行顺序，前面的图中我们可以看出，<strong>如果你在<code>Kernel::schedule</code>方法中注册了多个任务，正常情况下它们是顺序依次执行的</strong>。也就是说<strong>必须要等到<code>Task 1</code>执行完成之后，<code>Task 2</code>才会开始执行。在这种情况下，如果<code>Task 1</code>非常耗时，则会影响到<code>Task 2</code>的按时执行，这一点在开发中是尤其需要注意的</strong>。不过在<code>Kernel::schedule</code>中注册任务时加上<code>runInBackground</code>即可实现任务的后台执行，这点我们下文详细讨论。</p>
+<h2 id="2-后台运行"><a href="#2-后台运行" class="headerlink" title="2. 后台运行"></a>2. 后台运行</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;前文提到的<strong>定时任务队列顺序执行的特性，前面的任务执行时间太长会妨碍后面任务的按时执行</strong>。为解决此问题，<code>Laravel</code>中提供了使任务后台执行的方法<code>runInBackground</code>。如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Kernel.php</span></span><br><span class="line">protected <span class="function"><span class="keyword">function</span> <span class="title">schedule</span>(<span class="params">Schedule $schedule</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    $schedule-&gt;command(<span class="string">'test:hello'</span>) <span class="comment">// 执行command命令：php artisan test:hello</span></span><br><span class="line">    -&gt;cron(<span class="string">'10 11 1 * *'</span>) <span class="comment">// 每月1日的11:10:00执行该命令</span></span><br><span class="line">    -&gt;timezone(<span class="string">'Asia/Shanghai'</span>) <span class="comment">// 设置时区</span></span><br><span class="line">    -&gt;before(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;<span class="comment">/*do something*/</span>&#125;) <span class="comment">// 前置hook，命令执行前执行此回调</span></span><br><span class="line">    -&gt;after(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;<span class="comment">/*do something*/</span>&#125;) <span class="comment">// 后置钩子，命令执行完之后执行此回调</span></span><br><span class="line">    -&gt;runInBackground(); <span class="comment">// 后台运行本命令</span></span><br><span class="line">    <span class="comment">// 每分钟执行command命令：php artisan test:world</span></span><br><span class="line">    $schedule-&gt;command(<span class="string">'test:world'</span>)-&gt;everyMinute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;后台运行的原理，其实也非常简单。我们知道在<code>linux</code>系统下，命令行的指令最后加个<code>“&amp;”</code>符号，可以使任务在后台执行。<code>runInBackground</code>方法内部原理其实就是让最后跑的指令后面加了<code>“&amp;”</code>符号。不过在任务改为后台执行之后，又有了一个新的问题，即<strong>如何触发任务的后置钩子函数</strong>。<strong>因为后置钩子函数是需要在任务跑完之后立即执行，所以必须要有办法监测到后台运行的任务结束的一瞬间</strong>。我们从源代码中一探究竟（<code>Illuminate/Console/Scheduling/CommandBuilder.php</code>）</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 构建运行在后台的command指令</span></span><br><span class="line">protected <span class="function"><span class="keyword">function</span> <span class="title">buildBackgroundCommand</span>(<span class="params">Event $event</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    $output = ProcessUtils::escapeArgument($event-&gt;output);</span><br><span class="line">    $redirect = $event-&gt;shouldAppendOutput ? <span class="string">' &gt;&gt; '</span> : <span class="string">' &gt; '</span>;</span><br><span class="line">    $finished = Application::formatCommandString(<span class="string">'schedule:finish'</span>).<span class="string">' "'</span>.$event-&gt;mutexName().<span class="string">'"'</span>;</span><br><span class="line">    <span class="keyword">return</span> $<span class="keyword">this</span>-&gt;ensureCorrectUser($event,</span><br><span class="line">        <span class="string">'('</span>.$event-&gt;command.$redirect.$output.<span class="string">' 2&gt;&amp;1 '</span>.(windows_os() ? <span class="string">'&amp;'</span> : <span class="string">';'</span>).<span class="string">' '</span>.$finished.<span class="string">') &gt; '</span></span><br><span class="line">        .ProcessUtils::escapeArgument($event-&gt;getDefaultOutput()).<span class="string">' 2&gt;&amp;1 &amp;'</span></span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>$finished</code>字符串的内容是一个隐藏的<code>php artisan</code>指令，即<code>php artisan schedule:finish &lt;mutex_name&gt;</code>。该命令被附在了本来要执行的<code>command</code>命令后面，用来检测并执行后置钩子函数。<code>php artisan schedule:finish &lt;mutex_name&gt;</code>的源代码非常简单，<strong>用<code>mutex_name</code>来唯一标识一个待执行任务，通过比较系统中注册的所有任务的<code>mutex_name</code>，来确定需要执行哪个任务的后置函数</strong>。代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Illuminate/Console/Scheduling/ScheduleFinishCommand.php</span></span><br><span class="line"><span class="comment">// php artisan schedule:finish指令的源代码</span></span><br><span class="line">public <span class="function"><span class="keyword">function</span> <span class="title">handle</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    collect($<span class="keyword">this</span>-&gt;schedule-&gt;events())-&gt;filter(<span class="function"><span class="keyword">function</span> (<span class="params">$value</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> $value-&gt;mutexName() == $<span class="keyword">this</span>-&gt;argument(<span class="string">'id'</span>);</span><br><span class="line">    &#125;)-&gt;each-&gt;callAfterCallbacks($<span class="keyword">this</span>-&gt;laravel);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-防止重复"><a href="#3-防止重复" class="headerlink" title="3. 防止重复"></a>3. 防止重复</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;有些定时任务指令需要执行很长时间，而<code>laravel schedule</code>任务最频繁可以做到1分钟跑一次。这也就意味着，如果任务本身跑了1分钟以上都没有结束，那么等到下一个1分钟到来的时候，又一个相同的任务跑起来了。这很可能是我们不想看到的结果。因此，有必要想一种机制，来<strong>避免任务在同一时刻的重复执行</strong>（<code>prevent overlapping</code>）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种场景非常类似多进程或者多线程的程序抢夺资源的情形，常见的预防方式就是给资源加锁。<strong>具体到<code>laravel</code>定时任务，那就是给任务加锁，只有拿到任务锁之后，才能够执行任务的具体内容</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>Laravel</code>中提供了<code>withoutOverlapping</code>方法来让定时任务避免重复。具体锁的实现上，需要实现<code>Illuminate\Console\Scheduling\Mutex.php</code>接口中所定义的三个接口：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">interface Mutex</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 实现创建锁接口</span></span><br><span class="line">    public <span class="function"><span class="keyword">function</span> <span class="title">create</span>(<span class="params">Event $event</span>);</span></span><br><span class="line"><span class="function">    // 实现判断锁是否存在的接口</span></span><br><span class="line"><span class="function">    <span class="title">public</span> <span class="title">function</span> <span class="title">exists</span>(<span class="params">Event $event</span>);</span></span><br><span class="line"><span class="function">    // 实现解除锁的接口</span></span><br><span class="line"><span class="function">    <span class="title">public</span> <span class="title">function</span> <span class="title">forget</span>(<span class="params">Event $event</span>);</span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;该接口当然可以自己实现，<code>Laravel</code>也给了一套默认实现，即<strong>利用缓存作为存储锁的载体</strong>（可参考<code>Illuminate\Console\Scheduling\CacheMutex.php</code>文件）。<strong>在每次跑任务之间，程序都会做出判断，是否需要防止重复，如果重复了，则不再跑任务代码</strong>：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Illuminate\Console\Scheduling\Event.php</span></span><br><span class="line">public <span class="function"><span class="keyword">function</span> <span class="title">run</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 判断是否需要防止重复，若需要防重复，并且创建锁不成功，则说明已经有任务在跑了，这时直接退出，不再执行具体任务</span></span><br><span class="line">    <span class="keyword">if</span> ($<span class="keyword">this</span>-&gt;withoutOverlapping &amp;&amp; ! $<span class="keyword">this</span>-&gt;mutex-&gt;create($<span class="keyword">this</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    $<span class="keyword">this</span>-&gt;runInBackground?$<span class="keyword">this</span>-&gt;runCommandInBackground($container):$<span class="keyword">this</span>-&gt;runCommandInForeground($container);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-如何实现30秒任务？"><a href="#4-如何实现30秒任务？" class="headerlink" title="4. 如何实现30秒任务？"></a>4. 如何实现30秒任务？</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们知道<code>crontab</code>任务最精细的粒度只能到分钟级别。那么如果我想实现30s执行一次的任务，需要如何实现？关于这个问题，<code>stackoverflow</code>上面也有一些讨论，有建议说在业务层面实现，自己写个<code>sleep</code>来实现，示例代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public <span class="function"><span class="keyword">function</span> <span class="title">handle</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    runYourCode(); <span class="comment">// 跑业务代码</span></span><br><span class="line">    sleep(<span class="number">30</span>); <span class="comment">// 睡30秒</span></span><br><span class="line">    runYourCode(); <span class="comment">// 再跑一次业务代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果<code>runYourCode</code>执行实现不太长的话，上面这个任务每隔<code>1min</code>执行一次，其实相当于<code>runYourCode</code>函数每30秒执行一次。如果<code>runYourCode</code>函数本身执行时间比较长，那这里的<code>sleep 30</code>秒会不那么精确。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当然，也可以不使用<code>Laravel</code>的定时任务系统，改用专门的定时任务调度开源工具来实现每隔30秒执行一次的功能，在此推荐一个定时任务调度工具<code>nomad</code>（<a href="https://github.com/hashicorp/nomad" target="_blank" rel="noopener">https://github.com/hashicorp/nomad</a>）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果你确实要用<code>Laravel</code>自带的定时任务系统，并且又想实现更精确一些的每隔30秒执行一次任务的功能，那么可以结合<code>laravel</code> 的<code>queue job</code>来实现。如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public <span class="function"><span class="keyword">function</span> <span class="title">handle</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    $job1 = (<span class="keyword">new</span> MyJob())-&gt;onQueue(“queue-name”);</span><br><span class="line">    $job2 = (<span class="keyword">new</span> MyJob())-&gt;onQueue(“queue-name”)-&gt;delay(<span class="number">30</span>);</span><br><span class="line">    dispatch($job1);</span><br><span class="line">    dispatch($job2):</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyJob</span> <span class="title">implement</span> <span class="title">Illuminate</span>\<span class="title">Contracts</span>\<span class="title">Queue</span>\<span class="title">ShouldQueue</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;</span><br><span class="line">    </span><br><span class="line">    public <span class="function"><span class="keyword">function</span> <span class="title">handle</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        runYourCode();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过<code>Laravel</code>队列功能的<code>delay</code>方法，可以将任务延时30s执行，因此如果每隔<code>1min</code>，我们都往队列中<code>dispatch</code>两个任务，其中一个延时30秒。另外，把自己要执行的代码<code>runYourCode</code>写在任务中，即可实现30秒执行一次的功能。不过这里需要注意的是，这种实现中<code>scheduling</code>的防止重合功能不再有效，需要自己在业务代码<code>runYourCode</code>中实现加锁防止重复的功能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上，就是使用<code>Laravel Scheduling</code>定时任务调度的原理分析和注意事项。作为最流行的<code>PHP</code>框架，<code>Laravel</code>大而全，组件基本包含了<code>web</code>开发的各方面需求。其中很多组件的实现思想，还是很值得深入源码一探究竟的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
+          
+            <a href="/tags/Laravel/" rel="tag"># Laravel</a>
+          
+            <a href="/tags/定时任务/" rel="tag"># 定时任务</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/11/Redis批量删除key/" rel="next" title="Redis批量删除key">
+                <i class="fa fa-chevron-left"></i> Redis批量删除key
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/14/while循环的控制逻辑写在循环体内/" rel="prev" title="while循环的控制逻辑写在循环体内">
+                while循环的控制逻辑写在循环体内 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#深入理解Laravel定时任务调度机制"><span class="nav-number">1.</span> <span class="nav-text">深入理解Laravel定时任务调度机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-基本实现逻辑"><span class="nav-number">1.1.</span> <span class="nav-text">1. 基本实现逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-后台运行"><span class="nav-number">1.2.</span> <span class="nav-text">2. 后台运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-防止重复"><span class="nav-number">1.3.</span> <span class="nav-text">3. 防止重复</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-如何实现30秒任务？"><span class="nav-number">1.4.</span> <span class="nav-text">4. 如何实现30秒任务？</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

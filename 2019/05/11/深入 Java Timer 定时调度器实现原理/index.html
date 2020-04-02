@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="架构,延时队列,延时任务处理,Timer,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="搬运工 + 践行者" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="深入 Java Timer 定时调度器实现原理  原文地址：https://zhuanlan.zhihu.com/p/52587713?utm_source=wechat_session&amp;amp;utm_medium=social&amp;amp;utm_oi=645526066970759168   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;使用Java 来调度定时任务时，">
+<meta name="keywords" content="架构,延时队列,延时任务处理,Timer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入 Java Timer 定时调度器实现原理">
+<meta property="og:url" content="http://blog.com/2019/05/11/深入 Java Timer 定时调度器实现原理/index.html">
+<meta property="og:site_name" content="搬运工 + 践行者">
+<meta property="og:description" content="深入 Java Timer 定时调度器实现原理  原文地址：https://zhuanlan.zhihu.com/p/52587713?utm_source=wechat_session&amp;amp;utm_medium=social&amp;amp;utm_oi=645526066970759168   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;使用Java 来调度定时任务时，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://pic3.zhimg.com/v2-b7907d351809293c60658b0b87053c66_b.gif">
+<meta property="og:updated_time" content="2019-05-11T15:43:43.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入 Java Timer 定时调度器实现原理">
+<meta name="twitter:description" content="深入 Java Timer 定时调度器实现原理  原文地址：https://zhuanlan.zhihu.com/p/52587713?utm_source=wechat_session&amp;amp;utm_medium=social&amp;amp;utm_oi=645526066970759168   &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;使用Java 来调度定时任务时，">
+<meta name="twitter:image" content="https://pic3.zhimg.com/v2-b7907d351809293c60658b0b87053c66_b.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.com/2019/05/11/深入 Java Timer 定时调度器实现原理/">
+
+
+
+
+
+  <title>深入 Java Timer 定时调度器实现原理 | 搬运工 + 践行者</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">搬运工 + 践行者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">记录学习的技能和遇到的问题</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.com/2019/05/11/深入 Java Timer 定时调度器实现原理/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="刘泽明">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="搬运工 + 践行者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入 Java Timer 定时调度器实现原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-11T12:12:57+08:00">
+                2019-05-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/" itemprop="url" rel="index">
+                    <span itemprop="name">延时队列</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/Timer/" itemprop="url" rel="index">
+                    <span itemprop="name">Timer</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/延时队列/Timer/延时任务处理/" itemprop="url" rel="index">
+                    <span itemprop="name">延时任务处理</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="深入-Java-Timer-定时调度器实现原理"><a href="#深入-Java-Timer-定时调度器实现原理" class="headerlink" title="深入 Java Timer 定时调度器实现原理"></a>深入 Java Timer 定时调度器实现原理</h1><p><br></p>
+<blockquote>
+<p>原文地址：<a href="https://zhuanlan.zhihu.com/p/52587713?utm_source=wechat_session&amp;utm_medium=social&amp;utm_oi=645526066970759168" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/52587713?utm_source=wechat_session&amp;utm_medium=social&amp;utm_oi=645526066970759168</a></p>
+</blockquote>
+<p><br></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;使用<code>Java</code> 来调度定时任务时，我们经常会使用 <code>Timer</code> 类搞定。<code>Timer</code> 简单易用，其源码阅读起来也非常清晰，本节我们来仔细分析一下 <code>Timer</code> 类，来看看<code>JDK</code> 源码的编写者是如何实现一个稳定可靠的简单调度器。</p>
+<h2 id="Timer-使用"><a href="#Timer-使用" class="headerlink" title="Timer 使用"></a><strong>Timer 使用</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Timer</code> 调度任务有一次性调度和循环调度，循环调度有分为固定速率调度(<code>fixRate</code>)和固定时延调度(<code>fixDelay</code>)</strong>。固定速率就好比你今天加班到很晚，但是到了第二天还必须准点到公司上班，如果你一不小心加班到了第二天早上 9 点，你就连休息的时间都没有了。而固定时延的意思是你必须睡够 8 个小时再过来上班，如果你加班到凌晨 6 点，那就可以下午过来上班了。固定速率强调准点，固定时延强调间隔。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Timer timer = <span class="keyword">new</span> Timer();</span><br><span class="line"></span><br><span class="line">TimerTask task = <span class="keyword">new</span> TimerTask() &#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"wtf"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 延迟 1s 打印 wtf 一次</span></span><br><span class="line">timer.schedule(task, <span class="number">1000</span>)</span><br><span class="line"><span class="comment">// 延迟 1s 固定时延每隔 1s 周期打印一次 wtf</span></span><br><span class="line">timer.schedule(task, <span class="number">1000</span>, <span class="number">1000</span>);</span><br><span class="line"><span class="comment">// 延迟 1s 固定速率每隔 1s 周期打印一次 wtf</span></span><br><span class="line">timer.scheduleAtFixRate(task, <span class="number">1000</span>, <span class="number">1000</span>)</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果你有一个任务必须每天准点调度，那就应该使用固定速率调度，并且要确保每个任务执行时间不要太长，千万别超过了第二天这个点。如果你有一个任务需要每隔几分钟跑一次，那就使用固定时延调度，它不是很在乎你的单个任务要跑多长时间。</p>
+<h2 id="内部结构"><a href="#内部结构" class="headerlink" title="内部结构"></a><strong>内部结构</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Timer 类里包含一个任务队列和一个异步轮训线程</strong>。<strong>任务队列里容纳了所有待执行的任务，所有的任务将会在这一个异步线程里执行，切记任务的执行代码不可以抛出异常，否则会导致 Timer 线程挂掉，所有的任务都没得执行了</strong>。单个任务也不易执行时间太长，否则会影响任务调度在时间上的精准性。比如你一个任务跑了太久，其它等着调度的任务就一直处于饥饿状态得不到调度。所有任务的执行都是这单一的<code>TimerThread</code>线程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Timer</span> </span>&#123;</span><br><span class="line">  TaskQueue queue = <span class="keyword">new</span> TaskQueue();</span><br><span class="line">  TimerThread thread = <span class="keyword">new</span> TimerThread(queue);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://pic3.zhimg.com/v2-b7907d351809293c60658b0b87053c66_b.gif" alt="img"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Timer</code> 的任务队列<code>TaskQueue</code> 是一个特殊的队列，它内部是一个数组</strong>。<strong>这个数组会按照待执行时间进行堆排序，堆顶元素总是待执行时间最小的任务</strong>。<strong>轮训线程会每次轮训出时间点最近的并且到点的任务来执行。数组会自动扩容，如果任务非常多</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TaskQueue</span> </span>&#123;</span><br><span class="line">  TimerTask[] queue = <span class="keyword">new</span> TimerTask[<span class="number">128</span>];</span><br><span class="line">  <span class="keyword">int</span> size;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;任意线程都可以通过<code>Timer.schedule</code> 方法将任务加入 <code>TaskQueue</code>，但是 <code>TaskQueue</code>又并不是线程安全的数据结构。所在每次修改 <code>TaskQueue</code>时都需要加锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span>(queue) &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="任务状态"><a href="#任务状态" class="headerlink" title="任务状态"></a><strong>任务状态</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>TimerTask</code> 有 4 个状态，<code>VIRGIN</code> 是默认状态，刚刚实例化还没有被调度。<code>SCHEDULED</code> 表示已经将任务塞进 <code>TaskQueue</code> 等待被执行。<code>EXECUTED</code> 表示任务已经执行完成。<code>CANCELLED</code> 表示任务被取消了，还没来得及执行就被人为取消了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">TimerTask</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> state = VIRGIN;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> VIRGIN = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SCHEDULED = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> EXECUTED = <span class="number">2</span>;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CANCELLED = <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">long</span> nextExecutionTime; <span class="comment">// 下次执行时间</span></span><br><span class="line">  <span class="keyword">long</span> period = <span class="number">0</span>; <span class="comment">// 间隔</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于一个循环任务来说，它不存在 <code>EXECUTED</code>状态，因为它每次刚刚执行完成，就被重新调度了。<code>EXECUTED</code><strong>状态仅仅存在于一次性任务，而且这个状态其实并不是表示任务已经执行完成，它是指已经从任务队列里摘出来了，马上就要执行</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>任务间隔字段 <code>period</code> 比较特殊，当使用固定速率时，period 为正值，当使用固定间隔时，<code>period</code> 为负值，当任务是一次性时，<code>period</code> 为零</strong>。下面是循环任务的下次调度时间设定</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">currentTime = System.currentTimeMillis();</span><br><span class="line">executionTime = task.nextExecutionTime;</span><br><span class="line"><span class="comment">// 固定时延基于 currentTime 顺延</span></span><br><span class="line"><span class="comment">// 固定速率基于 executionTime(设定时间) 顺延</span></span><br><span class="line"><span class="comment">// next_exec_time = exec_time + period = first_delay + n * period</span></span><br><span class="line">queue.rescheduleMin(</span><br><span class="line">      task.period&lt;<span class="number">0</span> ? currentTime   - task.period  </span><br><span class="line">                    : executionTime + task.period);</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;对于固定速率来说，如果任务执行时间太长超出了间隔，那么它可能会持续霸占任务队列，因为它的调度时间将总是低于 <code>currentTime</code>，排在堆顶，每次轮训取出来的都是它。运行完毕后，重新调度这个任务，它的时间依旧赶不上。持续下去你会看到这个任务的调度时间远远落后于当前时间，而其它任务可能会彻底饿死。这就是为什么一定要特别注意固定速率的循环任务运行时间不宜过长。</p>
+<h2 id="任务锁"><a href="#任务锁" class="headerlink" title="任务锁"></a><strong>任务锁</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Timer</code> 的任务支持取消操作，取消任务的线程和执行任务的线程极有可能不是一个线程</strong>。有可能任务正在执行中，结果另一个线程表示要取消任务。这时候<code>Timer</code> 是如何处理的呢？在 <code>TimerTask</code> 类里看到了一把锁。当任务属性需要修改的时候，都会加锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">TimerTask</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> Object lock = <span class="keyword">new</span> Object();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 取消任务</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">cancel</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(lock) &#123;</span><br><span class="line">        <span class="keyword">boolean</span> result = (state == SCHEDULED);</span><br><span class="line">        state = CANCELLED;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调度任务</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sched</span><span class="params">(TimerTask task, <span class="keyword">long</span> time, <span class="keyword">long</span> period)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">synchronized</span>(task.lock) &#123;</span><br><span class="line">    <span class="keyword">if</span> (task.state != TimerTask.VIRGIN)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">              <span class="string">"Task already scheduled or cancelled"</span>);</span><br><span class="line">    task.nextExecutionTime = time;</span><br><span class="line">    task.period = period;</span><br><span class="line">    task.state = TimerTask.SCHEDULED;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 运行任务</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">mainLoop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(task.lock) &#123;</span><br><span class="line">        <span class="keyword">if</span> (task.state == TimerTask.CANCELLED) &#123;</span><br><span class="line">            queue.removeMin();</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span>(task.period == <span class="number">0</span>) &#123;</span><br><span class="line">          task.state = TimerTask.EXECUTED;</span><br><span class="line">        &#125; </span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    task.run();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在任务运行之前会检查任务是不是已经被取消了，如果取消了，就从队列中移除。一旦任务开始运行 <code>run()</code>，对于单次任务来说它就无法被取消了，而循环任务将不会继续下次调度。如果任务没有机会得到执行（时间设置的太长），那么即使这个任务被取消了，它也会一直持续躺在任务队列中。设想如果你调度了一系列久远的任务，然后都取消了，这可能会成为一个内存泄露点。所以 <code>Timer</code>还单独提供了一个<code>purge()</code>方法可以一次性清空所有的已取消的任务。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">purge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> result = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 灭掉 CANCELLED 状态的任务</span></span><br><span class="line">    <span class="keyword">synchronized</span>(queue) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = queue.size(); i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">             <span class="keyword">if</span> (queue.get(i).state == TimerTask.CANCELLED) &#123;</span><br><span class="line">                queue.quickRemove(i);</span><br><span class="line">                result++;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 堆调整</span></span><br><span class="line">    <span class="keyword">if</span> (result != <span class="number">0</span>)</span><br><span class="line">         queue.heapify();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="任务队列空了"><a href="#任务队列空了" class="headerlink" title="任务队列空了"></a><strong>任务队列空了</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>任务队列里没有任务了，调度线程必须按一定的策略进行睡眠。它需要睡眠一直到最先执行的任务到点时立即醒来，所以睡眠截止时间就是第一个任务将要执行的时间</strong>。<strong>同时在睡觉的时候，有可能会有新的任务被添加进来，它的调度时间可能会更加提前，所以当有新的任务到来时需要可以唤醒正在睡眠的线程</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">mainLoop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">    task = queue.getMin();</span><br><span class="line">    currentTime = System.currentTimeMillis();</span><br><span class="line">    executionTime = task.nextExecutionTime;</span><br><span class="line">    <span class="keyword">if</span>(executionTime &gt; currentTime) &#123;</span><br><span class="line">      <span class="comment">// 开始睡大觉</span></span><br><span class="line">      queue.wait(executionTime - currentTime);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 新任务进来了</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sched</span><span class="params">(TimerTask task, <span class="keyword">long</span> time, <span class="keyword">long</span> period)</span> </span>&#123;</span><br><span class="line">   ...</span><br><span class="line">   queue.add(task);</span><br><span class="line">   <span class="keyword">if</span> (queue.getMin() == task)</span><br><span class="line">        queue.notify();  <span class="comment">// 唤醒轮训线程</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;代码中的 <code>wait()</code>方法就是调用了 <code>Object.wait()</code>来进行睡眠。当有新任务进来了，发现这个新任务的运行时间是最早的，那就调用 <code>notify()</code> 方法唤醒轮训线程。</p>
+<h2 id="Timer-终止"><a href="#Timer-终止" class="headerlink" title="Timer 终止"></a><strong>Timer 终止</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong><code>Timer</code>提供了 <code>cancel()</code>方法清空队列，停止调度器，不允许有任何新任务进来</strong>。<strong>它会将 <code>newTasksMayBeScheduled</code> 字段设置为 <code>false</code> 表示 <code>Timer</code> 即将终止</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TimerThread</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">boolean</span> newTasksMayBeScheduled;  <span class="comment">// 终止的标志</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">cancel</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(queue) &#123;</span><br><span class="line">        thread.newTasksMayBeScheduled = <span class="keyword">false</span>;</span><br><span class="line">        queue.clear();</span><br><span class="line">        queue.notify();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果 <code>Timer</code>终止了，还有新任务进来就会抛出异常。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sched</span><span class="params">(TimerTask task, <span class="keyword">long</span> time, <span class="keyword">long</span> period)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">synchronized</span>(queue) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!thread.newTasksMayBeScheduled)</span><br><span class="line">       <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Timer already cancelled."</span>);</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们还注意到 <code>Timer.cancel()</code>方法会唤醒轮训线程，为的是可以立即停止轮训。不过如果任务正在执行中，这之后<code>cancel()</code>就必须等到任务执行完毕才可以停止。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">mainLoop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">      <span class="comment">// 正常清空下，队列空了，轮训线程会休眠</span></span><br><span class="line">      <span class="comment">// 但是如果 newTasksMayBeScheduled 为 false</span></span><br><span class="line">      <span class="comment">// 那么循环会退出，轮训线程会终止</span></span><br><span class="line">      <span class="keyword">while</span> (queue.isEmpty() &amp;&amp; newTasksMayBeScheduled)</span><br><span class="line">          queue.wait();</span><br><span class="line">      <span class="keyword">if</span> (queue.isEmpty())</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a><strong>垃圾回收</strong></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;还有一个特殊的场景需要特别注意，那就是<strong>当轮训线程因为队列里没有任务而睡眠的时候，Timer 对象因为不再被引用而被垃圾回收了</strong>。这时候<strong>需要主动唤醒轮训线程，让它退出</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Timer</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Object threadReaper = <span class="keyword">new</span> Object() &#123;</span><br><span class="line">        <span class="meta">@SuppressWarnings</span>(<span class="string">"deprecation"</span>)</span><br><span class="line">        <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(queue) &#123;</span><br><span class="line">                thread.newTasksMayBeScheduled = <span class="keyword">false</span>;</span><br><span class="line">                queue.notify();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当 <code>Time</code>r 被回收时，内部字段 <code>threadPeaper</code> 指向的对象也会被回收。所以<code>finalize</code> 方法将会被调用，唤醒并终止<code>Timer</code>轮训线程。如果没有这个 <code>threadPeaper</code>对象就可能会导致<code>JVM</code>里留下僵尸线程。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+            <a href="/tags/延时队列/" rel="tag"># 延时队列</a>
+          
+            <a href="/tags/延时任务处理/" rel="tag"># 延时任务处理</a>
+          
+            <a href="/tags/Timer/" rel="tag"># Timer</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/11/利用责任链模式设计一个拦截器/" rel="next" title="利用责任链模式设计一个拦截器">
+                <i class="fa fa-chevron-left"></i> 利用责任链模式设计一个拦截器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/11/利用策略模式优化过多 if else 代码/" rel="prev" title="利用策略模式优化过多 if else 代码">
+                利用策略模式优化过多 if else 代码 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">刘泽明</p>
+              <p class="site-description motion-element" itemprop="description">做一个懂业务的程序员</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">731</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">394</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">237</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#深入-Java-Timer-定时调度器实现原理"><span class="nav-number">1.</span> <span class="nav-text">深入 Java Timer 定时调度器实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Timer-使用"><span class="nav-number">1.1.</span> <span class="nav-text">Timer 使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内部结构"><span class="nav-number">1.2.</span> <span class="nav-text">内部结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务状态"><span class="nav-number">1.3.</span> <span class="nav-text">任务状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务锁"><span class="nav-number">1.4.</span> <span class="nav-text">任务锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务队列空了"><span class="nav-number">1.5.</span> <span class="nav-text">任务队列空了</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Timer-终止"><span class="nav-number">1.6.</span> <span class="nav-text">Timer 终止</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#垃圾回收"><span class="nav-number">1.7.</span> <span class="nav-text">垃圾回收</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">刘泽明</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
